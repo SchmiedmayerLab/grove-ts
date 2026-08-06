@@ -46,7 +46,7 @@
     "clean": "rimraf dist .parcel-cache",
     "dev": "parcel watch",
     "lint": "eslint .",
-    "lint:ci": "eslint --output-file eslint_report.json --format json .",
+    "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run clean && npm run build",
@@ -54,21 +54,22 @@
   },
   "dependencies": {
     "@eslint/js": "^9.39.5",
+    "@typescript-eslint/utils": "^8.65.0",
     "eslint-config-prettier": "^10",
     "eslint-plugin-import": "^2",
     "eslint-plugin-prefer-arrow-functions": "^3.9.1",
     "eslint-plugin-prettier": "^5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
+    "eslint-plugin-sonarjs": "^4.2.0",
     "globals": "^17.3.0",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript-eslint": "^8.65.0"
   },
   "peerDependencies": {
     "eslint": "^9",
-    "prettier": "^3",
-    "eslint-import-resolver-typescript": "^4.4.5"
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "prettier": "^3"
   },
   "engines": {
     "node": ">=24"

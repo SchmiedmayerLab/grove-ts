@@ -27,9 +27,6 @@ updates:
       # React and import lint plugins do not yet declare ESLint 10 support.
       - dependency-name: eslint
         update-types: ['version-update:semver-major']
-      # Storybook's React adapter currently supports Vite through version 7.
-      - dependency-name: vite
-        update-types: ['version-update:semver-major']
       # Grove's supported runtime is Node.js 24.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']

@@ -264,9 +264,10 @@ export const joinPaths = (...segments: Array<Nil<string | number>>) => {
 
       // Remove trailing slashes from non-last segments to avoid duplicate separators.
       const withoutTrailingSlash =
-        isLastSegment ? withoutLeadingSlash : (
-          withoutLeadingSlash.replace(/\/+$/, "")
-        );
+        isLastSegment ? withoutLeadingSlash
+          // Anchoring bounds this replacement to a single path-segment suffix.
+          // eslint-disable-next-line sonarjs/super-linear-regex
+        : withoutLeadingSlash.replace(/\/+$/, "");
 
       return withoutTrailingSlash;
     })

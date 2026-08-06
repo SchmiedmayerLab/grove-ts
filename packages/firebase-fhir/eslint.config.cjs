@@ -17,6 +17,19 @@ module.exports = [
       'import/export': 'off',
       'import/no-cycle': 'off',
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+      // FHIR defines canonical HTTP identifiers and specification-grade regular expressions.
+      'sonarjs/concise-regex': 'off',
+      'sonarjs/no-clear-text-protocols': 'off',
+      'sonarjs/regex-complexity': 'off',
+      'sonarjs/single-character-alternation': 'off',
+      'sonarjs/slow-regex': 'off',
+    },
+  },
+  {
+    files: ['test/**/*.ts'],
+    rules: {
+      'sonarjs/no-alphabetical-sort': 'off',
+      'sonarjs/no-clear-text-protocols': 'off',
     },
   },
 ]

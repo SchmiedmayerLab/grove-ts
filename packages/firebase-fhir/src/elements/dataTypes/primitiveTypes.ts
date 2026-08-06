@@ -33,7 +33,7 @@ export const dateSchema = z
  */
 export const urlSchema = z.url()
 
-// TODO: Restrict to https://datatracker.ietf.org/doc/html/rfc3986
+// FHIR permits absolute and relative RFC 3986 references, including URNs.
 /**
  * Zod schema for FHIR uri primitive type.
  */

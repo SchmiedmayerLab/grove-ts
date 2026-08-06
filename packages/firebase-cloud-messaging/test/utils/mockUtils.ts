@@ -11,58 +11,6 @@ import { type Mock } from 'vitest'
 type MockFunction<R> = Mock<(...args: any[]) => R>
 
 /**
- * Creates a mock function that tracks its calls.
- * @returns A mock function with call tracking
- */
-export const createMockFunction = <R>(): {
-  fn: MockFunction<R>
-  called: boolean
-  calledOnce: boolean
-  callCount: number
-  calledWith: (...args: any[]) => boolean
-  resetCalls: () => void
-  getCall: (n: number) => { args: any[] } | undefined
-  firstCall: { args: any[] } | undefined
-} => {
-  const mock = vi.fn() as MockFunction<R>
-  const calls: any[][] = []
-
-  mock.mockImplementation((...args: any[]) => {
-    calls.push([...args])
-    return undefined as unknown as R
-  })
-
-  return {
-    fn: mock,
-    get called() {
-      return calls.length > 0
-    },
-    get calledOnce() {
-      return calls.length === 1
-    },
-    get callCount() {
-      return calls.length
-    },
-    calledWith: (...args: any[]) => {
-      return calls.some((callArgs) =>
-        args.every((arg, i) => arg === callArgs[i]),
-      )
-    },
-    resetCalls: () => {
-      calls.length = 0
-      mock.mockClear()
-    },
-    getCall: (n: number) => {
-      if (n >= calls.length) return undefined
-      return { args: calls[n] }
-    },
-    get firstCall() {
-      return calls.length > 0 ? { args: calls[0] } : undefined
-    },
-  }
-}
-
-/**
  * Creates a stub function that returns a preset value
  * @param returnValue The value to return when the stub is called
  * @returns A stub function that returns the specified value

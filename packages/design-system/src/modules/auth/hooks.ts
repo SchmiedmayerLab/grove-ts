@@ -6,8 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { User } from "@firebase/auth-types";
-import { type Auth, onAuthStateChanged } from "firebase/auth";
+import { type Auth, type User, onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 
 /**
@@ -20,7 +19,6 @@ export const useAuthUser = (auth: Auth) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // @ts-expect-error Nested methods are not used anyway
       setUser(user);
     });
     return () => unsubscribe();

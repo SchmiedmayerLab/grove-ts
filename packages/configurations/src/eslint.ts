@@ -11,8 +11,12 @@ import * as preferArrow from 'eslint-plugin-prefer-arrow-functions'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
+import sonarjs from 'eslint-plugin-sonarjs'
 import globals from 'globals'
 import tseslint, { configs, type ConfigWithExtends } from 'typescript-eslint'
+
+const sonarRecommended = sonarjs.configs
+  ?.recommended as unknown as ConfigWithExtends
 // require is necessary to prevent Parcel from treating it as ESM
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const importPlugin = require('eslint-plugin-import') as {
@@ -58,6 +62,16 @@ export const getIgnoredDirs = (): ConfigWithExtends => ({
     '**/playwright-report',
     'eslint_report.json',
   ],
+})
+
+/**
+ * Fails on stale suppressions so lint exceptions cannot silently accumulate.
+ */
+export const getLinterOptions = (): ConfigWithExtends => ({
+  linterOptions: {
+    reportUnusedDisableDirectives: 'error',
+    reportUnusedInlineConfigs: 'error',
+  },
 })
 
 /**
@@ -271,6 +285,27 @@ export const getTslint = (): ConfigWithExtends => ({
 })
 
 /**
+ * Detects maintainability, correctness, and security code smells beyond the
+ * TypeScript compiler and the core ESLint recommendations.
+ */
+export const getSonarRules = (): ConfigWithExtends => ({
+  ...sonarRecommended,
+  files: ['**/*.{js,jsx,ts,tsx}'],
+  rules: {
+    ...sonarRecommended.rules,
+    'sonarjs/cognitive-complexity': ['error', 20],
+    // These overlap with typed ESLint rules or reject intentional public API/readability choices.
+    'sonarjs/deprecation': 'off',
+    'sonarjs/no-globals-shadowing': 'off',
+    'sonarjs/no-nested-conditional': 'off',
+    'sonarjs/no-nested-functions': 'off',
+    'sonarjs/no-nested-template-literals': 'off',
+    'sonarjs/no-redundant-optional': 'off',
+    'sonarjs/redundant-type-aliases': 'off',
+  },
+})
+
+/**
  * Configures react, react hooks plugin and customized rules
  * */
 export const getReactPlugins = (): ConfigWithExtends[] => [
@@ -339,6 +374,8 @@ export const getTestRules = (): ConfigWithExtends => ({
     '@typescript-eslint/no-unsafe-call': 'off',
     '@typescript-eslint/no-unsafe-member-access': 'off',
     '@typescript-eslint/no-unsafe-return': 'off',
+    'sonarjs/no-hardcoded-passwords': 'off',
+    'sonarjs/parameterized-tests': 'off',
   },
 })
 
@@ -373,6 +410,7 @@ export const getEslintReactConfig = ({
 }: EslintConfigParams) => {
   return tseslint.config(
     getIgnoredDirs(),
+    getLinterOptions(),
     ...getEslintRules(),
     ...getImportRules(tsConfigsDirs),
     getNodeGlobals(),
@@ -388,6 +426,7 @@ export const getEslintReactConfig = ({
       },
     },
     getPreferArrowFunctions(),
+    getSonarRules(),
     ...getReactPlugins(),
     ...getPrettierPlugin(),
     getIgnoreDefaultExportRule(),
@@ -403,6 +442,7 @@ export const getEslintNodeConfig = ({
 }: EslintConfigParams) => {
   return tseslint.config(
     getIgnoredDirs(),
+    getLinterOptions(),
     ...getEslintRules(),
     ...getImportRules(tsConfigsDirs),
     getNodeGlobals(),
@@ -418,6 +458,7 @@ export const getEslintNodeConfig = ({
       },
     },
     getPreferArrowFunctions(),
+    getSonarRules(),
     ...getPrettierPlugin(),
     getIgnoreDefaultExportRule(),
     getTestRules(),

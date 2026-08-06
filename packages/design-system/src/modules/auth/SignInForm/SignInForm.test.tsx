@@ -92,7 +92,7 @@ describe("SignInForm", () => {
   });
 
   it("shows firebase error on SSO failure", async () => {
-    const { FirebaseError } = await import("@firebase/app");
+    const { FirebaseError } = await import("firebase/app");
     const firebaseError = new FirebaseError(
       "auth/some-error",
       "Some firebase error",

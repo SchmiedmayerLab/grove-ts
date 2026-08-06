@@ -296,7 +296,7 @@ export const IconGrid = ({
       return { icon, rankingInfo };
     });
     const passedItems = rankedItems.filter((item) => item.rankingInfo.passed);
-    const sortedItems = passedItems.sort(
+    const sortedItems = passedItems.toSorted(
       (a, b) => b.rankingInfo.rank - a.rankingInfo.rank,
     );
     return sortedItems.map((item) => item.icon);

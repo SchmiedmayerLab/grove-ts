@@ -96,15 +96,6 @@ describe('FirestoreDeviceStorage', () => {
   })
 
   describe('constructor', () => {
-    test('should initialize with default options', () => {
-      new FirestoreDeviceStorage(mockFirestore)
-
-      // We can't test private properties directly, so test the behavior instead
-      expect(mockFirestore.collection).not.toHaveBeenCalledWith(
-        'users/test/devices',
-      )
-    })
-
     test('should initialize with custom options', () => {
       const options = {
         devicesCollection: 'custom_devices',

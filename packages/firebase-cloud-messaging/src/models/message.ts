@@ -160,16 +160,11 @@ export class Message {
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
-      title:
-        typeof input.title === 'string' ?
-          new LocalizedText(input.title)
-        : new LocalizedText(input.title),
+      title: new LocalizedText(input.title),
       description:
-        input.description ?
-          typeof input.description === 'string' ?
-            new LocalizedText(input.description)
-          : new LocalizedText(input.description)
-        : undefined,
+        input.description === undefined ?
+          undefined
+        : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Information,
       isDismissible: input.isDismissible ?? true,
@@ -201,16 +196,11 @@ export class Message {
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
-      title:
-        typeof input.title === 'string' ?
-          new LocalizedText(input.title)
-        : new LocalizedText(input.title),
+      title: new LocalizedText(input.title),
       description:
-        input.description ?
-          typeof input.description === 'string' ?
-            new LocalizedText(input.description)
-          : new LocalizedText(input.description)
-        : undefined,
+        input.description === undefined ?
+          undefined
+        : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Alert,
       isDismissible: input.isDismissible ?? true,
@@ -245,16 +235,11 @@ export class Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
       dueDate: input.dueDate,
-      title:
-        typeof input.title === 'string' ?
-          new LocalizedText(input.title)
-        : new LocalizedText(input.title),
+      title: new LocalizedText(input.title),
       description:
-        input.description ?
-          typeof input.description === 'string' ?
-            new LocalizedText(input.description)
-          : new LocalizedText(input.description)
-        : undefined,
+        input.description === undefined ?
+          undefined
+        : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Reminder,
       isDismissible: input.isDismissible ?? false,
@@ -286,16 +271,11 @@ export class Message {
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
-      title:
-        typeof input.title === 'string' ?
-          new LocalizedText(input.title)
-        : new LocalizedText(input.title),
+      title: new LocalizedText(input.title),
       description:
-        input.description ?
-          typeof input.description === 'string' ?
-            new LocalizedText(input.description)
-          : new LocalizedText(input.description)
-        : undefined,
+        input.description === undefined ?
+          undefined
+        : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Action,
       isDismissible: input.isDismissible ?? false,

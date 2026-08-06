@@ -53,10 +53,10 @@ jobs:
           cp -R "${STORYBOOK_OUTPUT_DIR}/." "${DEPLOY_PATH}/storybook/"
           cp -R "${DOCS_OUTPUT_DIR}/." "${DEPLOY_PATH}/docs/"
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./deploy
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

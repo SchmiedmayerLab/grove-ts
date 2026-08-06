@@ -14,7 +14,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "lint:ci": "eslint --output-file eslint_report.json --format json .",
+    "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
     "watch": "tsc --watch",
@@ -54,7 +54,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@schmiedmayerlab/grove-firebase-utils": "0.0.0"
+    "@schmiedmayerlab/grove-firebase-utils": "0.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@schmiedmayerlab/grove-configurations": "0.0.0",
@@ -66,6 +67,7 @@
     "prettier": "^3.6.2",
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0",
     "vitest": "4.1.10"
   },
   "peerDependencies": {

@@ -132,7 +132,7 @@ describe('FirebaseNotificationService', () => {
 
       const tokenMessages = mockMessaging.sendEach.mock.calls[0][0]
       expect(Array.isArray(tokenMessages)).toBe(true)
-      expect(tokenMessages.length).toBe(2)
+      expect(tokenMessages).toHaveLength(2)
 
       // Check iOS token message
       const iosMessage = tokenMessages.find((m: any) => m.token === 'ios-token')

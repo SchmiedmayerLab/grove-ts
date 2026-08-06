@@ -174,7 +174,7 @@ export const useSelectProvider = ({
       const prevItem = prev.get(itemValue);
       if (
         prevItem &&
-        prevItem.label === prevItem.label &&
+        prevItem.label === value.label &&
         prevItem.itemText === value.itemText
       ) {
         return prev;

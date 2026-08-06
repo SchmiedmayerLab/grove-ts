@@ -55,13 +55,19 @@ jobs:
       - name: Build packages with strict TypeScript checks
         run: npm run build
       - name: Lint packages
-        run: npm run lint
+        run: npm run lint:ci
+      - name: Analyze dead code, dependencies, exports, and cycles
+        run: npm run analyze
       - name: Type-check source and tests
         run: npm run typecheck
       - name: Verify package contents
         run: npm run pack:check
-      - name: Audit production dependencies
-        run: npm run audit:production
+      - name: Lint package manifests and TypeScript declarations
+        run: npm run pack:lint
+      - name: Audit all dependencies
+        run: npm run audit
+      - name: Verify npm registry signatures
+        run: npm run audit:signatures
   documentation:
     name: Build Documentation
     runs-on: ubuntu-latest
@@ -105,9 +111,10 @@ jobs:
       contents: read
     steps:
       - name: Review dependency changes
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: moderate
+          fail-on-scopes: runtime, development
   ci:
     name: CI
     if: always()
