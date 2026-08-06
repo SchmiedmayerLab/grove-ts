@@ -1,0 +1,61 @@
+{
+  "name": "@stanfordspezi/spezi-web-configurations",
+  "description": "Stanford Biodesign Digital Health Spezi Web Configurations",
+  "keywords": [
+    "Stanford",
+    "Biodesign",
+    "Spezi",
+    "Web",
+    "Configurations",
+    "ESLint",
+    "Prettier",
+    "linting",
+    "formatting"
+  ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StanfordSpezi/spezi-web-configurations"
+  },
+  "license": "MIT",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "parcel build",
+    "dev": "parcel watch",
+    "lint": "eslint .",
+    "lint:ci": "eslint --output-file eslint_report.json --format json .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@eslint/js": "^9",
+    "eslint-config-prettier": "^10",
+    "eslint-plugin-import": "^2",
+    "eslint-plugin-prefer-arrow-functions": "^3.9.1",
+    "eslint-plugin-prettier": "^5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.3.0",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "typescript-eslint": "^8.56.1"
+  },
+  "peerDependencies": {
+    "eslint": "^9",
+    "prettier": "^3",
+    "eslint-import-resolver-typescript": "^4"
+  },
+  "engines": {
+    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+  },
+  "devDependencies": {
+    "@parcel/packager-ts": "^2.16.4",
+    "@parcel/transformer-typescript-types": "^2.16.4",
+    "parcel": "^2.16.4",
+    "typescript": "^5.9.3"
+  }
+}
