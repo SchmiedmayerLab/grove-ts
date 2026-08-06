@@ -25,7 +25,8 @@ import { FieldTooltip } from "./FieldTooltip";
 export type FieldProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = Omit<ControllerProps<TFieldValues, TName>, "render"> & {
+  TTransformedValues = TFieldValues,
+> = Omit<ControllerProps<TFieldValues, TName, TTransformedValues>, "render"> & {
   /**
    * Render function that receives field state and props and renders form input element.
    */
@@ -91,6 +92,7 @@ export type FieldProps<
 export const Field = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
 >({
   label,
   name,
@@ -100,10 +102,10 @@ export const Field = <
   error: errorProp,
   tooltip,
   ...props
-}: FieldProps<TFieldValues, TName>) => {
+}: FieldProps<TFieldValues, TName, TTransformedValues>) => {
   const id = name;
   return (
-    <Controller
+    <Controller<TFieldValues, TName, TTransformedValues>
       {...props}
       name={name}
       render={(states) => {

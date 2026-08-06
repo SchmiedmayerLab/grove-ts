@@ -21,7 +21,7 @@ describe('FhirBundle - findResourcesWith', () => {
             id: '1',
             active: true,
             name: [{ family: 'Smith' }],
-          } as Patient,
+          },
         },
         {
           resource: {
@@ -29,7 +29,7 @@ describe('FhirBundle - findResourcesWith', () => {
             id: '2',
             active: false,
             name: [{ family: 'Jones' }],
-          } as Patient,
+          },
         },
         {
           resource: {
@@ -37,7 +37,7 @@ describe('FhirBundle - findResourcesWith', () => {
             id: '3',
             status: 'final',
             code: { text: 'Blood pressure' },
-          } as Observation,
+          },
         },
       ],
     }
@@ -64,7 +64,7 @@ describe('FhirBundle - findResourcesWith', () => {
             resourceType: 'Patient',
             id: '1',
             active: false,
-          } as Patient,
+          },
         },
       ],
     }
@@ -104,7 +104,7 @@ describe('FhirBundle - findResourcesWith', () => {
             resourceType: 'Patient',
             id: '2',
             active: true,
-          } as Patient,
+          },
         },
       ],
     }
@@ -135,7 +135,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          } as Observation,
+          },
         },
         {
           resource: {
@@ -150,7 +150,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          } as Observation,
+          },
         },
         {
           resource: {
@@ -165,7 +165,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          } as Observation,
+          },
         },
       ],
     }

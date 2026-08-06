@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-// Using Jest assertions
 import { z } from 'zod'
 import { Lazy } from '../../src/helpers/lazy.js'
 import {

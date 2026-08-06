@@ -33,13 +33,13 @@ export enum MessageType {
 /**
  * Schema converter for Message objects, providing validation and encoding
  */
-export const messageConverter = new SchemaConverter<Message, z.ZodType>({
+export const messageConverter = new SchemaConverter({
   schema: z
     .object({
       creationDate: dateConverter.schema,
       dueDate: optionalish(dateConverter.schema),
       completionDate: optionalish(dateConverter.schema),
-      type: z.nativeEnum(MessageType),
+      type: z.enum(MessageType),
       title: z.lazy(() => localizedTextConverter.schema as z.ZodType),
       description: optionalish(
         z.lazy(() => localizedTextConverter.schema as z.ZodType),

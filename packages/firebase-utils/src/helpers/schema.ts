@@ -115,9 +115,7 @@ export class BidirectionalSchema<
  * @param backward Schema for output to input transformation
  * @returns Object containing forward and backward schemas
  */
-export function createBidirectionalSchema<Input, Output>(
+export const createBidirectionalSchema = <Input, Output>(
   forward: ZodType<Output, Input>,
   backward: ZodType<Input, Output>,
-) {
-  return { forward, backward }
-}
+) => ({ forward, backward })

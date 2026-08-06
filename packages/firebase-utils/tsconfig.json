@@ -13,12 +13,11 @@
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "declaration": true,
-    "outDir": "lib",
+    "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "incremental": true
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts"]
 }

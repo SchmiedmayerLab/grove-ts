@@ -94,6 +94,9 @@ const config: Config = {
   baseUrl: "/grove-ts/docs/",
   organizationName: "SchmiedmayerLab",
   projectName: "grove-ts",
+  // TypeDoc emits valid HTML anchors for table members that Docusaurus cannot
+  // discover during its static anchor validation.
+  onBrokenAnchors: "ignore",
   i18n: {
     defaultLocale: "en",
     locales: ["en"],

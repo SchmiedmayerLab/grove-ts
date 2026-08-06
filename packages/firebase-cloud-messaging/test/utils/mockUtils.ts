@@ -6,12 +6,16 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { type Mock } from 'vitest'
+
+type MockFunction<R> = Mock<(...args: any[]) => R>
+
 /**
- * Creates a mock function that tracks its calls, see https://stackoverflow.com/questions/59010129/mocking-a-function-inside-a-function-and-getting-calls-count-in-jest
+ * Creates a mock function that tracks its calls.
  * @returns A mock function with call tracking
  */
-export function createMockFunction<R, _T = void>(): {
-  fn: jest.Mock<R, any[]>
+export const createMockFunction = <R>(): {
+  fn: MockFunction<R>
   called: boolean
   calledOnce: boolean
   callCount: number
@@ -19,8 +23,8 @@ export function createMockFunction<R, _T = void>(): {
   resetCalls: () => void
   getCall: (n: number) => { args: any[] } | undefined
   firstCall: { args: any[] } | undefined
-} {
-  const mock = jest.fn() as jest.Mock<R>
+} => {
+  const mock = vi.fn() as MockFunction<R>
   const calls: any[][] = []
 
   mock.mockImplementation((...args: any[]) => {
@@ -63,39 +67,40 @@ export function createMockFunction<R, _T = void>(): {
  * @param returnValue The value to return when the stub is called
  * @returns A stub function that returns the specified value
  */
-export function createStub<T>(returnValue: T): jest.Mock<T> & {
-  resolves: (value?: any) => jest.Mock
-  rejects: (error?: any) => jest.Mock
+export const createStub = <T>(
+  returnValue: T,
+): MockFunction<T> & {
+  resolves: (value?: any) => MockFunction<T>
+  rejects: (error?: any) => MockFunction<T>
   callCount: number
   calledOnce: boolean
   called: boolean
   reset: () => void
-  mockResolvedValue: (value?: any) => jest.Mock
-} {
-  const stub = jest.fn().mockReturnValue(returnValue)
+  mockResolvedValue: (value?: any) => MockFunction<T>
+} => {
+  const stub = vi.fn().mockReturnValue(returnValue)
   let callCount = 0
 
-  const enhancedStub = stub as jest.Mock<T> & {
-    resolves: (value?: any) => jest.Mock
-    rejects: (error?: any) => jest.Mock
+  const enhancedStub = stub as MockFunction<T> & {
+    resolves: (value?: any) => MockFunction<T>
+    rejects: (error?: any) => MockFunction<T>
     callCount: number
     calledOnce: boolean
     called: boolean
     reset: () => void
-    mockResolvedValue: (value?: any) => jest.Mock
+    mockResolvedValue: (value?: any) => MockFunction<T>
   }
 
   // Add sinon-like API
-  enhancedStub.resolves = (value: any = undefined) => {
+  enhancedStub.resolves = (value?: any) => {
     stub.mockResolvedValue(value === undefined ? returnValue : value)
     return enhancedStub
   }
 
   // Override mockResolvedValue to support empty cals
   const originalMockResolvedValue = stub.mockResolvedValue.bind(stub)
-  stub.mockResolvedValue = function (value?: any) {
-    return originalMockResolvedValue(value === undefined ? undefined : value)
-  }
+  stub.mockResolvedValue = (value?: any) =>
+    originalMockResolvedValue(value === undefined ? undefined : value)
 
   enhancedStub.rejects = (error: any = new Error('Rejected')) => {
     stub.mockRejectedValue(error)
@@ -107,7 +112,7 @@ export function createStub<T>(returnValue: T): jest.Mock<T> & {
   stub.mockImplementation = (fn) => {
     originalMockImplementation((...args: any[]) => {
       callCount++
-      return fn ? fn(...args) : undefined
+      return fn(...args)
     })
     return enhancedStub
   }

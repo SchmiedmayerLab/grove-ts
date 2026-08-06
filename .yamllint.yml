@@ -6,26 +6,12 @@
 # SPDX-License-Identifier: MIT
 #
 
-# Build output
-/dist
-/lib
+extends: default
 
-# Dependencies
-/node_modules
-
-# TypeScript
-*.tsbuildinfo
-
-# Test
-/coverage
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
+rules:
+  document-start: disable
+  line-length:
+    max: 120
+    level: warning
+  truthy:
+    allowed-values: ['true', 'false', 'on']

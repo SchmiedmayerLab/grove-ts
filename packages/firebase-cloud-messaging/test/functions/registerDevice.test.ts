@@ -29,7 +29,7 @@ describe('registerDevice Function', () => {
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   test('should validate and register a valid device request', async () => {

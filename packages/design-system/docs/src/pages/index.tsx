@@ -9,7 +9,7 @@
 "use client";
 
 import {
-  Github,
+  GitFork,
   BookOpen,
   Sparkles,
   Target,
@@ -150,7 +150,7 @@ export const Landing = () => (
               href="https://github.com/SchmiedmayerLab/grove-ts"
               className={styles.secondaryButton}
             >
-              <Github className={styles.buttonIcon} />
+              <GitFork className={styles.buttonIcon} />
               GitHub
             </Link>
           </div>
@@ -214,9 +214,7 @@ export const Landing = () => (
     <section className={styles.ecosystemSection}>
       <div className={styles.container}>
         <div className={styles.content}>
-          <h2 className={styles.sectionTitle}>
-            Part of the Grove Ecosystem
-          </h2>
+          <h2 className={styles.sectionTitle}>Part of the Grove Ecosystem</h2>
           <div className={styles.ecosystemGrid}>
             {packages.map((pkg, index) => (
               <div key={index} className={styles.ecosystemCard}>
@@ -281,7 +279,8 @@ export const Landing = () => (
               </div>
               <h3 className={styles.actionCardTitle}>Explore the Repository</h3>
               <p className={styles.actionCardDescription}>
-                Browse the source, packages, examples, and contribution guidance.
+                Browse the source, packages, examples, and contribution
+                guidance.
               </p>
               <Link
                 href="https://github.com/SchmiedmayerLab/grove-ts"

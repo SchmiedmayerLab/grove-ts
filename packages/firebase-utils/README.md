@@ -39,7 +39,7 @@ import { z } from 'zod'
 
 const userSchema = z.object({
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   age: z.number().optional(),
 })
 

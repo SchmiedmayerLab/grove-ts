@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Technology Stack
 
-Our technology stack is based on the production-proven open source libraries. We do not re-invent the wheel and use existing solutions that are widely adopted, well-tested, and well-documented. 
+Our technology stack is based on the production-proven open source libraries. We do not re-invent the wheel and use existing solutions that are widely adopted, well-tested, and well-documented.
 
 Frequently, you might find yourself exploring the documentation of these libraries to learn more about their features and usage.
 
@@ -32,17 +32,19 @@ Our choices prioritize simplicity, performance, accessibility, and developer exp
 ### React
 
 React is the most widely adopted front-end library. It provides:
+
 - A component-based architecture for modular, reusable UI
 - A mature ecosystem of libraries and tools
 - Strong community support and resources
 
-React in 2025 is still the most sensible choice, given our needs. 
+React remains the most sensible choice for our needs.
 
 [More about React](https://react.dev/)
 
 ### TypeScript
 
 TypeScript is essential for a modern web application. It allows:
+
 - Catching errors at compile time rather than runtime
 - Providing excellent autocomplete and IntelliSense
 - Making refactoring safer and easier
@@ -55,7 +57,6 @@ You can use our library with vanilla JavaScript, but we strongly recommend adopt
 
 [More about TypeScript](https://www.typescriptlang.org/)
 
-
 ### Vite
 
 Vite is a modern build tool and development server. It's fast, lightweight, and has excellent developer experience. We also rely on [vitest](https://vitest.dev/) for unified testing.
@@ -64,12 +65,11 @@ You can still consume our library with Next or any other React tool, we use it i
 
 [More about Vite](https://vitejs.dev/)
 
-
 ### Tailwind CSS
 
 Tailwind is the industry standard for utility-first CSS. It speeds up development with pre-defined utility classes constructed out of the theme system. Theming is based on CSS variables, which allows for easy customization and simple implementation.
 
-Tailwind provides excellent developer experience with IntelliSense. It guarantees the ultimate speed of development. It's widely adopted and familiar to most developers. Thanks to its utility-first nature, it allows moving with high confidence. 
+Tailwind provides excellent developer experience with IntelliSense. It guarantees the ultimate speed of development. It's widely adopted and familiar to most developers. Thanks to its utility-first nature, it allows moving with high confidence.
 
 We build our system using Tailwind because it allows us to leverage a system that's widely adopted and requires no further abstractions. Our components are straightforward to understand. They are built using the same tools you're familiar with. We don't create custom APIs just for styling. Use Tailwind directly for common grid, flex, typography, or spacing utilities.
 
@@ -101,17 +101,15 @@ Zod is a powerful schema validation library for TypeScript. It lets you define c
 
 React Hook Form is a performant form library for React. It minimizes re-renders and provides a simple API for managing form state and validation. We integrate it with Zod and custom form components.
 
-This ensures consistent, performant, type-safe, and declarative form handling. 
+This ensures consistent, performant, type-safe, and declarative form handling.
 
 [More about React Hook Form](https://react-hook-form.com/)
-
 
 ### date-fns
 
 Functional date manipulation and formatting library. Use it to format dates, calculate durations, and more. Provides everything you need to work with dates in TypeScript.
 
 [More about date-fns](https://date-fns.org/)
-
 
 ### ESToolkit
 

@@ -8,8 +8,8 @@ SPDX-License-Identifier: MIT
 
 */
 
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @theme inline {
   --color-surface: var(--color-surface, rgb(250 250 249));
@@ -78,7 +78,7 @@ SPDX-License-Identifier: MIT
 }
 
 @utility hide-all-hidden {
-  & [aria-hidden="true"] {
+  & [aria-hidden='true'] {
     display: none;
   }
 }

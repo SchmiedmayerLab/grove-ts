@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-const { prettierConfig } = require("@schmiedmayerlab/grove-configurations");
-
-module.exports = prettierConfig;
+module.exports = {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+}

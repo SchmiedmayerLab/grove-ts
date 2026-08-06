@@ -175,7 +175,7 @@ SPDX-License-Identifier: MIT
   text-decoration: none;
 }
 
-[data-theme="dark"] .secondaryButton:hover {
+[data-theme='dark'] .secondaryButton:hover {
   background: #333333;
 }
 
@@ -472,7 +472,7 @@ SPDX-License-Identifier: MIT
 
 .ecosystemCardTitle {
   margin-bottom: 0.75rem;
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   font-size: 1.125rem;
   font-weight: 600;
 }

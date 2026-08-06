@@ -18,7 +18,11 @@ import { type z } from 'zod'
  * 1. Input data -> Domain object (via schema validation)
  * 2. Domain object -> Data (via encode function)
  */
-export class SchemaConverter<T, S extends z.ZodType = z.ZodType> {
+export class SchemaConverter<
+  T,
+  S extends z.ZodType = z.ZodType,
+  Encoded = unknown,
+> {
   /**
    * Zod schema for validation
    */
@@ -26,7 +30,7 @@ export class SchemaConverter<T, S extends z.ZodType = z.ZodType> {
   /**
    * Encoding function to convert domain object to data
    */
-  readonly encode: (obj: T) => z.output<S>
+  readonly encode: (obj: T) => Encoded
 
   /**
    * Creates a new SchemaConverter instance
@@ -34,7 +38,7 @@ export class SchemaConverter<T, S extends z.ZodType = z.ZodType> {
    * @param input.schema The Zod schema for validation
    * @param input.encode Function to encode validated output
    */
-  constructor(input: { schema: S; encode: (obj: T) => z.output<S> }) {
+  constructor(input: { schema: S; encode: (obj: T) => Encoded }) {
     this.schema = input.schema
     this.encode = input.encode
   }

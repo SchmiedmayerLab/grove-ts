@@ -77,8 +77,18 @@ describe('Lazy Utility', () => {
 
     // Access the value
     expect(lazy.value).toBeUndefined()
+    expect(lazy.value).toBeUndefined()
 
     // Factory should only be called once
     expect(factoryCalled).toBe(1)
+  })
+
+  test('should cache null values', () => {
+    const factory = vi.fn(() => null)
+    const lazy = new Lazy<null>(factory)
+
+    expect(lazy.value).toBeNull()
+    expect(lazy.value).toBeNull()
+    expect(factory).toHaveBeenCalledOnce()
   })
 })

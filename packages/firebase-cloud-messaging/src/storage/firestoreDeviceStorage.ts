@@ -11,6 +11,7 @@
  */
 
 import {
+  type FirestoreDataConverter,
   type Firestore,
   type Query,
   type Transaction,
@@ -51,14 +52,10 @@ export class FirestoreDeviceStorage implements DeviceStorage {
    * Get devices collection reference
    * @returns Query for all devices across users
    */
-  private get devices(): Query {
-    // Need to use type assertion due to FirebaseFirestore's complex types
-    return (
-      this.firestore
-        .collectionGroup(this.devicesCollection)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-        .withConverter(this.converter<Device>(deviceConverter.encode) as any)
-    )
+  private get devices(): Query<Device> {
+    return this.firestore
+      .collectionGroup(this.devicesCollection)
+      .withConverter(this.converter(deviceConverter.encode))
   }
 
   /**
@@ -76,24 +73,18 @@ export class FirestoreDeviceStorage implements DeviceStorage {
    * @param encoder Function to encode the type to Firestore
    * @returns Firestore converter object
    */
-  private converter<T>(encoder: (data: T) => Record<string, unknown>) {
+  private converter(
+    encoder: (data: Device) => Record<string, unknown>,
+  ): FirestoreDataConverter<Device> {
     return {
-      toFirestore: (data: T): Record<string, unknown> => encoder(data),
+      toFirestore: (data: Device): Record<string, unknown> => encoder(data),
       fromFirestore: (
         snapshot: FirebaseFirestore.QueryDocumentSnapshot<
           Record<string, unknown>
         >,
-      ): Document<T> => {
+      ): Device => {
         const data = snapshot.data()
-        return {
-          id: snapshot.id,
-          path: snapshot.ref.path,
-          // Firestore's toDate() should always return a Date, but adding a fallback just in case
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          lastUpdate: snapshot.updateTime.toDate() || new Date(),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          content: deviceConverter.schema.parse(data) as unknown as T,
-        }
+        return deviceConverter.schema.parse(data)
       },
     }
   }
@@ -104,7 +95,10 @@ export class FirestoreDeviceStorage implements DeviceStorage {
    * @returns Promise resolving to the callback result
    */
   private async runTransaction<T>(
-    callback: (deviceQuery: Query, transaction: Transaction) => Promise<T>,
+    callback: (
+      deviceQuery: Query<Device>,
+      transaction: Transaction,
+    ) => Promise<T>,
   ): Promise<T> {
     return this.firestore.runTransaction(async (transaction) => {
       return callback(this.devices, transaction)
@@ -167,7 +161,7 @@ export class FirestoreDeviceStorage implements DeviceStorage {
 
       for (const device of devices.docs) {
         // Compare as strings to avoid type issues
-        if (String(device.data().platform) !== platform) continue
+        if (device.data().platform !== platform) continue
         transaction.delete(device.ref)
       }
     })
@@ -182,8 +176,7 @@ export class FirestoreDeviceStorage implements DeviceStorage {
     // Get the devices collection and apply the converter
     const userDevicesCollection = this.userDevices(userId)
     const devicesRef = userDevicesCollection.withConverter(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-      this.converter<Device>(deviceConverter.encode) as any,
+      this.converter(deviceConverter.encode),
     )
     const snapshot = await devicesRef.get()
 
@@ -196,7 +189,7 @@ export class FirestoreDeviceStorage implements DeviceStorage {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         lastUpdate: doc.updateTime.toDate() || new Date(),
         content: data,
-      } as Document<Device>
+      }
     })
   }
 

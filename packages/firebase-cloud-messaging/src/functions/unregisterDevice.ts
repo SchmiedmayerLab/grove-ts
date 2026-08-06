@@ -36,10 +36,9 @@ export type UnregisterDeviceOutput = undefined
  * @param notificationService The notification service
  * @returns A function that handles device unregistration
  */
-export function createUnregisterDeviceHandler(
-  notificationService: NotificationService,
-) {
-  return async (
+export const createUnregisterDeviceHandler =
+  (notificationService: NotificationService) =>
+  async (
     userId: string,
     data: UnregisterDeviceInput,
   ): Promise<UnregisterDeviceOutput> => {
@@ -51,4 +50,3 @@ export function createUnregisterDeviceHandler(
       platform,
     )
   }
-}

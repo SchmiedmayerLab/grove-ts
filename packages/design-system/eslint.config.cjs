@@ -8,19 +8,19 @@
 
 const {
   getEslintReactConfig,
-} = require("@schmiedmayerlab/grove-configurations");
-const jsdoc = require("eslint-plugin-jsdoc");
+} = require('@schmiedmayerlab/grove-configurations')
+const jsdoc = require('eslint-plugin-jsdoc')
 
 module.exports = [
-  { ignores: ["storybook-static"] },
+  { ignores: ['storybook-static'] },
   ...getEslintReactConfig({ tsconfigRootDir: __dirname }),
   {
-    files: ["**/*.{js,ts,tsx}"],
+    files: ['**/*.{js,ts,tsx}'],
     plugins: {
       jsdoc,
     },
     rules: {
-      "jsdoc/no-multi-asterisks": "error",
+      'jsdoc/no-multi-asterisks': 'error',
     },
   },
-];
+]

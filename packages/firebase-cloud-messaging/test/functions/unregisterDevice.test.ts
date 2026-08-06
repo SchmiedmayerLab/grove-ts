@@ -31,7 +31,7 @@ describe('unregisterDevice Function', () => {
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   test('should validate and unregister a valid device request', async () => {

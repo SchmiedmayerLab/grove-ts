@@ -88,10 +88,10 @@ const bundleEntryResponseSchema: ZodType<BundleEntryResponse> =
  * @param schema - The Zod schema for the resource type
  * @returns A Zod schema for BundleEntry containing the specified resource type
  */
-function bundleEntrySchema<R extends DomainResource>(
+const bundleEntrySchema = <R extends DomainResource>(
   schema: ZodType<R>,
-): ZodType<BundleEntry<R>> {
-  return backboneElementSchema.extend({
+): ZodType<BundleEntry<R>> =>
+  backboneElementSchema.extend({
     link: bundleLinkSchema.array().optional(),
     fullUrl: uriSchema.optional(),
     _fullUrl: elementSchema.optional(),
@@ -100,7 +100,6 @@ function bundleEntrySchema<R extends DomainResource>(
     request: bundleEntryRequestSchema.optional(),
     response: bundleEntryResponseSchema.optional(),
   })
-}
 
 /**
  * Creates an untyped Bundle schema for the given resource type.
@@ -108,10 +107,10 @@ function bundleEntrySchema<R extends DomainResource>(
  * @param schema - The Zod schema for the resource type
  * @returns A Zod schema for Bundle containing the specified resource type
  */
-export function untypedBundleSchema<R extends DomainResource>(
+export const untypedBundleSchema = <R extends DomainResource>(
   schema: ZodType<R>,
-) {
-  return domainResourceSchema.extend({
+) =>
+  domainResourceSchema.extend({
     resourceType: z.literal('Bundle').readonly(),
     identifier: identifierSchema.optional(),
     type: bundleTypeSchema,
@@ -125,7 +124,6 @@ export function untypedBundleSchema<R extends DomainResource>(
     },
     signature: signatureSchema.optional(),
   }) satisfies ZodType<Bundle<R>>
-}
 
 /**
  * Creates a Bundle schema for the given resource type.
@@ -133,11 +131,9 @@ export function untypedBundleSchema<R extends DomainResource>(
  * @param schema - The Zod schema for the resource type
  * @returns A Zod schema for Bundle containing the specified resource type
  */
-export function bundleSchema<R extends DomainResource>(
+export const bundleSchema = <R extends DomainResource>(
   schema: ZodType<R>,
-): ZodType<Bundle<R>> {
-  return untypedBundleSchema(schema)
-}
+): ZodType<Bundle<R>> => untypedBundleSchema(schema)
 
 /**
  * Zod schema for FHIR Bundle resource (untyped version, generic).

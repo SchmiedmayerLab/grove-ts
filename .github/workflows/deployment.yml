@@ -12,6 +12,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: Package version to publish, for example 0.1.0
+        required: true
+        type: string
 
 concurrency:
   group: production
@@ -39,7 +44,7 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     with:
       nodeVersion: 24
-      packageVersion: ${{ github.event.release.tag_name }}
+      packageVersion: ${{ github.event.release.tag_name || inputs.packageVersion }}
       workspaces: true
   deploy-pages:
     name: Deploy GitHub Pages

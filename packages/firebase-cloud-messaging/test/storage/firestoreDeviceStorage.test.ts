@@ -6,10 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
+import {
+  type FirestoreDataConverter,
+  type QueryDocumentSnapshot,
+} from 'firebase-admin/firestore'
 import { Device, DevicePlatform } from '../../src/models/device.js'
 import { FirestoreDeviceStorage } from '../../src/storage/firestoreDeviceStorage.js'
-// The createStub import was removed since it's not used
-// import { createStub } from '../utils/mockUtils.js'
 
 describe('FirestoreDeviceStorage', () => {
   let mockFirestore: any
@@ -26,8 +28,8 @@ describe('FirestoreDeviceStorage', () => {
     mockDocRef = {
       id: 'device1',
       path: 'users/user123/devices/device1',
-      set: jest.fn(),
-      delete: jest.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
     }
 
     // Setup query snapshot
@@ -50,37 +52,37 @@ describe('FirestoreDeviceStorage', () => {
 
     // Setup query
     mockQuery = {
-      where: jest.fn().mockReturnThis(),
-      get: jest.fn().mockResolvedValue(mockQuerySnapshot),
+      where: vi.fn().mockReturnThis(),
+      get: vi.fn().mockResolvedValue(mockQuerySnapshot),
     }
 
     // Setup collection
     mockCollection = {
-      doc: jest.fn().mockReturnValue(mockDocRef),
+      doc: vi.fn().mockReturnValue(mockDocRef),
       path: 'users/user123/devices',
-      get: jest.fn().mockResolvedValue(mockQuerySnapshot),
-      withConverter: jest.fn().mockReturnThis(),
+      get: vi.fn().mockResolvedValue(mockQuerySnapshot),
+      withConverter: vi.fn().mockReturnThis(),
     }
 
     // Setup collection group
     mockCollectionGroup = {
-      where: jest.fn().mockReturnValue(mockQuery),
-      withConverter: jest.fn().mockReturnThis(),
+      where: vi.fn().mockReturnValue(mockQuery),
+      withConverter: vi.fn().mockReturnThis(),
     }
 
     // Setup transaction
     mockTransaction = {
-      get: jest.fn().mockResolvedValue(mockQuerySnapshot),
-      set: jest.fn(),
-      delete: jest.fn(),
+      get: vi.fn().mockResolvedValue(mockQuerySnapshot),
+      set: vi.fn(),
+      delete: vi.fn(),
     }
 
     // Setup Firestore
     mockFirestore = {
-      collection: jest.fn().mockReturnValue(mockCollection),
-      collectionGroup: jest.fn().mockReturnValue(mockCollectionGroup),
+      collection: vi.fn().mockReturnValue(mockCollection),
+      collectionGroup: vi.fn().mockReturnValue(mockCollectionGroup),
       // eslint-disable-next-line @typescript-eslint/require-await
-      runTransaction: jest.fn().mockImplementation(async (callback: any) => {
+      runTransaction: vi.fn().mockImplementation(async (callback: any) => {
         return callback(mockTransaction)
       }),
     }
@@ -90,7 +92,7 @@ describe('FirestoreDeviceStorage', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('constructor', () => {
@@ -133,22 +135,22 @@ describe('FirestoreDeviceStorage', () => {
       })
 
       // Create mock for the collection path
-      mockFirestore.collection = jest.fn().mockReturnValue(mockCollection)
+      mockFirestore.collection = vi.fn().mockReturnValue(mockCollection)
 
       // Create a custom mock implementation for runTransaction
-      const setStub = jest.fn().mockReturnValue(undefined)
+      const setStub = vi.fn().mockReturnValue(undefined)
 
-      mockFirestore.runTransaction = jest
+      mockFirestore.runTransaction = vi
         .fn()
         // eslint-disable-next-line @typescript-eslint/require-await
         .mockImplementation(async (transactionCallback: any) => {
           // Create a transaction mock that matches what FirestoreDeviceStorage expects
           const transaction = {
-            get: jest.fn().mockResolvedValue({
+            get: vi.fn().mockResolvedValue({
               docs: [], // Empty array means no existing devices found
             }),
             set: setStub,
-            delete: jest.fn().mockReturnValue(undefined),
+            delete: vi.fn().mockReturnValue(undefined),
           }
 
           // Call the callback
@@ -174,15 +176,15 @@ describe('FirestoreDeviceStorage', () => {
       const mockDeviceRef1 = {
         id: 'device1',
         path: 'users/user123/devices/device1',
-        set: jest.fn(),
-        delete: jest.fn(),
+        set: vi.fn(),
+        delete: vi.fn(),
       }
 
       const mockDeviceRef2 = {
         id: 'device2',
         path: 'users/otheruser/devices/device2',
-        set: jest.fn(),
-        delete: jest.fn(),
+        set: vi.fn(),
+        delete: vi.fn(),
       }
 
       mockQuerySnapshot.docs = [
@@ -230,7 +232,7 @@ describe('FirestoreDeviceStorage', () => {
       const deviceRef = {
         id: 'device1',
         path: 'users/user123/devices/device1',
-        delete: jest.fn(),
+        delete: vi.fn(),
       }
 
       const deviceDoc = {
@@ -243,16 +245,16 @@ describe('FirestoreDeviceStorage', () => {
       }
 
       // Create a custom mock implementation for this test
-      mockFirestore.runTransaction = jest
+      mockFirestore.runTransaction = vi
         .fn()
         // eslint-disable-next-line @typescript-eslint/require-await
         .mockImplementation(async (transactionCallback: any) => {
           // Override the transaction object with a proper implementation for this test
           const transaction = {
-            get: jest.fn().mockResolvedValue({
+            get: vi.fn().mockResolvedValue({
               docs: [deviceDoc],
             }),
-            delete: jest.fn().mockReturnValue(undefined),
+            delete: vi.fn().mockReturnValue(undefined),
           }
 
           // Call the callback with mocked parameters
@@ -270,7 +272,7 @@ describe('FirestoreDeviceStorage', () => {
       const deviceRef = {
         id: 'device1',
         path: 'users/user123/devices/device1',
-        delete: jest.fn(),
+        delete: vi.fn(),
       }
 
       const deviceDoc = {
@@ -287,16 +289,16 @@ describe('FirestoreDeviceStorage', () => {
       const platform = 'iOS' // Different from device platform
 
       // Create a delete stub to verify it's not called
-      const deleteStub = jest.fn()
+      const deleteStub = vi.fn()
 
       // Create a custom mock implementation for this test
-      mockFirestore.runTransaction = jest
+      mockFirestore.runTransaction = vi
         .fn()
         // eslint-disable-next-line @typescript-eslint/require-await
         .mockImplementation(async (transactionCallback: any) => {
           // Override the transaction object with a proper implementation for this test
           const transaction = {
-            get: jest.fn().mockResolvedValue({
+            get: vi.fn().mockResolvedValue({
               docs: [deviceDoc],
             }),
             delete: deleteStub,
@@ -335,16 +337,21 @@ describe('FirestoreDeviceStorage', () => {
       }
 
       // Create a mock query snapshot
-      const querySnapshot = {
-        docs: [deviceDoc],
-      }
-
-      // Setup the mock
-      const getStub = jest.fn()
-      getStub.mockResolvedValue(querySnapshot)
-
-      const withConverterStub = jest.fn()
-      withConverterStub.mockReturnValue({ get: getStub })
+      const withConverterStub = vi.fn(
+        (converter: FirestoreDataConverter<Device>) => ({
+          get: vi.fn().mockResolvedValue({
+            docs: [
+              {
+                ...deviceDoc,
+                data: () =>
+                  converter.fromFirestore(
+                    deviceDoc as unknown as QueryDocumentSnapshot,
+                  ),
+              },
+            ],
+          }),
+        }),
+      )
 
       mockFirestore.collection.mockReturnValue({
         withConverter: withConverterStub,
@@ -369,6 +376,8 @@ describe('FirestoreDeviceStorage', () => {
       expect(devices[0].content).toHaveProperty('appVersion', '1.0.0')
       expect(devices[0].content.notificationToken).toBe('token123')
       expect(devices[0].content.platform).toBe(DevicePlatform.iOS)
+      expect(devices[0].content).toBeInstanceOf(Device)
+      expect(devices[0].content).not.toHaveProperty('content')
     })
   })
 
@@ -380,7 +389,7 @@ describe('FirestoreDeviceStorage', () => {
       const deviceRef = {
         id: 'device1',
         path: 'users/user123/devices/device1',
-        delete: jest.fn(),
+        delete: vi.fn(),
       }
 
       const deviceDoc = {
@@ -393,16 +402,16 @@ describe('FirestoreDeviceStorage', () => {
       }
 
       // Create a delete stub to verify it's called
-      const deleteStub = jest.fn()
+      const deleteStub = vi.fn()
 
       // Create a custom mock implementation for this test
-      mockFirestore.runTransaction = jest
+      mockFirestore.runTransaction = vi
         .fn()
         // eslint-disable-next-line @typescript-eslint/require-await
         .mockImplementation(async (transactionCallback: any) => {
           // Override the transaction object with a proper implementation for this test
           const transaction = {
-            get: jest.fn().mockResolvedValue({
+            get: vi.fn().mockResolvedValue({
               docs: [deviceDoc],
             }),
             delete: deleteStub,

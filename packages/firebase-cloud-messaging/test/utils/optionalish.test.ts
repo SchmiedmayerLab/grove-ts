@@ -30,7 +30,7 @@ describe('Optionalish Utilities', () => {
     })
 
     test('should still validate the inner schema', () => {
-      const schema = optionalish(z.string().email())
+      const schema = optionalish(z.email())
 
       expect(() => schema.parse('invalid')).toThrow()
       expect(schema.parse('test@example.com')).toBe('test@example.com')
@@ -61,10 +61,7 @@ describe('Optionalish Utilities', () => {
     })
 
     test('should still validate the inner schema', () => {
-      const schema = optionalishDefault(
-        z.string().email(),
-        'default@example.com',
-      )
+      const schema = optionalishDefault(z.email(), 'default@example.com')
 
       expect(() => schema.parse('invalid')).toThrow()
       expect(schema.parse('test@example.com')).toBe('test@example.com')

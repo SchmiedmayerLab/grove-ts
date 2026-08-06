@@ -4,7 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": true,
-    "types": ["jest", "node"],
+    "types": ["vitest/globals", "node"],
     "paths": {
       "@schmiedmayerlab/grove-firebase-utils": ["../../firebase-utils/src"]
     },

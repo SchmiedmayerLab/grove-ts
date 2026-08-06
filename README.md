@@ -32,14 +32,14 @@ Grove provides reusable TypeScript tooling, accessible React components, and Fir
 Requirements:
 
 - Node.js 24
-- npm
+- npm 11
 
 Install dependencies, build every package, and run the test suites:
 
 ```bash
 npm ci
-npm run build
-npm test
+npm ci --prefix packages/design-system/docs
+npm run validate
 ```
 
 Workspace-specific commands can be run with npm's `--workspace` option:

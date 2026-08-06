@@ -55,7 +55,6 @@ describe("useMedia", () => {
       act(() => {
         mediaQueryList.matches = true;
         // this is onChange handler
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         mediaQueryList.addEventListener.mock.calls[0][1]();
       });
 
@@ -96,7 +95,6 @@ describe("useMedia", () => {
       act(() => {
         mediaQueryList.matches = true;
         // this is onChange handler
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         mediaQueryList.addEventListener.mock.calls[0][1]();
       });
 

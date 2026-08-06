@@ -11,8 +11,8 @@
  * @param object The object to stringify
  * @returns JSON string with sorted keys
  */
-export function jsonStringifyDeterministically(object: unknown): string {
-  return JSON.stringify(
+export const jsonStringifyDeterministically = (object: unknown): string =>
+  JSON.stringify(
     object,
     (_, value) => {
       if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -27,4 +27,3 @@ export function jsonStringifyDeterministically(object: unknown): string {
     },
     2,
   )
-}

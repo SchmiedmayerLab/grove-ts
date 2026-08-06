@@ -6,8 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { type Mock } from 'vitest'
+
 /**
- * Test helpers and utilities using Jest
+ * Test helpers and utilities.
  */
 
 // Add custom test utilities here
@@ -17,9 +19,8 @@
  * @param ms Milliseconds to wait
  * @returns Promise that resolves after the specified delay
  */
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+export const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
  * Create a mock document reference
@@ -28,21 +29,34 @@ export function sleep(ms: number): Promise<void> {
  * @param data Document data
  * @returns Mock document reference
  */
-export function createMockDocRef(
+interface MockDocumentReference {
+  id: string
+  path: string
+  set: Mock<() => Promise<void>>
+  get: Mock<
+    () => Promise<{
+      id: string
+      data: () => Record<string, any>
+      exists: boolean
+      ref: { path: string }
+    }>
+  >
+  delete: Mock<() => Promise<void>>
+}
+
+export const createMockDocRef = (
   id: string,
   path: string,
   data: Record<string, any> = {},
-) {
-  return {
+): MockDocumentReference => ({
+  id,
+  path,
+  set: vi.fn().mockResolvedValue(undefined),
+  get: vi.fn().mockResolvedValue({
     id,
-    path,
-    set: jest.fn().mockResolvedValue(undefined),
-    get: jest.fn().mockResolvedValue({
-      id,
-      data: () => data,
-      exists: true,
-      ref: { path },
-    }),
-    delete: jest.fn().mockResolvedValue(undefined),
-  }
-}
+    data: () => data,
+    exists: true,
+    ref: { path },
+  }),
+  delete: vi.fn().mockResolvedValue(undefined),
+})
