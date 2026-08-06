@@ -28,9 +28,7 @@ jobs:
     uses: ./.github/workflows/build-and-test.yml
     permissions:
       contents: read
-      checks: write
-      actions: read
-      security-events: write
+      pull-requests: read
     secrets: inherit
   publishpackage:
     name: Publish Package
