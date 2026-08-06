@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Reusable React components and utilities for Grove applications",
+  "author": "Schmiedmayer Lab",
+  "license": "MIT",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "keywords": [
     "grove",
     "react",
@@ -12,16 +17,19 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/SchmiedmayerLab/grove-ts.git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
     "directory": "packages/design-system"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./tailwind.css": {
@@ -37,6 +45,10 @@
     "./components/Button": {
       "types": "./dist/components/Button.d.ts",
       "default": "./dist/components/Button.js"
+    },
+    "./components/Breadcrumb": {
+      "types": "./dist/components/Breadcrumb.d.ts",
+      "default": "./dist/components/Breadcrumb.js"
     },
     "./components/Calendar": {
       "types": "./dist/components/Calendar.d.ts",
@@ -327,8 +339,8 @@
       "default": "./dist/utils/notImplementedToast.js"
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "README.md",
@@ -347,7 +359,6 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepush": "npm run lint:fix && tsc --noEmit",
     "prepublishOnly": "npm run clean && npm run build",
     "version": "node ../../scripts/sync-workspace-versions.mjs"
   },

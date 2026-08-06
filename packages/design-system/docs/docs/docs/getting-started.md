@@ -343,8 +343,8 @@ const MyComponent = () => {
 
 - **[Browse Components in Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/)** - Interactive examples and documentation
 - **[API Reference](../api/GroveProvider)** - Detailed component and utility documentation
-- **[Why Grove?](./why-grove)** - Learn about the library's philosophy and approach
-- **[Technology Stack](./technology-stack)** - Understand the underlying technologies
+- **[Why Grove?](./why-grove.md)** - Learn about the library's philosophy and approach
+- **[Technology Stack](./technology-stack.md)** - Understand the underlying technologies
 
 ## Need Help?
 

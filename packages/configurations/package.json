@@ -2,6 +2,9 @@
   "name": "@schmiedmayerlab/grove-configurations",
   "version": "0.0.0",
   "description": "Shared ESLint and Prettier configurations for Grove TypeScript projects",
+  "author": "Schmiedmayer Lab",
+  "license": "MIT",
+  "sideEffects": false,
   "keywords": [
     "grove",
     "typescript",
@@ -18,17 +21,20 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/SchmiedmayerLab/grove-ts.git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
     "directory": "packages/configurations"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT",
   "type": "commonjs",
   "source": "src/index.ts",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

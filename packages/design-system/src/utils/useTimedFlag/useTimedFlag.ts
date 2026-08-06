@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
  */
 export const useTimedFlag = (trigger: boolean | undefined, timeout: number) => {
   const [isActive, setIsActive] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (trigger) {

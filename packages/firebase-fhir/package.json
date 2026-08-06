@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,6 +14,7 @@
   },
   "scripts": {
     "lint": "eslint .",
+    "lint:ci": "eslint --output-file eslint_report.json --format json .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
     "watch": "tsc --watch",
@@ -33,9 +35,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SchmiedmayerLab/grove-ts.git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
     "directory": "packages/firebase-fhir"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "publishConfig": {
     "access": "public"
   },

@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { UrlObject } from "url";
 import { isNil, isString } from "es-toolkit";
 import { toast } from "../../components/Toaster";
 
@@ -52,7 +51,7 @@ export type Nil<T> = T | null | undefined;
 /**
  * Type representing a URL that can be either a string or a URL object.
  */
-export type Url = string | UrlObject;
+export type Url = string | URL;
 
 /**
  * Make some fields in the object partial.

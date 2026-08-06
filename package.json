@@ -2,6 +2,7 @@
   "name": "@schmiedmayerlab/grove",
   "version": "0.0.0",
   "private": true,
+  "author": "Schmiedmayer Lab",
   "license": "MIT",
   "description": "TypeScript packages for the Grove ecosystem",
   "keywords": [
@@ -15,6 +16,10 @@
     "type": "git",
     "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "engines": {
     "node": ">=24",
     "npm": ">=11"
@@ -47,7 +52,7 @@
     "test:utils": "npm run test -w @schmiedmayerlab/grove-firebase-utils",
     "test:cloud-messaging": "npm run test -w @schmiedmayerlab/grove-firebase-cloud-messaging",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "pack:check": "npm pack --workspaces --dry-run --silent",
+    "pack:check": "node scripts/verify-packages.mjs",
     "audit:production": "npm audit --omit=dev --audit-level=high",
     "audit:docs": "npm audit --prefix packages/design-system/docs --omit=dev --audit-level=high",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run docs:ci && npm run pack:check && npm run audit:production && npm run audit:docs",

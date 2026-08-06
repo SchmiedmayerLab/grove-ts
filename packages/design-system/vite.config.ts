@@ -55,6 +55,14 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
+      exclude: [
+        ".storybook/**",
+        "src/tests/**",
+        "**/*.stories.{ts,tsx}",
+        "**/*.test.{ts,tsx}",
+        "testSetup.ts",
+        "vite.config.ts",
+      ],
       insertTypesEntry: true,
     }),
     viteStaticCopy({

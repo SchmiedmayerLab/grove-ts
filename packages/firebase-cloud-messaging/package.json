@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,6 +14,7 @@
   },
   "scripts": {
     "lint": "eslint .",
+    "lint:ci": "eslint --output-file eslint_report.json --format json .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
     "watch": "tsc --watch",
@@ -36,9 +38,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SchmiedmayerLab/grove-ts.git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
     "directory": "packages/firebase-cloud-messaging"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "publishConfig": {
     "access": "public"
   },
@@ -48,7 +54,6 @@
     "LICENSE"
   ],
   "dependencies": {
-    "firebase-admin": "^14.2.0",
     "@schmiedmayerlab/grove-firebase-utils": "0.0.0"
   },
   "devDependencies": {
@@ -57,6 +62,7 @@
     "@vitest/coverage-v8": "4.1.10",
     "eslint": "^9.39.5",
     "eslint-import-resolver-typescript": "^4.4.5",
+    "firebase-admin": "^14.2.0",
     "prettier": "^3.6.2",
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
