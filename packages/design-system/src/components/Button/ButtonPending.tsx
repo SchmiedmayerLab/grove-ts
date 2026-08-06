@@ -1,0 +1,50 @@
+//
+// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+//
+// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+//
+
+import { Loader2 } from "lucide-react";
+import { type ComponentProps } from "react";
+import { cn } from "@/utils/className";
+import type { ButtonProps } from "../Button";
+
+export interface ButtonPendingProps
+  extends ComponentProps<"span">,
+    Pick<ButtonProps, "size" | "isPending"> {}
+
+/**
+ * Utility to compose button with pending state.
+ * It's separated from Button to prevent redundant markup when unnecessary.
+ * Loader is displayed over regular button's content, which maintains button's size.
+ */
+export const ButtonPending = ({
+  children,
+  isPending,
+  className,
+  size,
+  ...props
+}: ButtonPendingProps) => (
+  <span
+    data-slot="button-pending"
+    className={cn("inline-flex-center relative", className)}
+    {...props}
+  >
+    {isPending && (
+      <div className="absolute" aria-hidden data-testid="buttonPendingLoader">
+        <Loader2 className="animate-spin" />
+      </div>
+    )}
+    <span
+      className={cn(
+        "inline-flex-center",
+        size === "lg" ? "gap-2.5" : "gap-2",
+        isPending && "invisible",
+      )}
+    >
+      {children}
+    </span>
+  </span>
+);

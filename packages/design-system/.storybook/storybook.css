@@ -1,0 +1,16 @@
+/*
+
+This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+
+SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+
+*/
+
+@import "../src/tailwind.css";
+@import "../src/base.css";
+
+.sb-show-main {
+  @apply bg-surface;
+}

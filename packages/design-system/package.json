@@ -1,0 +1,404 @@
+{
+  "name": "@stanfordspezi/spezi-web-design-system",
+  "description": "Stanford Biodesign Digital Health Spezi Web Design System",
+  "keywords": [
+    "Stanford",
+    "Biodesign",
+    "Spezi",
+    "Web",
+    "Design",
+    "System"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StanfordSpezi/spezi-web-design-system"
+  },
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tailwind.css": {
+      "default": "./dist/tailwind.css"
+    },
+    "./base.css": {
+      "default": "./dist/base.css"
+    },
+    "./components/Avatar": {
+      "types": "./dist/components/Avatar.d.ts",
+      "default": "./dist/components/Avatar.js"
+    },
+    "./components/Button": {
+      "types": "./dist/components/Button.d.ts",
+      "default": "./dist/components/Button.js"
+    },
+    "./components/Calendar": {
+      "types": "./dist/components/Calendar.d.ts",
+      "default": "./dist/components/Calendar.js"
+    },
+    "./components/Checkbox": {
+      "types": "./dist/components/Checkbox.d.ts",
+      "default": "./dist/components/Checkbox.js"
+    },
+    "./components/CheckboxGroup": {
+      "types": "./dist/components/CheckboxGroup.d.ts",
+      "default": "./dist/components/CheckboxGroup.js"
+    },
+    "./components/Card": {
+      "types": "./dist/components/Card.d.ts",
+      "default": "./dist/components/Card.js"
+    },
+    "./components/Command": {
+      "types": "./dist/components/Command.d.ts",
+      "default": "./dist/components/Command.js"
+    },
+    "./components/CopyText": {
+      "types": "./dist/components/CopyText.d.ts",
+      "default": "./dist/components/CopyText.js"
+    },
+    "./components/DataTable": {
+      "types": "./dist/components/DataTable.d.ts",
+      "default": "./dist/components/DataTable.js"
+    },
+    "./components/DatePicker": {
+      "types": "./dist/components/DatePicker.d.ts",
+      "default": "./dist/components/DatePicker.js"
+    },
+    "./components/Dialog": {
+      "types": "./dist/components/Dialog.d.ts",
+      "default": "./dist/components/Dialog.js"
+    },
+    "./components/DropdownMenu": {
+      "types": "./dist/components/DropdownMenu.d.ts",
+      "default": "./dist/components/DropdownMenu.js"
+    },
+    "./components/EmptyState": {
+      "types": "./dist/components/EmptyState.d.ts",
+      "default": "./dist/components/EmptyState.js"
+    },
+    "./components/Error": {
+      "types": "./dist/components/Error.d.ts",
+      "default": "./dist/components/Error.js"
+    },
+    "./components/IconGrid": {
+      "types": "./dist/components/IconGrid.d.ts",
+      "default": "./dist/components/IconGrid.js"
+    },
+    "./components/IconPicker": {
+      "types": "./dist/components/IconPicker.d.ts",
+      "default": "./dist/components/IconPicker.js"
+    },
+    "./components/InfoButton": {
+      "types": "./dist/components/InfoButton.d.ts",
+      "default": "./dist/components/InfoButton.js"
+    },
+    "./components/Input": {
+      "types": "./dist/components/Input.d.ts",
+      "default": "./dist/components/Input.js"
+    },
+    "./components/InputOTP": {
+      "types": "./dist/components/InputOTP.d.ts",
+      "default": "./dist/components/InputOTP.js"
+    },
+    "./components/Label": {
+      "types": "./dist/components/Label.d.ts",
+      "default": "./dist/components/Label.js"
+    },
+    "./components/MultiSelect": {
+      "types": "./dist/components/MultiSelect.d.ts",
+      "default": "./dist/components/MultiSelect.js"
+    },
+    "./components/Pagination": {
+      "types": "./dist/components/Pagination.d.ts",
+      "default": "./dist/components/Pagination.js"
+    },
+    "./components/Popover": {
+      "types": "./dist/components/Popover.d.ts",
+      "default": "./dist/components/Popover.js"
+    },
+    "./components/Radio": {
+      "types": "./dist/components/Radio.d.ts",
+      "default": "./dist/components/Radio.js"
+    },
+    "./components/RadioGroup": {
+      "types": "./dist/components/RadioGroup.d.ts",
+      "default": "./dist/components/RadioGroup.js"
+    },
+    "./components/RangeCounter": {
+      "types": "./dist/components/RangeCounter.d.ts",
+      "default": "./dist/components/RangeCounter.js"
+    },
+    "./components/ScrollArea": {
+      "types": "./dist/components/ScrollArea.d.ts",
+      "default": "./dist/components/ScrollArea.js"
+    },
+    "./components/Select": {
+      "types": "./dist/components/Select.d.ts",
+      "default": "./dist/components/Select.js"
+    },
+    "./components/Separator": {
+      "types": "./dist/components/Separator.d.ts",
+      "default": "./dist/components/Separator.js"
+    },
+    "./components/Skeleton": {
+      "types": "./dist/components/Skeleton.d.ts",
+      "default": "./dist/components/Skeleton.js"
+    },
+    "./components/SideLabel": {
+      "types": "./dist/components/SideLabel.d.ts",
+      "default": "./dist/components/SideLabel.js"
+    },
+    "./components/StatusDot": {
+      "types": "./dist/components/StatusDot.d.ts",
+      "default": "./dist/components/StatusDot.js"
+    },
+    "./components/Switch": {
+      "types": "./dist/components/Switch.d.ts",
+      "default": "./dist/components/Switch.js"
+    },
+    "./components/Table": {
+      "types": "./dist/components/Table.d.ts",
+      "default": "./dist/components/Table.js"
+    },
+    "./components/Tabs": {
+      "types": "./dist/components/Tabs.d.ts",
+      "default": "./dist/components/Tabs.js"
+    },
+    "./components/Textarea": {
+      "types": "./dist/components/Textarea.d.ts",
+      "default": "./dist/components/Textarea.js"
+    },
+    "./components/Toaster": {
+      "types": "./dist/components/Toaster.d.ts",
+      "default": "./dist/components/Toaster.js"
+    },
+    "./components/Tooltip": {
+      "types": "./dist/components/Tooltip.d.ts",
+      "default": "./dist/components/Tooltip.js"
+    },
+    "./components/ErrorState": {
+      "types": "./dist/components/ErrorState.d.ts",
+      "default": "./dist/components/ErrorState.js"
+    },
+    "./components/Badge": {
+      "types": "./dist/components/Badge.d.ts",
+      "default": "./dist/components/Badge.js"
+    },
+    "./components/Collapsible": {
+      "types": "./dist/components/Collapsible.d.ts",
+      "default": "./dist/components/Collapsible.js"
+    },
+    "./components/StateContainer": {
+      "types": "./dist/components/StateContainer.d.ts",
+      "default": "./dist/components/StateContainer.js"
+    },
+    "./components/Spinner": {
+      "types": "./dist/components/Spinner.d.ts",
+      "default": "./dist/components/Spinner.js"
+    },
+    "./components/Accordion": {
+      "types": "./dist/components/Accordion.d.ts",
+      "default": "./dist/components/Accordion.js"
+    },
+    "./components/NavigationBlocker": {
+      "types": "./dist/components/NavigationBlocker.d.ts",
+      "default": "./dist/components/NavigationBlocker.js"
+    },
+    "./components/Sheet": {
+      "types": "./dist/components/Sheet.d.ts",
+      "default": "./dist/components/Sheet.js"
+    },
+    "./components/Async": {
+      "types": "./dist/components/Async.d.ts",
+      "default": "./dist/components/Async.js"
+    },
+    "./components/TimeSelect": {
+      "types": "./dist/components/TimeSelect.d.ts",
+      "default": "./dist/components/TimeSelect.js"
+    },
+    "./components/Progress": {
+      "types": "./dist/components/Progress.d.ts",
+      "default": "./dist/components/Progress.js"
+    },
+    "./molecules/AsideBrandLayout": {
+      "types": "./dist/molecules/AsideBrandLayout.d.ts",
+      "default": "./dist/molecules/AsideBrandLayout.js"
+    },
+    "./molecules/ConfirmDeleteDialog": {
+      "types": "./dist/molecules/ConfirmDeleteDialog.d.ts",
+      "default": "./dist/molecules/ConfirmDeleteDialog.js"
+    },
+    "./molecules/ConsentDialog": {
+      "types": "./dist/molecules/ConsentDialog.d.ts",
+      "default": "./dist/molecules/ConsentDialog.js"
+    },
+    "./molecules/DashboardLayout": {
+      "types": "./dist/molecules/DashboardLayout.d.ts",
+      "default": "./dist/molecules/DashboardLayout.js"
+    },
+    "./molecules/Notifications": {
+      "types": "./dist/molecules/Notifications.d.ts",
+      "default": "./dist/molecules/Notifications.js"
+    },
+    "./molecules/NotFound": {
+      "types": "./dist/molecules/NotFound.d.ts",
+      "default": "./dist/molecules/NotFound.js"
+    },
+    "./SpeziProvider": {
+      "types": "./dist/SpeziProvider.d.ts",
+      "default": "./dist/SpeziProvider.js"
+    },
+    "./forms": {
+      "types": "./dist/forms.d.ts",
+      "default": "./dist/forms.js"
+    },
+    "./modules/auth": {
+      "types": "./dist/modules/auth.d.ts",
+      "default": "./dist/modules/auth.js"
+    },
+    "./utils/className": {
+      "types": "./dist/utils/className.d.ts",
+      "default": "./dist/utils/className.js"
+    },
+    "./utils/date": {
+      "types": "./dist/utils/date.d.ts",
+      "default": "./dist/utils/date.js"
+    },
+    "./utils/file": {
+      "types": "./dist/utils/file.d.ts",
+      "default": "./dist/utils/file.js"
+    },
+    "./utils/misc": {
+      "types": "./dist/utils/misc.d.ts",
+      "default": "./dist/utils/misc.js"
+    },
+    "./utils/tailwind": {
+      "types": "./dist/utils/tailwind.d.ts",
+      "default": "./dist/utils/tailwind.js"
+    },
+    "./utils/useOpenState": {
+      "types": "./dist/utils/useOpenState.d.ts",
+      "default": "./dist/utils/useOpenState.js"
+    },
+    "./utils/useTimedFlag": {
+      "types": "./dist/utils/useTimedFlag.d.ts",
+      "default": "./dist/utils/useTimedFlag.js"
+    },
+    "./utils/navigator": {
+      "types": "./dist/utils/navigator.d.ts",
+      "default": "./dist/utils/navigator.js"
+    },
+    "./utils/query": {
+      "types": "./dist/utils/query.d.ts",
+      "default": "./dist/utils/query.js"
+    },
+    "./utils/dev": {
+      "types": "./dist/utils/dev.d.ts",
+      "default": "./dist/utils/dev.js"
+    },
+    "./utils/data": {
+      "types": "./dist/utils/data.d.ts",
+      "default": "./dist/utils/data.js"
+    },
+    "./utils/useMedia": {
+      "types": "./dist/utils/useMedia.d.ts",
+      "default": "./dist/utils/useMedia.js"
+    },
+    "./utils/useIsScrolled": {
+      "types": "./dist/utils/useIsScrolled.d.ts",
+      "default": "./dist/utils/useIsScrolled.js"
+    },
+    "./utils/react": {
+      "types": "./dist/utils/react.d.ts",
+      "default": "./dist/utils/react.js"
+    },
+    "./utils/getOrdinalSuffix": {
+      "types": "./dist/utils/getOrdinalSuffix.d.ts",
+      "default": "./dist/utils/getOrdinalSuffix.js"
+    },
+    "./utils/notImplementedToast": {
+      "types": "./dist/utils/notImplementedToast.d.ts",
+      "default": "./dist/utils/notImplementedToast.js"
+    }
+  },
+  "main": "dist/spezi-web-design-system.es.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && vite build",
+    "build-storybook": "storybook build",
+    "dev": "vite",
+    "docs": "typedoc",
+    "docs:ci": "typedoc --out ./out/docs --githubPages true",
+    "lint": "eslint .",
+    "lint:ci": "eslint --output-file eslint_report.json --format json .",
+    "lint:fix": "eslint . --fix",
+    "storybook": "storybook dev -p 6006",
+    "test": "vitest run --coverage",
+    "prepush": "npm run lint:fix && tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@nextui-org/use-pagination": "^2.2.3",
+    "@tanstack/match-sorter-utils": "^8.19.4",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.19",
+    "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
+    "date-fns": "^4.1.0",
+    "es-toolkit": "^1.45.1",
+    "firebase": "^12.10.0",
+    "input-otp": "^1.4.2",
+    "lucide-react": "^0.577.0",
+    "radix-ui": "^1.4.3",
+    "react-day-picker": "^9",
+    "react-hook-form": "^7.71.2",
+    "sonner": "^2.0.7",
+    "tw-animate-css": "^1.4.0",
+    "use-debounce": "^10.1.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@stanfordspezi/spezi-web-configurations": "^0.7.0",
+    "@storybook/addon-docs": "^10.2.15",
+    "@storybook/react-vite": "^10.2.15",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@tanstack/react-query": "^5.90.21",
+    "@testing-library/jest-dom": "^6",
+    "@testing-library/react": "^16",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-helmet": "^6.1.11",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.0.18",
+    "autoprefixer": "^10",
+    "eslint": "^9",
+    "eslint-plugin-jsdoc": "^62.7.1",
+    "jsdom": "^28.1.0",
+    "postcss": "^8",
+    "prettier": "^3",
+    "storybook": "^10.2.15",
+    "tailwindcss": "^4",
+    "typedoc": "^0.28",
+    "typescript": "^5",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-static-copy": "^3.2.0",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5",
+    "next-intl": "^4",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "engines": {
+    "node": "24"
+  }
+}

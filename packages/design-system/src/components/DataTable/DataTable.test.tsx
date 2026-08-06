@@ -1,0 +1,392 @@
+//
+// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+//
+// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+//
+
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { vitest } from "vitest";
+import {
+  columnHelper,
+  peopleColumn,
+  peopleColumns,
+  peopleData,
+} from "./DataTable.mocks";
+import { DataTable } from ".";
+
+describe("DataTable", () => {
+  const getTBody = () => {
+    // tBody exists, guaranteed by previous tests
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return screen.getByRole("table").querySelector("tbody")!;
+  };
+
+  const getRows = () => within(getTBody()).getAllByRole("row");
+
+  const expectNamesInGivenOrder = (data: typeof peopleData) =>
+    getRows().forEach((row, index) => {
+      const name = data.at(index)?.name;
+      expect(name).toBeDefined();
+      const cellColumn = within(row).getByRole("cell", { name });
+      expect(cellColumn).toBeInTheDocument();
+    });
+
+  const queryEmptyState = () => {
+    // Regex because text is broken with elements
+    return screen.queryByText(/No\sdata\sfound/);
+  };
+
+  const expectEmptyStateToBeInTheDocument = () => {
+    const emptyState = queryEmptyState();
+    expect(emptyState).toBeInTheDocument();
+  };
+
+  it("renders table element with respective columns", () => {
+    render(<DataTable columns={peopleColumns} data={peopleData} />);
+
+    const table = screen.getByRole("table");
+    expect(table).toBeInTheDocument();
+
+    const nameHead = screen.getByRole("columnheader", { name: "Name" });
+    expect(nameHead).toBeInTheDocument();
+
+    const someCell = screen.getByRole("cell", { name: peopleData.at(0)?.name });
+    expect(someCell).toBeInTheDocument();
+  });
+
+  describe("empty state", () => {
+    it("shows default empty state", () => {
+      render(<DataTable columns={peopleColumns} data={[]} />);
+
+      expectEmptyStateToBeInTheDocument();
+    });
+
+    it("shows entityName", () => {
+      render(
+        <DataTable columns={peopleColumns} data={[]} entityName="users" />,
+      );
+      const emptyStateWithEntityName = screen.getByText(/No\susers\sfound/);
+      expect(emptyStateWithEntityName).toBeInTheDocument();
+    });
+
+    it("shows customized messages", () => {
+      render(
+        <DataTable
+          columns={peopleColumns}
+          data={[]}
+          empty={{ children: "Custom error message" }}
+        />,
+      );
+      const customEmptyState = screen.getByText("Custom error message");
+      expect(customEmptyState).toBeInTheDocument();
+      const defaultEmptyState = queryEmptyState();
+      expect(defaultEmptyState).not.toBeInTheDocument();
+    });
+
+    it("shows no error state if empty overrides default checks", () => {
+      render(<DataTable columns={peopleColumns} data={[]} empty={false} />);
+      const emptyState = queryEmptyState();
+      expect(emptyState).not.toBeInTheDocument();
+    });
+  });
+
+  it("paginates data", () => {
+    render(
+      <DataTable columns={peopleColumns} data={peopleData} pageSize={2} />,
+    );
+
+    expect(getRows()).toHaveLength(2);
+    const paginationCounter = screen.getByText(`1-2 of ${peopleData.length}`);
+    expect(paginationCounter).toBeInTheDocument();
+
+    const pageFour = screen.getByRole("button", { name: "4" });
+    fireEvent.click(pageFour);
+
+    expect(getRows()).toHaveLength(1);
+    const lastCell = screen.getByRole("cell", {
+      name: peopleData.at(-1)?.name,
+    });
+    expect(lastCell).toBeInTheDocument();
+
+    const lastPagePaginationCounter = screen.getByText(
+      `7-7 of ${peopleData.length}`,
+    );
+    expect(lastPagePaginationCounter).toBeInTheDocument();
+  });
+
+  it("sorts data", () => {
+    render(
+      <DataTable columns={peopleColumns} data={peopleData} pageSize={2} />,
+    );
+
+    const enableDescSortButton = screen.getByRole("button", {
+      name: "Sort descending by Age column",
+    });
+    fireEvent.click(enableDescSortButton);
+    expectNamesInGivenOrder([...peopleData].sort((a, b) => b.age - a.age));
+
+    const enableAscSortButton = screen.getByRole("button", {
+      name: "Sort ascending by Age column",
+    });
+    fireEvent.click(enableAscSortButton);
+    expectNamesInGivenOrder([...peopleData].sort((a, b) => a.age - b.age));
+
+    const disabledSortButton = screen.getByRole("button", {
+      name: "Disable sorting by Age column",
+    });
+    fireEvent.click(disabledSortButton);
+    // Just order of the data
+    expectNamesInGivenOrder(peopleData);
+  });
+
+  it("filters data with fuzzy search", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={peopleColumns} data={peopleData} />);
+
+    const searchInput = screen.getByRole("textbox", { name: "Search..." });
+    await user.type(searchInput, "4");
+
+    // search is debounced, wait for it to happen
+    await screen.findByText("1-3 of 3");
+    expectNamesInGivenOrder(
+      peopleData.filter((person) => person.age.toString().includes("4")),
+    );
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "lor");
+
+    await screen.findByText("1-1 of 1");
+    expectNamesInGivenOrder(
+      peopleData.filter((person) => person.name.toLowerCase().includes("lor")),
+    );
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "1111");
+
+    const emptyState = await screen.findByText(/No data found/);
+    expect(emptyState).toBeInTheDocument();
+    const searchTextDisplayed = screen.getByText(/"1111"/);
+    expect(searchTextDisplayed).toBeInTheDocument();
+  });
+
+  it("shows correct filters empty state", () => {
+    const initialState = {
+      columnFilters: [{ id: peopleColumn.age.id ?? "", value: 9999 }],
+    };
+    const { rerender } = render(
+      <DataTable
+        columns={peopleColumns}
+        data={peopleData}
+        initialState={initialState}
+      />,
+    );
+
+    const emptyState = screen.getByText(
+      /No\sdata\sfound\sfor\syour\sselected\sfilters/,
+    );
+    expect(emptyState).toBeInTheDocument();
+
+    rerender(
+      <DataTable
+        columns={peopleColumns}
+        data={[]}
+        initialState={initialState}
+      />,
+    );
+
+    // When there is no data at all, it shows regular message
+    const emptyStateForFilters = screen.queryByText(
+      /No\sdata\sfound\sfor\syour\sselected\sfilters/,
+    );
+    expect(emptyStateForFilters).not.toBeInTheDocument();
+  });
+
+  it("supports entityName for search", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable
+        columns={peopleColumns}
+        data={peopleData}
+        entityName="users"
+      />,
+    );
+
+    const searchInput = screen.getByRole("textbox", {
+      name: "Search users...",
+    });
+    await user.type(searchInput, "44444lorem44444");
+
+    const emptyState = await screen.findByText(/No users found/);
+    expect(emptyState).toBeInTheDocument();
+  });
+
+  describe("minimal", () => {
+    it("hides header", () => {
+      render(<DataTable columns={peopleColumns} data={peopleData} minimal />);
+
+      const searchInput = screen.queryByRole("textbox", { name: "Search..." });
+      expect(searchInput).not.toBeInTheDocument();
+    });
+
+    it("hides pagination counter if no pagination to show", () => {
+      render(<DataTable columns={peopleColumns} data={peopleData} minimal />);
+
+      const paginationCounter = screen.queryByRole("1-7 of 7");
+      expect(paginationCounter).not.toBeInTheDocument();
+    });
+
+    it("shows pagination counter if paginated", () => {
+      render(
+        <DataTable
+          columns={peopleColumns}
+          data={peopleData}
+          minimal
+          pageSize={2}
+        />,
+      );
+
+      const paginationCounter = screen.getByText("1-2 of 7");
+      expect(paginationCounter).toBeInTheDocument();
+    });
+  });
+
+  describe("row click", () => {
+    it("calls onRowClick when clicking table cell", () => {
+      const onRowClick = vitest.fn();
+      render(
+        <DataTable
+          columns={peopleColumns}
+          data={peopleData}
+          tableView={{ onRowClick }}
+        />,
+      );
+
+      const firstCell = screen.getByRole("cell", {
+        name: peopleData[0]?.name,
+      });
+      fireEvent.click(firstCell);
+
+      expect(onRowClick).toHaveBeenCalledWith(peopleData[0], expect.anything());
+    });
+
+    it("supports custom isRowClicked", () => {
+      const onRowClick = vitest.fn();
+      const isRowClicked = vitest.fn(() => true);
+      render(
+        <DataTable
+          columns={peopleColumns}
+          data={peopleData}
+          tableView={{ onRowClick, isRowClicked }}
+        />,
+      );
+
+      const firstCell = screen.getByRole("cell", {
+        name: peopleData[0]?.name,
+      });
+      fireEvent.click(firstCell);
+
+      expect(isRowClicked).toHaveBeenCalled();
+      expect(onRowClick).toHaveBeenCalledWith(peopleData[0], expect.anything());
+    });
+  });
+
+  describe("cellClassName", () => {
+    it("applies static cellClassName to cells", () => {
+      const columns = [
+        columnHelper.accessor("name", {
+          header: "Name",
+          id: "name",
+          meta: { cellClassName: "bg-success/10 text-success" },
+        }),
+        peopleColumn.age,
+      ];
+      render(<DataTable columns={columns} data={peopleData} />);
+
+      const nameCell = screen.getByRole("cell", {
+        name: peopleData.at(0)?.name,
+      });
+      expect(nameCell).toHaveClass("bg-success/10", "text-success");
+
+      const ageCell = screen.getByRole("cell", {
+        name: String(peopleData.at(0)?.age),
+      });
+      expect(ageCell).not.toHaveClass("bg-success/10");
+    });
+
+    it("applies dynamic cellClassName based on cell value", () => {
+      const columns = [
+        peopleColumn.name,
+        columnHelper.accessor("age", {
+          header: "Age",
+          id: "age",
+          meta: {
+            cellClassName: (ctx) => {
+              const age = ctx.getValue();
+              if (age < 18) return "bg-warning/10 text-warning-dark";
+              return "bg-success/10 text-success";
+            },
+          },
+        }),
+      ];
+      render(<DataTable columns={columns} data={peopleData} />);
+
+      // Ralph is 12, should get warning
+      const youngCell = screen.getByRole("cell", { name: "12" });
+      expect(youngCell).toHaveClass("bg-warning/10", "text-warning-dark");
+
+      // John is 52, should get success
+      const olderCell = screen.getByRole("cell", { name: "52" });
+      expect(olderCell).toHaveClass("bg-success/10", "text-success");
+    });
+
+    it("does not add extra classes when meta is undefined", () => {
+      render(<DataTable columns={peopleColumns} data={peopleData} />);
+
+      const cell = screen.getByRole("cell", {
+        name: peopleData.at(0)?.name,
+      });
+      expect(cell).toHaveClass("p-4");
+      expect(cell.className).not.toContain("bg-");
+    });
+  });
+
+  describe("custom view", () => {
+    it("renders people using custom view", () => {
+      render(
+        <DataTable columns={peopleColumns} data={peopleData}>
+          {({ rows }) => (
+            <>
+              {rows.map((row) => {
+                const person = row.original;
+                return (
+                  <div key={row.id} role="row">
+                    Person name - {person.name}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </DataTable>,
+      );
+
+      const roles = screen.getAllByRole("row");
+      expect(roles).toHaveLength(peopleData.length);
+
+      const john = screen.getByText("Person name - John");
+      expect(john).toBeInTheDocument();
+    });
+
+    it("shows empty state", () => {
+      render(
+        <DataTable columns={peopleColumns} data={[]}>
+          {() => null}
+        </DataTable>,
+      );
+
+      expectEmptyStateToBeInTheDocument();
+    });
+  });
+});
