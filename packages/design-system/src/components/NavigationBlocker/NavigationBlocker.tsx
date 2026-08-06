@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -20,8 +20,10 @@ import {
 
 export type BlockerStatus = "idle" | "blocked";
 
-export interface NavigationBlockerProps
-  extends Omit<ComponentProps<typeof Dialog>, "open"> {
+export interface NavigationBlockerProps extends Omit<
+  ComponentProps<typeof Dialog>,
+  "open"
+> {
   /**
    * Controls whether the native browser beforeunload prompt should be enabled.
    * When true and {@link NavigationBlockerProps#shouldBlock|shouldBlock} is true, a native prompt will appear on page reload/close.

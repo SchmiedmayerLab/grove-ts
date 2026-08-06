@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -63,36 +63,26 @@ const features = [
 
 const projects = [
   {
-    title: "ENGAGE-HF Web Frontend",
-    description: "Heart failure management platform",
-    url: "https://github.com/StanfordBDHG/ENGAGE-HF-Web-Frontend",
-  },
-  {
-    title: "Spezi Web Study Platform",
-    description: "Research study management system",
-    url: "https://github.com/StanfordSpezi/spezi-web-study-platform",
-  },
-  {
-    title: "RadGPT",
-    description: "AI-powered radiology assistance tool",
-    url: "https://github.com/StanfordBDHG/RadGPT",
+    title: "Grove TypeScript",
+    description: "The complete Grove package collection",
+    url: "https://github.com/SchmiedmayerLab/grove-ts",
   },
 ];
 
 const packages = [
   {
-    title: "spezi-web-configurations",
+    title: "@schmiedmayerlab/grove-configurations",
     description:
-      "Shared ESLint, Prettier, and TypeScript configurations used across Spezi Web projects.",
+      "Shared ESLint, Prettier, and TypeScript configurations used across Grove Web projects.",
     buttonText: "View Package",
-    url: "https://github.com/StanfordSpezi/spezi-web-configurations",
+    url: "https://github.com/SchmiedmayerLab/grove-ts/tree/main/packages/configurations",
   },
   {
-    title: "spezi-web-template-application",
+    title: "Grove Firebase",
     description:
-      "Complete application template combining all Spezi Web packages for rapid bootstrapping.",
-    buttonText: "View Template",
-    url: "https://github.com/StanfordSpezi/spezi-web-template-application",
+      "Firebase messaging, FHIR, and shared utility packages for TypeScript applications.",
+    buttonText: "View Packages",
+    url: "https://github.com/SchmiedmayerLab/grove-ts/tree/main/packages",
   },
 ];
 
@@ -105,7 +95,7 @@ export const Landing = () => (
             <Sparkles className={styles.badgeIcon} />
             <span>Batteries-included app building kit</span>
           </div>
-          <h1 className={styles.title}>Spezi Web Design System</h1>
+          <h1 className={styles.title}>Grove Design System</h1>
           <p className={styles.subtitle}>
             An opinionated, feature-rich frontend toolset for rapid application
             development.
@@ -115,12 +105,12 @@ export const Landing = () => (
             hatches. You build what matters for your users, we handle the rest.
           </p>
           <div className={styles.buttons}>
-            <Link className={styles.primaryButton} href="/docs/why-spezi">
+            <Link className={styles.primaryButton} href="/docs/why-grove">
               <BookOpen className={styles.buttonIcon} />
               Docs
             </Link>
             <Link
-              href="https://spezi.health/spezi-web-design-system/storybook"
+              href="https://schmiedmayerlab.github.io/grove-ts/storybook/"
               className={styles.secondaryButton}
             >
               <svg
@@ -157,7 +147,7 @@ export const Landing = () => (
               Storybook
             </Link>
             <Link
-              href="https://github.com/StanfordSpezi/spezi-web-design-system"
+              href="https://github.com/SchmiedmayerLab/grove-ts"
               className={styles.secondaryButton}
             >
               <Github className={styles.buttonIcon} />
@@ -201,9 +191,9 @@ export const Landing = () => (
     <section className={styles.productionSection}>
       <div className={styles.container}>
         <div className={styles.content}>
-          <h2 className={styles.sectionTitle}>Used in Production</h2>
+          <h2 className={styles.sectionTitle}>Explore Grove</h2>
           <p className={styles.sectionSubtitle}>
-            Real-world Stanford projects using this library
+            Browse the complete source and package collection
           </p>
           <div className={styles.productionGrid}>
             {projects.map((project, index) => (
@@ -213,7 +203,7 @@ export const Landing = () => (
                   {project.description}
                 </p>
                 <Link href={project.url} className={styles.productionButton}>
-                  View Project
+                  View Repository
                 </Link>
               </div>
             ))}
@@ -225,7 +215,7 @@ export const Landing = () => (
       <div className={styles.container}>
         <div className={styles.content}>
           <h2 className={styles.sectionTitle}>
-            Part of the Spezi Web Ecosystem
+            Part of the Grove Ecosystem
           </h2>
           <div className={styles.ecosystemGrid}>
             {packages.map((pkg, index) => (
@@ -250,7 +240,7 @@ export const Landing = () => (
             Ready to Build Something Amazing?
           </h2>
           <p className={styles.actionsSubtitle}>
-            Choose your path to get started with Spezi Web Design System
+            Choose your path to get started with Grove Design System
           </p>
           <div className={styles.actionsGrid}>
             <div className={styles.actionCard}>
@@ -289,16 +279,15 @@ export const Landing = () => (
               <div className={styles.actionIconWrapper}>
                 <Zap className={styles.actionIcon} />
               </div>
-              <h3 className={styles.actionCardTitle}>Start with Template</h3>
+              <h3 className={styles.actionCardTitle}>Explore the Repository</h3>
               <p className={styles.actionCardDescription}>
-                Jump right in with our complete application template. Everything
-                configured and ready to go in seconds.
+                Browse the source, packages, examples, and contribution guidance.
               </p>
               <Link
-                href="https://github.com/StanfordSpezi/spezi-web-template-application"
+                href="https://github.com/SchmiedmayerLab/grove-ts"
                 className={styles.actionCardButton}
               >
-                Use Template Application
+                View Grove on GitHub
                 <svg
                   className={styles.actionArrow}
                   fill="none"

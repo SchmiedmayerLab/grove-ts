@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -138,8 +138,10 @@ export const MultiSelect = ({
   );
 };
 
-interface MultiSelectTriggerProps
-  extends Omit<ComponentProps<typeof Button>, "size" | "variant"> {}
+interface MultiSelectTriggerProps extends Omit<
+  ComponentProps<typeof Button>,
+  "size" | "variant"
+> {}
 
 /**
  * Clickable trigger element that opens the selection popover.
@@ -185,8 +187,10 @@ export const MultiSelectTrigger = ({
   );
 };
 
-interface MultiSelectValueProps
-  extends Omit<ComponentProps<"div">, "children"> {
+interface MultiSelectValueProps extends Omit<
+  ComponentProps<"div">,
+  "children"
+> {
   /**
    * Placeholder text to show when no items are selected.
    */
@@ -260,7 +264,7 @@ export const MultiSelectValue = ({
 
   useLayoutEffect(() => {
     // Syncs DOM measurements with state — legitimate effect usage
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     checkOverflow();
   }, [selectedValues, checkOverflow, shouldWrap]);
 
@@ -335,8 +339,10 @@ export const MultiSelectValue = ({
   );
 };
 
-interface MultiSelectContentProps
-  extends Omit<ComponentProps<typeof Command>, "children"> {
+interface MultiSelectContentProps extends Omit<
+  ComponentProps<typeof Command>,
+  "children"
+> {
   /**
    * Enable or disable the search input. Accepts three possible values:
    * - `true`: shows a search input with default placeholder and empty message.
@@ -424,8 +430,10 @@ export const MultiSelectContent = ({
   );
 };
 
-interface MultiSelectItemProps
-  extends Omit<ComponentProps<typeof CommandItem>, "value"> {
+interface MultiSelectItemProps extends Omit<
+  ComponentProps<typeof CommandItem>,
+  "value"
+> {
   /**
    * The unique value for this item within the selection.
    */

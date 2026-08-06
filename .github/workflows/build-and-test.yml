@@ -1,7 +1,7 @@
 #
-# This source file is part of the Stanford Biodesign Digital Health Next.js Template open-source project
+# This source file is part of the Grove open-source project
 #
-# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
 #
@@ -23,20 +23,29 @@ on:
 jobs:
   reuseaction:
     name: REUSE Compliance Check
-    uses: StanfordBDHG/.github/.github/workflows/reuse.yml@v2
+    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.3
   markdownlinkcheck:
     name: Markdown Link Check
-    uses: StanfordBDHG/.github/.github/workflows/markdown-link-check.yml@v2
-  eslint:
-    name: ESLint
-    uses: StanfordBDHG/.github/.github/workflows/eslint.yml@v2
-    permissions:
-      contents: read
-      checks: write
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3
+  buildandlint:
+    name: Build and Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build packages
+        run: npm run build
+      - name: Lint packages
+        run: npm run lint
   testandcoverage:
     name: Test and Coverage
-    uses: StanfordBDHG/.github/.github/workflows/npm-test-and-coverage.yml@v2
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3
     with:
-      nodeVersion: 22
+      nodeVersion: 24
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -21,7 +21,7 @@ import { configDefaults } from "vitest/config";
  */
 const entires = [
   ["index", "src/index.ts"],
-  ["SpeziProvider", "src/SpeziProvider.tsx"],
+  ["GroveProvider", "src/GroveProvider.tsx"],
   ["forms", "src/forms/index.tsx"],
   ...fs
     .readdirSync(path.resolve(__dirname, `src/components`))
@@ -76,7 +76,7 @@ export default defineConfig({
       entry: Object.fromEntries(
         entires.map((entry) => [entry[0], path.resolve(__dirname, entry[1])]),
       ),
-      name: "@stanfordspezi/spezi-web-design-system",
+      name: "@schmiedmayerlab/grove-design-system",
       fileName: (format, name) => {
         if (format === "es") return `${name}.js`;
         return `${name}.${format}`;

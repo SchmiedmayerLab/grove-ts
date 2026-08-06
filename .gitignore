@@ -1,7 +1,7 @@
 #
-# This source file is part of the Stanford Spezi Firebase Remote Notifications open-source project
+# This source file is part of the Grove open-source project
 #
-# SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
 #
@@ -23,10 +23,12 @@
 
 # production
 /build
+/.parcel-cache
 
 # packages build output
 /packages/*/lib
 /packages/*/dist
+/packages/*/storybook-static
 
 # misc
 .DS_Store

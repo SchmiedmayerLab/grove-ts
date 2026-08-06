@@ -1,0 +1,56 @@
+//
+// This source file is part of the Grove open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+//
+
+import { type Dosage } from 'fhir/r4b.js'
+import { z, type ZodType } from 'zod'
+import { codeableConceptSchema } from './dataTypes/codeableConcept.js'
+import {
+  booleanSchema,
+  intSchema,
+  stringSchema,
+} from './dataTypes/primitiveTypes.js'
+import { quantitySchema } from './dataTypes/quantity.js'
+import { rangeSchema } from './dataTypes/range.js'
+import { ratioSchema } from './dataTypes/ratio.js'
+import { timingSchema } from './dataTypes/timing.js'
+import { elementSchema } from './element.js'
+
+/**
+ * Zod schema for FHIR Dosage data type.
+ */
+export const untypedDosageSchema = z.lazy(() =>
+  elementSchema.extend({
+    sequence: intSchema.optional(),
+    text: stringSchema.optional(),
+    _text: elementSchema.optional(),
+    additionalInstruction: codeableConceptSchema.array().optional(),
+    patientInstruction: stringSchema.optional(),
+    _patientInstruction: elementSchema.optional(),
+    timing: timingSchema.optional(),
+    asNeededBoolean: booleanSchema.optional(),
+    _asNeededBoolean: elementSchema.optional(),
+    asNeededCodeableConcept: codeableConceptSchema.optional(),
+    site: codeableConceptSchema.optional(),
+    route: codeableConceptSchema.optional(),
+    method: codeableConceptSchema.optional(),
+    doseAndRate: elementSchema
+      .extend({
+        type: codeableConceptSchema.optional(),
+        doseQuantity: quantitySchema.optional(),
+        rateRatio: ratioSchema.optional(),
+        rateRange: rangeSchema.optional(),
+      })
+      .array()
+      .optional(),
+  }),
+) satisfies ZodType<Dosage>
+
+/**
+ * Zod schema for FHIR Dosage data type.
+ */
+export const dosageSchema: ZodType<Dosage> = untypedDosageSchema

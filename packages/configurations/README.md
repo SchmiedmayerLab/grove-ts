@@ -1,18 +1,17 @@
 <!--
 
-This source file is part of the Stanford Biodesign Digital Health Spezi Web Configurations open-source project
+This source file is part of the Grove open-source project
 
-SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
 -->
 
-# Biodesign Digital Health Spezi Web Configurations
+# Grove Configurations
 
-[![Build and Test](https://github.com/StanfordSpezi/spezi-web-configurations/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/StanfordSpezi/spezi-web-configurations/actions/workflows/build-and-test.yml)
-[![Deployment](https://github.com/StanfordSpezi/spezi-web-configurations/actions/workflows/deployment.yml/badge.svg)](https://github.com/StanfordSpezi/spezi-web-configurations/actions/workflows/deployment.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10052055.svg)](https://doi.org/10.5281/zenodo.10052055)
+[![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
+[![Deployment](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml)
 
 ## Getting Started
 
@@ -25,7 +24,7 @@ Configurations are opinionated and strict. We aim to catch as many possible mist
 Install dependencies:
 
 ```bash
-npm install --save-dev prettier eslint @stanfordspezi/spezi-web-configurations
+npm install --save-dev prettier eslint @schmiedmayerlab/grove-configurations
 ```
 
 Create `eslint.config.js` file.
@@ -33,7 +32,7 @@ Create `eslint.config.js` file.
 If aiming for React, use:
 
 ```javascript
-const { getEslintReactConfig } = require('@stanfordspezi/spezi-web-configurations')
+const { getEslintReactConfig } = require('@schmiedmayerlab/grove-configurations')
 
 module.exports = getEslintReactConfig({ tsconfigRootDir: __dirname })
 ```
@@ -41,7 +40,7 @@ module.exports = getEslintReactConfig({ tsconfigRootDir: __dirname })
 If aiming for Node application, use:
 
 ```javascript
-const { getEslintNodeConfig } = require('@stanfordspezi/spezi-web-configurations')
+const { getEslintNodeConfig } = require('@schmiedmayerlab/grove-configurations')
 
 module.exports = getEslintNodeConfig({ tsconfigRootDir: __dirname })
 ```
@@ -49,7 +48,7 @@ module.exports = getEslintNodeConfig({ tsconfigRootDir: __dirname })
 Create `.prettierrc.js` file:
 
 ```javascript
-const { prettierConfig } = require("@stanfordspezi/spezi-web-configurations");
+const { prettierConfig } = require("@schmiedmayerlab/grove-configurations");
 
 module.exports = prettierConfig;
 ```
@@ -87,7 +86,7 @@ const {
     getReactPlugins,
     getPrettierPlugin,
     getTslint,
-} = require("@stanfordspezi/spezi-web-configurations");
+} = require("@schmiedmayerlab/grove-configurations");
 const tseslint = require("typescript-eslint");
 
 module.exports = tseslint.config(
@@ -113,12 +112,9 @@ module.exports = tseslint.config(
 
 ## License
 
-This project is licensed under the MIT License. See [Licenses](https://github.com/StanfordSpezi/spezi-web-configurations/tree/main/LICENSES) for more information.
+This project is licensed under the MIT License. See [Licenses](https://github.com/SchmiedmayerLab/grove-ts/tree/main/LICENSES) for more information.
 
 ## Contributors
 
-This project is developed as part of the Stanford Byers Center for Biodesign at Stanford University.
-See [CONTRIBUTORS.md](https://github.com/StanfordSpezi/spezi-web-configurations/tree/main/CONTRIBUTORS.md) for a full list of all Next.js Template contributors.
-
-![Stanford Byers Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-light.png#gh-light-mode-only)
-![Stanford Byers Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-dark.png#gh-dark-mode-only)
+This project is developed as part of the Schmiedmayer Lab at Stanford University.
+See the repository's [CONTRIBUTORS.md](../../CONTRIBUTORS.md).

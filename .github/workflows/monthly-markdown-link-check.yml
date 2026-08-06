@@ -1,7 +1,7 @@
 #
-# This source file is part of the Stanford Biodesign Digital Health Next.js Template open-source project
+# This source file is part of the Grove open-source project
 #
-# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
 #
@@ -15,4 +15,4 @@ on:
 jobs:
   markdown_link_check:
     name: Markdown Link Check
-    uses: StanfordBDHG/.github/.github/workflows/markdown-link-check.yml@v2
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3

@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -9,7 +9,7 @@
 import { RouteOff } from "lucide-react";
 import { type ComponentProps, type ReactNode } from "react";
 import { Button } from "@/components/Button";
-import { useSpeziContext } from "@/SpeziProvider";
+import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
 
 /**
@@ -124,7 +124,7 @@ export const NotFound = ({
 }: NotFoundProps) => {
   const {
     router: { Link },
-  } = useSpeziContext();
+  } = useGroveContext();
   return (
     <NotFoundContainer className={className}>
       <NotFoundIcon />

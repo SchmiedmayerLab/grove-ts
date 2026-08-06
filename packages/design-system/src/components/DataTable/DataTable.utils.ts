@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -51,8 +51,7 @@ declare module "@tanstack/react-table" {
      * ```
      */
     cellClassName?:
-      | string
-      | ((context: CellContext<TData, TValue>) => string | undefined);
+      string | ((context: CellContext<TData, TValue>) => string | undefined);
   }
 }
 
@@ -76,8 +75,10 @@ export const fuzzyFilter: FilterFn<unknown> = (
   return itemRank.passed;
 };
 
-export interface UseDataTableProps<Data>
-  extends PartialSome<TableOptions<Data>, "getCoreRowModel" | "filterFns"> {
+export interface UseDataTableProps<Data> extends PartialSome<
+  TableOptions<Data>,
+  "getCoreRowModel" | "filterFns"
+> {
   /**
    * Defines how many items are displayed per one page.
    *

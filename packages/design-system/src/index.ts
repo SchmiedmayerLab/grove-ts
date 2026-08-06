@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -67,7 +67,7 @@ export * from "./molecules/ConsentDialog";
 export * from "./molecules/DashboardLayout";
 export * from "./molecules/NotFound";
 export * from "./molecules/Notifications";
-export * from "./SpeziProvider";
+export * from "./GroveProvider";
 export * from "./theme/light";
 export * from "./theme/utils";
 export * from "./utils/className";

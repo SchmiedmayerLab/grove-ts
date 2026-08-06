@@ -1,7 +1,7 @@
 #
-# This source file is part of the Stanford Biodesign Digital Health Spezi NPM package publication workflow
+# This source file is part of the Grove open-source project
 #
-# SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
 #
@@ -30,7 +30,7 @@ jobs:
   publishpackage:
     name: Publish Package
     needs: build-and-test
-    uses: StanfordBDHG/.github/.github/workflows/npm-publish-package.yml@v2
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-publish.yml@v0.3
     permissions:
       contents: read
       id-token: write
@@ -38,5 +38,14 @@ jobs:
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     with:
+      nodeVersion: 24
       packageVersion: ${{ github.event.release.tag_name }}
       workspaces: true
+  deploy-pages:
+    name: Deploy GitHub Pages
+    needs: build-and-test
+    uses: ./.github/workflows/deploy-pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

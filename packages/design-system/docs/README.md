@@ -1,16 +1,16 @@
 <!--
 
-This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+This source file is part of the Grove open-source project
 
-SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
 -->
 
-# Spezi Web Design System Documentation
+# Grove Design System Documentation
 
-This documentation website is built using [Docusaurus 3](https://docusaurus.io/), a modern static website generator. It provides comprehensive documentation for the Spezi Web Design System, including guides and auto-generated API reference.
+This documentation website is built using [Docusaurus 3](https://docusaurus.io/). It provides guides and an auto-generated API reference for Grove Design System.
 
 ## Prerequisites
 
@@ -103,7 +103,7 @@ The documentation is automatically deployed to GitHub Pages via GitHub Actions w
 
 1. Builds the documentation site
 2. Deploys to the `gh-pages` branch
-3. Makes the site available at `https://spezi.health/spezi-web-design-system/docs`
+3. Makes the site available at `https://schmiedmayerlab.github.io/grove-ts/docs/`
 
 ### Getting Help
 

@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -80,6 +80,7 @@ describe("useMedia", () => {
       mockMatchMedia(false);
       renderHook(() => useIsScreen("md"));
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(window.matchMedia).toHaveBeenCalledWith(
         `(min-width: ${screens.md})`,
       );

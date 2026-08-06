@@ -1,13 +1,13 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
 
 import { type ReactNode, useContext } from "react";
-import { useSpeziContext } from "@/SpeziProvider";
+import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
 import { DashboardContext } from "./DashboardContext";
 import { Tooltip } from "../../components/Tooltip";
@@ -71,7 +71,7 @@ export const MenuItem = ({
   const { shrinkable } = useContext(DashboardContext);
   const {
     router: { Link },
-  } = useSpeziContext();
+  } = useGroveContext();
 
   const content = (
     <Link

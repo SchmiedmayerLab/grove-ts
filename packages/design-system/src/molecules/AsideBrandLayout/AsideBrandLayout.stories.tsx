@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -56,10 +56,10 @@ export const Branded: Story = {
   render: () => (
     <AsideBrandLayoutRoot>
       <AsideBrandLayoutAside>
-        <h1 className="text-2xl font-bold">Spezi Web Design System</h1>
+        <h1 className="text-2xl font-bold">Grove Web Design System</h1>
         <img
-          src="https://biodesign.stanford.edu/_jcr_content/local-header/_jcr_content/custom-logo.img.full.high.png"
-          alt="Stanford Byers Center for Biodesign Logo"
+          src="https://github.com/SchmiedmayerLab/_jcr_content/local-header/_jcr_content/custom-logo.img.full.high.png"
+          alt="Schmiedmayer Lab Logo"
           className="w-40"
         />
       </AsideBrandLayoutAside>

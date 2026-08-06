@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -15,8 +15,10 @@ import {
   DropdownMenuTrigger,
 } from "../../DropdownMenu";
 
-interface RowDropdownMenuProps
-  extends Pick<ComponentProps<typeof DropdownMenuContent>, "align"> {
+interface RowDropdownMenuProps extends Pick<
+  ComponentProps<typeof DropdownMenuContent>,
+  "align"
+> {
   /**
    * Pass DropdownMenuContent children.
    */

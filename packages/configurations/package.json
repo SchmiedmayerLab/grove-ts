@@ -1,14 +1,13 @@
 {
-  "name": "@stanfordspezi/spezi-web-configurations",
-  "description": "Stanford Biodesign Digital Health Spezi Web Configurations",
+  "name": "@schmiedmayerlab/grove-configurations",
+  "version": "0.0.0",
+  "description": "Shared ESLint and Prettier configurations for Grove TypeScript projects",
   "keywords": [
-    "Stanford",
-    "Biodesign",
-    "Spezi",
-    "Web",
-    "Configurations",
-    "ESLint",
-    "Prettier",
+    "grove",
+    "typescript",
+    "configuration",
+    "eslint",
+    "prettier",
     "linting",
     "formatting"
   ],
@@ -18,7 +17,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/StanfordSpezi/spezi-web-configurations"
+    "url": "https://github.com/SchmiedmayerLab/grove-ts.git",
+    "directory": "packages/configurations"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "source": "src/index.ts",

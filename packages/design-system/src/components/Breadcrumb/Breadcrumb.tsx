@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/DropdownMenu";
-import { useSpeziContext } from "@/SpeziProvider";
+import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
 import { type AsChildProp } from "@/utils/misc";
 
@@ -74,7 +74,7 @@ export const BreadcrumbLink = ({
 }: BreadcrumbLinkProps) => {
   const {
     router: { Link },
-  } = useSpeziContext();
+  } = useGroveContext();
   const Comp = asChild ? Slot.Root : Link;
 
   return (
@@ -184,7 +184,7 @@ const BreadcrumbCompleteItem = ({
 }: BreadcrumbCompleteItemProps) => {
   const {
     router: { Link },
-  } = useSpeziContext();
+  } = useGroveContext();
   return (
     <>
       <BreadcrumbItem>
@@ -241,7 +241,7 @@ export const Breadcrumbs = ({
 }: BreadcrumbsProps) => {
   const {
     router: { Link },
-  } = useSpeziContext();
+  } = useGroveContext();
   const firstBreadcrumb = breadcrumbs.at(0);
   const hasTruncatedBreadcrumbs = breadcrumbs.length > maxToDisplay;
   const remainingBreadcrumbs =

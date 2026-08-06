@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -32,8 +32,7 @@ export type DataTableViewProps<Data> = {
 type ViewRenderProp<Data> = (props: DataTableViewProps<Data>) => ReactNode;
 
 export interface DataTableProps<Data>
-  extends UseDataTableProps<Data>,
-    Pick<AsyncProps, "error" | "loading"> {
+  extends UseDataTableProps<Data>, Pick<AsyncProps, "error" | "loading"> {
   /**
    * Additional CSS classes to apply to the DataTable container.
    */

@@ -18,7 +18,7 @@
   "exclude": ["node_modules", "**/lib/**"],
   "typedocOptions": {
     "entryPoints": ["packages/*"],
-    "name": "Stanford Biodesign Digital Health Spezi Firebase",
+    "name": "Grove",
     "entryPointStrategy": "packages",
     "includeVersion": false
   }

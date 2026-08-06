@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -13,7 +13,7 @@ interface StorybookEmbedProps {
 }
 
 const StorybookEmbed = ({ id }: StorybookEmbedProps) => {
-  let baseStorybook = `https://spezi.health/spezi-web-design-system/storybook`;
+  const baseStorybook = "https://schmiedmayerlab.github.io/grove-ts/storybook";
   return (
     <>
       <a

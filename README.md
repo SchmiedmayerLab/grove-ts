@@ -1,222 +1,72 @@
 <!--
 
-This source file is part of the Stanford Biodesign Digital Health Spezi Firebae open-source project
+This source file is part of the Grove open-source project
 
-SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
 -->
 
-# Spezi Firebase
+# Grove
 
-[![Build and Test](https://github.com/StanfordSpezi/spezi-firebase/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/StanfordSpezi/spezi-firebase/actions/workflows/build-and-test.yml)
-[![codecov](https://codecov.io/gh/StanfordSpezi/spezi-firebase/graph/badge.svg)](https://codecov.io/gh/StanfordSpezi/spezi-firebase)
+[![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
+[![CodeQL](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml)
+[![Deployment](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml)
+[![codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/branch/main/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
 
-A collection of Firebase utilities and further components to kickstart the development for firebase-related functions in the Stanford Spezi Ecosystem.
+Grove provides reusable TypeScript tooling, accessible React components, and Firebase utilities for building reliable web and cloud applications.
 
-## Repository Structure
+## Packages
 
-This repository is organized as an npm workspace containing two main packages:
+| Package                                                                                  | Description                                                |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| [`@schmiedmayerlab/grove-configurations`](./packages/configurations)                     | Shared ESLint and Prettier configurations                  |
+| [`@schmiedmayerlab/grove-design-system`](./packages/design-system)                       | Reusable React components, layouts, forms, and utilities   |
+| [`@schmiedmayerlab/grove-firebase-cloud-messaging`](./packages/firebase-cloud-messaging) | Firebase Cloud Messaging and device-registration utilities |
+| [`@schmiedmayerlab/grove-firebase-fhir`](./packages/firebase-fhir)                       | Type-safe FHIR R4B schemas and helpers                     |
+| [`@schmiedmayerlab/grove-firebase-utils`](./packages/firebase-utils)                     | Shared Firebase and data-conversion utilities              |
 
-- **spezi-firebase-utils** (`packages/spezi-firebase-utils`): Base utility functions for Firebase projects
-- **spezi-firebase-cloud-messaging** (`packages/spezi-firebase-cloud-messaging`): Firebase Cloud Messaging (FCM) remote notifications package that builds on the utilities
+## Development
 
-## Features
+Requirements:
 
-- Device registration and token management
-- Multi-language notification support
-- Platform-specific message formatting (iOS, Android, Web)
-- Support for rich notification content
-- Token invalidation handling
-- Firestore integration for device storage
+- Node.js 24
+- npm
 
-## Installation
-
-### For End Users
-
-Install the packages you need:
+Install dependencies, build every package, and run the test suites:
 
 ```bash
-# For Firebase Cloud Messaging functionality
-npm install @stanfordspezi/spezi-firebase-cloud-messaging
-
-# For Firebase utilities only
-npm install @stanfordspezi/spezi-firebase-utils
+npm ci
+npm run build
+npm test
 ```
 
-### For Development
+Workspace-specific commands can be run with npm's `--workspace` option:
 
-This project uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) for managing multiple packages. To set up the development environment:
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/StanfordSpezi/spezi-firebase.git
-   cd spezi-firebase
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-   This will install dependencies for all workspace packages.
-
-3. **Build all packages**:
-
-   ```bash
-   npm run build
-   ```
-
-4. **Run tests**:
-   ```bash
-   npm test
-   ```
-
-#### Workspace Commands
-
-For more advanced development, you can use npm workspace commands:
-
-- **Build all packages**: `npm run build --workspaces`
-- **Build specific package**: `npm run build -w @stanfordspezi/spezi-firebase-utils`
-- **Test all packages**: `npm run test --workspaces`
-- **Test specific package**: `npm run test -w @stanfordspezi/spezi-firebase-cloud-messaging`
-- **Start development mode**: `npm run dev`
-
-Learn more about npm workspaces in the [official documentation](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
-
-## Quick Start
-
-```typescript
-import { initializeApp, cert } from 'firebase-admin/app'
-import { getMessaging } from 'firebase-admin/messaging'
-import { getFirestore } from 'firebase-admin/firestore'
-import {
-  FirebaseNotificationService,
-  FirestoreDeviceStorage,
-  Message,
-  DevicePlatform,
-  Device,
-  LocalizedText,
-} from '@stanfordspezi/spezi-firebase-cloud-messaging'
-
-// Initialize Firebase
-const app = initializeApp()
-const messaging = getMessaging(app)
-const firestore = getFirestore(app)
-
-// Initialize device storage
-const deviceStorage = new FirestoreDeviceStorage(firestore)
-
-// Initialize notification service
-const notificationService = new FirebaseNotificationService(
-  messaging,
-  deviceStorage,
-)
-
-// Register a device
-await notificationService.registerDevice(
-  'user123',
-  new Device({
-    notificationToken: 'fcm-token-123',
-    platform: DevicePlatform.iOS,
-    language: 'en',
-    appVersion: '1.0.0',
-  }),
-)
-
-// Send a notification
-await notificationService.sendNotification('user123', {
-  title: { en: 'Hello', de: 'Hallo' },
-  body: {
-    en: 'This is a test notification',
-    de: 'Dies ist eine Test-Benachrichtigung',
-  },
-  data: { action: 'open_home' },
-})
-
-// Create and send a message notification
-const message = Message.createInformation({
-  title: { en: 'Information', de: 'Information' },
-  description: {
-    en: 'This is important information',
-    de: 'Dies ist eine wichtige Information',
-  },
-  action: 'view_details',
-  isDismissible: true,
-  data: { itemId: '123' },
-})
-
-// Send a message-based notification
-await notificationService.sendMessageNotification('user123', {
-  id: 'message-123',
-  path: '/messages/message-123',
-  lastUpdate: new Date(),
-  content: message,
-})
-
-// Unregister a device
-await notificationService.unregisterDevice(
-  'user123',
-  'fcm-token-123',
-  DevicePlatform.iOS,
-)
+```bash
+npm run build --workspace @schmiedmayerlab/grove-design-system
+npm test --workspace @schmiedmayerlab/grove-firebase-utils
 ```
 
-## Firebase Functions Integration
+See each package's README for installation and API details.
 
-This package includes helpers for creating Firebase Functions:
+## Contributing
 
-```typescript
-import { onCall } from 'firebase-functions/v2/https'
-import {
-  createRegisterDeviceHandler,
-  createUnregisterDeviceHandler,
-  registerDeviceInputSchema,
-  unregisterDeviceInputSchema,
-} from '@stanfordspezi/spezi-firebase-cloud-messaging'
-
-// Create function handlers
-const registerDeviceHandler = createRegisterDeviceHandler(notificationService)
-const unregisterDeviceHandler =
-  createUnregisterDeviceHandler(notificationService)
-
-// Create Firebase Functions
-export const registerDevice = onCall(
-  {
-    schema: registerDeviceInputSchema,
-  },
-  async (request) => {
-    const userId = request.auth?.uid
-    if (!userId) throw new Error('Unauthorized')
-
-    return registerDeviceHandler(userId, request.data)
-  },
-)
-
-export const unregisterDevice = onCall(
-  {
-    schema: unregisterDeviceInputSchema,
-  },
-  async (request) => {
-    const userId = request.auth?.uid
-    if (!userId) throw new Error('Unauthorized')
-
-    return unregisterDeviceHandler(userId, request.data)
-  },
-)
-```
+Contributions to this project are welcome. Please read the [contribution guidelines](https://github.com/SchmiedmayerLab/.github/blob/main/CONTRIBUTING.md) and the [Contributor Covenant Code of Conduct](https://github.com/SchmiedmayerLab/.github/blob/main/CODE_OF_CONDUCT.md) first.
 
 ## License
 
-This project is licensed under the MIT License. See [Licenses](https://github.com/StanfordSpezi/spezi-firebase/tree/main/LICENSES) for more information.
+This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md), [LICENSES](LICENSES), and [CONTRIBUTORS.md](CONTRIBUTORS.md) for more information.
 
 ## Contributors
 
-This project is developed as part of the Stanford Mussallem Center for Biodesign at Stanford University.
-See [CONTRIBUTORS.md](https://github.com/StanfordSpezi/spezi-firebase/tree/main/CONTRIBUTORS.md) for a full list of all Spezi Firebase contributors.
+This project is developed as part of the Schmiedmayer Lab at Stanford University.
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for a full list of all contributors.
 
-![Stanford Mussallem Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-light.png#gh-light-mode-only)
-![Stanford Mussallem Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-dark.png#gh-dark-mode-only)
+## Our Research
+
+For more information, visit the [Schmiedmayer Lab GitHub organization](https://github.com/SchmiedmayerLab).
+
+![Stanford and Stanford Medicine logos](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png#gh-light-mode-only)
+![Stanford and Stanford Medicine logos](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-dark.png#gh-dark-mode-only)

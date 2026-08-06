@@ -1,29 +1,28 @@
 <!--
 
-This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+This source file is part of the Grove open-source project
 
-SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
 -->
 
-# Biodesign Digital Health Spezi Web Design System
+# Grove Design System
 
-[![Build and Test](https://github.com/StanfordSpezi/spezi-web-design-system/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/StanfordSpezi/spezi-web-design-system/actions/workflows/build-and-test.yml)
-[![Deployment](https://github.com/StanfordSpezi/spezi-web-design-system/actions/workflows/deployment.yml/badge.svg)](https://github.com/StanfordSpezi/spezi-web-design-system/actions/workflows/deployment.yml)
-[![codecov](https://codecov.io/gh/StanfordSpezi/spezi-web-design-system/graph/badge.svg?token=dfQW5eZ2up)](https://codecov.io/gh/StanfordSpezi/spezi-web-design-system)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10052055.svg)](https://doi.org/10.5281/zenodo.10052055)
+[![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
+[![Deployment](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml)
+[![codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/graph/badge.svg?token=dfQW5eZ2up)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
 
 An opinionated, feature-rich kit for rapid application development. Built on modern standards (Radix UI, Tailwind CSS) with sensible defaults, yet with flexible escape hatches to customize deeply when needed.
 
 ## Overview
 
-Spezi Web Design System is a general-purpose component and utilities library designed to accelerate web application development by providing well-tested, comprehensive, accessible, and type-safe components out of the box. It strikes a balance between opinionated defaults and customization flexibility - enabling developers to focus on building features rather than implementing UI patterns, while maintaining the option to take ownership when needed.
+Grove Design System is a general-purpose component and utilities library designed to accelerate web application development by providing well-tested, comprehensive, accessible, and type-safe components out of the box. It strikes a balance between opinionated defaults and customization flexibility—enabling developers to focus on features while retaining escape hatches for customization.
 
 The library enforces a consistent design language, includes robust state management patterns, and provides a comprehensive set of utilities - handling UI complexity behind the scenes.
 
-As part of the broader **Spezi Web ecosystem**, this library serves as the foundation for building applications that can be extended with specialized packages (like health-specific components) and bootstrapped with the [spezi-web-template-application](https://github.com/StanfordSpezi/spezi-web-template-application) for rapid project setup.
+As part of the broader Grove ecosystem, this library provides a foundation for building React applications alongside the shared configuration and Firebase packages in this repository.
 
 ## Key Features
 
@@ -39,54 +38,41 @@ As part of the broader **Spezi Web ecosystem**, this library serves as the found
 
 ## Documentation
 
-- 🚀 **[Getting Started](https://spezi.health/spezi-web-design-system/docs/docs/getting-started)** - Installation, setup, and usage guide
-- 📚 **[Interactive Storybook](https://spezi.health/spezi-web-design-system/storybook)** - Browse components, view live examples, and experiment with props
-- 📖 **[API Reference](https://spezi.health/spezi-web-design-system/docs/api/SpeziProvider)** - Detailed technical documentation and API reference
-- 🏗️ **[Template Application](https://github.com/StanfordSpezi/spezi-web-template-application)** - Get started quickly with a complete application setup
+- 🚀 **[Getting Started](https://schmiedmayerlab.github.io/grove-ts/docs/getting-started)** - Installation, setup, and usage guide
+- 📚 **[Interactive Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/)** - Browse components, view live examples, and experiment with props
+- 📖 **[API Reference](https://schmiedmayerlab.github.io/grove-ts/docs/api/GroveProvider)** - Detailed technical documentation and API reference
+- 🏗️ **[Repository](https://github.com/SchmiedmayerLab/grove-ts)** - Browse every Grove TypeScript package
 
-## Spezi Web Ecosystem
+## Grove Ecosystem
 
-Spezi Web Design System is part of a larger ecosystem of tools and packages:
+Grove Design System is part of a larger ecosystem of tools and packages:
 
 ### Related Packages
 
-- **[spezi-web-configurations](https://github.com/StanfordSpezi/spezi-web-configurations)** - Shared ESLint, Prettier, and TypeScript configurations used across Spezi Web projects (including this library)
-- **[spezi-web-template-application](https://github.com/StanfordSpezi/spezi-web-template-application)** - Complete application template that combines all Spezi Web packages for rapid project bootstrapping
-
-## Used In Production
-
-Real-world Stanford projects using this library:
-
-- **[ENGAGE-HF Web Frontend](https://github.com/StanfordBDHG/ENGAGE-HF-Web-Frontend)** - Heart failure management platform for patients and healthcare providers
-- **[Spezi Web Study Platform](https://github.com/StanfordSpezi/spezi-web-study-platform)** - Research study management and participant enrollment system
-- **[RadGPT](https://github.com/StanfordBDHG/RadGPT)** - AI-powered radiology assistance tool
-
-Refer to them if you need inspiration or guidance on how to use the library in your own projects.
+- **[`@schmiedmayerlab/grove-configurations`](../configurations)** - Shared ESLint and Prettier configurations
+- **[Grove Firebase packages](../firebase-utils)** - Firebase, messaging, and FHIR utilities
 
 ## Getting Started
 
-For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://spezi.health/spezi-web-design-system/docs/docs/getting-started)**.
+For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://schmiedmayerlab.github.io/grove-ts/docs/getting-started)**.
 
-## Why Spezi?
+## Why Grove?
 
-Spezi Web Design System strikes a balance between highly opinionated frameworks and copy-paste patterns. We provide package-based distribution for automatic updates, strong opinions for faster development, and escape hatches when you need deep customization.
+Grove Design System strikes a balance between highly opinionated frameworks and copy-paste patterns. It provides package-based distribution for automatic updates, strong defaults for faster development, and escape hatches for deep customization.
 
-**[Read more about our rationale, comparisons with alternatives, and detailed trade-offs →](https://spezi.health/spezi-web-design-system/docs/docs/why-spezi)**
+**[Read more about our rationale, comparisons with alternatives, and detailed trade-offs →](https://schmiedmayerlab.github.io/grove-ts/docs/why-grove)**
 
 ## Technology Stack
 
 Built on modern standards: TypeScript, React 19, Tailwind CSS v4, and Radix UI. Includes integrations with React Hook Form, Zod, TanStack Table, and more.
 
-**[View complete technology stack and rationale →](https://spezi.health/spezi-web-design-system/docs/docs/technology-stack)**
+**[View complete technology stack and rationale →](https://schmiedmayerlab.github.io/grove-ts/docs/technology-stack)**
 
 ## License
 
-This project is licensed under the MIT License. See [Licenses](https://github.com/StanfordSpezi/spezi-web-design-system/tree/main/LICENSES) for more information.
+This project is licensed under the MIT License. See [Licenses](https://github.com/SchmiedmayerLab/grove-ts/tree/main/LICENSES) for more information.
 
 ## Contributors
 
-This project is developed as part of the Stanford Byers Center for Biodesign at Stanford University.
-See [CONTRIBUTORS.md](https://github.com/StanfordSpezi/spezi-web-design-system/tree/main/CONTRIBUTORS.md) for a full list of all Spezi Web Design System contributors.
-
-![Stanford Byers Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-light.png#gh-light-mode-only)
-![Stanford Byers Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-dark.png#gh-dark-mode-only)
+This project is developed as part of the Schmiedmayer Lab at Stanford University.
+See the repository's [CONTRIBUTORS.md](../../CONTRIBUTORS.md).

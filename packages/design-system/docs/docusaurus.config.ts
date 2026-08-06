@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -32,7 +32,7 @@ const getEntryPoints = () => {
 
       // Try different file patterns
       const patterns = [
-        `${basePath}.tsx`, // Direct file like SpeziProvider.tsx
+        `${basePath}.tsx`, // Direct file like GroveProvider.tsx
         `${basePath}.ts`, // Direct file like forms.ts
         `${basePath}/index.tsx`, // Directory with index.tsx
         `${basePath}/index.ts`, // Directory with index.ts
@@ -87,14 +87,13 @@ const docusaurusPluginOptions: DocusaurusPluginOptions = {
 };
 
 const config: Config = {
-  title: "Spezi Web Design System",
+  title: "Grove Design System",
   tagline:
     "Build Web applications with comprehensive components and utilities.",
-  favicon: "img/favicon.ico",
-  url: "https://spezi.health",
-  baseUrl: "/spezi-web-design-system/docs",
-  organizationName: "StanfordSpezi",
-  projectName: "spezi-web-design-system",
+  url: "https://schmiedmayerlab.github.io",
+  baseUrl: "/grove-ts/docs/",
+  organizationName: "SchmiedmayerLab",
+  projectName: "grove-ts",
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -118,17 +117,11 @@ const config: Config = {
   // @ts-expect-error TypeDoc plugin options are not typed correctly
   plugins: [["docusaurus-plugin-typedoc", docusaurusPluginOptions]],
   themeConfig: {
-    image:
-      "https://spezi.stanford.edu/sites/g/files/sbiybj29021/files/styles/card_1192x596/public/media/image/photo-epel-stanford-campus.jpg",
     colorMode: {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: "Spezi Web Design System",
-      logo: {
-        alt: "Spezi Logo",
-        src: "img/spezi.png",
-      },
+      title: "Grove Design System",
       items: [
         {
           to: "/docs/getting-started",
@@ -136,38 +129,33 @@ const config: Config = {
           position: "left",
         },
         {
-          to: "/api/SpeziProvider",
+          to: "/api/GroveProvider",
           label: "API Reference",
           position: "left",
         },
         {
-          href: "https://spezi.health/spezi-web-design-system/storybook",
+          href: "https://schmiedmayerlab.github.io/grove-ts/storybook/",
           label: "Storybook",
         },
         {
-          href: "https://github.com/StanfordSpezi/spezi-web-design-system",
+          href: "https://github.com/SchmiedmayerLab/grove-ts",
           label: "GitHub",
           position: "right",
         },
       ],
     },
     footer: {
-      logo: {
-        alt: "Stanford Biodesign Logo",
-        src: "img/biodesign.png",
-        height: 73,
-      },
       links: [
         {
           title: "Resources",
           items: [
             {
               label: "Storybook",
-              to: "https://spezi.health/spezi-web-design-system/storybook",
+              to: "https://schmiedmayerlab.github.io/grove-ts/storybook/",
             },
             {
               label: "API Reference",
-              to: "/api/SpeziProvider",
+              to: "/api/GroveProvider",
             },
           ],
         },
@@ -176,11 +164,11 @@ const config: Config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/StanfordSpezi/spezi-web-design-system",
+              href: "https://github.com/SchmiedmayerLab/grove-ts",
             },
             {
-              label: "Stanford Spezi",
-              href: "https://spezi.health",
+              label: "Grove",
+              href: "https://github.com/SchmiedmayerLab/grove-ts",
             },
           ],
         },

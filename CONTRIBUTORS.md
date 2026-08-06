@@ -1,14 +1,20 @@
 <!--
 
-This source file is part of the Stanford Biodesign Digital Health Spezi Firebase Remote Notifications open-source project
+This source file is part of the Grove open-source project
 
-SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
 -->
 
-# Stanford Biodesign Digital Health Next.js Template Contributors
+# Grove Contributors
 
+- [Arkadiusz Bachorski](https://github.com/arkadiuszbachorski)
+- [Paul Johannes Kraft](https://github.com/pauljohanneskraft)
+- [Paul Goldschmidt](https://github.com/PaulGoldschmidt)
 - [Paul Schmiedmayer](https://github.com/PSchmiedmayer)
-- [Vishnu Ravi](https://github.com/vishnuravi)
+
+## Attributions
+
+This repository is based on the [`StanfordSpezi/spezi-web-configurations`](https://github.com/StanfordSpezi/spezi-web-configurations), [`StanfordSpezi/spezi-web-design-system`](https://github.com/StanfordSpezi/spezi-web-design-system), and [`StanfordSpezi/spezi-firebase`](https://github.com/StanfordSpezi/spezi-firebase) repositories, published under the MIT License.

@@ -1,5 +1,5 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
 // SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -25,11 +25,10 @@ export interface TimeSelectValue {
   minutes: TimeSelectMinute;
 }
 
-export interface TimeSelectProps
-  extends Omit<
-    ComponentProps<typeof Select>,
-    "value" | "onValueChange" | "children"
-  > {
+export interface TimeSelectProps extends Omit<
+  ComponentProps<typeof Select>,
+  "value" | "onValueChange" | "children"
+> {
   id?: string;
   value?: TimeSelectValue | null;
   onChange: (value: TimeSelectValue) => void;

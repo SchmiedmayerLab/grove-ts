@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -63,8 +63,7 @@ export const statusDotVariance = cva("rounded-full", {
 });
 
 export interface StatusDotProps
-  extends ComponentProps<"div">,
-    VariantProps<typeof statusDotVariance> {
+  extends ComponentProps<"div">, VariantProps<typeof statusDotVariance> {
   /**
    * Screen reader label for the status dot.
    * If not provided, a default label will be generated based on the status.

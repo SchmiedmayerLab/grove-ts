@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -28,8 +28,9 @@ export interface CheckboxOption<T extends string | number = string> {
   disabled?: boolean;
 }
 
-export interface CheckboxGroupProps<T extends string | number = string>
-  extends Omit<ComponentProps<"div">, "defaultValue" | "onChange"> {
+export interface CheckboxGroupProps<
+  T extends string | number = string,
+> extends Omit<ComponentProps<"div">, "defaultValue" | "onChange"> {
   /**
    * Options to render as checkboxes.
    */

@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -45,7 +45,7 @@ export const LG: Story = { args: { size: "lg" } };
 
 export const Contain: Story = {
   args: {
-    src: "https://biodesign.stanford.edu/_jcr_content/local-header/_jcr_content/custom-logo.img.full.high.png",
+    src: "https://github.com/SchmiedmayerLab/_jcr_content/local-header/_jcr_content/custom-logo.img.full.high.png",
     objectFit: "contain",
   },
 };

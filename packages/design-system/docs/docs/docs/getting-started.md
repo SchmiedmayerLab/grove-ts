@@ -4,46 +4,17 @@ sidebar_position: 0
 
 # Getting Started
 
-Get up and running with Spezi Web Design System in minutes.
-
-## Quick Start with Template
-
-The fastest way to start is using our template application, which includes all the necessary dependencies, configuration, boilerplate code and examples.
-
-```bash
-# Clone the template repository
-git clone https://github.com/StanfordSpezi/spezi-web-template-application.git my-app
-cd my-app
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-The template includes:
-- Pre-configured tech stack
-- Spezi Web pre-configured
-- Examples components and pages
-- Routing and layout structure
-- Authentication patterns
-
-**[View Template Repository →](https://github.com/StanfordSpezi/spezi-web-template-application)**
-
-## Manual Installation
-
-If you're adding Spezi to an existing project:
+Get up and running with Grove Design System in minutes.
 
 ### 1. Install the Package
 
 ```bash
-npm install @stanfordspezi/spezi-web-design-system
+npm install @schmiedmayerlab/grove-design-system
 ```
 
 ### 2. Install Tailwind
 
-This package is built with Tailwind CSS. You'll need to configure Tailwind CSS to use Spezi styles. Read more about setting up Tailwind CSS in the [Tailwind CSS Documentation](https://tailwindcss.com/docs/installation). 
+This package is built with Tailwind CSS. You'll need to configure Tailwind CSS to use Grove styles. Read more about setting up Tailwind CSS in the [Tailwind CSS Documentation](https://tailwindcss.com/docs/installation).
 
 #### Simplified Tailwind installation guide
 
@@ -69,51 +40,51 @@ Create `globals.css` file:
 Ensure your `globals.css` is imported in your application. You can import it in the root file and add it to your `head` tag.
 
 
-### 3. Configure Spezi
+### 3. Configure Grove
 
-In the file where you're importing tailwindcss (`globals.css` from the previous step), replace it with the Spezi imports:
+In the file where you're importing tailwindcss (`globals.css` from the previous step), replace it with the Grove imports:
 
 ```css
-/* This file automatically imports Tailwind CSS, Spezi CSS variables and custom utilities. */
-@import '@stanfordspezi/spezi-web-design-system/tailwind.css';
+/* This file automatically imports Tailwind CSS, Grove CSS variables and custom utilities. */
+@import '@schmiedmayerlab/grove-design-system/tailwind.css';
 /* This file applies global base styles, like background color, selection colors or cursor pointers. Separated from main file in case you want to opt-out from it.  */
-@import '@stanfordspezi/spezi-web-design-system/base.css';
+@import '@schmiedmayerlab/grove-design-system/base.css';
 /* ⚠️ Important! 
- * This file is required for Tailwind to generate CSS for Spezi components.  
+ * This file is required for Tailwind to generate CSS for Grove components.
  * Ensure that this path points to the correct `node_modules` location.
  * It's relative to your `globals.css` file.
  * If globals is in the root directory, it's `../node_modules/...`. 
  */
-@source '../node_modules/@stanfordspezi/spezi-web-design-system/dist/**/*.js';
+@source '../node_modules/@schmiedmayerlab/grove-design-system/dist/**/*.js';
 ```
 
 Ensure that your `@source` points to the correct `node_modules` location.
 
-### 4. Setup SpeziProvider
+### 4. Setup GroveProvider
 
-`SpeziProvider` provides global values to your Spezi components. 
+`GroveProvider` provides global values to your Grove components.
 
 It allows configuring:
 - router objects
 - theme
 - localization messages
 
-Wrap your entire application with the `SpeziProvider`. 
+Wrap your entire application with the `GroveProvider`.
 
 #### With Tanstack Router
 
 ```tsx
-import { SpeziProvider, SpeziContextRouter } from "@stanfordspezi/spezi-web-design-system";
+import { GroveProvider, GroveContextRouter } from "@schmiedmayerlab/grove-design-system";
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 
-const routerProps: SpeziContextRouter = {
+const routerProps: GroveContextRouter = {
   Link: ({ href, ...props }) => <Link to={href} {...props} />,
 };
 
 const Root = () => (
-  <SpeziProvider router={routerProps}>
+  <GroveProvider router={routerProps}>
     <Outlet />
-  </SpeziProvider>
+  </GroveProvider>
 );
 
 export const Route = createRootRoute({
@@ -127,9 +98,9 @@ export const Route = createRootRoute({
 ```tsx
 "use client";
 import Link from "next/link";
-import { SpeziProvider, SpeziContextRouter } from "@stanfordspezi/spezi-web-design-system";
+import { GroveProvider, GroveContextRouter } from "@schmiedmayerlab/grove-design-system";
 
-const routerProps: SpeziContextRouter = {
+const routerProps: GroveContextRouter = {
   Link: ({ href, ...props }) => <Link href={href ?? "#"} {...props} />,
 };
 
@@ -141,7 +112,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SpeziProvider router={routerProps}>{children}</SpeziProvider>
+        <GroveProvider router={routerProps}>{children}</GroveProvider>
       </body>
     </html>
   );
@@ -158,7 +129,7 @@ export default function RootLayout({
 You can import everything from the root of the package:
 
 ```tsx
-import { Button, Input, Card } from '@stanfordspezi/spezi-web-design-system';
+import { Button, Input, Card } from '@schmiedmayerlab/grove-design-system';
 ```
 
 This approach guarantees simplicity.
@@ -168,9 +139,9 @@ This approach guarantees simplicity.
 You can also import specific modules:
 
 ```tsx
-import { Button } from '@stanfordspezi/spezi-web-design-system/components/Button';
-import { Input } from '@stanfordspezi/spezi-web-design-system/components/Input';
-import { Card } from '@stanfordspezi/spezi-web-design-system/components/Card';
+import { Button } from '@schmiedmayerlab/grove-design-system/components/Button';
+import { Input } from '@schmiedmayerlab/grove-design-system/components/Input';
+import { Card } from '@schmiedmayerlab/grove-design-system/components/Card';
 ```
 
 This approach might reduce bundle size, but it's more verbose. In Next.JS it might be necessary to import components individually if you want to use them on the server-side. Root includes all components, as well as those clients-only.
@@ -188,7 +159,7 @@ import {
   Badge,
   Tooltip,
   Button,
-} from "@stanfordspezi/spezi-web-design-system";
+} from "@schmiedmayerlab/grove-design-system";
 
 const App = () => (
   <main className="flex-center h-screen w-screen">
@@ -239,7 +210,7 @@ import {
   Input,
   FormError,
   sleep,
-} from "@stanfordspezi/spezi-web-design-system";
+} from "@schmiedmayerlab/grove-design-system";
 import { z } from "zod";
 
 const formSchema = z.object({
@@ -319,8 +290,8 @@ const App = () => (
 Molecules are higher-level components that provide complex, yet common UI patterns:
 
 ```tsx
-import { DashboardLayout } from '@stanfordspezi/spezi-web-design-system/molecules/DashboardLayout';
-import { Notifications } from '@stanfordspezi/spezi-web-design-system/molecules/Notifications';
+import { DashboardLayout } from '@schmiedmayerlab/grove-design-system/molecules/DashboardLayout';
+import { Notifications } from '@schmiedmayerlab/grove-design-system/molecules/Notifications';
 
 function Dashboard() {
   return (
@@ -346,7 +317,7 @@ import {
   cn,
   formatDate,
   useOpenState,
-} from "@stanfordspezi/spezi-web-design-system";
+} from "@schmiedmayerlab/grove-design-system";
 
 const MyComponent = () => {
   const dialog = useOpenState();
@@ -363,21 +334,11 @@ const MyComponent = () => {
 
 ## Next Steps
 
-- **[Browse Components in Storybook](https://spezi.health/spezi-web-design-system/storybook)** - Interactive examples and documentation
-- **[API Reference](https://spezi.health/spezi-web-design-system/docs/api/SpeziProvider)** - Detailed component and utility documentation
-- **[Why Spezi?](https://spezi.health/spezi-web-design-system/docs/docs/why-spezi)** - Learn about our philosophy and approach
-- **[Technology Stack](https://spezi.health/spezi-web-design-system/docs/docs/technology-stack)** - Understand the underlying technologies
-
-## Production Examples
-
-See real-world implementations:
-
-- **[ENGAGE-HF Web Frontend](https://github.com/StanfordBDHG/ENGAGE-HF-Web-Frontend)** - Heart failure management platform
-- **[Spezi Web Study Platform](https://github.com/StanfordSpezi/spezi-web-study-platform)** - Research study management system
-- **[RadGPT](https://github.com/StanfordBDHG/RadGPT)** - AI-powered radiology assistance tool
+- **[Browse Components in Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/)** - Interactive examples and documentation
+- **[API Reference](../api/GroveProvider)** - Detailed component and utility documentation
+- **[Why Grove?](./why-grove)** - Learn about the library's philosophy and approach
+- **[Technology Stack](./technology-stack)** - Understand the underlying technologies
 
 ## Need Help?
 
-- Look at [template application](https://github.com/StanfordSpezi/spezi-web-template-application) for an example implementation
-- Look at [production examples](#production-examples) for inspiration
-- Report issues on [GitHub](https://github.com/StanfordSpezi/spezi-web-design-system/issues)
+- Report issues on [GitHub](https://github.com/SchmiedmayerLab/grove-ts/issues)

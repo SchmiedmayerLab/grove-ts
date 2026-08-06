@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -11,7 +11,7 @@ import {
   usePagination,
   type UsePaginationProps,
 } from "@nextui-org/use-pagination";
-import { useSpeziContext } from "@/SpeziProvider";
+import { useGroveContext } from "@/GroveProvider";
 import {
   Pagination,
   PaginationContent,
@@ -56,7 +56,7 @@ export const LinkPagination = ({
 }: LinkPaginationProps) => {
   const {
     router: { Link },
-  } = useSpeziContext();
+  } = useGroveContext();
   const { activePage, range } = usePagination({
     total,
     page,

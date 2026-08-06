@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -12,8 +12,10 @@ import { cn } from "@/utils/className";
 import { useTimedFlag } from "@/utils/useTimedFlag";
 import { Button } from "../Button";
 
-export interface SaveButtonProps
-  extends Omit<ComponentProps<typeof Button>, "children"> {
+export interface SaveButtonProps extends Omit<
+  ComponentProps<typeof Button>,
+  "children"
+> {
   /** When true, shows a temporary success state. */
   isSuccess?: boolean;
   /**

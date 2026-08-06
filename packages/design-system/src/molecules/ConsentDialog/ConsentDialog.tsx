@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -24,8 +24,10 @@ import { ConsentDialogContext, useConsentDialog } from "./ConsentDialogContext";
 /**
  * Extends Dialog props but omits onOpenChange to prevent closing.
  */
-interface ConsentDialogProps
-  extends Omit<ComponentProps<typeof Dialog>, "onOpenChange"> {}
+interface ConsentDialogProps extends Omit<
+  ComponentProps<typeof Dialog>,
+  "onOpenChange"
+> {}
 
 /**
  * A dialog component that requires explicit consent before proceeding.
@@ -98,8 +100,7 @@ export const ConsentDialogContent = ({
 );
 
 interface ConsentDialogCheckboxProps
-  extends ComponentProps<typeof Checkbox>,
-    Pick<SideLabelProps, "label"> {}
+  extends ComponentProps<typeof Checkbox>, Pick<SideLabelProps, "label"> {}
 
 /**
  * A checkbox component that controls the consent state.
@@ -127,8 +128,7 @@ export const ConsentDialogCheckbox = ({
 };
 
 interface ConsentDialogSubmitProps
-  extends ComponentProps<typeof Button>,
-    Pick<TooltipProps, "tooltip"> {}
+  extends ComponentProps<typeof Button>, Pick<TooltipProps, "tooltip"> {}
 
 /**
  * A submit button that is disabled until consent is given.

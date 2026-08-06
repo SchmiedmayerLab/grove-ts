@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -123,8 +123,9 @@ export const SheetOverlay = ({
 export const sheetSides = ["top", "right", "bottom", "left"] as const;
 export type SheetSide = (typeof sheetSides)[number];
 
-export interface SheetContentElementProps
-  extends ComponentProps<typeof SheetPrimitive.Content> {
+export interface SheetContentElementProps extends ComponentProps<
+  typeof SheetPrimitive.Content
+> {
   /**
    * Determines which side of the screen the sheet slides in from.
    * @default "right"

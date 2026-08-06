@@ -1,7 +1,7 @@
 //
-// This source file is part of the Stanford Biodesign Digital Health Spezi Web Design System open-source project
+// This source file is part of the Grove open-source project
 //
-// SPDX-FileCopyrightText: 2024 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -15,10 +15,8 @@ import { IconSearchGrid, type IconSearchGridProps } from "../IconGrid";
 import { PopoverContent, PopoverRoot, PopoverTrigger } from "../Popover";
 
 interface IconPickerProps
-  extends Omit<
-      ComponentProps<typeof PopoverTrigger>,
-      "onSelect" | "onOpenChange"
-    >,
+  extends
+    Omit<ComponentProps<typeof PopoverTrigger>, "onSelect" | "onOpenChange">,
     ComponentProps<typeof PopoverRoot>,
     IconSearchGridProps {
   value?: IconName;
