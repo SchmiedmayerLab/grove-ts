@@ -43,7 +43,7 @@ jobs:
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     with:
-      nodeVersion: 24
+      nodeVersion: '24'
       packageVersion: ${{ github.event.release.tag_name || inputs.packageVersion }}
       workspaces: true
   deploy-pages:

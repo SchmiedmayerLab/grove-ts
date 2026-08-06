@@ -92,7 +92,7 @@ jobs:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3
     with:
-      nodeVersion: 24
+      nodeVersion: '24'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
   dependency-review:
