@@ -40,7 +40,7 @@ export const ToggleSortButton = <Data,>({
     .filter(Boolean)
     .join(" ");
 
-  let sortingIcon = <div aria-hidden className="size-4" />;
+  let sortingIcon = <span aria-hidden className="size-4" />;
   if (isSorted === "asc") sortingIcon = <ArrowDownAZ className="size-4" />;
   else if (isSorted === "desc") sortingIcon = <ArrowUpZA className="size-4" />;
 
