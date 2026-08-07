@@ -46,7 +46,7 @@ jobs:
   publish-packages:
     name: Publish Packages
     needs: build-and-test
-    uses: SchmiedmayerLab/.github/.github/workflows/npm-release.yml@reusable-npm-workflows
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-publish.yml@reusable-npm-workflows
     permissions:
       contents: read
       id-token: write
