@@ -95,14 +95,14 @@ jobs:
       - name: Run tests
         run: npm test
   documentation:
-    name: Build Documentation
+    name: Shared Pages Build
     uses: SchmiedmayerLab/.github/.github/workflows/npm-pages.yml@reusable-npm-workflows
     permissions:
       contents: read
     with:
       deploy: false
   release-dry-run:
-    name: Release Dry Run
+    name: Shared Release Dry Run
     uses: SchmiedmayerLab/.github/.github/workflows/npm-release.yml@reusable-npm-workflows
     permissions:
       contents: read
