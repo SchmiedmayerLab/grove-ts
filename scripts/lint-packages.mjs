@@ -35,10 +35,8 @@ for (const workspace of manifest.workspaces) {
 
 for (const workspace of manifest.workspaces) {
   const arguments_ = ['exec', '--offline', '--', 'attw', '--pack', workspace]
-  if (workspace !== 'packages/configurations') {
-    // Runtime packages intentionally expose ESM-only entry points.
-    arguments_.push('--profile', 'esm-only')
-  }
+  // Grove packages intentionally expose ESM-only entry points.
+  arguments_.push('--profile', 'esm-only')
   if (workspace === 'packages/design-system') {
     // Browser bundlers consume this ESM package; CSS entries do not expose TypeScript declarations.
     arguments_.push(

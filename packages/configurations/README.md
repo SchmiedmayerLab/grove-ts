@@ -27,32 +27,30 @@ Install dependencies:
 npm install --save-dev prettier eslint @schmiedmayerlab/grove-configurations
 ```
 
-Create an `eslint.config.cjs` file.
+Create an `eslint.config.mjs` file.
 
 If aiming for React, use:
 
 ```javascript
-const {
-  getEslintReactConfig,
-} = require('@schmiedmayerlab/grove-configurations')
+import { getEslintReactConfig } from '@schmiedmayerlab/grove-configurations'
 
-module.exports = getEslintReactConfig({ tsconfigRootDir: __dirname })
+export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname })
 ```
 
 If aiming for Node application, use:
 
 ```javascript
-const { getEslintNodeConfig } = require('@schmiedmayerlab/grove-configurations')
+import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
 
-module.exports = getEslintNodeConfig({ tsconfigRootDir: __dirname })
+export default getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname })
 ```
 
-Create a `.prettierrc.cjs` file:
+Create a `.prettierrc.mjs` file:
 
 ```javascript
-const { prettierConfig } = require('@schmiedmayerlab/grove-configurations')
+import { prettierConfig } from '@schmiedmayerlab/grove-configurations'
 
-module.exports = prettierConfig
+export default prettierConfig
 ```
 
 Now, when you run `eslint . --fix`, code is going to be linted and formatted.
@@ -62,8 +60,10 @@ Now, when you run `eslint . --fix`, code is going to be linted and formatted.
 We aim to make this config mostly plug and play. You can adjust ESLint to your needs by passing additional configuration pieces.
 
 ```javascript
-module.exports = [
-  ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
+import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
+
+export default [
+  ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
   {
     ignores: ['lib/**/*'], // Ignore generated build files
   },
@@ -78,17 +78,20 @@ module.exports = [
 For more complex scenarios, we expose smaller pieces of configuration. You can use them and do micro-adjustments. This is not the recommended approach.
 
 ```javascript
-const {
+import {
   getEslintRules,
   getNodeGlobals,
   getPreferArrowFunctions,
   getReactPlugins,
   getPrettierPlugin,
   getTslint,
-} = require('@schmiedmayerlab/grove-configurations')
-const tseslint = require('typescript-eslint')
+} from '@schmiedmayerlab/grove-configurations'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
 
-module.exports = tseslint.config(
+const tsconfigRootDir = import.meta.dirname
+
+export default tseslint.config(
   ...getEslintRules(),
   getNodeGlobals(),
   {
