@@ -7,6 +7,7 @@
 
 import { NextIntlClientProvider } from "next-intl";
 import {
+  type CSSProperties,
   type ComponentProps,
   createContext,
   type ReactNode,
@@ -14,6 +15,15 @@ import {
   useMemo,
 } from "react";
 import { messages as defaultMessages, type AllMessages } from "@/messages";
+import { darkTheme } from "@/theme/dark";
+import { lightTheme } from "@/theme/light";
+import {
+  type ColorScheme,
+  type GroveThemes,
+  type ResolvedColorScheme,
+  themeToCSSProperties,
+} from "@/theme/utils";
+import { usePrefersDarkMode } from "@/utils/useMedia";
 
 /**
  * Allows injecting the necessary router-related components.
@@ -52,13 +62,32 @@ export const useGroveContext = () => {
   return value;
 };
 
-interface GroveProviderProps extends GroveContextType {
+export interface GroveProviderProps extends GroveContextType {
   children?: ReactNode;
   /**
    * Allows overriding default localization messages.
    */
   messages?: Partial<AllMessages>;
+  /**
+   * Selects the active color scheme. `system` follows browser and operating-system settings.
+   * Existing applications remain light unless this property is provided.
+   *
+   * @default "light"
+   */
+  colorScheme?: ColorScheme;
+  /**
+   * Overrides either of Grove's default theme token sets.
+   */
+  themes?: Partial<GroveThemes>;
 }
+
+const resolveColorScheme = (
+  preference: ColorScheme,
+  prefersDarkMode: boolean,
+): ResolvedColorScheme => {
+  if (preference !== "system") return preference;
+  return prefersDarkMode ? "dark" : "light";
+};
 
 /**
  * Injects necessary context providers for Grove components.
@@ -67,6 +96,14 @@ interface GroveProviderProps extends GroveContextType {
  * - router configuration (Link component used by your application)
  * - CSS variables for theme
  * - localization messages
+ *
+ * @example
+ * // Follow the browser or operating-system color scheme
+ * ```tsx
+ * <GroveProvider router={routerProps} colorScheme="system">
+ *   <App />
+ * </GroveProvider>
+ * ```
  *
  * @example
  * // Usage with Next.js
@@ -94,19 +131,51 @@ interface GroveProviderProps extends GroveContextType {
  */
 export const GroveProvider = ({
   children,
+  colorScheme,
   messages,
   router,
+  themes,
 }: GroveProviderProps) => {
+  const prefersDarkMode = usePrefersDarkMode();
+  const colorSchemePreference = colorScheme ?? "light";
+  const resolvedColorScheme = resolveColorScheme(
+    colorSchemePreference,
+    prefersDarkMode,
+  );
+  const selectedTheme =
+    themes?.[resolvedColorScheme] ??
+    (resolvedColorScheme === "dark" ? darkTheme : lightTheme);
+
   const resolvedMessages = useMemo(
     () => ({ ...defaultMessages, ...messages }),
     [messages],
   );
 
   const groveContextValue = useMemo(() => ({ router }), [router]);
+  const themeStyle = useMemo<CSSProperties>(
+    () => ({
+      ...themeToCSSProperties(selectedTheme),
+      color: "var(--color-foreground)",
+      colorScheme: resolvedColorScheme,
+      display: "contents",
+    }),
+    [resolvedColorScheme, selectedTheme],
+  );
+
+  const themedChildren =
+    colorScheme !== undefined || themes !== undefined ?
+      <div
+        data-grove-color-scheme={resolvedColorScheme}
+        data-grove-color-scheme-preference={colorSchemePreference}
+        style={themeStyle}
+      >
+        {children}
+      </div>
+    : children;
 
   return (
     <NextIntlClientProvider messages={resolvedMessages} locale="en">
-      <GroveContext value={groveContextValue}>{children}</GroveContext>
+      <GroveContext value={groveContextValue}>{themedChildren}</GroveContext>
     </NextIntlClientProvider>
   );
 };

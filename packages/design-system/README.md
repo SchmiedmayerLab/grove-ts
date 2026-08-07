@@ -28,7 +28,7 @@ As part of the broader Grove ecosystem, this library provides a foundation for b
 
 - **40+ Production-Ready Components** - Comprehensive library including atoms (Button, Input, Select), molecules (DashboardLayout, ConsentDialog, NotFound, Notifications), and utilities
 - **Modern Tech Stack** - Built on Radix UI, Tailwind CSS, TypeScript, and React 19
-- **Theming Support** - Customizable design tokens and theme configuration
+- **Adaptive Theming** - Built-in light and dark themes, automatic system preference support, and customizable design tokens
 - **Well-Tested** - High test coverage with Vitest and Testing Library
 - **Feature-Rich** - Integrated form with validation, data fetching patterns, authentication, application shell, error handling, and more
 - **Comprehensive Documentation** - Interactive Storybook with live examples

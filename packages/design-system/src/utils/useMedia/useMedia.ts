@@ -20,6 +20,7 @@ import { screens } from "@/theme/breakpoints";
 const useMedia = (query: string) => {
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
+      if (typeof window.matchMedia !== "function") return () => undefined;
       const match = window.matchMedia(query);
       match.addEventListener("change", onStoreChange);
       return () => match.removeEventListener("change", onStoreChange);
@@ -27,11 +28,20 @@ const useMedia = (query: string) => {
     [query],
   );
   const getSnapshot = useCallback(
-    () => window.matchMedia(query).matches,
+    () =>
+      typeof window.matchMedia === "function" ?
+        window.matchMedia(query).matches
+      : false,
     [query],
   );
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 };
+
+/**
+ * Tracks whether the browser or operating system prefers a dark color scheme.
+ */
+export const usePrefersDarkMode = () =>
+  useMedia("(prefers-color-scheme: dark)");
 
 /**
  * Checks if the user uses a touch device

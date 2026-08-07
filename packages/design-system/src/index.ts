@@ -70,6 +70,7 @@ export * from "./molecules/NotFound";
 export * from "./molecules/Notifications";
 export * from "./GroveProvider";
 export * from "./theme/light";
+export * from "./theme/dark";
 export * from "./theme/utils";
 export * from "./utils/className";
 export * from "./utils/data";

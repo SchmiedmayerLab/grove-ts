@@ -127,6 +127,40 @@ export default function RootLayout({
 }
 ```
 
+### Color Schemes
+
+Grove uses the light color scheme by default to preserve a predictable initial appearance.
+Set `colorScheme="system"` to follow the browser or operating-system preference automatically and respond when it changes:
+
+```tsx
+<GroveProvider router={routerProps} colorScheme="system">
+  {children}
+</GroveProvider>
+```
+
+Use `colorScheme="light"` or `colorScheme="dark"` when an application provides a manual theme control.
+Grove exports `lightTheme` and `darkTheme`, and either token set can be customized without recreating the other:
+
+```tsx
+import {
+  darkTheme,
+  GroveProvider,
+} from '@schmiedmayerlab/grove-design-system'
+
+const customDarkTheme = {
+  ...darkTheme,
+  'color-primary': 'rgb(125 211 252)',
+}
+
+<GroveProvider
+  router={routerProps}
+  colorScheme="system"
+  themes={{ dark: customDarkTheme }}
+>
+  {children}
+</GroveProvider>
+```
+
 ## Basic Usage
 
 ## Importing
