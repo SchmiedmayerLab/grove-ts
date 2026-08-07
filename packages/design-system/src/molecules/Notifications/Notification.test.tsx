@@ -76,6 +76,19 @@ describe("Notification", () => {
 
     expect(screen.getByText("0")).toBeInTheDocument();
   });
+
+  it("renders time and actions independently", () => {
+    renderWithProviders(
+      <Notification
+        actions={<button type="button">Dismiss</button>}
+        isRead={false}
+        time={new Date("2024-07-15T14:00:00")}
+      />,
+    );
+
+    expect(screen.getByText(/7\/15\/2024/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
+  });
 });
 
 describe("NotificationActions", () => {

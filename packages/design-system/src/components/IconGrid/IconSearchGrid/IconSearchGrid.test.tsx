@@ -61,14 +61,11 @@ describe("IconSearchGrid", () => {
     expect(screen.getByRole("button", { name: /cat/i })).toBeInTheDocument();
 
     // Wait for debounce and filtering
-    await waitFor(
-      () => {
-        expect(
-          screen.queryByRole("button", { name: /cat/i }),
-        ).not.toBeInTheDocument();
-      },
-      { timeout: 300 },
-    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /cat/i }),
+      ).not.toBeInTheDocument();
+    });
 
     expect(screen.getByRole("button", { name: /bird/i })).toBeInTheDocument();
   });
@@ -80,14 +77,11 @@ describe("IconSearchGrid", () => {
     const searchInput = screen.getByRole("searchbox");
     await user.type(searchInput, "bird");
 
-    await waitFor(
-      () => {
-        expect(
-          screen.queryByRole("button", { name: /cat/i }),
-        ).not.toBeInTheDocument();
-      },
-      { timeout: 300 },
-    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /cat/i }),
+      ).not.toBeInTheDocument();
+    });
 
     await user.clear(searchInput);
 

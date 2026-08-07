@@ -15,6 +15,7 @@ describe("DashboardLayout", () => {
     const menuLinks = <MenuItem href="/home" label="Home" isActive />;
     renderWithProviders(
       <DashboardLayout
+        actions={<button type="button">Sign out</button>}
         aside={menuLinks}
         mobile={menuLinks}
         title={<PageTitle title="Home" />}
@@ -39,6 +40,24 @@ describe("DashboardLayout", () => {
     // Renders both home links - mobile and desktop
     const homeLinks = screen.getAllByRole("link", { name: "Home" });
     expect(homeLinks).toHaveLength(2);
+
+    const actions = screen.getAllByRole("button", { name: "Sign out" });
+    expect(actions).toHaveLength(2);
+  });
+});
+
+describe("PageTitle", () => {
+  it("renders an icon and subtitle without a title", () => {
+    renderWithProviders(
+      <PageTitle
+        icon={<svg data-testid="page-icon" />}
+        subTitle="Account settings"
+      />,
+    );
+
+    expect(screen.getByTestId("page-icon")).toBeInTheDocument();
+    expect(screen.getByText("Account settings")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
   });
 });
 

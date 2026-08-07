@@ -49,4 +49,12 @@ describe("EmptyState", () => {
 
     expect(element).toBeInTheDocument();
   });
+
+  it("renders actions", () => {
+    render(<EmptyState actions={<button type="button">Create item</button>} />);
+
+    expect(
+      screen.getByRole("button", { name: "Create item" }),
+    ).toBeInTheDocument();
+  });
 });
