@@ -106,6 +106,7 @@ export abstract class FhirDomainResource<ResourceType extends DomainResource> {
    * const patient = resource.containedResource<Patient>('patient-1')
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- The caller selects the expected contained FHIR resource subtype.
   public containedResource<T extends DomainResource>(
     id: string,
   ): T | undefined {

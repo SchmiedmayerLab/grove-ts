@@ -128,7 +128,7 @@ export const NotFound = ({
   return (
     <NotFoundContainer className={className}>
       <NotFoundIcon />
-      <NotFoundTitle>This {entityName} doesn't exist</NotFoundTitle>
+      <NotFoundTitle>This {entityName} doesn&apos;t exist</NotFoundTitle>
       <NotFoundParagraph>
         Please check your URL or return to {backPage.name}
       </NotFoundParagraph>

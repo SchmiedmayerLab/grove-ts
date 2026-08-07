@@ -28,6 +28,7 @@ import { toast } from "../../components/Toaster";
  *
  * @default false
  */
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- The semantic alias documents the polymorphic component API.
 export type AsChildProp = boolean;
 
 /**

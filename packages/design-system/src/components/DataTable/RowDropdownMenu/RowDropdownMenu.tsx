@@ -65,7 +65,9 @@ export const RowDropdownMenu = ({
           size="round"
           className="size-6"
           variant="ghost"
-          aria-label={`Open actions${itemName ? ` for ${itemName}` : ""}`}
+          aria-label={
+            itemName ? `Open actions for ${itemName}` : "Open actions"
+          }
         >
           <Ellipsis className="size-4" />
         </Button>

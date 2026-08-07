@@ -79,7 +79,6 @@ export const getLinterOptions = (): ConfigWithExtends => ({
  * */
 export const getEslintRules = (): ConfigWithExtends[] => [
   eslint.configs.recommended,
-  { rules: { 'no-empty-pattern': 'off' } },
 ]
 
 /*
@@ -136,8 +135,6 @@ export const getImportRules = (
           'prefer-inline': true,
         },
       ],
-      // false negatives
-      'import/namespace': ['off'],
     },
   },
 ]
@@ -235,8 +232,6 @@ export const getTslint = (): ConfigWithExtends => ({
       'error',
       { ignoreArrowShorthand: true },
     ],
-    // empty interfaces are fine, e.g. React component that extends other component, but with no additional props
-    '@typescript-eslint/no-empty-interface': 'off',
     '@typescript-eslint/array-type': [
       'warn',
       { default: 'array-simple', readonly: 'array-simple' },
@@ -251,8 +246,6 @@ export const getTslint = (): ConfigWithExtends => ({
       // numbers and booleans are fine in template strings
       { allowNumber: true, allowBoolean: true },
     ],
-    // notFound in Tanstack Router is thrown
-    '@typescript-eslint/only-throw-error': 'off',
     '@typescript-eslint/no-restricted-imports': [
       'error',
       {
@@ -294,14 +287,6 @@ export const getSonarRules = (): ConfigWithExtends => ({
   rules: {
     ...sonarRecommended.rules,
     'sonarjs/cognitive-complexity': ['error', 20],
-    // These overlap with typed ESLint rules or reject intentional public API/readability choices.
-    'sonarjs/deprecation': 'off',
-    'sonarjs/no-globals-shadowing': 'off',
-    'sonarjs/no-nested-conditional': 'off',
-    'sonarjs/no-nested-functions': 'off',
-    'sonarjs/no-nested-template-literals': 'off',
-    'sonarjs/no-redundant-optional': 'off',
-    'sonarjs/redundant-type-aliases': 'off',
   },
 })
 
@@ -323,9 +308,7 @@ export const getReactPlugins = (): ConfigWithExtends[] => [
         'warn',
         { props: 'never', children: 'never', propElementValues: 'always' },
       ],
-      'react/no-unescaped-entities': 'off',
       'react/jsx-fragments': ['warn', 'syntax'],
-      'react/prop-types': 'off',
       'react/self-closing-comp': [
         'warn',
         {
@@ -333,6 +316,22 @@ export const getReactPlugins = (): ConfigWithExtends[] => [
           html: false,
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      // TypeScript declarations are the source of truth for component props.
+      'react/prop-types': 'off',
+    },
+  },
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      // These reject idiomatic React callbacks, JSX rendering, and explicit optional props.
+      'sonarjs/no-nested-conditional': 'off',
+      'sonarjs/no-nested-functions': 'off',
+      'sonarjs/no-redundant-optional': 'off',
     },
   },
   reactPlugin.configs.flat['jsx-runtime'],
@@ -359,8 +358,8 @@ export const getIgnoreDefaultExportRule = (): ConfigWithExtends => ({
 })
 
 /**
- * Allows test doubles and fixture inspection to use deliberately loose types.
- * Production source files retain the complete strict type-checked ruleset.
+ * Allows test fixtures to use representative secrets and repeated schema cases.
+ * Type-safety rules remain enabled unless a package scopes an exception further.
  * */
 export const getTestRules = (): ConfigWithExtends => ({
   files: [
@@ -368,12 +367,7 @@ export const getTestRules = (): ConfigWithExtends => ({
     '**/{test,tests,__tests__}/**/*.{js,jsx,ts,tsx}',
   ],
   rules: {
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unsafe-argument': 'off',
-    '@typescript-eslint/no-unsafe-assignment': 'off',
-    '@typescript-eslint/no-unsafe-call': 'off',
-    '@typescript-eslint/no-unsafe-member-access': 'off',
-    '@typescript-eslint/no-unsafe-return': 'off',
+    // Placeholder credentials and repetitive fixture-validation tests are intentional.
     'sonarjs/no-hardcoded-passwords': 'off',
     'sonarjs/parameterized-tests': 'off',
   },
@@ -408,6 +402,7 @@ export const getEslintReactConfig = ({
   tsConfigsDirs = [],
   changeEveryRuleToWarning,
 }: EslintConfigParams) => {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- Native ESLint and typescript-eslint config types are not yet compatible.
   return tseslint.config(
     getIgnoredDirs(),
     getLinterOptions(),
@@ -440,6 +435,7 @@ export const getEslintNodeConfig = ({
   tsConfigsDirs = [],
   changeEveryRuleToWarning,
 }: EslintConfigParams) => {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- Native ESLint and typescript-eslint config types are not yet compatible.
   return tseslint.config(
     getIgnoredDirs(),
     getLinterOptions(),

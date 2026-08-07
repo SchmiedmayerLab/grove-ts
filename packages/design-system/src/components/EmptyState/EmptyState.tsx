@@ -113,7 +113,7 @@ export const EmptyState = ({
           No {entityName ?? "results"} found
           {textFilter ?
             <>
-              &nbsp;for <i>"{textFilter}"</i> search
+              &nbsp;for <i>&quot;{textFilter}&quot;</i> search
             </>
           : hasFilters ?
             <>&nbsp;for your selected filters</>

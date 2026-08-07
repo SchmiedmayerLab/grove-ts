@@ -23,7 +23,8 @@ export const Loading: Story = {
   args: { loading: true },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
+  name: "Error",
   args: { error: true },
 };
 

@@ -15,7 +15,7 @@ describe("useMedia", () => {
     matches,
     media: "",
     onchange: null,
-    addEventListener: vi.fn(),
+    addEventListener: vi.fn<(type: string, listener: () => void) => void>(),
     removeEventListener: vi.fn(),
     addListener: vi.fn(),
     removeListener: vi.fn(),

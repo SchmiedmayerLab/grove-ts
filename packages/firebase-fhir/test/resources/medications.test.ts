@@ -23,10 +23,26 @@ describe('Medication Resource', () => {
     expectTypeOf<Medication>().toExtend<Schema>()
 
     const data = fs.readFileSync('test/resources/medications.json', 'utf-8')
-    const decodedJson = JSON.parse(data)
+    const decodedJson: unknown = JSON.parse(data)
+
+    if (
+      typeof decodedJson !== 'object' ||
+      decodedJson === null ||
+      Array.isArray(decodedJson)
+    ) {
+      throw new TypeError('Expected medication categories to be an object')
+    }
 
     // drugs.json contains nested structure: {categoryId: {drugId: medicationResource}}
-    Object.values(decodedJson).forEach((categoryData: any) => {
+    Object.values(decodedJson).forEach((categoryData: unknown) => {
+      if (
+        typeof categoryData !== 'object' ||
+        categoryData === null ||
+        Array.isArray(categoryData)
+      ) {
+        throw new TypeError('Expected a medication category to be an object')
+      }
+
       Object.values(categoryData).forEach((medicationData: unknown) => {
         const fhirResource = FhirMedication.parse(medicationData).value
         expect(jsonStringifyDeterministically(medicationData)).toBe(

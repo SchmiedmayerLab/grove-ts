@@ -228,8 +228,11 @@ export class FhirBundle<R extends DomainResource> extends FhirDomainResource<
   public resourceById<T extends R>(
     resourceType: T['resourceType'],
     id: string,
-  ): R | undefined {
-    return this.findResources(resourceType, (r) => r.id === id).at(0)
+  ): T | undefined {
+    return this.findResources<T>(
+      resourceType,
+      (resource) => resource.id === id,
+    ).at(0)
   }
 
   /**

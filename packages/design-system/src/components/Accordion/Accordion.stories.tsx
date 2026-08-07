@@ -40,7 +40,7 @@ const InnerContent = () => (
     </AccordionItem>
     <AccordionItem value="item-4">
       <AccordionTrigger>Interactivity</AccordionTrigger>
-      <AccordionContent>It's activatable by keyboard</AccordionContent>
+      <AccordionContent>It&apos;s activatable by keyboard</AccordionContent>
     </AccordionItem>
   </>
 );

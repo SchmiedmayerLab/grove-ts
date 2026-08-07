@@ -23,4 +23,11 @@ module.exports = [
       'jsdoc/no-multi-asterisks': 'error',
     },
   },
+  {
+    files: ['src/components/Error/Error.tsx'],
+    rules: {
+      // Error is the intentional public name of the validation-message component.
+      'sonarjs/no-globals-shadowing': 'off',
+    },
+  },
 ]

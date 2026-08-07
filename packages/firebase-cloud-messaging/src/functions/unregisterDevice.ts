@@ -29,6 +29,7 @@ export type UnregisterDeviceInput = z.input<typeof unregisterDeviceInputSchema>
 /**
  * Type for unregister device output (undefined)
  */
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- The named output type is part of the callable function contract.
 export type UnregisterDeviceOutput = undefined
 
 /**

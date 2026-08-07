@@ -16,7 +16,6 @@ module.exports = [
       // FHIR's recursive schema graph intentionally mirrors the specification.
       'import/export': 'off',
       'import/no-cycle': 'off',
-      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       // FHIR defines canonical HTTP identifiers and specification-grade regular expressions.
       'sonarjs/concise-regex': 'off',
       'sonarjs/no-clear-text-protocols': 'off',
@@ -28,8 +27,17 @@ module.exports = [
   {
     files: ['test/**/*.ts'],
     rules: {
+      // FHIR fixtures use canonical HTTP identifiers and repetitive conformance cases.
       'sonarjs/no-alphabetical-sort': 'off',
       'sonarjs/no-clear-text-protocols': 'off',
+    },
+  },
+  {
+    files: ['test/resources/**/*.ts'],
+    rules: {
+      // JSON fixtures are untyped input by design; schemas perform the runtime validation.
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
     },
   },
 ]

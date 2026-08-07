@@ -46,7 +46,7 @@ export class SchemaConverter<Schema extends z.ZodType, Encoded> {
   }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Conditional-type wildcards preserve inference for arbitrary schema converters. */
 /**
  * Infer the encoded type from a SchemaConverter or Lazy<SchemaConverter>
  */

@@ -15,10 +15,6 @@ import { type z } from 'zod'
 /**
  * Creates a schema that transforms null values to undefined
  *
- * NOTE: The Zod transform API returns a type that TypeScript cannot safely infer,
- * so we must use the unsafe-return eslint-disable. This is a known limitation when
- * working with Zod's transform API and schema validation.
- *
  * @param schema The Zod schema to make optionalish
  * @returns A schema that transforms null to undefined
  */
@@ -29,10 +25,6 @@ export const optionalish = <T extends z.ZodType>(schema: T) =>
 
 /**
  * Creates a schema that provides a default value when null is encountered
- *
- * NOTE: The Zod transform API returns a type that TypeScript cannot safely infer,
- * so we must use the unsafe-return eslint-disable. This is a known limitation when
- * working with Zod's transform API and schema validation.
  *
  * @param schema The Zod schema to make optionalish with default
  * @param defaultValue The default value to use when null is encountered
