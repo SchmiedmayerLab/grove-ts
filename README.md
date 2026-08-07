@@ -122,8 +122,9 @@ gh release create 0.2.0 --target main --title 0.2.0 --generate-notes
 
 ### Bootstrap a New npm Package
 
-An unpublished package needs a one-time token-based publication before npm Trusted Publishing can be configured.
-Temporarily add an `NPM_TOKEN` repository secret and manually run **Deployment** from `main`.
+An unpublished package needs one token-based publication before npm Trusted Publishing can be configured.
+Create a short-lived granular npm token with read and write access to the `@schmiedmayerlab` scope and **Bypass two-factor authentication** enabled, then temporarily add it as the `NPM_TOKEN` repository secret.
+Manually run **Deployment** from `main`.
 Use `*` for the repository's first publication or comma-separated package names for selected new workspaces:
 
 ```bash
@@ -134,8 +135,25 @@ gh workflow run deployment.yml --ref main \
 
 For example, set `bootstrapPackages` to `@schmiedmayerlab/grove-new-package` when adding a single workspace later.
 
-After the bootstrap succeeds, configure the package's npm trusted publisher with organization `SchmiedmayerLab`, repository `grove-ts`, and workflow `deployment.yml`, then delete the token secret.
+After the workflow creates the packages, sign in to npm from a trusted workstation and authorize `deployment.yml` as their publisher:
+
+```bash
+npm login
+npm run configure:trusted-publishing -- --packages '@schmiedmayerlab/grove-new-package'
+```
+
+npm requires an interactive maintainer session with two-factor authentication for this operation; it does not accept granular tokens, including bypass-2FA tokens, for changing Trusted Publishers.
+Use `--packages '*'` when configuring every public workspace in a new repository.
+Delete the token secret after an OIDC publication succeeds.
 The workflow verifies and skips versions already present on npm, making recovery from an interrupted release safe.
+
+If packages were published before Trusted Publishing was configured, run the helper from `main` and then rerun the failed release jobs:
+
+```bash
+npm login
+npm run configure:trusted-publishing
+gh run rerun <release-run-id> --failed
+```
 
 ## Contributing
 
