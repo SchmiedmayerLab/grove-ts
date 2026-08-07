@@ -45,11 +45,12 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import {
-  publicationStatusSchema,
   assertDirectionSchema,
   assertOperatorSchema,
   assertResponseCodeSchema,
+  fhirDefinedTypeSchema,
   mimeTypeSchema,
+  publicationStatusSchema,
   testScriptRequestMethodSchema,
 } from '../valueSets/index.js'
 
@@ -137,7 +138,7 @@ const testScriptSetupActionOperationRequestHeader: ZodType<TestScriptSetupAction
 const testScriptSetupActionOperationSchema: ZodType<TestScriptSetupActionOperation> =
   backboneElementSchema.extend({
     type: codingSchema.optional(),
-    resource: urlSchema.optional(),
+    resource: fhirDefinedTypeSchema.optional(),
     _resource: elementSchema.optional(),
     label: stringSchema.optional(),
     _label: elementSchema.optional(),
@@ -204,7 +205,7 @@ const testScriptSetupActionAssertSchema: ZodType<TestScriptSetupActionAssert> =
     _requestMethod: elementSchema.optional(),
     requestURL: stringSchema.optional(),
     _requestURL: elementSchema.optional(),
-    resource: urlSchema.optional(),
+    resource: fhirDefinedTypeSchema.optional(),
     _resource: elementSchema.optional(),
     response: assertResponseCodeSchema.optional(),
     _response: elementSchema.optional(),

@@ -29,6 +29,7 @@ import {
   positiveIntSchema,
   referenceSchema,
   stringSchema,
+  uriSchema,
 } from '../elements/index.js'
 import {
   requestPrioritySchema,
@@ -60,6 +61,8 @@ export const untypedTaskSchema = z.lazy(() =>
     identifier: identifierSchema.array().optional(),
     instantiatesCanonical: canonicalSchema.optional(),
     _instantiatesCanonical: elementSchema.optional(),
+    instantiatesUri: uriSchema.optional(),
+    _instantiatesUri: elementSchema.optional(),
     basedOn: referenceSchema.array().optional(),
     groupIdentifier: identifierSchema.optional(),
     partOf: referenceSchema.array().optional(),

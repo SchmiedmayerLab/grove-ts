@@ -45,6 +45,8 @@ import {
   conditionalReadStatusSchema,
   documentModeSchema,
   eventCapabilityModeSchema,
+  fhirResourceTypeSchema,
+  fhirVersionSchema,
   publicationStatusSchema,
   referencePolicySchema,
   resourceVersionPolicySchema,
@@ -114,7 +116,7 @@ const capabilityStatementRestResourceOperationSchema: ZodType<CapabilityStatemen
 
 const capabilityStatementRestResourceSchema: ZodType<CapabilityStatementRestResource> =
   backboneElementSchema.extend({
-    type: searchParameterTypeSchema,
+    type: fhirResourceTypeSchema,
     _type: elementSchema.optional(),
     profile: urlSchema.optional(),
     _profile: elementSchema.optional(),
@@ -255,7 +257,7 @@ export const untypedCapabilityStatementSchema = z.lazy(() =>
     _imports: elementSchema.array().optional(),
     software: capabilityStatementSoftwareSchema.optional(),
     implementation: capabilityStatementImplementationSchema.optional(),
-    fhirVersion: stringSchema,
+    fhirVersion: fhirVersionSchema,
     _fhirVersion: elementSchema.optional(),
     format: stringSchema.array(),
     _format: elementSchema.array().optional(),

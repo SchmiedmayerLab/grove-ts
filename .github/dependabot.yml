@@ -27,9 +27,6 @@ updates:
       # Grove's supported runtime is Node.js 24.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
-      # Newer FHIR type definitions narrow code fields beyond the generated R4B schemas.
-      - dependency-name: '@types/fhir'
-        versions: ['>0.0.41']
   - package-ecosystem: npm
     directory: /packages/design-system/docs
     patterns: ['*']

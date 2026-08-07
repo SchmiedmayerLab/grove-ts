@@ -11,7 +11,6 @@ import { z, type ZodType } from 'zod'
 import { codeableConceptSchema } from './codeableConcept.js'
 import { periodSchema } from './period.js'
 import {
-  codeSchema,
   dateTimeSchema,
   decimalSchema,
   positiveIntSchema,
@@ -19,6 +18,7 @@ import {
 } from './primitiveTypes.js'
 import { quantitySchema } from './quantity.js'
 import { rangeSchema } from './range.js'
+import { eventTimingSchema } from '../../valueSets/index.js'
 import { elementSchema } from '../element.js'
 
 const timingRepeatDayOfWeekSchema = z.enum([
@@ -69,7 +69,7 @@ export const untypedTimingSchema = z.lazy(() =>
         _dayOfWeek: elementSchema.array().optional(),
         timeOfDay: timeSchema.array().optional(),
         _timeOfDay: elementSchema.array().optional(),
-        when: codeSchema.array().optional(),
+        when: eventTimingSchema.array().optional(),
         _when: elementSchema.array().optional(),
         offset: positiveIntSchema.optional(),
       })

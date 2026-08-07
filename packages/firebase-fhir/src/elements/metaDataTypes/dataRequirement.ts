@@ -8,11 +8,11 @@
 
 import { type DataRequirement } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { fhirTypeSchema } from '../../valueSets/index.js'
 import { codeableConceptSchema } from '../dataTypes/codeableConcept.js'
 import { codingSchema } from '../dataTypes/coding.js'
 import { periodSchema } from '../dataTypes/period.js'
 import {
-  codeSchema,
   dateTimeSchema,
   positiveIntSchema,
   stringSchema,
@@ -27,7 +27,7 @@ const dataRequirementSortDirectionSchema = z.enum(['ascending', 'descending'])
  */
 export const untypedDataRequirementSchema = z.lazy(() =>
   elementSchema.extend({
-    type: codeSchema,
+    type: fhirTypeSchema,
     _type: elementSchema.optional(),
     profile: stringSchema.array().optional(),
     _profile: elementSchema.array().optional(),

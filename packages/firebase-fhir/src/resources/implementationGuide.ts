@@ -36,6 +36,9 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import {
+  fhirLicenseSchema,
+  fhirResourceTypeSchema,
+  fhirVersionSchema,
   guidePageGenerationSchema,
   guideParameterCodeSchema,
   publicationStatusSchema,
@@ -53,7 +56,7 @@ const implementationGuideDependsOnSchema: ZodType<ImplementationGuideDependsOn> 
 
 const implementationGuideGlobalSchema: ZodType<ImplementationGuideGlobal> =
   backboneElementSchema.extend({
-    type: stringSchema,
+    type: fhirResourceTypeSchema,
     _type: elementSchema.optional(),
     profile: urlSchema,
     _profile: elementSchema.optional(),
@@ -62,7 +65,7 @@ const implementationGuideGlobalSchema: ZodType<ImplementationGuideGlobal> =
 const implementationGuideDefinitionResourceSchema: ZodType<ImplementationGuideDefinitionResource> =
   backboneElementSchema.extend({
     reference: referenceSchema,
-    fhirVersion: z.array(stringSchema).optional(),
+    fhirVersion: fhirVersionSchema.array().optional(),
     _fhirVersion: elementSchema.array().optional(),
     name: stringSchema.optional(),
     _name: elementSchema.optional(),
@@ -189,9 +192,9 @@ export const untypedImplementationGuideSchema = z.lazy(() =>
     _copyright: elementSchema.optional(),
     packageId: stringSchema,
     _packageId: elementSchema.optional(),
-    license: stringSchema.optional(),
+    license: fhirLicenseSchema.optional(),
     _license: elementSchema.optional(),
-    fhirVersion: z.array(stringSchema),
+    fhirVersion: fhirVersionSchema.array(),
     _fhirVersion: elementSchema.array().optional(),
     dependsOn: implementationGuideDependsOnSchema.array().optional(),
     global: implementationGuideGlobalSchema.array().optional(),

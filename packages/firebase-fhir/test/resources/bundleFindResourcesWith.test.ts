@@ -9,6 +9,9 @@
 import { type Bundle, type Patient, type Observation } from 'fhir/r4b.js'
 import { FhirBundle } from '../../src/index.js'
 
+const patient = (resource: Patient): Patient => resource
+const observation = (resource: Observation): Observation => resource
+
 describe('FhirBundle - findResourcesWith', () => {
   it('should find resources matching a predicate', () => {
     const bundle: Bundle = {
@@ -16,28 +19,28 @@ describe('FhirBundle - findResourcesWith', () => {
       type: 'collection',
       entry: [
         {
-          resource: {
+          resource: patient({
             resourceType: 'Patient',
             id: '1',
             active: true,
             name: [{ family: 'Smith' }],
-          },
+          }),
         },
         {
-          resource: {
+          resource: patient({
             resourceType: 'Patient',
             id: '2',
             active: false,
             name: [{ family: 'Jones' }],
-          },
+          }),
         },
         {
-          resource: {
+          resource: observation({
             resourceType: 'Observation',
             id: '3',
             status: 'final',
             code: { text: 'Blood pressure' },
-          },
+          }),
         },
       ],
     }
@@ -60,11 +63,11 @@ describe('FhirBundle - findResourcesWith', () => {
       type: 'collection',
       entry: [
         {
-          resource: {
+          resource: patient({
             resourceType: 'Patient',
             id: '1',
             active: false,
-          },
+          }),
         },
       ],
     }
@@ -100,11 +103,11 @@ describe('FhirBundle - findResourcesWith', () => {
           fullUrl: 'http://example.com/Patient/1',
         },
         {
-          resource: {
+          resource: patient({
             resourceType: 'Patient',
             id: '2',
             active: true,
-          },
+          }),
         },
       ],
     }
@@ -123,10 +126,10 @@ describe('FhirBundle - findResourcesWith', () => {
       type: 'collection',
       entry: [
         {
-          resource: {
+          resource: patient({
             resourceType: 'Patient',
             id: 'patient-1',
-          },
+          }),
         },
       ],
     }
@@ -147,7 +150,7 @@ describe('FhirBundle - findResourcesWith', () => {
       type: 'collection',
       entry: [
         {
-          resource: {
+          resource: observation({
             resourceType: 'Observation',
             id: '1',
             status: 'final',
@@ -159,10 +162,10 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          },
+          }),
         },
         {
-          resource: {
+          resource: observation({
             resourceType: 'Observation',
             id: '2',
             status: 'preliminary',
@@ -174,10 +177,10 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          },
+          }),
         },
         {
-          resource: {
+          resource: observation({
             resourceType: 'Observation',
             id: '3',
             status: 'final',
@@ -189,7 +192,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          },
+          }),
         },
       ],
     }

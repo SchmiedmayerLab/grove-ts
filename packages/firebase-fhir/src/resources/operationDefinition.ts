@@ -31,6 +31,8 @@ import {
 } from '../elements/index.js'
 import {
   bindingStrengthSchema,
+  fhirResourceTypeSchema,
+  fhirTypeSchema,
   operationDefinitionKindSchema,
   operationDefinitionParameterUseSchema,
   publicationStatusSchema,
@@ -73,7 +75,7 @@ const operationDefinitionParameterSchema: ZodType<OperationDefinitionParameter> 
     _searchType: elementSchema.optional(),
     targetProfile: urlSchema.array().optional(),
     _targetProfile: elementSchema.array().optional(),
-    type: stringSchema.optional(),
+    type: fhirTypeSchema.optional(),
     _type: elementSchema.optional(),
     use: operationDefinitionParameterUseSchema,
     _use: elementSchema.optional(),
@@ -125,7 +127,7 @@ export const untypedOperationDefinitionSchema = z.lazy(() =>
     _publisher: elementSchema.optional(),
     purpose: markdownSchema.optional(),
     _purpose: elementSchema.optional(),
-    resource: stringSchema.array().optional(),
+    resource: fhirResourceTypeSchema.array().optional(),
     _resource: elementSchema.array().optional(),
     status: publicationStatusSchema,
     _status: elementSchema.optional(),
