@@ -8,7 +8,7 @@
 
 import { spawn } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
-import { basename, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -87,12 +87,9 @@ export const validateTrustedPublisherTarget = ({ repository, workflow }) => {
       `GitHub repository must use the owner/repository format: ${repository}`,
     )
   }
-  if (
-    basename(workflow) !== workflow ||
-    (!workflow.endsWith('.yml') && !workflow.endsWith('.yaml'))
-  ) {
+  if (workflow !== 'deployment.yml') {
     throw new Error(
-      `GitHub Actions workflow must be a .yml or .yaml filename: ${workflow}`,
+      `GitHub Actions workflow must be deployment.yml: ${workflow}`,
     )
   }
 }

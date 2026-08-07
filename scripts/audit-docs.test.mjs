@@ -15,10 +15,14 @@ const advisory = (id) => ({
   url: `https://github.com/advisories/${id}`,
 })
 
-const report = ({ fixAvailable = false, includeUnexpected = false } = {}) => ({
+const report = ({
+  fixAvailable = false,
+  includeUnexpected = false,
+  rootFixAvailable = false,
+} = {}) => ({
   vulnerabilities: {
     '@docusaurus/core': {
-      fixAvailable: false,
+      fixAvailable: rootFixAvailable,
       via: ['image-size'],
     },
     'image-size': {
@@ -70,6 +74,10 @@ describe('documentation audit exceptions', () => {
     )
     assert.throws(
       () => validateAuditReport(report({ fixAvailable: true })),
+      /Fixes are now available/,
+    )
+    assert.throws(
+      () => validateAuditReport(report({ rootFixAvailable: true })),
       /Fixes are now available/,
     )
   })

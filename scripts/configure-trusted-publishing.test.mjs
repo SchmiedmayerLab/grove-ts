@@ -98,6 +98,14 @@ describe('Trusted Publisher target validation', () => {
         }),
       /workflow must be/,
     )
+    assert.throws(
+      () =>
+        validateTrustedPublisherTarget({
+          repository: 'SchmiedmayerLab/grove-ts',
+          workflow: 'publish.yaml',
+        }),
+      /workflow must be deployment\.yml/,
+    )
   })
 })
 

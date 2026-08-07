@@ -28,16 +28,21 @@ export const auditExceptions = new Map([
 const advisoryId = (advisory) =>
   advisory.url?.match(/\/advisories\/(GHSA-[A-Za-z0-9-]+)$/)?.[1]
 
-const rootAdvisories = (vulnerabilities, name, visited = new Set()) => {
-  if (visited.has(name)) return []
-  visited.add(name)
+const rootAdvisories = (vulnerabilities, name, ancestors = new Set()) => {
+  if (ancestors.has(name)) return []
 
   const vulnerability = vulnerabilities[name]
   if (!vulnerability) return []
+
+  const visited = new Set(ancestors)
+  visited.add(name)
   return vulnerability.via.flatMap((source) =>
     typeof source === 'string' ?
-      rootAdvisories(vulnerabilities, source, visited)
-    : [{ advisory: source, vulnerability }],
+      rootAdvisories(vulnerabilities, source, visited).map((finding) => ({
+        ...finding,
+        vulnerabilities: [vulnerability, ...finding.vulnerabilities],
+      }))
+    : [{ advisory: source, vulnerabilities: [vulnerability] }],
   )
 }
 
@@ -62,7 +67,9 @@ export const validateAuditReport = (report, exceptions = auditExceptions) => {
         `Unable to identify npm advisory: ${finding.advisory.title ?? 'unknown finding'}`,
       )
     }
-    findingsById.set(id, finding)
+    const records = findingsById.get(id) ?? []
+    records.push(finding)
+    findingsById.set(id, records)
   }
 
   const unexpected = [...findingsById.keys()].filter(
@@ -78,7 +85,11 @@ export const validateAuditReport = (report, exceptions = auditExceptions) => {
   }
 
   const fixable = [...findingsById.entries()]
-    .filter(([, { vulnerability }]) => vulnerability.fixAvailable)
+    .filter(([, records]) =>
+      records.some(({ vulnerabilities: traversal }) =>
+        traversal.some(({ fixAvailable }) => fixAvailable),
+      ),
+    )
     .map(([id]) => id)
   if (fixable.length > 0) {
     throw new Error(`Fixes are now available for: ${fixable.join(', ')}`)
