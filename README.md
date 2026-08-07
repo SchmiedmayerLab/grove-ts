@@ -22,8 +22,13 @@ It packages recurring engineering decisions—from code quality rules to interfa
 
 ## See Grove in Action
 
-[![Digital health research dashboard composed with the light Grove design system](https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-light.png#gh-light-mode-only)](https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--light)
-[![Digital health research dashboard composed with the dark Grove design system](https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-dark.png#gh-dark-mode-only)](https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--dark)
+<a href="https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--light">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-light.png">
+    <img alt="Digital health research interface composed with the Grove design system" src="https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-light.png">
+  </picture>
+</a>
 
 The example demonstrates how the Grove design system helps teams build custom digital health and research interfaces from reusable, accessible, and themeable React components.
 Explore the [live Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--light) to experience the light and dark themes, components, and their variants.
@@ -173,5 +178,8 @@ See [CONTRIBUTORS.md](CONTRIBUTORS.md) for a full list of all contributors.
 
 For more information, visit the [Schmiedmayer Lab GitHub organization](https://github.com/SchmiedmayerLab).
 
-![Stanford and Stanford Medicine logos](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png#gh-light-mode-only)
-![Stanford and Stanford Medicine logos](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-dark.png#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png">
+  <img alt="Stanford and Stanford Medicine logos" src="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png">
+</picture>
