@@ -133,6 +133,7 @@ jobs:
         packages/firebase-fhir/coverage/lcov.info,
         packages/firebase-utils/coverage/lcov.info
       nodeVersion: '24'
+      npmVersion: '12.0.2'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
   dependency-review:
