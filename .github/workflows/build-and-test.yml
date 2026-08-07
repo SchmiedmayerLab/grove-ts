@@ -127,6 +127,11 @@ jobs:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3
     with:
+      coverage-files: >-
+        packages/design-system/coverage/lcov.info,
+        packages/firebase-cloud-messaging/coverage/lcov.info,
+        packages/firebase-fhir/coverage/lcov.info,
+        packages/firebase-utils/coverage/lcov.info
       nodeVersion: '24'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
