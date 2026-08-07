@@ -22,9 +22,9 @@
   "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "engines": {
     "node": ">=24",
-    "npm": ">=11"
+    "npm": ">=12"
   },
-  "packageManager": "npm@11.19.0",
+  "packageManager": "npm@12.0.2",
   "workspaces": [
     "packages/configurations",
     "packages/design-system",
@@ -71,6 +71,9 @@
     "publint": "^0.3.22"
   },
   "overrides": {
+    "@google-cloud/storage": {
+      "gaxios": "6.3.0"
+    },
     "js-yaml": "4.3.1",
     "next": {
       "postcss": "8.5.26",
@@ -113,8 +116,6 @@
           "src/**/*.ts"
         ],
         "ignoreDependencies": [
-          "@parcel/packager-ts",
-          "@parcel/transformer-typescript-types",
           "prettier-plugin-tailwindcss"
         ]
       },

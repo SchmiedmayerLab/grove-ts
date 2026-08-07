@@ -51,7 +51,7 @@ describe('FhirBundle - findResourcesWith', () => {
     )
 
     expect(activePatients).toHaveLength(1)
-    expect(activePatients[0].id).toBe('1')
+    expect(activePatients.at(0)?.id).toBe('1')
   })
 
   it('should return empty array when no resources match', () => {
@@ -114,7 +114,7 @@ describe('FhirBundle - findResourcesWith', () => {
     const patients = fhirBundle.findResources('Patient')
 
     expect(patients).toHaveLength(1)
-    expect(patients[0].id).toBe('2')
+    expect(patients.at(0)?.id).toBe('2')
   })
 
   it('should find a resource by type and ID', () => {
@@ -206,6 +206,6 @@ describe('FhirBundle - findResourcesWith', () => {
     )
 
     expect(loincObservations).toHaveLength(1)
-    expect(loincObservations[0].id).toBe('1')
+    expect(loincObservations.at(0)?.id).toBe('1')
   })
 })

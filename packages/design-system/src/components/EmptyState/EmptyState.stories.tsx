@@ -38,10 +38,6 @@ export const CustomMessage: Story = {
 
 export const Actions: Story = {
   args: {
-    actions: (
-      <>
-        <Button size="xs">Create user</Button>
-      </>
-    ),
+    actions: <Button size="xs">Create user</Button>,
   },
 };

@@ -80,7 +80,7 @@ describe("NotificationActions", () => {
     renderWithProviders(
       <div onClick={parentClick} role="presentation">
         <NotificationActions onClick={actionsClick}>
-          <button>Delete</button>
+          <button type="button">Delete</button>
         </NotificationActions>
       </div>,
     );
@@ -99,7 +99,7 @@ describe("NotificationActions", () => {
   it("renders without onClick handler", () => {
     renderWithProviders(
       <NotificationActions>
-        <button>Mark as read</button>
+        <button type="button">Mark as read</button>
       </NotificationActions>,
     );
 

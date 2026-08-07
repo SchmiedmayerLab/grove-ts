@@ -48,17 +48,21 @@ interface PageTitleProps {
  */
 export const PageTitle = ({ title, subTitle, icon }: PageTitleProps) => (
   <div data-slot="page-title" className="flex items-center gap-2 lg:gap-4">
-    {icon && (
+    {icon ?
       <div
         className="flex-center bg-muted rounded-lg p-2 [&_svg]:size-5 lg:[&_svg]:size-6"
         aria-hidden
       >
         {icon}
       </div>
-    )}
+    : null}
     <div className="flex flex-col">
-      {title && <h1 className="font-medium lg:text-xl">{title}</h1>}
-      {subTitle && <h2 className="text-xs lg:text-sm">{subTitle}</h2>}
+      {title ?
+        <h1 className="font-medium lg:text-xl">{title}</h1>
+      : null}
+      {subTitle ?
+        <h2 className="text-xs lg:text-sm">{subTitle}</h2>
+      : null}
     </div>
   </div>
 );

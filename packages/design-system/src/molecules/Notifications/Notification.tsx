@@ -99,15 +99,22 @@ export const Notification = ({
     <>
       <NotificationImage src={image} />
       <NotificationContentContainer>
-        {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
-        {(title || time) && (
+        {title || time ?
           <NotificationHeader>
-            {title && <NotificationTitle>{title}</NotificationTitle>}
-            {time && <NotificationTime time={time} />}
+            {title ?
+              <NotificationTitle>{title}</NotificationTitle>
+            : null}
+            {time ?
+              <NotificationTime time={time} />
+            : null}
           </NotificationHeader>
-        )}
-        {message && <NotificationMessage>{message}</NotificationMessage>}
-        {actions && <NotificationActions>{actions}</NotificationActions>}
+        : null}
+        {message ?
+          <NotificationMessage>{message}</NotificationMessage>
+        : null}
+        {actions ?
+          <NotificationActions>{actions}</NotificationActions>
+        : null}
       </NotificationContentContainer>
     </>
   );

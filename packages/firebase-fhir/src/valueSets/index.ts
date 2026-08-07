@@ -118,7 +118,10 @@ export * from './substance.js'
 export * from './supplyDelivery.js'
 export * from './supplyRequest.js'
 export * from './task.js'
-export * from './terminologyCapabilities.js'
+export {
+  codeSearchSupportSchema,
+  type CodeSearchSupport,
+} from './terminologyCapabilities.js'
 export * from './testReport.js'
 export * from './testScript.js'
 export * from './verificationResult.js'

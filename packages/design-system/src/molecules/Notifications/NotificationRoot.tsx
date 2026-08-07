@@ -43,7 +43,7 @@ export const NotificationRoot = ({
 }: NotificationRootProps) => {
   const Component = asChild ? Slot.Root : "article";
   return (
-    <NotificationContext.Provider value={notification}>
+    <NotificationContext value={notification}>
       <Component
         data-slot="notification-root"
         className={cn(
@@ -52,6 +52,6 @@ export const NotificationRoot = ({
         )}
         {...props}
       />
-    </NotificationContext.Provider>
+    </NotificationContext>
   );
 };

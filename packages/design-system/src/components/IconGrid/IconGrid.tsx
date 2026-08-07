@@ -123,6 +123,7 @@ const IconRow = memo(
       >
         {icons.map((icon) => (
           <button
+            type="button"
             key={icon.name}
             aria-label={upperFirst(icon.name.split("-").join(" "))}
             className="focus:bg-muted hover:bg-muted rounded-md transition outline-none"
@@ -159,7 +160,6 @@ const GridVirtualizer = ({
   getScrollElement,
 }: GridVirtualizerProps) => {
   // Acknowledge, but ignore
-  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: Math.ceil(icons.length / columns),
     getScrollElement,

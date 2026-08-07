@@ -39,12 +39,10 @@ export const Controlled = () => {
 export const CustomPositioning = () => {
   const [tab, setTab] = useState(Tab.lorem);
   return (
-    <>
-      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
-        <nav className="fixed top-0 left-0">{elements.triggers}</nav>
-        {elements.content}
-      </Tabs>
-    </>
+    <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
+      <nav className="fixed top-0 left-0">{elements.triggers}</nav>
+      {elements.content}
+    </Tabs>
   );
 };
 

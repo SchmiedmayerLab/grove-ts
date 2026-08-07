@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { z } from 'zod'
 import {
   SchemaConverter,
   LocalizedText,
@@ -15,7 +16,6 @@ import {
   optionalish,
   optionalishDefault,
 } from '@schmiedmayerlab/grove-firebase-utils'
-import { z } from 'zod'
 
 // 1. Define schemas with SchemaConverter
 const userSchema = z.object({

@@ -54,8 +54,10 @@ describe("useMedia", () => {
       // Simulate media query change
       act(() => {
         mediaQueryList.matches = true;
-        // this is onChange handler
-        mediaQueryList.addEventListener.mock.calls[0][1]();
+        const changeListener =
+          mediaQueryList.addEventListener.mock.calls[0]?.[1];
+        if (changeListener == null) throw new Error("Missing change listener.");
+        changeListener();
       });
 
       expect(result.current).toBe(true);
@@ -94,8 +96,10 @@ describe("useMedia", () => {
       // Simulate media query change
       act(() => {
         mediaQueryList.matches = true;
-        // this is onChange handler
-        mediaQueryList.addEventListener.mock.calls[0][1]();
+        const changeListener =
+          mediaQueryList.addEventListener.mock.calls[0]?.[1];
+        if (changeListener == null) throw new Error("Missing change listener.");
+        changeListener();
       });
 
       expect(result.current).toBe(true);

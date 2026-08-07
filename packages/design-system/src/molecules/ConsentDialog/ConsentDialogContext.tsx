@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 
 interface ConsentDialogContextValue {
   /**
@@ -28,7 +28,7 @@ export const ConsentDialogContext =
  * @throws If used outside of a ConsentDialog component
  */
 export const useConsentDialog = () => {
-  const context = useContext(ConsentDialogContext);
+  const context = use(ConsentDialogContext);
   if (!context) {
     throw new Error(
       "ConsentDialog components must be used within ConsentDialog",

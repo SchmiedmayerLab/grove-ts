@@ -9,6 +9,7 @@
 import { isDate, set } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
+  type ChevronProps,
   type DateRange,
   DayPicker,
   type DayPickerProps,
@@ -17,6 +18,11 @@ import {
 } from "react-day-picker";
 import { buttonVariance } from "@/components/Button";
 import { cn } from "@/utils/className";
+
+const CalendarChevron = ({ orientation, ...props }: ChevronProps) =>
+  orientation === "left" ?
+    <ChevronLeft {...props} className="size-4" />
+  : <ChevronRight {...props} className="size-4" />;
 
 /**
  * Internal time picker component for the Calendar.
@@ -167,10 +173,7 @@ export const Calendar = (props: CalendarProps) => {
           ...classNames,
         }}
         components={{
-          Chevron: ({ ...props }) =>
-            props.orientation === "left" ?
-              <ChevronLeft {...props} className="size-4" />
-            : <ChevronRight {...props} className="size-4" />,
+          Chevron: CalendarChevron,
         }}
         mode={mode}
         // @ts-expect-error handleSelect works with every mode

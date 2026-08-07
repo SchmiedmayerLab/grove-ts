@@ -121,7 +121,9 @@ export const EmptyState = ({
           .
         </span>
       )}
-      {actions && <div className="flex gap-2">{actions}</div>}
+      {actions ?
+        <div className="flex gap-2">{actions}</div>
+      : null}
     </span>
   </div>
 );

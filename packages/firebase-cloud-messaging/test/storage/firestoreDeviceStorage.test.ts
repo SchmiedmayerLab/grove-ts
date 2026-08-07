@@ -362,22 +362,30 @@ describe('FirestoreDeviceStorage', () => {
       // Check returned devices
       expect(Array.isArray(devices)).toBe(true)
       expect(devices.length).toBe(1)
-      expect(devices[0].id).toBe('device1')
+      const storedDevice = devices.at(0)
+      if (storedDevice == null) throw new Error('Missing stored device')
+      expect(storedDevice.id).toBe('device1')
 
       // Instead of checking instanceof, check the properties directly
-      expect(devices[0].content).toHaveProperty('notificationToken', 'token123')
-      expect(devices[0].content).toHaveProperty('platform', DevicePlatform.iOS)
-      expect(devices[0].content).toHaveProperty('osVersion', '15.0')
-      expect(devices[0].content).toHaveProperty('appVersion', '1.0.0')
-      expect(devices[0].content.notificationToken).toBe('token123')
-      expect(devices[0].content.platform).toBe(DevicePlatform.iOS)
-      expect(devices[0].content).toBeInstanceOf(Device)
-      expect(devices[0].content).not.toHaveProperty('content')
+      expect(storedDevice.content).toHaveProperty(
+        'notificationToken',
+        'token123',
+      )
+      expect(storedDevice.content).toHaveProperty(
+        'platform',
+        DevicePlatform.iOS,
+      )
+      expect(storedDevice.content).toHaveProperty('osVersion', '15.0')
+      expect(storedDevice.content).toHaveProperty('appVersion', '1.0.0')
+      expect(storedDevice.content.notificationToken).toBe('token123')
+      expect(storedDevice.content.platform).toBe(DevicePlatform.iOS)
+      expect(storedDevice.content).toBeInstanceOf(Device)
+      expect(storedDevice.content).not.toHaveProperty('content')
 
       if (!capturedConverter) {
         throw new Error('Expected Firestore converter to be captured')
       }
-      expect(capturedConverter.toFirestore(devices[0].content)).toEqual(
+      expect(capturedConverter.toFirestore(storedDevice.content)).toEqual(
         deviceData,
       )
     })

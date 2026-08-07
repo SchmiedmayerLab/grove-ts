@@ -93,6 +93,8 @@ export const TimeSelect = ({
 }: TimeSelectProps) => {
   const handleValueChange = (nextValue: string) => {
     const [hoursPart, minutesPart] = nextValue.split(":");
+    if (hoursPart == null || minutesPart == null) return;
+
     const hours = Number.parseInt(hoursPart, 10);
     const minutes = Number.parseInt(minutesPart, 10) as TimeSelectMinute;
 

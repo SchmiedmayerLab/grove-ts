@@ -218,6 +218,7 @@ describe('FirebaseNotificationService', () => {
       expect(sendNotificationSpy).toHaveBeenCalledTimes(1)
 
       const args = sendNotificationSpy.mock.calls[0]
+      if (args == null) throw new Error('Missing send notification arguments')
       expect(args[0]).toBe(userId)
 
       // Check notification content

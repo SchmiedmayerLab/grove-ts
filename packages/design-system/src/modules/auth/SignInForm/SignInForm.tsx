@@ -112,11 +112,11 @@ export const SignInForm = ({
             }
           }}
         >
-          {provider.icon && (
+          {provider.icon ?
             <span className={cn("flex", buttonSize === "lg" ? "h-8" : "h-6")}>
               {provider.icon}
             </span>
-          )}
+          : null}
           {t("signIn_provider", { provider: provider.name })}
         </Button>
       ))}

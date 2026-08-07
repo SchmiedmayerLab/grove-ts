@@ -10,7 +10,7 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  useContext,
+  use,
   useMemo,
 } from "react";
 import { messages as defaultMessages, type AllMessages } from "@/messages";
@@ -43,7 +43,7 @@ export const GroveContext = createContext<GroveContextType | null>(null);
  * @throws {Error} When used outside GroveProvider.
  */
 export const useGroveContext = () => {
-  const value = useContext(GroveContext);
+  const value = use(GroveContext);
   if (!value) {
     throw new Error(
       "useGroveContext must be used within GroveProvider. Make sure to wrap your application with GroveProvider",
@@ -106,9 +106,7 @@ export const GroveProvider = ({
 
   return (
     <NextIntlClientProvider messages={resolvedMessages} locale="en">
-      <GroveContext.Provider value={groveContextValue}>
-        {children}
-      </GroveContext.Provider>
+      <GroveContext value={groveContextValue}>{children}</GroveContext>
     </NextIntlClientProvider>
   );
 };

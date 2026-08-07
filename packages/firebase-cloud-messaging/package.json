@@ -61,7 +61,7 @@
     "@schmiedmayerlab/grove-configurations": "0.0.0",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "4.1.10",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "firebase-admin": "^14.2.0",
     "prettier": "^3.6.2",

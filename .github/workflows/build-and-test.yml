@@ -70,6 +70,30 @@ jobs:
         run: npm run audit
       - name: Verify npm registry signatures
         run: npm run audit:signatures
+  node-current:
+    name: Node.js 26 Compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+      - name: Set up npm
+        run: npm install --global --ignore-scripts npm@12.0.2
+      - name: Install dependencies
+        run: npm ci
+      - name: Build packages
+        run: npm run build
+      - name: Type-check source and tests
+        run: npm run typecheck
+      - name: Run tests
+        run: npm test
   documentation:
     name: Build Documentation
     runs-on: ubuntu-latest
@@ -127,6 +151,7 @@ jobs:
       - dependency-review
       - documentation
       - markdown-links
+      - node-current
       - quality
       - reuse
       - tests

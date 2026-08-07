@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/Checkbox";
 import { SideLabel } from "@/components/SideLabel";
 import { cn } from "@/utils/className";
 
+const emptyCheckboxValues: never[] = [];
+
 export interface CheckboxOption<T extends string | number = string> {
   /**
    * Label to display next to the checkbox.
@@ -80,7 +82,7 @@ export const CheckboxGroup = <T extends string | number>({
   options,
   value: valueProp,
   onChange,
-  defaultValue = [],
+  defaultValue = emptyCheckboxValues,
   className,
   direction = "column",
   ...props

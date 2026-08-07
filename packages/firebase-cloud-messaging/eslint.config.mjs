@@ -6,18 +6,26 @@
 // SPDX-License-Identifier: MIT
 //
 
-const { getEslintNodeConfig } = require('@schmiedmayerlab/grove-configurations')
-const { configs } = require('typescript-eslint')
+import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
+import { configs } from 'typescript-eslint'
 
-module.exports = [
-  ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
+export default [
+  ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
   {
     // The build intentionally excludes tool configuration files from its typed program.
     ...configs.disableTypeChecked,
     files: ['vitest.config.ts'],
   },
   {
-    files: ['test/**/*.ts'],
+    files: [
+      'test/functions/registerDevice.test.ts',
+      'test/functions/unregisterDevice.test.ts',
+      'test/models/message.test.ts',
+      'test/services/firebaseNotificationService.test.ts',
+      'test/storage/firestoreDeviceStorage.test.ts',
+      'test/utils/mockUtils.ts',
+      'test/utils/schemaConverter.test.ts',
+    ],
     rules: {
       // Firebase mocks deliberately model partially implemented external services.
       '@typescript-eslint/no-explicit-any': 'off',

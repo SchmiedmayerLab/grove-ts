@@ -93,16 +93,11 @@ export class FirebaseNotificationService implements NotificationService {
       const preferredLanguage =
         device.content.language ?? options?.language ?? 'en'
 
-      // Get localized strings
-      // Using nullish coalescing to handle missing language variations
       const title =
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         notification.title[preferredLanguage] ??
         notification.title.en ??
         'Message'
-      // Using nullish coalescing to handle missing language variations
       const body =
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         notification.body[preferredLanguage] ?? notification.body.en ?? ''
 
       // Create token message for this device
@@ -167,7 +162,7 @@ export class FirebaseNotificationService implements NotificationService {
           individualResponse.error?.code ===
           'messaging/registration-token-not-registered'
         ) {
-          const tokenToRemove = devices[index].content.notificationToken
+          const tokenToRemove = devices[index]?.content.notificationToken
           if (tokenToRemove) {
             await this.deviceStorage.removeInvalidToken(tokenToRemove)
           }

@@ -19,6 +19,8 @@ import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
 import { type AsChildProp } from "@/utils/misc";
 
+const defaultBreadcrumbSeparator = <ChevronRight />;
+
 /**
  * Container for Breadcrumbs component.
  *
@@ -117,7 +119,7 @@ export const BreadcrumbPage = ({
  * ```
  */
 export const BreadcrumbSeparator = ({
-  children = <ChevronRight />,
+  children = defaultBreadcrumbSeparator,
   className,
   ...props
 }: ComponentProps<"li">) => (
@@ -269,13 +271,11 @@ export const Breadcrumbs = ({
                   <BreadcrumbEllipsis />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  {breadcrumbs
-                    .slice(1, -maxToDisplay + 1)
-                    .map((breadcrumb, index) => (
-                      <DropdownMenuItem key={index}>
-                        <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
-                      </DropdownMenuItem>
-                    ))}
+                  {breadcrumbs.slice(1, -maxToDisplay + 1).map((breadcrumb) => (
+                    <DropdownMenuItem key={breadcrumb.href}>
+                      <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </BreadcrumbItem>
@@ -286,7 +286,7 @@ export const Breadcrumbs = ({
           <BreadcrumbCompleteItem
             {...breadcrumb}
             isActive={index === remainingBreadcrumbs.length - 1}
-            key={index}
+            key={breadcrumb.href}
           />
         ))}
       </BreadcrumbList>

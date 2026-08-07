@@ -23,7 +23,7 @@ export const useTimedFlag = (trigger: boolean | undefined, timeout: number) => {
   useEffect(() => {
     if (trigger) {
       // Valid use case for setState. Effect is based on a timeout.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line @eslint-react/set-state-in-effect
       setIsActive(true);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setIsActive(false), timeout);

@@ -112,7 +112,10 @@ export const presortedPercentile = (
     return values[lowerIndex]
   } else {
     const weight = index - lowerIndex
-    return values[lowerIndex] * (1 - weight) + values[upperIndex] * weight
+    const lowerValue = values[lowerIndex]
+    const upperValue = values[upperIndex]
+    if (lowerValue == null || upperValue == null) return undefined
+    return lowerValue * (1 - weight) + upperValue * weight
   }
 }
 

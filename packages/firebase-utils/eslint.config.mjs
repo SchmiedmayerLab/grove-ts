@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-const { getEslintNodeConfig } = require('@schmiedmayerlab/grove-configurations')
-const { configs } = require('typescript-eslint')
+import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
+import { configs } from 'typescript-eslint'
 
-module.exports = [
-  ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
+export default [
+  ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
   {
     // Examples and tool configuration are intentionally outside the production TS program.
     ...configs.disableTypeChecked,

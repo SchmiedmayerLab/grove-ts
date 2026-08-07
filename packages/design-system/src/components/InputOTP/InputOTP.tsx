@@ -8,7 +8,7 @@
 
 import { OTPInput, OTPInputContext } from "input-otp";
 import { Minus } from "lucide-react";
-import { type ComponentProps, useContext } from "react";
+import { type ComponentProps, use } from "react";
 import { cn } from "@/utils/className";
 import { times } from "@/utils/misc";
 
@@ -97,8 +97,12 @@ export const InputOTPSlot = ({
   className,
   ...props
 }: InputOTPSlotProps) => {
-  const inputOTPContext = useContext(OTPInputContext);
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
+  const inputOTPContext = use(OTPInputContext);
+  const slot = inputOTPContext.slots[index];
+  if (slot == null) {
+    throw new RangeError(`No OTP slot exists at index ${index}.`);
+  }
+  const { char, hasFakeCaret, isActive } = slot;
 
   return (
     <div

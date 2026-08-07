@@ -12,7 +12,7 @@ import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { VisuallyHidden } from "radix-ui";
 import {
   createContext,
-  useContext,
+  use,
   useEffect,
   useState,
   type ReactNode,
@@ -42,7 +42,7 @@ const SelectContext = createContext<SelectContextType | null>(null);
  * @throws {Error} If used outside a Select component.
  */
 export const useSelectContext = () => {
-  const context = useContext(SelectContext);
+  const context = use(SelectContext);
   if (context === null) {
     throw new Error("useSelectContext must be used within a SelectContext");
   }
@@ -161,7 +161,7 @@ export const useSelectProvider = ({
   const [selectedValue, setSelectedValue] = useState<string | undefined>(
     value ?? defaultValue,
   );
-  const [items, setItems] = useState(new Map<string, ItemsMapValue>());
+  const [items, setItems] = useState(() => new Map<string, ItemsMapValue>());
 
   const selectValue = (newValue: string) => {
     setSelectedValue(newValue);
@@ -309,11 +309,11 @@ export const useSelectProvider = ({
 export const Select = ({ children, ...props }: SelectProps) => {
   const state = useSelectProvider(props);
   return (
-    <SelectContext.Provider value={state}>
+    <SelectContext value={state}>
       <PopoverRoot open={state.open} onOpenChange={state.setOpen}>
         {children}
       </PopoverRoot>
-    </SelectContext.Provider>
+    </SelectContext>
   );
 };
 
@@ -507,7 +507,7 @@ export const SelectContent = ({ children, ...props }: SelectContentProps) => {
         >
           {search ?
             <CommandInput placeholder={search.placeholder} />
-          : <button autoFocus className="sr-only" />}
+          : <button type="button" autoFocus className="sr-only" />}
           <CommandList>
             {search && <CommandEmpty>{search.emptyMessage}</CommandEmpty>}
             {children}

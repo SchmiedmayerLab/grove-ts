@@ -18,6 +18,6 @@ const meta: Meta<typeof DatePicker> = {
 export default meta;
 
 export const Default = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(() => new Date());
   return <DatePicker mode="single" selected={date} onSelect={setDate} />;
 };

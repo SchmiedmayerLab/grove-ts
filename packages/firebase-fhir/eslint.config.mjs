@@ -6,19 +6,24 @@
 // SPDX-License-Identifier: MIT
 //
 
-const { getEslintNodeConfig } = require('@schmiedmayerlab/grove-configurations')
+import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
 
-module.exports = [
-  ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
+export default [
+  ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
   {
     files: ['src/**/*.ts'],
     rules: {
       // FHIR's recursive schema graph intentionally mirrors the specification.
-      'import/export': 'off',
-      'import/no-cycle': 'off',
-      // FHIR defines canonical HTTP identifiers and specification-grade regular expressions.
-      'sonarjs/concise-regex': 'off',
+      'import-x/no-cycle': 'off',
+      // FHIR defines canonical HTTP identifiers.
       'sonarjs/no-clear-text-protocols': 'off',
+    },
+  },
+  {
+    files: ['src/elements/dataTypes/primitiveTypes.ts'],
+    rules: {
+      // These expressions reproduce the normative FHIR lexical formats.
+      'sonarjs/concise-regex': 'off',
       'sonarjs/regex-complexity': 'off',
       'sonarjs/single-character-alternation': 'off',
       'sonarjs/slow-regex': 'off',
