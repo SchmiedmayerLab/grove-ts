@@ -43,6 +43,13 @@ SPDX-License-Identifier: MIT
     var(--landing-background);
 }
 
+:global([data-theme='dark']) .hero {
+  background:
+    radial-gradient(circle at 5% 0%, rgb(88 87 84 / 24%), transparent 32rem),
+    radial-gradient(circle at 95% 100%, rgb(83 86 90 / 14%), transparent 32rem),
+    var(--landing-background);
+}
+
 .hero::before {
   position: absolute;
   inset: 0 0 auto;
