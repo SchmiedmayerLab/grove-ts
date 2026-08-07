@@ -33,8 +33,32 @@ import { Input } from "@/components/Input";
 import { Progress } from "@/components/Progress";
 import { StatusDot } from "@/components/StatusDot";
 import { GroveProvider, type GroveContextRouter } from "@/GroveProvider";
-import { type ResolvedColorScheme } from "@/theme/utils";
-import { cn } from "@/utils/className";
+import { darkTheme } from "@/theme/dark";
+import { lightTheme } from "@/theme/light";
+import { type GroveThemes, type ResolvedColorScheme } from "@/theme/utils";
+
+const stanfordThemes = {
+  light: {
+    ...lightTheme,
+    "color-primary": "rgb(177 4 14)",
+    "color-primary-foreground": "rgb(255 255 255)",
+    "color-success": "rgb(0 133 102)",
+    "color-success-foreground": "rgb(255 255 255)",
+    "color-warning": "rgb(254 221 92)",
+    "color-warning-dark": "rgb(209 102 15)",
+    "color-ring": "rgb(177 4 14)",
+  },
+  dark: {
+    ...darkTheme,
+    "color-primary": "rgb(229 8 8)",
+    "color-primary-foreground": "rgb(255 255 255)",
+    "color-success": "rgb(26 236 186)",
+    "color-success-foreground": "rgb(1 66 64)",
+    "color-warning": "rgb(254 221 92)",
+    "color-warning-dark": "rgb(255 231 129)",
+    "color-ring": "rgb(229 8 8)",
+  },
+} satisfies GroveThemes;
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard, active: true },
@@ -95,14 +119,13 @@ interface GroveShowcaseProps {
 }
 
 const GroveShowcase = ({ colorScheme }: GroveShowcaseProps) => (
-  <GroveProvider router={router} colorScheme={colorScheme}>
+  <GroveProvider
+    router={router}
+    colorScheme={colorScheme}
+    themes={stanfordThemes}
+  >
     <div
-      className={cn(
-        "flex min-h-screen items-center justify-center p-10",
-        colorScheme === "dark" ?
-          "bg-[radial-gradient(circle_at_top_left,rgb(6_78_59),transparent_35%),radial-gradient(circle_at_bottom_right,rgb(30_58_138),transparent_38%),rgb(2_6_23)]"
-        : "bg-[radial-gradient(circle_at_top_left,rgb(220_252_231),transparent_35%),radial-gradient(circle_at_bottom_right,rgb(219_234_254),transparent_38%),rgb(248_250_252)]",
-      )}
+      className="flex min-h-screen items-center justify-center bg-transparent p-10"
       data-testid="grove-showcase"
     >
       <div className="bg-surface-primary border-border w-full max-w-7xl overflow-hidden rounded-2xl border shadow-2xl shadow-black/20">

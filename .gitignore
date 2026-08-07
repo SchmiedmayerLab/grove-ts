@@ -55,6 +55,7 @@ eslint_report.json
 **/.docusaurus/
 **/.cache-loader/
 /packages/design-system/docs/docs/api/
+/packages/design-system/docs/static/img/grove-showcase-*.png
 
 # editors
 **/.idea/

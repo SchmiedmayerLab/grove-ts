@@ -39,7 +39,7 @@ Explore the [live Storybook](https://schmiedmayerlab.github.io/grove-ts/storyboo
 | [`@schmiedmayerlab/grove-firebase-utils`](./packages/firebase-utils)                     | Shared Firebase converters and application utilities         |
 
 Each package README contains focused setup and usage guidance.
-The [design system documentation](https://schmiedmayerlab.github.io/grove-ts/docs/getting-started) provides a guided setup, while [Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/) lets you explore the components interactively.
+The [design system documentation](https://schmiedmayerlab.github.io/grove-ts/docs/) provides a guided introduction, while [Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/) lets you explore the components interactively.
 Packages are independently installable from the `@schmiedmayerlab` npm scope and use one coordinated release version.
 
 ## Quick Start

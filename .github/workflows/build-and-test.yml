@@ -119,12 +119,12 @@ jobs:
         run: npm ci --prefix packages/design-system/docs
       - name: Audit documentation dependencies
         run: npm run audit:docs
-      - name: Build documentation site
-        run: npm run docs:ci
       - name: Build Storybook
         run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
       - name: Generate README showcase
         run: npm run showcase:generate
+      - name: Build documentation site
+        run: npm run docs:ci
   tests:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3

@@ -15,15 +15,18 @@ SPDX-License-Identifier: MIT
  */
 
 :root {
-  --ifm-color-primary: var(--stanford-cardinal-red);
+  --ifm-color-primary: var(--stanford-digital-red);
   --ifm-color-primary-dark: #820000;
-  --ifm-color-primary-darker: #7a0000;
-  --ifm-color-primary-darkest: #650000;
-  --ifm-color-primary-light: #9a1a1a;
-  --ifm-color-primary-lighter: #a82020;
+  --ifm-color-primary-darker: #750000;
+  --ifm-color-primary-darkest: #5f0000;
+  --ifm-color-primary-light: #c92e35;
+  --ifm-color-primary-lighter: #d53d44;
   --ifm-color-primary-lightest: #b83a4b;
 
   --stanford-cardinal-red: #8c1515;
+  --stanford-digital-red: #b1040e;
+  --stanford-digital-blue: #006cb8;
+  --stanford-digital-green: #008566;
   --stanford-black: #2e2d29;
   --stanford-cool-grey: #53565a;
   --stanford-white: #ffffff;
@@ -49,13 +52,13 @@ SPDX-License-Identifier: MIT
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #b83a4b;
-  --ifm-color-primary-dark: #a83545;
-  --ifm-color-primary-darker: #9d3240;
-  --ifm-color-primary-darkest: #822935;
-  --ifm-color-primary-light: #c84555;
-  --ifm-color-primary-lighter: #d3505f;
-  --ifm-color-primary-lightest: #e36579;
+  --ifm-color-primary: #ff7676;
+  --ifm-color-primary-dark: #ff6b6b;
+  --ifm-color-primary-darker: #ff6262;
+  --ifm-color-primary-darkest: #ff4d4d;
+  --ifm-color-primary-light: #ff8585;
+  --ifm-color-primary-lighter: #ff9292;
+  --ifm-color-primary-lightest: #ffadad;
   --docusaurus-highlighted-code-line-bg: rgba(184, 58, 75, 0.3);
 
   --bg: #1a1a1a;
@@ -64,6 +67,27 @@ SPDX-License-Identifier: MIT
   --text-muted: #a3a3a3;
   --border: #333333;
   --card-bg: #262626;
+}
+
+.navbar {
+  background: var(--stanford-cardinal-red);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 16%);
+}
+
+.navbar__brand,
+.navbar__brand:hover,
+.navbar__link,
+.navbar__link:hover,
+.navbar__link--active,
+.navbar .clean-btn {
+  color: var(--stanford-white);
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+  text-decoration: underline;
+  text-decoration-thickness: 0.12rem;
+  text-underline-offset: 0.35rem;
 }
 
 .footer__bottom {

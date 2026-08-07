@@ -26,4 +26,26 @@ describe("theme utilities", () => {
       Object.keys(lightTheme).length,
     );
   });
+
+  it("uses neutral structural colors for the dark theme", () => {
+    const structuralTokens = [
+      "color-surface",
+      "color-surface-primary",
+      "color-card",
+      "color-popover",
+      "color-secondary",
+      "color-muted",
+      "color-accent",
+      "color-border",
+      "color-input",
+    ] as const;
+
+    structuralTokens.forEach((token) => {
+      const channels = darkTheme[token].slice(4, -1).split(" ").map(Number);
+
+      expect(Math.max(...channels) - Math.min(...channels)).toBeLessThanOrEqual(
+        5,
+      );
+    });
+  });
 });
