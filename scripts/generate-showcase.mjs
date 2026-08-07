@@ -100,11 +100,16 @@ try {
       { waitUntil: 'networkidle' },
     )
     await page.evaluate(() => document.fonts.ready)
+    await page.addStyleTag({
+      content:
+        'html, body, #storybook-root, .sb-show-main { background: transparent !important; }',
+    })
 
     const showcase = page.getByTestId('grove-showcase')
     await showcase.waitFor({ state: 'visible' })
     const screenshot = await showcase.screenshot({
       animations: 'disabled',
+      omitBackground: true,
     })
     const outputPaths = [
       join(storybookDirectory, filename),

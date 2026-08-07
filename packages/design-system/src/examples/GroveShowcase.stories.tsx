@@ -36,7 +36,6 @@ import { GroveProvider, type GroveContextRouter } from "@/GroveProvider";
 import { darkTheme } from "@/theme/dark";
 import { lightTheme } from "@/theme/light";
 import { type GroveThemes, type ResolvedColorScheme } from "@/theme/utils";
-import { cn } from "@/utils/className";
 
 const stanfordThemes = {
   light: {
@@ -126,12 +125,7 @@ const GroveShowcase = ({ colorScheme }: GroveShowcaseProps) => (
     themes={stanfordThemes}
   >
     <div
-      className={cn(
-        "flex min-h-screen items-center justify-center p-10",
-        colorScheme === "dark" ?
-          "bg-[radial-gradient(circle_at_top_left,rgb(101_28_50),transparent_35%),radial-gradient(circle_at_bottom_right,rgb(23_94_84),transparent_38%),rgb(46_45_41)]"
-        : "bg-[radial-gradient(circle_at_top_left,rgb(248_232_234),transparent_35%),radial-gradient(circle_at_bottom_right,rgb(218_215_203),transparent_38%),rgb(244_244_244)]",
-      )}
+      className="flex min-h-screen items-center justify-center bg-transparent p-10"
       data-testid="grove-showcase"
     >
       <div className="bg-surface-primary border-border w-full max-w-7xl overflow-hidden rounded-2xl border shadow-2xl shadow-black/20">
