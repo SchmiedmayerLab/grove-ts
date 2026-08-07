@@ -53,7 +53,7 @@
     "version": "node ../../scripts/sync-workspace-versions.mjs"
   },
   "dependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@typescript-eslint/utils": "^8.65.0",
     "eslint-config-prettier": "^10",
     "eslint-plugin-import": "^2",
