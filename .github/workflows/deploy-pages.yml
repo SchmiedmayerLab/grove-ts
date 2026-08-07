@@ -19,49 +19,8 @@ concurrency:
 jobs:
   build-and-deploy:
     name: Build and Deploy to GitHub Pages
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-pages.yml@v0.4
     permissions:
       contents: read
       pages: write
       id-token: write
-    env:
-      DOCS_OUTPUT_DIR: ./packages/design-system/docs/build
-      STORYBOOK_OUTPUT_DIR: ./packages/design-system/storybook-static
-      DEPLOY_PATH: ./deploy
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-      - name: Setup npm
-        run: npm install --global --ignore-scripts npm@12.0.2
-      - name: Install package dependencies
-        run: npm ci
-      - name: Install documentation dependencies
-        run: npm ci --prefix packages/design-system/docs
-      - name: Build Storybook
-        run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
-      - name: Generate README showcase
-        run: npm run showcase:generate
-      - name: Build documentation
-        run: npm run build --prefix packages/design-system/docs
-      - name: Prepare deployment directory
-        run: |
-          mkdir -p "${DEPLOY_PATH}/storybook" "${DEPLOY_PATH}/docs"
-          cp "pages/index.html" "${DEPLOY_PATH}/index.html"
-          cp -R "${STORYBOOK_OUTPUT_DIR}/." "${DEPLOY_PATH}/storybook/"
-          cp -R "${DOCS_OUTPUT_DIR}/." "${DEPLOY_PATH}/docs/"
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: ./deploy
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v5

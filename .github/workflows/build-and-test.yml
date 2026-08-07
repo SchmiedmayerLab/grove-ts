@@ -95,9 +95,9 @@ jobs:
       - name: Run tests
         run: npm test
   documentation:
-    name: Build Documentation
+    name: Build Pages
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -106,25 +106,25 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: |
             package-lock.json
             packages/design-system/docs/package-lock.json
-      - name: Set up npm
-        run: npm install --global --ignore-scripts npm@12.0.2
-      - name: Install package dependencies
+      - name: Use the repository npm version
+        run: |
+          NPM_VERSION="$(node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const { packageManager } = JSON.parse(readFileSync("package.json", "utf8"));
+            const match = /^npm@((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))$/.exec(packageManager ?? "");
+            if (!match) throw new Error("package.json must declare an exact npm packageManager version.");
+            console.log(match[1]);
+          ')"
+          npm install --global --ignore-scripts "npm@$NPM_VERSION"
+      - name: Install dependencies
         run: npm ci
-      - name: Install documentation dependencies
-        run: npm ci --prefix packages/design-system/docs
-      - name: Audit documentation dependencies
-        run: npm run audit:docs
-      - name: Build Storybook
-        run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
-      - name: Generate README showcase
-        run: npm run showcase:generate
-      - name: Build documentation site
-        run: npm run docs:ci
+      - name: Build Pages artifact
+        run: npm run pages:build
   tests:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3

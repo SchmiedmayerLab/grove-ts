@@ -107,17 +107,26 @@ Useful repository-wide commands include:
 | Command                 | Purpose                                                    |
 | ----------------------- | ---------------------------------------------------------- |
 | `npm run build`         | Build every workspace                                      |
-| `npm test`              | Run release and workspace tests                            |
+| `npm test`              | Run repository and workspace tests                         |
 | `npm run test:coverage` | Run workspace tests with coverage                          |
 | `npm run lint:ci`       | Run linting with no warnings allowed                       |
 | `npm run analyze`       | Check dead files, dependencies, exports, and import cycles |
 | `npm run docs`          | Start the design system documentation locally              |
+| `npm run pages:build`   | Assemble the complete GitHub Pages artifact                |
 | `npm run validate`      | Run the complete validation suite used before review       |
 
 ## Releases
 
 Grove uses fixed, bare semantic versions such as `0.1.0` across all packages; prerelease versions such as `0.2.0-beta.1` use the npm `next` tag.
 Publishing a GitHub release runs the validation pipeline, publishes missing versions through npm Trusted Publishing, verifies the registry state, and deploys the documentation and Storybook.
+
+Maintainers can validate release preparation from any branch without publishing or deploying:
+
+```bash
+gh workflow run deployment.yml --ref <branch> \
+  -f packageVersion=0.2.0 \
+  -f dryRun=true
+```
 
 Maintainers can create a normal release in the GitHub interface or with:
 

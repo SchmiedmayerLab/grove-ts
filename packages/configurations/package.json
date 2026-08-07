@@ -50,8 +50,7 @@
     "lint:fix": "eslint . --fix",
     "test": "node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run clean && npm run build",
-    "version": "node ../../scripts/sync-workspace-versions.mjs"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "dependencies": {
     "@eslint-react/eslint-plugin": "^5.18.1",
