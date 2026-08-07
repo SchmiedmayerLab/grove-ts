@@ -52,13 +52,13 @@ SPDX-License-Identifier: MIT
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #e50808;
-  --ifm-color-primary-dark: #d20707;
-  --ifm-color-primary-darker: #c40707;
-  --ifm-color-primary-darkest: #a00606;
-  --ifm-color-primary-light: #ec3030;
-  --ifm-color-primary-lighter: #f04a4a;
-  --ifm-color-primary-lightest: #f67878;
+  --ifm-color-primary: #ff7676;
+  --ifm-color-primary-dark: #ff6b6b;
+  --ifm-color-primary-darker: #ff6262;
+  --ifm-color-primary-darkest: #ff4d4d;
+  --ifm-color-primary-light: #ff8585;
+  --ifm-color-primary-lighter: #ff9292;
+  --ifm-color-primary-lightest: #ffadad;
   --docusaurus-highlighted-code-line-bg: rgba(184, 58, 75, 0.3);
 
   --bg: #1a1a1a;

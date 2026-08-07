@@ -51,7 +51,7 @@ const stanfordThemes = {
   dark: {
     ...darkTheme,
     "color-primary": "rgb(229 8 8)",
-    "color-primary-foreground": "rgb(46 45 41)",
+    "color-primary-foreground": "rgb(255 255 255)",
     "color-success": "rgb(26 236 186)",
     "color-success-foreground": "rgb(1 66 64)",
     "color-warning": "rgb(254 221 92)",

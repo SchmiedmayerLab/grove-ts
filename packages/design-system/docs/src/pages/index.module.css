@@ -18,6 +18,7 @@ SPDX-License-Identifier: MIT
   --landing-accent: #b1040e;
   --landing-accent-dark: #820000;
   --landing-green: #175e54;
+
   background: var(--landing-background);
   color: var(--landing-foreground);
 }
@@ -29,8 +30,8 @@ SPDX-License-Identifier: MIT
   --landing-foreground: #ffffff;
   --landing-muted: #c0c0bf;
   --landing-border: #585754;
-  --landing-accent: #e50808;
-  --landing-accent-dark: #ff5f5f;
+  --landing-accent: #ff7676;
+  --landing-accent-dark: #ff8a8a;
   --landing-green: #1aecba;
 }
 
@@ -222,16 +223,16 @@ SPDX-License-Identifier: MIT
   height: auto;
 }
 
-.showcaseDark {
-  display: none !important;
-}
-
-:global([data-theme='dark']) .showcaseLight {
+.showcase .showcaseDark {
   display: none;
 }
 
-:global([data-theme='dark']) .showcaseDark {
-  display: block !important;
+:global([data-theme='dark']) .showcase .showcaseLight {
+  display: none;
+}
+
+:global([data-theme='dark']) .showcase .showcaseDark {
+  display: block;
 }
 
 .showcase figcaption {
