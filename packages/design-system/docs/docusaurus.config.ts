@@ -89,7 +89,7 @@ const docusaurusPluginOptions: DocusaurusPluginOptions = {
 const config: Config = {
   title: "Grove Design System",
   tagline:
-    "Build Web applications with comprehensive components and utilities.",
+    "Reusable, accessible, and themeable React components for custom interfaces.",
   url: "https://schmiedmayerlab.github.io",
   baseUrl: "/grove-ts/docs/",
   organizationName: "SchmiedmayerLab",
@@ -153,6 +153,10 @@ const config: Config = {
           title: "Resources",
           items: [
             {
+              label: "Getting Started",
+              to: "/docs/getting-started",
+            },
+            {
               label: "Storybook",
               to: "https://schmiedmayerlab.github.io/grove-ts/storybook/",
             },
@@ -163,15 +167,19 @@ const config: Config = {
           ],
         },
         {
-          title: "Community",
+          title: "Project",
           items: [
             {
               label: "GitHub",
               href: "https://github.com/SchmiedmayerLab/grove-ts",
             },
             {
-              label: "Grove",
-              href: "https://github.com/SchmiedmayerLab/grove-ts",
+              label: "npm",
+              href: "https://www.npmjs.com/package/@schmiedmayerlab/grove-design-system",
+            },
+            {
+              label: "Contributing",
+              href: "https://github.com/SchmiedmayerLab/.github/blob/main/CONTRIBUTING.md",
             },
           ],
         },

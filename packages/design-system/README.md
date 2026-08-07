@@ -38,7 +38,7 @@ As part of the broader Grove ecosystem, this library provides a foundation for b
 
 ## Documentation
 
-- 🚀 **[Getting Started](https://schmiedmayerlab.github.io/grove-ts/docs/getting-started)** - Installation, setup, and usage guide
+- 🚀 **[Getting Started](https://schmiedmayerlab.github.io/grove-ts/docs/docs/getting-started)** - Installation, setup, and usage guide
 - 📚 **[Interactive Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/)** - Browse components, view live examples, and experiment with props
 - 📖 **[API Reference](https://schmiedmayerlab.github.io/grove-ts/docs/api/GroveProvider)** - Detailed technical documentation and API reference
 - 🏗️ **[Repository](https://github.com/SchmiedmayerLab/grove-ts)** - Browse every Grove TypeScript package
@@ -54,19 +54,19 @@ Grove Design System is part of a larger ecosystem of tools and packages:
 
 ## Getting Started
 
-For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://schmiedmayerlab.github.io/grove-ts/docs/getting-started)**.
+For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://schmiedmayerlab.github.io/grove-ts/docs/docs/getting-started)**.
 
 ## Why Grove?
 
 Grove Design System strikes a balance between highly opinionated frameworks and copy-paste patterns. It provides package-based distribution for automatic updates, strong defaults for faster development, and escape hatches for deep customization.
 
-**[Read more about our rationale, comparisons with alternatives, and detailed trade-offs →](https://schmiedmayerlab.github.io/grove-ts/docs/why-grove)**
+**[Read more about our rationale, comparisons with alternatives, and detailed trade-offs →](https://schmiedmayerlab.github.io/grove-ts/docs/docs/why-grove)**
 
 ## Technology Stack
 
 Built on modern standards: TypeScript, React 19, Tailwind CSS v4, and Radix UI. Includes integrations with React Hook Form, Zod, TanStack Table, and more.
 
-**[View complete technology stack and rationale →](https://schmiedmayerlab.github.io/grove-ts/docs/technology-stack)**
+**[View complete technology stack and rationale →](https://schmiedmayerlab.github.io/grove-ts/docs/docs/technology-stack)**
 
 ## License
 
