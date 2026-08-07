@@ -54,6 +54,7 @@ jobs:
       - name: Prepare deployment directory
         run: |
           mkdir -p "${DEPLOY_PATH}/storybook" "${DEPLOY_PATH}/docs"
+          cp "pages/index.html" "${DEPLOY_PATH}/index.html"
           cp -R "${STORYBOOK_OUTPUT_DIR}/." "${DEPLOY_PATH}/storybook/"
           cp -R "${DOCS_OUTPUT_DIR}/." "${DEPLOY_PATH}/docs/"
       - name: Setup Pages

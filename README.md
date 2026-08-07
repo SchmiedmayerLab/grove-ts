@@ -22,8 +22,13 @@ It packages recurring engineering decisions—from code quality rules to interfa
 
 ## See Grove in Action
 
-[![Digital health research dashboard composed with the light Grove design system](https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-light.png#gh-light-mode-only)](https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--light)
-[![Digital health research dashboard composed with the dark Grove design system](https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-dark.png#gh-dark-mode-only)](https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--dark)
+<a href="https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--light">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-light.png">
+    <img alt="Digital health research interface composed with the Grove design system" src="https://schmiedmayerlab.github.io/grove-ts/storybook/grove-showcase-light.png">
+  </picture>
+</a>
 
 The example demonstrates how the Grove design system helps teams build custom digital health and research interfaces from reusable, accessible, and themeable React components.
 Explore the [live Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/?path=/story/examples-grove-showcase--light) to experience the light and dark themes, components, and their variants.
@@ -122,8 +127,9 @@ gh release create 0.2.0 --target main --title 0.2.0 --generate-notes
 
 ### Bootstrap a New npm Package
 
-An unpublished package needs a one-time token-based publication before npm Trusted Publishing can be configured.
-Temporarily add an `NPM_TOKEN` repository secret and manually run **Deployment** from `main`.
+An unpublished package needs one token-based publication before npm Trusted Publishing can be configured.
+Create a short-lived granular npm token with read and write access to the `@schmiedmayerlab` scope and **Bypass two-factor authentication** enabled, then temporarily add it as the `NPM_TOKEN` repository secret.
+Manually run **Deployment** from `main`.
 Use `*` for the repository's first publication or comma-separated package names for selected new workspaces:
 
 ```bash
@@ -134,8 +140,25 @@ gh workflow run deployment.yml --ref main \
 
 For example, set `bootstrapPackages` to `@schmiedmayerlab/grove-new-package` when adding a single workspace later.
 
-After the bootstrap succeeds, configure the package's npm trusted publisher with organization `SchmiedmayerLab`, repository `grove-ts`, and workflow `deployment.yml`, then delete the token secret.
+After the workflow creates the packages, sign in to npm from a trusted workstation and authorize `deployment.yml` as their publisher:
+
+```bash
+npm login
+npm run configure:trusted-publishing -- --packages '@schmiedmayerlab/grove-new-package'
+```
+
+npm requires an interactive maintainer session with two-factor authentication for this operation; it does not accept granular tokens, including bypass-2FA tokens, for changing Trusted Publishers.
+Use `--packages '*'` when configuring every public workspace in a new repository.
+Delete the token secret after an OIDC publication succeeds.
 The workflow verifies and skips versions already present on npm, making recovery from an interrupted release safe.
+
+If packages were published before Trusted Publishing was configured, run the helper from `main` and then rerun the failed release jobs:
+
+```bash
+npm login
+npm run configure:trusted-publishing
+gh run rerun <release-run-id> --failed
+```
 
 ## Contributing
 
@@ -155,5 +178,8 @@ See [CONTRIBUTORS.md](CONTRIBUTORS.md) for a full list of all contributors.
 
 For more information, visit the [Schmiedmayer Lab GitHub organization](https://github.com/SchmiedmayerLab).
 
-![Stanford and Stanford Medicine logos](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png#gh-light-mode-only)
-![Stanford and Stanford Medicine logos](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-dark.png#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png">
+  <img alt="Stanford and Stanford Medicine logos" src="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png">
+</picture>

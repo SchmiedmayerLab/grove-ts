@@ -196,6 +196,21 @@ jobs:
           for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
             npm publish --workspace "$PACKAGE_NAME" --provenance --access public --tag "$NPM_TAG"
           done
+      - name: Summarize Trusted Publisher setup
+        if: needs.plan.outputs.bootstrap != '[]'
+        env:
+          PACKAGES: ${{ needs.plan.outputs.bootstrap }}
+        run: |
+          PACKAGE_SELECTION="$(node --input-type=module -e 'console.log(JSON.parse(process.env.PACKAGES).join(","))')"
+          {
+            echo "### Complete npm Trusted Publisher setup"
+            echo
+            echo "npm requires an interactive maintainer session with two-factor authentication."
+            echo "The bypass-2FA token used to create the package cannot configure this setting."
+            echo "Run this command from the repository's default branch:"
+            echo
+            echo "    npm run configure:trusted-publishing -- --packages '$PACKAGE_SELECTION'"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Verify published package versions
         env:
           PACKAGE_VERSION: ${{ needs.plan.outputs.version }}
