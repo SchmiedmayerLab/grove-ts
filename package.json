@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
+    "@storybook/react-vite": "^10.5.5",
     "knip": "^6.29.0",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.8.1",
@@ -105,6 +106,7 @@
         ],
         "ignoreDependencies": [
           "@arethetypeswrong/cli",
+          "@storybook/react-vite",
           "publint"
         ]
       },
