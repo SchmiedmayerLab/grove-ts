@@ -8,7 +8,7 @@
 
 import { renderHook, act } from "@testing-library/react";
 import { screens } from "@/theme/breakpoints";
-import { useIsTouchDevice, useIsScreen } from "./useMedia";
+import { useIsTouchDevice, useIsScreen, usePrefersDarkMode } from "./useMedia";
 
 describe("useMedia", () => {
   let matchMediaMock = vi.fn<typeof window.matchMedia>();
@@ -64,6 +64,18 @@ describe("useMedia", () => {
       });
 
       expect(result.current).toBe(true);
+    });
+  });
+
+  describe("usePrefersDarkMode", () => {
+    it("tracks the system color-scheme preference", () => {
+      mockMatchMedia(true);
+      const { result } = renderHook(() => usePrefersDarkMode());
+
+      expect(result.current).toBe(true);
+      expect(matchMediaMock).toHaveBeenCalledWith(
+        "(prefers-color-scheme: dark)",
+      );
     });
   });
 

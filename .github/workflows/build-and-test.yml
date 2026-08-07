@@ -123,6 +123,8 @@ jobs:
         run: npm run docs:ci
       - name: Build Storybook
         run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
+      - name: Generate README showcase
+        run: npm run showcase:generate
   tests:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3

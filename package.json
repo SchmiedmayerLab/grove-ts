@@ -62,12 +62,15 @@
     "audit:signatures": "npm audit signatures",
     "validate": "npm run build && npm run format:check && npm run lint:ci && npm run analyze && npm run typecheck && npm test && npm run docs:ci && npm run pack:check && npm run pack:lint && npm run audit && npm run audit:docs",
     "docs": "npm run dev --prefix packages/design-system/docs",
-    "docs:ci": "npm run build --prefix packages/design-system/docs"
+    "docs:ci": "npm run build --prefix packages/design-system/docs",
+    "showcase": "npm run build-storybook --workspace @schmiedmayerlab/grove-design-system && npm run showcase:generate",
+    "showcase:generate": "node scripts/generate-showcase.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@storybook/react-vite": "^10.5.5",
     "knip": "^6.29.0",
+    "playwright": "^1.62.1",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "publint": "^0.3.22"

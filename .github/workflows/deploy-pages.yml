@@ -47,6 +47,8 @@ jobs:
         run: npm ci --prefix packages/design-system/docs
       - name: Build Storybook
         run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
+      - name: Generate README showcase
+        run: npm run showcase:generate
       - name: Build documentation
         run: npm run build --prefix packages/design-system/docs
       - name: Prepare deployment directory
