@@ -24,6 +24,11 @@ on:
         required: false
         type: string
         default: ''
+      dryRun:
+        description: Validate release preparation without publishing or deploying.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: production
@@ -48,11 +53,13 @@ jobs:
     with:
       packageVersion: ${{ github.event.release.tag_name || inputs.packageVersion }}
       bootstrapPackages: ${{ inputs.bootstrapPackages || '' }}
+      dryRun: ${{ inputs.dryRun || false }}
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   deploy-pages:
     name: Deploy GitHub Pages
+    if: ${{ !inputs.dryRun }}
     needs: build-and-test
     uses: ./.github/workflows/deploy-pages.yml
     permissions:
@@ -64,6 +71,7 @@ jobs:
     name: Create GitHub Release
     if: >-
       always() &&
+      !inputs.dryRun &&
       github.event_name == 'workflow_dispatch' &&
       needs.publish-packages.result == 'success'
     needs:
@@ -119,9 +127,13 @@ jobs:
         env:
           CREATE_RELEASE_RESULT: ${{ needs.create-release.result }}
           DEPLOY_PAGES_RESULT: ${{ needs.deploy-pages.result }}
+          DRY_RUN: ${{ inputs.dryRun || false }}
           PUBLISH_RESULT: ${{ needs.publish-packages.result }}
         run: |
-          if [ "$PUBLISH_RESULT" != "success" ] ||
+          if [ "$PUBLISH_RESULT" != "success" ]; then
+            exit 1
+          fi
+          if [ "$DRY_RUN" != "true" ] &&
              [ "$DEPLOY_PAGES_RESULT" != "success" ]; then
             exit 1
           fi

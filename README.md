@@ -120,6 +120,14 @@ Useful repository-wide commands include:
 Grove uses fixed, bare semantic versions such as `0.1.0` across all packages; prerelease versions such as `0.2.0-beta.1` use the npm `next` tag.
 Publishing a GitHub release runs the validation pipeline, publishes missing versions through npm Trusted Publishing, verifies the registry state, and deploys the documentation and Storybook.
 
+Maintainers can validate release preparation from any branch without publishing or deploying:
+
+```bash
+gh workflow run deployment.yml --ref <branch> \
+  -f packageVersion=0.2.0 \
+  -f dryRun=true
+```
+
 Maintainers can create a normal release in the GitHub interface or with:
 
 ```bash
