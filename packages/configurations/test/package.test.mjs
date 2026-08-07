@@ -19,5 +19,10 @@ test('loads the published ESM configuration entry point', () => {
 
   assert.ok(getEslintNodeConfig(options).length > 0)
   assert.ok(getEslintReactConfig(options).length > 0)
-  assert.equal(typeof prettierConfig, 'object')
+  assert.ok(
+    prettierConfig !== null &&
+      typeof prettierConfig === 'object' &&
+      !Array.isArray(prettierConfig) &&
+      Array.isArray(prettierConfig.plugins),
+  )
 })

@@ -60,6 +60,8 @@ Now, when you run `eslint . --fix`, code is going to be linted and formatted.
 We aim to make this config mostly plug and play. You can adjust ESLint to your needs by passing additional configuration pieces.
 
 ```javascript
+import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
+
 export default [
   ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
   {
@@ -84,7 +86,10 @@ import {
   getPrettierPlugin,
   getTslint,
 } from '@schmiedmayerlab/grove-configurations'
+import globals from 'globals'
 import tseslint from 'typescript-eslint'
+
+const tsconfigRootDir = import.meta.dirname
 
 export default tseslint.config(
   ...getEslintRules(),
