@@ -117,6 +117,30 @@ describe('FhirBundle - findResourcesWith', () => {
     expect(patients[0].id).toBe('2')
   })
 
+  it('should find a resource by type and ID', () => {
+    const bundle: Bundle = {
+      resourceType: 'Bundle',
+      type: 'collection',
+      entry: [
+        {
+          resource: {
+            resourceType: 'Patient',
+            id: 'patient-1',
+          },
+        },
+      ],
+    }
+
+    const fhirBundle = FhirBundle.parseGeneric(bundle)
+
+    expect(fhirBundle.resourceById<Patient>('Patient', 'patient-1')?.id).toBe(
+      'patient-1',
+    )
+    expect(
+      fhirBundle.resourceById<Patient>('Patient', 'missing'),
+    ).toBeUndefined()
+  })
+
   it('should work with complex predicates', () => {
     const bundle: Bundle = {
       resourceType: 'Bundle',

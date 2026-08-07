@@ -48,7 +48,10 @@ const packOutput = execFileSync(
     maxBuffer: 32 * 1024 * 1024,
   },
 )
-const packs = JSON.parse(packOutput)
+const packMetadata = JSON.parse(packOutput)
+// npm 12 keys workspace metadata by package name; npm 11 returned an array.
+const packs =
+  Array.isArray(packMetadata) ? packMetadata : Object.values(packMetadata)
 const packsByName = new Map(packs.map((pack) => [pack.name, pack]))
 const errors = []
 
@@ -67,6 +70,7 @@ const exportTargets = (value) => {
 
 const forbiddenPackageFile = (path) =>
   /(^|\/)(coverage|test|tests|\.storybook)(\/|$)/.test(path) ||
+  /^dist\/src\/.*\.(?:[cm]?js|d\.ts)(?:\.map)?$/.test(path) ||
   /\.(spec|stories|test)\./.test(path) ||
   path.endsWith('.tsbuildinfo') ||
   path.includes('eslint_report')

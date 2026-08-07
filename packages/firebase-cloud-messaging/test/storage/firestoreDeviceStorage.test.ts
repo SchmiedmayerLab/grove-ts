@@ -310,6 +310,7 @@ describe('FirestoreDeviceStorage', () => {
   describe('getUserDevices', () => {
     test('should return user devices properly formatted', async () => {
       const userId = 'user123'
+      let capturedConverter: FirestoreDataConverter<Device> | undefined
 
       // Create a mock document snapshot
       const deviceData = {
@@ -329,19 +330,22 @@ describe('FirestoreDeviceStorage', () => {
 
       // Create a mock query snapshot
       const withConverterStub = vi.fn(
-        (converter: FirestoreDataConverter<Device>) => ({
-          get: vi.fn().mockResolvedValue({
-            docs: [
-              {
-                ...deviceDoc,
-                data: () =>
-                  converter.fromFirestore(
-                    deviceDoc as unknown as QueryDocumentSnapshot,
-                  ),
-              },
-            ],
-          }),
-        }),
+        (converter: FirestoreDataConverter<Device>) => {
+          capturedConverter = converter
+          return {
+            get: vi.fn().mockResolvedValue({
+              docs: [
+                {
+                  ...deviceDoc,
+                  data: () =>
+                    converter.fromFirestore(
+                      deviceDoc as unknown as QueryDocumentSnapshot,
+                    ),
+                },
+              ],
+            }),
+          }
+        },
       )
 
       mockFirestore.collection.mockReturnValue({
@@ -369,6 +373,13 @@ describe('FirestoreDeviceStorage', () => {
       expect(devices[0].content.platform).toBe(DevicePlatform.iOS)
       expect(devices[0].content).toBeInstanceOf(Device)
       expect(devices[0].content).not.toHaveProperty('content')
+
+      if (!capturedConverter) {
+        throw new Error('Expected Firestore converter to be captured')
+      }
+      expect(capturedConverter.toFirestore(devices[0].content)).toEqual(
+        deviceData,
+      )
     })
   })
 

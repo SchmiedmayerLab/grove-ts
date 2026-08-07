@@ -36,4 +36,23 @@ describe('ImmunizationRecommendation Resource', () => {
       )
     })
   })
+
+  it('should return vaccine displays and ignore recommendations without vaccine codes', () => {
+    const recommendation = FhirImmunizationRecommendation.parse({
+      resourceType: 'ImmunizationRecommendation',
+      patient: { reference: 'Patient/123' },
+      date: '2026-08-06',
+      recommendation: [
+        {
+          vaccineCode: [{ text: 'Influenza' }],
+          forecastStatus: { text: 'Due' },
+        },
+        {
+          forecastStatus: { text: 'Complete' },
+        },
+      ],
+    })
+
+    expect(recommendation.vaccineCodeDisplays).toEqual(['Influenza'])
+  })
 })
