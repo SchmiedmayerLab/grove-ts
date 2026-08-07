@@ -80,6 +80,6 @@
     "@types/node": "^24.10.0",
     "parcel": "^2.16.4",
     "rimraf": "^6.1.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   }
 }
