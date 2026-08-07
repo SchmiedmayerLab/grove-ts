@@ -76,7 +76,7 @@ export const Default = () => (
         onClick={() =>
           toast(
             <>
-              Event <b>"Example"</b> will be ready to publish soon
+              Event <b>&quot;Example&quot;</b> will be ready to publish soon
             </>,
           )
         }

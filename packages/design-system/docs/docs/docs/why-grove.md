@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-sidebar_label: "Why Grove Web?"
+sidebar_label: 'Why Grove Web?'
 ---
 
 # Why Grove Design System?
@@ -36,11 +36,13 @@ The library is built on these core principles:
 ### vs shadcn/ui
 
 **Similarities:**
+
 - Both built on Radix UI primitives
 - Both use Tailwind CSS for styling
 - Many components in this library are based on shadcn/ui patterns
 
 **Key Differences:**
+
 - **Distribution**: shadcn/ui uses copy-paste (you own the code immediately), Grove uses package distribution (centralized updates)
 - **Philosophy**: shadcn/ui maximizes flexibility, Grove maximizes productivity with opinionated defaults
 - **Scope**: Grove includes additional molecules, utilities, and ecosystem integrations (auth, forms, layouts)
@@ -52,12 +54,14 @@ The library is built on these core principles:
 ### vs Material-UI / Chakra UI
 
 **Advantages of Grove:**
+
 - Lower learning curve - built on standard tools (Tailwind, Radix)
 - More modern tech stack aligned with current ecosystem trends
 - Lighter weight and less opinionated about design language
 - Easier to customize without fighting the framework
 
 **Advantages of Material-UI/Chakra:**
+
 - More mature ecosystems with larger communities
 - More comprehensive component libraries
 - Built-in design languages (Material Design)

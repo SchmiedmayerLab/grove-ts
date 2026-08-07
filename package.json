@@ -2,6 +2,7 @@
   "name": "@schmiedmayerlab/grove",
   "version": "0.0.0",
   "private": true,
+  "author": "Schmiedmayer Lab",
   "license": "MIT",
   "description": "TypeScript packages for the Grove ecosystem",
   "keywords": [
@@ -15,6 +16,15 @@
     "type": "git",
     "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
+  "engines": {
+    "node": ">=24",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.19.0",
   "workspaces": [
     "packages/configurations",
     "packages/design-system",
@@ -27,17 +37,121 @@
     "build:fhir": "npm run build -w @schmiedmayerlab/grove-firebase-fhir",
     "build:utils": "npm run build -w @schmiedmayerlab/grove-firebase-utils",
     "build:cloud-messaging": "npm run build -w @schmiedmayerlab/grove-firebase-cloud-messaging",
+    "clean": "npm run clean --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prelint": "npm run build --workspace @schmiedmayerlab/grove-configurations",
-    "lint": "npm run lint --workspace @schmiedmayerlab/grove-design-system && npm run lint --workspace @schmiedmayerlab/grove-firebase-cloud-messaging && npm run lint --workspace @schmiedmayerlab/grove-firebase-fhir && npm run lint --workspace @schmiedmayerlab/grove-firebase-utils",
+    "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
-    "lint:ci": "npm run lint",
-    "lint:strict": "npm run lint",
+    "lint:ci": "npm run lint:ci --workspaces --if-present",
+    "lint:strict": "npm run lint:ci",
+    "analyze": "knip --include files,dependencies,unlisted,exports --no-config-hints && knip --cycles --workspace '!packages/firebase-fhir' --no-config-hints",
     "pretest": "npm run build",
     "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
     "test:fhir": "npm run test -w @schmiedmayerlab/grove-firebase-fhir",
     "test:utils": "npm run test -w @schmiedmayerlab/grove-firebase-utils",
     "test:cloud-messaging": "npm run test -w @schmiedmayerlab/grove-firebase-cloud-messaging",
-    "docs": "npm run docs --workspace @schmiedmayerlab/grove-design-system",
-    "docs:ci": "npm run docs:ci --workspace @schmiedmayerlab/grove-design-system"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "pack:check": "node scripts/verify-packages.mjs",
+    "pack:lint": "node scripts/lint-packages.mjs",
+    "audit": "npm audit --audit-level=low",
+    "audit:production": "npm audit --omit=dev --audit-level=low",
+    "audit:docs": "npm audit --prefix packages/design-system/docs --audit-level=low",
+    "audit:signatures": "npm audit signatures",
+    "validate": "npm run format:check && npm run lint:ci && npm run analyze && npm run typecheck && npm test && npm run docs:ci && npm run pack:check && npm run pack:lint && npm run audit && npm run audit:docs",
+    "docs": "npm run dev --prefix packages/design-system/docs",
+    "docs:ci": "npm run build --prefix packages/design-system/docs"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "knip": "^6.29.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "publint": "^0.3.22"
+  },
+  "overrides": {
+    "js-yaml": "4.3.1",
+    "next": {
+      "postcss": "8.5.26",
+      "sharp": "0.35.3"
+    },
+    "teeny-request": {
+      "uuid": "11.1.1"
+    }
+  },
+  "allowScripts": {
+    "@firebase/util@1.15.2": true,
+    "@parcel/watcher@2.6.0": true,
+    "@swc/core@1.15.47": true,
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true,
+    "lmdb@2.8.5": true,
+    "msgpackr-extract@3.0.4": true,
+    "protobufjs@7.6.5": true,
+    "unrs-resolver@1.12.2": true
+  },
+  "knip": {
+    "workspaces": {
+      ".": {
+        "entry": [
+          "scripts/*.mjs"
+        ],
+        "project": [
+          "scripts/**/*.mjs"
+        ],
+        "ignoreDependencies": [
+          "@arethetypeswrong/cli",
+          "publint"
+        ]
+      },
+      "packages/configurations": {
+        "entry": [
+          "src/index.ts"
+        ],
+        "project": [
+          "src/**/*.ts"
+        ],
+        "ignoreDependencies": [
+          "@parcel/packager-ts",
+          "@parcel/transformer-typescript-types",
+          "prettier-plugin-tailwindcss"
+        ]
+      },
+      "packages/design-system": {
+        "entry": [
+          "src/index.ts",
+          "src/**/index.{ts,tsx}",
+          ".storybook/*.{ts,tsx}"
+        ],
+        "project": [
+          "src/**/*.{ts,tsx,css,mdx}",
+          ".storybook/*.{ts,tsx}",
+          "*.{ts,tsx}"
+        ],
+        "ignoreDependencies": [
+          "tailwindcss",
+          "tw-animate-css"
+        ]
+      },
+      "packages/firebase-utils": {
+        "project": [
+          "src/**/*.ts",
+          "test/**/*.ts"
+        ]
+      },
+      "packages/firebase-fhir": {
+        "project": [
+          "src/**/*.ts",
+          "test/**/*.ts"
+        ]
+      },
+      "packages/firebase-cloud-messaging": {
+        "project": [
+          "src/**/*.ts",
+          "test/**/*.ts"
+        ]
+      }
+    }
   }
 }

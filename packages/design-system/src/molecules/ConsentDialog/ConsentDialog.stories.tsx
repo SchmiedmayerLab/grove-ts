@@ -44,8 +44,8 @@ export const Default: Story = {
       <div className="space-y-2">
         <p>
           Acme Inc. collects and processes your personal data to provide you
-          with our services and improve your experience. By clicking "I
-          Consent", you agree to our processing of your personal data as
+          with our services and improve your experience. By clicking &quot;I
+          Consent&quot;, you agree to our processing of your personal data as
           described in our Privacy Policy, which includes:
         </p>
         <ul>

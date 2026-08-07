@@ -1,20 +1,22 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2020",
+    "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
-    "strict": true,
     "declaration": true,
-    "outDir": "lib",
+    "rootDir": "src",
+    "outDir": "dist",
     "skipLibCheck": true,
     "isolatedModules": true,
     "sourceMap": true,
     "resolveJsonModule": true,
+    "types": ["node"],
     "paths": {
       "@schmiedmayerlab/grove-firebase-utils": ["../firebase-utils/src"]
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "lib", "test"]
+  "exclude": ["node_modules", "dist", "test"]
 }

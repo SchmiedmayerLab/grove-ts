@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { UrlObject } from "url";
 import { isNil, isString } from "es-toolkit";
 import { toast } from "../../components/Toaster";
 
@@ -29,6 +28,7 @@ import { toast } from "../../components/Toaster";
  *
  * @default false
  */
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- The semantic alias documents the polymorphic component API.
 export type AsChildProp = boolean;
 
 /**
@@ -52,7 +52,7 @@ export type Nil<T> = T | null | undefined;
 /**
  * Type representing a URL that can be either a string or a URL object.
  */
-export type Url = string | UrlObject;
+export type Url = string | URL;
 
 /**
  * Make some fields in the object partial.
@@ -265,9 +265,10 @@ export const joinPaths = (...segments: Array<Nil<string | number>>) => {
 
       // Remove trailing slashes from non-last segments to avoid duplicate separators.
       const withoutTrailingSlash =
-        isLastSegment ? withoutLeadingSlash : (
-          withoutLeadingSlash.replace(/\/+$/, "")
-        );
+        isLastSegment ? withoutLeadingSlash
+          // Anchoring bounds this replacement to a single path-segment suffix.
+          // eslint-disable-next-line sonarjs/super-linear-regex
+        : withoutLeadingSlash.replace(/\/+$/, "");
 
       return withoutTrailingSlash;
     })

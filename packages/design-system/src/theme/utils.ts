@@ -10,6 +10,7 @@
  * Color in `r g b` 8bit format.
  * @example 255 255 255
  */
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- The semantic alias documents the expected space-separated RGB format.
 type RGBColor = string;
 
 /**

@@ -9,3 +9,5 @@ dirs:
 ignorePatterns:
   - pattern: '^http://localhost'
   - pattern: '^https://schmiedmayerlab.github.io/grove-ts/'
+  # TypeDoc API pages are generated during the documentation build.
+  - pattern: '^\.\./api/'

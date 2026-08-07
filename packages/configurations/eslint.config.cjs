@@ -6,6 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-const { prettierConfig } = require("@schmiedmayerlab/grove-configurations");
+const { getEslintNodeConfig } = require('./dist')
 
-module.exports = prettierConfig;
+module.exports = getEslintNodeConfig({ tsconfigRootDir: __dirname })

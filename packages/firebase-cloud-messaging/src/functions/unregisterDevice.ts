@@ -29,6 +29,7 @@ export type UnregisterDeviceInput = z.input<typeof unregisterDeviceInputSchema>
 /**
  * Type for unregister device output (undefined)
  */
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- The named output type is part of the callable function contract.
 export type UnregisterDeviceOutput = undefined
 
 /**
@@ -36,10 +37,9 @@ export type UnregisterDeviceOutput = undefined
  * @param notificationService The notification service
  * @returns A function that handles device unregistration
  */
-export function createUnregisterDeviceHandler(
-  notificationService: NotificationService,
-) {
-  return async (
+export const createUnregisterDeviceHandler =
+  (notificationService: NotificationService) =>
+  async (
     userId: string,
     data: UnregisterDeviceInput,
   ): Promise<UnregisterDeviceOutput> => {
@@ -51,4 +51,3 @@ export function createUnregisterDeviceHandler(
       platform,
     )
   }
-}

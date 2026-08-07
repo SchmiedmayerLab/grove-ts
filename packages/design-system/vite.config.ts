@@ -15,27 +15,33 @@ import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { configDefaults } from "vitest/config";
+import packageManifest from "./package.json" with { type: "json" };
 
 /**
  * Tuple of [package name, package entry point].
  */
-const entires = [
+const entries = [
   ["index", "src/index.ts"],
   ["GroveProvider", "src/GroveProvider.tsx"],
   ["forms", "src/forms/index.tsx"],
   ...fs
-    .readdirSync(path.resolve(__dirname, `src/components`))
+    .readdirSync(path.resolve(import.meta.dirname, `src/components`))
     .map((name) => [`components/${name}`, `src/components/${name}/index.tsx`]),
   ...fs
-    .readdirSync(path.resolve(__dirname, `src/molecules`))
+    .readdirSync(path.resolve(import.meta.dirname, `src/molecules`))
     .map((name) => [`molecules/${name}`, `src/molecules/${name}/index.tsx`]),
   ...fs
-    .readdirSync(path.resolve(__dirname, `src/modules`))
+    .readdirSync(path.resolve(import.meta.dirname, `src/modules`))
     .map((name) => [`modules/${name}`, `src/modules/${name}/index.tsx`]),
   ...fs
-    .readdirSync(path.resolve(__dirname, `src/utils`))
+    .readdirSync(path.resolve(import.meta.dirname, `src/utils`))
     .map((name) => [`utils/${name}`, `src/utils/${name}/index.ts`]),
 ];
+
+const externalPackages = new Set([
+  ...Object.keys(packageManifest.dependencies),
+  ...Object.keys(packageManifest.peerDependencies),
+]);
 
 const testExclude = [
   "**/*.stories.tsx",
@@ -49,6 +55,14 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
+      exclude: [
+        ".storybook/**",
+        "src/tests/**",
+        "**/*.stories.{ts,tsx}",
+        "**/*.test.{ts,tsx}",
+        "testSetup.ts",
+        "vite.config.ts",
+      ],
       insertTypesEntry: true,
     }),
     viteStaticCopy({
@@ -68,14 +82,18 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   build: {
     lib: {
       entry: Object.fromEntries(
-        entires.map((entry) => [entry[0], path.resolve(__dirname, entry[1])]),
+        entries.map((entry) => [
+          entry[0],
+          path.resolve(import.meta.dirname, entry[1]),
+        ]),
       ),
+      formats: ["es"],
       name: "@schmiedmayerlab/grove-design-system",
       fileName: (format, name) => {
         if (format === "es") return `${name}.js`;
@@ -83,7 +101,11 @@ export default defineConfig({
       },
     },
     rollupOptions: {
-      external: ["react", "next-intl", "react/jsx-runtime", "react-dom"],
+      external: (source) =>
+        [...externalPackages].some(
+          (packageName) =>
+            source === packageName || source.startsWith(`${packageName}/`),
+        ),
     },
   },
   test: {
@@ -92,7 +114,15 @@ export default defineConfig({
     setupFiles: ["./testSetup.ts"],
     exclude: [...testExclude, ...configDefaults.exclude],
     coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "lcov"],
       exclude: [...testExclude, ...(configDefaults.coverage.exclude ?? [])],
+      thresholds: {
+        branches: 80,
+        functions: 90,
+        lines: 90,
+        statements: 90,
+      },
     },
   },
 });

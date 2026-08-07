@@ -3,25 +3,28 @@
   "version": "0.0.0",
   "description": "Firebase Cloud Messaging utilities for Grove applications",
   "type": "module",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
-      "import": "./lib/index.js",
-      "require": "./lib/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "lint": "eslint src --resolve-plugins-relative-to .",
-    "lint:fix": "eslint src --fix --resolve-plugins-relative-to .",
-    "build": "tsc --noEmitOnError false || true",
+    "lint": "eslint .",
+    "lint:ci": "eslint --max-warnings 0 .",
+    "lint:fix": "eslint . --fix",
+    "build": "tsc",
     "watch": "tsc --watch",
-    "clean": "rimraf lib tsconfig.tsbuildinfo",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "prepublishOnly": "npm run clean && npm run build"
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "test": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json",
+    "prepublishOnly": "npm run clean && npm run build",
+    "version": "node ../../scripts/sync-workspace-versions.mjs"
   },
   "keywords": [
     "grove",
@@ -35,41 +38,42 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SchmiedmayerLab/grove-ts.git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
     "directory": "packages/firebase-cloud-messaging"
   },
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "publishConfig": {
     "access": "public"
   },
   "files": [
-    "lib",
+    "dist",
     "README.md",
     "LICENSE"
   ],
   "dependencies": {
-    "firebase-admin": "^12.0",
-    "@schmiedmayerlab/grove-firebase-utils": "0.0.0"
+    "@schmiedmayerlab/grove-firebase-utils": "0.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.3",
-    "@types/node": "^20",
-    "@typescript-eslint/eslint-plugin": "^7",
-    "@typescript-eslint/parser": "^7",
-    "eslint": "^8.57",
-    "eslint-config-google": "^0.14",
-    "eslint-config-prettier": "^9",
-    "eslint-plugin-import": "^2",
-    "eslint-plugin-jsdoc": "^61.2.0",
-    "eslint-plugin-prettier": "^5",
-    "jest": "^29.6.2",
-    "prettier": "^3",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5"
+    "@schmiedmayerlab/grove-configurations": "0.0.0",
+    "@types/node": "^24.10.0",
+    "@vitest/coverage-v8": "4.1.10",
+    "eslint": "^9.39.5",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "firebase-admin": "^14.2.0",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.1.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "firebase-admin": "^12.0"
+    "firebase-admin": "^14.2.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24"
   }
 }

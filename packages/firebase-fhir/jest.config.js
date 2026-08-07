@@ -7,13 +7,15 @@
 //
 
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-export default {
+const config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  testMatch: ['**/test/**/*.test.ts'],
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
       {
+        tsconfig: 'test/tsconfig.json',
         useESM: true,
       },
     ],
@@ -21,10 +23,18 @@ export default {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  extensionsToTreatAsEsm: ['.ts'],
-  testMatch: ['**/test/**/*.test.ts'],
   collectCoverage: true,
-  coverageDirectory: 'coverage',
   collectCoverageFrom: ['src/**/*.ts'],
-  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.js'],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'json-summary', 'lcov'],
+  coverageThreshold: {
+    global: {
+      branches: 28,
+      functions: 34,
+      lines: 64,
+      statements: 63,
+    },
+  },
 }
+
+export default config

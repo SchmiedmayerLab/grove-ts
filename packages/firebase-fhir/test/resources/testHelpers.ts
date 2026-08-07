@@ -11,15 +11,16 @@
  * @param object The object to stringify
  * @returns JSON string with sorted keys
  */
-export function jsonStringifyDeterministically(object: unknown): string {
-  return JSON.stringify(
+export const jsonStringifyDeterministically = (object: unknown): string =>
+  JSON.stringify(
     object,
-    (_, value) => {
+    (_, value: unknown) => {
       if (value && typeof value === 'object' && !Array.isArray(value)) {
-        return Object.keys(value)
+        const record = value as Record<string, unknown>
+        return Object.keys(record)
           .sort()
-          .reduce<any>((sorted, key) => {
-            sorted[key] = value[key]
+          .reduce<Record<string, unknown>>((sorted, key) => {
+            sorted[key] = record[key]
             return sorted
           }, {})
       }
@@ -27,4 +28,3 @@ export function jsonStringifyDeterministically(object: unknown): string {
     },
     2,
   )
-}

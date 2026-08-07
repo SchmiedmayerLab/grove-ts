@@ -31,7 +31,7 @@ import { z } from 'zod'
 // Define a schema using Zod
 const userSchema = z.object({
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   age: z.number().optional(),
 })
 

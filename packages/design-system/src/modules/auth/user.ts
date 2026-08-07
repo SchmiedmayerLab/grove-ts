@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type UserInfo as AuthUserInfo } from "@firebase/auth-types";
+import { type UserInfo as AuthUserInfo } from "firebase/auth";
 import { type Nil } from "@/utils/misc";
 
 /**

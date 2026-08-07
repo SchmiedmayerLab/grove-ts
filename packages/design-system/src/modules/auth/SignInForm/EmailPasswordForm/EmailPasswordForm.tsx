@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { FirebaseError } from "@firebase/app";
+import { FirebaseError } from "firebase/app";
 import { type Auth, type signInWithEmailAndPassword } from "firebase/auth";
 import { useTranslations } from "next-intl";
 import { z } from "zod";

@@ -10,7 +10,10 @@
  * Firebase implementation of notification service
  */
 
-import { type Messaging, type TokenMessage } from 'firebase-admin/messaging'
+import {
+  type Message as FirebaseMessage,
+  type Messaging,
+} from 'firebase-admin/messaging'
 import { type NotificationService } from './notificationService.js'
 import { DevicePlatform, type Device } from '../models/device.js'
 import { type Message } from '../models/message.js'
@@ -84,7 +87,7 @@ export class FirebaseNotificationService implements NotificationService {
     if (devices.length === 0) return
 
     // Create notifications for each device
-    const notifications: TokenMessage[] = []
+    const notifications: FirebaseMessage[] = []
 
     for (const device of devices) {
       const preferredLanguage =
@@ -104,7 +107,7 @@ export class FirebaseNotificationService implements NotificationService {
 
       // Create token message for this device
       if (device.content.notificationToken) {
-        const tokenMessage: TokenMessage = {
+        const tokenMessage: FirebaseMessage = {
           token: device.content.notificationToken,
           notification: {
             title,

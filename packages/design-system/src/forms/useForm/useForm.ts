@@ -58,16 +58,17 @@ class ValidationError<
  * ```
  */
 export const useForm = <
-  Schema extends z.ZodType<FieldValues, FieldValues>,
+  Input extends FieldValues,
+  Output extends FieldValues,
   Context,
 >({
   formSchema,
   ...props
-}: UseFormProps<z.input<Schema>, Context, z.output<Schema>> & {
-  formSchema: Schema;
+}: UseFormProps<Input, Context, Output> & {
+  formSchema: z.ZodType<Output, Input>;
 }) => {
-  const form = useFormHook({
-    resolver: zodResolver(formSchema),
+  const form = useFormHook<Input, Context, Output>({
+    resolver: zodResolver<Input, Context, Output>(formSchema),
     ...props,
   });
 
@@ -82,7 +83,7 @@ export const useForm = <
    * Prevents callback hell and wrong execution flow if one of forms is not valid.
    */
   const submitAsync = () =>
-    new Promise<z.infer<Schema>>((resolve, reject) => {
+    new Promise<Output>((resolve, reject) => {
       void form.handleSubmit(
         (data) => {
           resolve(data);

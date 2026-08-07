@@ -15,7 +15,7 @@ describe("useMedia", () => {
     matches,
     media: "",
     onchange: null,
-    addEventListener: vi.fn(),
+    addEventListener: vi.fn<(type: string, listener: () => void) => void>(),
     removeEventListener: vi.fn(),
     addListener: vi.fn(),
     removeListener: vi.fn(),
@@ -55,7 +55,6 @@ describe("useMedia", () => {
       act(() => {
         mediaQueryList.matches = true;
         // this is onChange handler
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         mediaQueryList.addEventListener.mock.calls[0][1]();
       });
 
@@ -96,7 +95,6 @@ describe("useMedia", () => {
       act(() => {
         mediaQueryList.matches = true;
         // this is onChange handler
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         mediaQueryList.addEventListener.mock.calls[0][1]();
       });
 

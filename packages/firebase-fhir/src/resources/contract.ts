@@ -51,7 +51,7 @@ import {
   contractStatusSchema,
 } from '../valueSets/index.js'
 
-// TODO: Separate schemas
+// Keep the nested schemas together to mirror the FHIR Contract structure.
 
 const contractTermSecurityLabelSchema: ZodType<ContractTermSecurityLabel> =
   backboneElementSchema.extend({

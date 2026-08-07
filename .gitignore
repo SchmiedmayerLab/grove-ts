@@ -9,26 +9,24 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+**/node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # testing
-/coverage
+**/coverage/
 
 # next.js
 /.next/
-/out/
+**/out/
 
 # production
-/build
-/.parcel-cache
-
-# packages build output
-/packages/*/lib
-/packages/*/dist
-/packages/*/storybook-static
+**/build/
+**/dist/
+**/lib/
+**/storybook-static/
+**/.parcel-cache/
 
 # misc
 .DS_Store
@@ -54,12 +52,13 @@ next-env.d.ts
 eslint_report.json
 
 # docs
-/docs
-/out/docs
+**/.docusaurus/
+**/.cache-loader/
+/packages/design-system/docs/docs/api/
 
 # editors
-.idea/
-.vscode/
+**/.idea/
+**/.vscode/
 *.swp
 *.swo
 

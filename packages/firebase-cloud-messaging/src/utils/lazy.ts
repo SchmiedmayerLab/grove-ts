@@ -14,8 +14,9 @@
  * A utility class that implements lazy initialization pattern
  */
 export class Lazy<T> {
-  private factory: () => T
-  private _value?: T
+  private readonly factory: () => T
+  private isInitialized = false
+  private _value!: T
 
   /**
    * Creates a new Lazy instance
@@ -30,8 +31,9 @@ export class Lazy<T> {
    * @returns The computed or cached value
    */
   get value(): T {
-    if (this._value === undefined) {
+    if (!this.isInitialized) {
       this._value = this.factory()
+      this.isInitialized = true
     }
     return this._value
   }

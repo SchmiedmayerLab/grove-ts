@@ -5,5 +5,5 @@
 //
 // SPDX-License-Identifier: MIT
 //
-export * from "./eslint";
-export * from "./prettier";
+export * from './eslint'
+export * from './prettier'

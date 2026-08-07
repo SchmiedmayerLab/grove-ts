@@ -7,4 +7,13 @@
 #
 
 **/dist
+**/build
+**/coverage
+**/lib
+**/out
+**/storybook-static
+**/*.tsbuildinfo
+**/.docusaurus
+packages/design-system/docs/docs/api
+.parcel-cache
 node_modules

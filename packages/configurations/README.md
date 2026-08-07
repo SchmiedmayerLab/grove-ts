@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT
 
 ## Getting Started
 
-A shared linting and formatter configurations. Uses Prettier and ESLint. Pre-configured for you to easily plug into your codebases. 
+Shared ESLint and Prettier configurations that can be added to TypeScript projects with minimal setup.
 
 Configurations are opinionated and strict. We aim to catch as many possible mistakes or elements we consider harmful practices early. Some rules are meant to be broken once in a while, with an explanation comment around them.
 
@@ -27,12 +27,14 @@ Install dependencies:
 npm install --save-dev prettier eslint @schmiedmayerlab/grove-configurations
 ```
 
-Create `eslint.config.js` file.
+Create an `eslint.config.cjs` file.
 
 If aiming for React, use:
 
 ```javascript
-const { getEslintReactConfig } = require('@schmiedmayerlab/grove-configurations')
+const {
+  getEslintReactConfig,
+} = require('@schmiedmayerlab/grove-configurations')
 
 module.exports = getEslintReactConfig({ tsconfigRootDir: __dirname })
 ```
@@ -45,16 +47,15 @@ const { getEslintNodeConfig } = require('@schmiedmayerlab/grove-configurations')
 module.exports = getEslintNodeConfig({ tsconfigRootDir: __dirname })
 ```
 
-Create `.prettierrc.js` file:
+Create a `.prettierrc.cjs` file:
 
 ```javascript
-const { prettierConfig } = require("@schmiedmayerlab/grove-configurations");
+const { prettierConfig } = require('@schmiedmayerlab/grove-configurations')
 
-module.exports = prettierConfig;
+module.exports = prettierConfig
 ```
 
-Now, when you run `eslint . --fix`, code is going to be linted and formatted. 
-
+Now, when you run `eslint . --fix`, code is going to be linted and formatted.
 
 ### ESLint customization
 
@@ -62,53 +63,50 @@ We aim to make this config mostly plug and play. You can adjust ESLint to your n
 
 ```javascript
 module.exports = [
-    ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
-    {
-        ignores: ["lib/**/*"], // Ignore generated build files
+  ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
+  {
+    ignores: ['lib/**/*'], // Ignore generated build files
+  },
+  {
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off', // ignore unwanted rule
     },
-    {
-        rules: {
-            "@typescript-eslint/no-non-null-assertion": "off", // ignore unwanted rule
-        },
-    },
+  },
 ]
 ```
 
-
 For more complex scenarios, we expose smaller pieces of configuration. You can use them and do micro-adjustments. This is not the recommended approach.
-
 
 ```javascript
 const {
-    getEslintRules,
-    getNodeGlobals,
-    getPreferArrowFunctions,
-    getReactPlugins,
-    getPrettierPlugin,
-    getTslint,
-} = require("@schmiedmayerlab/grove-configurations");
-const tseslint = require("typescript-eslint");
+  getEslintRules,
+  getNodeGlobals,
+  getPreferArrowFunctions,
+  getReactPlugins,
+  getPrettierPlugin,
+  getTslint,
+} = require('@schmiedmayerlab/grove-configurations')
+const tseslint = require('typescript-eslint')
 
 module.exports = tseslint.config(
-    ...getEslintRules(),
-    getNodeGlobals(),
-    {
-        ...getTslint(),
-        languageOptions: {
-            ecmaVersion: 2020,
-            globals: globals.browser,
-            parserOptions: {
-                projectService: true,
-                tsconfigRootDir,
-            },
-        },
+  ...getEslintRules(),
+  getNodeGlobals(),
+  {
+    ...getTslint(),
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir,
+      },
     },
-    getPreferArrowFunctions(),
-    ...getReactPlugins(),
-    ...getPrettierPlugin(),
-);
+  },
+  getPreferArrowFunctions(),
+  ...getReactPlugins(),
+  ...getPrettierPlugin(),
+)
 ```
-
 
 ## License
 

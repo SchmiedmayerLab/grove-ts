@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { FirebaseError } from "@firebase/app";
 import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { FirebaseError } from "firebase/app";
 import { type Auth } from "firebase/auth";
 import { vitest } from "vitest";
 import { renderWithProviders } from "@/tests/helpers";

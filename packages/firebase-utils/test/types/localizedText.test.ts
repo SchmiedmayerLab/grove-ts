@@ -19,7 +19,6 @@ describe('LocalizedText', () => {
       expect(text).toBeInstanceOf(LocalizedText)
       expect(text.content).toBe('hello')
     })
-
     it('should create an instance with a record of translations', () => {
       const translations = {
         en: 'hello',
@@ -133,11 +132,5 @@ describe('LocalizedText', () => {
       const encoded = localizedTextConverter.encode(parsed)
       expect(encoded).toEqual(translations)
     })
-
-    // TODO: Add more tests for granular localization keys
-    // - Test region-specific language codes (e.g., en-US, en-GB, pt-BR, zh-CN)
-    // - Test handling of non-standard codes and case sensitivity
-    // - Test multi-level fallbacks (e.g., zh-HK → zh-TW → zh-CN → zh)
-    // - Test script variants (e.g., sr-Latn vs sr-Cyrl)
   })
 })

@@ -8,7 +8,11 @@
 
 name: CodeQL
 
+permissions:
+  contents: read
+
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -21,7 +25,8 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       security-events: write
       packages: read
@@ -29,10 +34,13 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
+          build-mode: none
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4

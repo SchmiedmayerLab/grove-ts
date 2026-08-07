@@ -175,9 +175,7 @@ const doc = await firestore.collection('observations').doc('obs-123').get()
 const observation = FhirObservation.parse(doc.data())
 
 // Write validated data to Firestore
-const newObservation = FhirObservation.parse({
-  /* ... */
-})
+const newObservation = FhirObservation.parse({/* ... */})
 await firestore
   .collection('observations')
   .doc(newObservation.value.id)

@@ -8,6 +8,10 @@
 
 name: Build and Test
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,31 +25,117 @@ on:
   workflow_call:
 
 jobs:
-  reuseaction:
+  reuse:
     name: REUSE Compliance Check
     uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.3
-  markdownlinkcheck:
+  actionlint:
+    name: GitHub Actions Workflow Check
+    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.3
+  markdown-links:
     name: Markdown Link Check
     uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3
-  buildandlint:
-    name: Build and Lint
+  quality:
+    name: Build and Quality Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
+      - name: Set up npm
+        run: npm install --global --ignore-scripts npm@12.0.2
       - name: Install dependencies
         run: npm ci
-      - name: Build packages
+      - name: Check formatting
+        run: npm run format:check
+      - name: Build packages with strict TypeScript checks
         run: npm run build
       - name: Lint packages
-        run: npm run lint
-  testandcoverage:
+        run: npm run lint:ci
+      - name: Analyze dead code, dependencies, exports, and cycles
+        run: npm run analyze
+      - name: Type-check source and tests
+        run: npm run typecheck
+      - name: Verify package contents
+        run: npm run pack:check
+      - name: Lint package manifests and TypeScript declarations
+        run: npm run pack:lint
+      - name: Audit all dependencies
+        run: npm run audit
+      - name: Verify npm registry signatures
+        run: npm run audit:signatures
+  documentation:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            packages/design-system/docs/package-lock.json
+      - name: Set up npm
+        run: npm install --global --ignore-scripts npm@12.0.2
+      - name: Install package dependencies
+        run: npm ci
+      - name: Install documentation dependencies
+        run: npm ci --prefix packages/design-system/docs
+      - name: Audit documentation dependencies
+        run: npm run audit:docs
+      - name: Build documentation site
+        run: npm run docs:ci
+      - name: Build Storybook
+        run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
+  tests:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3
     with:
-      nodeVersion: 24
+      nodeVersion: '24'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: moderate
+          fail-on-scopes: runtime, development
+  ci:
+    name: CI
+    if: always()
+    needs:
+      - actionlint
+      - dependency-review
+      - documentation
+      - markdown-links
+      - quality
+      - reuse
+      - tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+            exit 1
+          fi

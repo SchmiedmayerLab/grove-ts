@@ -175,7 +175,8 @@ export const CustomizedEmptyMessage: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
+  name: "Error",
   args: {
     ...Default.args,
     error: true,

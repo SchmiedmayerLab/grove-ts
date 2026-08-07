@@ -6,14 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-// Using Jest assertions
 import { z } from 'zod'
 import { Lazy } from '../../src/helpers/lazy.js'
-import {
-  SchemaConverter,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type InferEncoded,
-} from '../../src/helpers/schemaConverter.js'
+import { SchemaConverter } from '../../src/helpers/schemaConverter.js'
 
 describe('SchemaConverter', () => {
   // Simple class for testing

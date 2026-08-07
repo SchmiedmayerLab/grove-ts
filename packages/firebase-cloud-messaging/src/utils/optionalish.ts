@@ -15,40 +15,28 @@ import { type z } from 'zod'
 /**
  * Creates a schema that transforms null values to undefined
  *
- * NOTE: The Zod transform API returns a type that TypeScript cannot safely infer,
- * so we must use the unsafe-return eslint-disable. This is a known limitation when
- * working with Zod's transform API and schema validation.
- *
  * @param schema The Zod schema to make optionalish
  * @returns A schema that transforms null to undefined
  */
-export function optionalish<T extends z.ZodTypeAny>(schema: T) {
-  return schema.nullable().transform<z.infer<T> | undefined>((val) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return val === null ? undefined : (val as z.infer<T>)
+export const optionalish = <T extends z.ZodType>(schema: T) =>
+  schema.nullable().transform<z.infer<T> | undefined>((val) => {
+    return val ?? undefined
   })
-}
 
 /**
  * Creates a schema that provides a default value when null is encountered
- *
- * NOTE: The Zod transform API returns a type that TypeScript cannot safely infer,
- * so we must use the unsafe-return eslint-disable. This is a known limitation when
- * working with Zod's transform API and schema validation.
  *
  * @param schema The Zod schema to make optionalish with default
  * @param defaultValue The default value to use when null is encountered
  * @returns A schema that uses the default value for null
  */
-export function optionalishDefault<T extends z.ZodTypeAny>(
+export const optionalishDefault = <T extends z.ZodType>(
   schema: T,
   defaultValue: z.infer<T>,
-) {
-  return schema
+) =>
+  schema
     .nullable()
     .default(null)
     .transform<z.infer<T>>((val) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return val === null ? defaultValue : (val as z.infer<T>)
+      return val ?? defaultValue
     })
-}

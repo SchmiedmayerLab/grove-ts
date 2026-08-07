@@ -21,7 +21,7 @@ describe('FhirBundle - findResourcesWith', () => {
             id: '1',
             active: true,
             name: [{ family: 'Smith' }],
-          } as Patient,
+          },
         },
         {
           resource: {
@@ -29,7 +29,7 @@ describe('FhirBundle - findResourcesWith', () => {
             id: '2',
             active: false,
             name: [{ family: 'Jones' }],
-          } as Patient,
+          },
         },
         {
           resource: {
@@ -37,7 +37,7 @@ describe('FhirBundle - findResourcesWith', () => {
             id: '3',
             status: 'final',
             code: { text: 'Blood pressure' },
-          } as Observation,
+          },
         },
       ],
     }
@@ -64,7 +64,7 @@ describe('FhirBundle - findResourcesWith', () => {
             resourceType: 'Patient',
             id: '1',
             active: false,
-          } as Patient,
+          },
         },
       ],
     }
@@ -104,7 +104,7 @@ describe('FhirBundle - findResourcesWith', () => {
             resourceType: 'Patient',
             id: '2',
             active: true,
-          } as Patient,
+          },
         },
       ],
     }
@@ -115,6 +115,30 @@ describe('FhirBundle - findResourcesWith', () => {
 
     expect(patients).toHaveLength(1)
     expect(patients[0].id).toBe('2')
+  })
+
+  it('should find a resource by type and ID', () => {
+    const bundle: Bundle = {
+      resourceType: 'Bundle',
+      type: 'collection',
+      entry: [
+        {
+          resource: {
+            resourceType: 'Patient',
+            id: 'patient-1',
+          },
+        },
+      ],
+    }
+
+    const fhirBundle = FhirBundle.parseGeneric(bundle)
+
+    expect(fhirBundle.resourceById<Patient>('Patient', 'patient-1')?.id).toBe(
+      'patient-1',
+    )
+    expect(
+      fhirBundle.resourceById<Patient>('Patient', 'missing'),
+    ).toBeUndefined()
   })
 
   it('should work with complex predicates', () => {
@@ -135,7 +159,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          } as Observation,
+          },
         },
         {
           resource: {
@@ -150,7 +174,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          } as Observation,
+          },
         },
         {
           resource: {
@@ -165,7 +189,7 @@ describe('FhirBundle - findResourcesWith', () => {
                 },
               ],
             },
-          } as Observation,
+          },
         },
       ],
     }

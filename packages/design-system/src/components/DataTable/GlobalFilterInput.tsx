@@ -45,7 +45,7 @@ export const GlobalFilterInputInput = ({
   className,
   ...props
 }: GlobalFilterInputInputProps) => {
-  const placeholder = `Search${entityName ? ` ${entityName}` : ""}...`;
+  const placeholder = entityName ? `Search ${entityName}...` : "Search...";
   return (
     <Input
       placeholder={placeholder}

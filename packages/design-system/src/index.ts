@@ -10,6 +10,7 @@ export * from "./components/Accordion";
 export * from "./components/Async";
 export * from "./components/Avatar";
 export * from "./components/Badge";
+export * from "./components/Breadcrumb";
 export * from "./components/Button";
 export * from "./components/Calendar";
 export * from "./components/Card";

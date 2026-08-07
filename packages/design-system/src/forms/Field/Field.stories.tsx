@@ -53,7 +53,7 @@ export const Label = () => {
  * Field errors are coming from formSchema validation
  * This is just example
  */
-export const Error = () => {
+export const ErrorState = () => {
   const form = useForm({ formSchema });
   return (
     <Field

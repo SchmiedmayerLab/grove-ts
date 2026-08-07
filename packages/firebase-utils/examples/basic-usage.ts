@@ -14,7 +14,7 @@ import {
   advanceDateByDays,
   optionalish,
   optionalishDefault,
-} from 'firebase-utils'
+} from '@schmiedmayerlab/grove-firebase-utils'
 import { z } from 'zod'
 
 // 1. Define schemas with SchemaConverter
@@ -22,7 +22,7 @@ const userSchema = z.object({
   name: z.string(),
   // Simple optional field
   age: optionalish(z.number()),
-  email: z.string().email(),
+  email: z.email(),
   createdAt: z.date(),
   preferences: z
     .object({
@@ -33,10 +33,10 @@ const userSchema = z.object({
     .optional(),
 })
 
-type User = z.infer<typeof userSchema>
+export type User = z.infer<typeof userSchema>
 
 // 2. Create a schema converter
-const userConverter = new SchemaConverter({
+export const userConverter = new SchemaConverter({
   schema: userSchema,
   encode: (user) => ({
     name: user.name,
@@ -55,7 +55,7 @@ const greeting = new LocalizedText({
 })
 
 // Example: Using optionalish and optionalishDefault for handling null values
-function processUserData(data: unknown) {
+export const processUserData = (data: unknown) => {
   // This will handle both undefined and null values for age
   // age: null → undefined
   const user = userSchema.parse(data)
@@ -65,19 +65,14 @@ function processUserData(data: unknown) {
   return user
 }
 
-function greetUser(language: string) {
-  return greeting.localize(language)
-}
+export const greetUser = (language: string) => greeting.localize(language)
 
 // Example: Using array utilities
-function calculateStatistics(values: number[]) {
-  return {
-    average: average(values),
-    batches: chunks(values, 5),
-  }
-}
+export const calculateStatistics = (values: number[]) => ({
+  average: average(values),
+  batches: chunks(values, 5),
+})
 
 // Example: Using date utilities
-function getExpirationDate(fromDate: Date) {
-  return advanceDateByDays(fromDate, 30)
-}
+export const getExpirationDate = (fromDate: Date) =>
+  advanceDateByDays(fromDate, 30)

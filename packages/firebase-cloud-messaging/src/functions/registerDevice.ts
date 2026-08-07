@@ -17,7 +17,7 @@ import { type NotificationService } from '../services/notificationService.js'
 /**
  * Zod schema for register device input validation
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 export const registerDeviceInputSchema = deviceConverter.schema
 
 /**
@@ -28,6 +28,7 @@ export type RegisterDeviceInput = z.input<typeof registerDeviceInputSchema>
 /**
  * Type for register device output (undefined)
  */
+// eslint-disable-next-line sonarjs/redundant-type-aliases -- The named output type is part of the callable function contract.
 export type RegisterDeviceOutput = undefined
 
 /**
@@ -35,16 +36,13 @@ export type RegisterDeviceOutput = undefined
  * @param notificationService The notification service
  * @returns A function that handles device registration
  */
-export function createRegisterDeviceHandler(
-  notificationService: NotificationService,
-) {
-  return async (
+export const createRegisterDeviceHandler =
+  (notificationService: NotificationService) =>
+  async (
     userId: string,
     data: RegisterDeviceInput,
   ): Promise<RegisterDeviceOutput> => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const device = deviceConverter.schema.parse(data)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
     await notificationService.registerDevice(userId, device)
   }
-}

@@ -12,6 +12,16 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: Package version to publish, for example 0.1.0
+        required: true
+        type: string
+      bootstrapWithToken:
+        description: Create unpublished npm packages with the one-time NPM_TOKEN
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: production
@@ -23,9 +33,7 @@ jobs:
     uses: ./.github/workflows/build-and-test.yml
     permissions:
       contents: read
-      checks: write
-      actions: read
-      security-events: write
+      pull-requests: read
     secrets: inherit
   publishpackage:
     name: Publish Package
@@ -34,13 +42,14 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      packages: write
     secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_TOKEN: ${{ inputs.bootstrapWithToken && secrets.NPM_TOKEN || '' }}
     with:
-      nodeVersion: 24
-      packageVersion: ${{ github.event.release.tag_name }}
+      nodeVersion: '24'
+      npmVersion: '12.0.2'
+      packageVersion: ${{ github.event.release.tag_name || inputs.packageVersion }}
       workspaces: true
+      bootstrapWithToken: ${{ inputs.bootstrapWithToken }}
   deploy-pages:
     name: Deploy GitHub Pages
     needs: build-and-test

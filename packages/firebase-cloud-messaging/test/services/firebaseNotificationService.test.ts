@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { type MockInstance } from 'vitest'
 import { Device, DevicePlatform } from '../../src/models/device.js'
 import { Message } from '../../src/models/message.js'
 import { FirebaseNotificationService } from '../../src/services/firebaseNotificationService.js'
@@ -16,14 +17,14 @@ describe('FirebaseNotificationService', () => {
   let mockMessaging: any
   let mockDeviceStorage: any
   let service: FirebaseNotificationService
-  // This variable is defined here but only assigned in one test
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  let sendNotificationSpy: jest.SpyInstance
+  let sendNotificationSpy: MockInstance<
+    FirebaseNotificationService['sendNotification']
+  >
 
   beforeEach(() => {
     // Create mock messaging
     mockMessaging = {
-      sendEach: jest.fn().mockResolvedValue({
+      sendEach: vi.fn().mockResolvedValue({
         responses: [{ success: true }],
       }),
     }
@@ -41,7 +42,7 @@ describe('FirebaseNotificationService', () => {
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
     // Only restore the spy if it was created
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (sendNotificationSpy) {
@@ -131,7 +132,7 @@ describe('FirebaseNotificationService', () => {
 
       const tokenMessages = mockMessaging.sendEach.mock.calls[0][0]
       expect(Array.isArray(tokenMessages)).toBe(true)
-      expect(tokenMessages.length).toBe(2)
+      expect(tokenMessages).toHaveLength(2)
 
       // Check iOS token message
       const iosMessage = tokenMessages.find((m: any) => m.token === 'ios-token')
@@ -210,7 +211,7 @@ describe('FirebaseNotificationService', () => {
       ])
 
       // Spy on sendNotification but allow it to run through to ensure correct behavior
-      sendNotificationSpy = jest.spyOn(service, 'sendNotification')
+      sendNotificationSpy = vi.spyOn(service, 'sendNotification')
 
       await service.sendMessageNotification(userId, message)
 

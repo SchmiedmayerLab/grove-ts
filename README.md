@@ -32,14 +32,14 @@ Grove provides reusable TypeScript tooling, accessible React components, and Fir
 Requirements:
 
 - Node.js 24
-- npm
+- npm 12
 
 Install dependencies, build every package, and run the test suites:
 
 ```bash
 npm ci
-npm run build
-npm test
+npm ci --prefix packages/design-system/docs
+npm run validate
 ```
 
 Workspace-specific commands can be run with npm's `--workspace` option:
@@ -50,6 +50,15 @@ npm test --workspace @schmiedmayerlab/grove-firebase-utils
 ```
 
 See each package's README for installation and API details.
+
+## Publishing
+
+Releases publish every package with npm Trusted Publishing through [`deployment.yml`](.github/workflows/deployment.yml); normal releases need no npm token.
+For the initial `0.1.0` publication:
+
+1. Add an `NPM_TOKEN` repository secret with publish access and manually run **Deployment** with `bootstrapWithToken` enabled.
+2. For every npm package, configure a GitHub Actions trusted publisher for `SchmiedmayerLab/grove-ts` and the caller workflow `deployment.yml`.
+3. Delete the token secret; publish subsequent versions by creating a GitHub release or running **Deployment** without bootstrap mode.
 
 ## Contributing
 
