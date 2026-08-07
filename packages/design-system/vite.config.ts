@@ -20,22 +20,34 @@ import packageManifest from "./package.json" with { type: "json" };
 /**
  * Tuple of [package name, package entry point].
  */
-const entries = [
+const entries: Array<readonly [string, string]> = [
   ["index", "src/index.ts"],
   ["GroveProvider", "src/GroveProvider.tsx"],
   ["forms", "src/forms/index.tsx"],
   ...fs
     .readdirSync(path.resolve(import.meta.dirname, `src/components`))
-    .map((name) => [`components/${name}`, `src/components/${name}/index.tsx`]),
+    .map((name): readonly [string, string] => [
+      `components/${name}`,
+      `src/components/${name}/index.tsx`,
+    ]),
   ...fs
     .readdirSync(path.resolve(import.meta.dirname, `src/molecules`))
-    .map((name) => [`molecules/${name}`, `src/molecules/${name}/index.tsx`]),
+    .map((name): readonly [string, string] => [
+      `molecules/${name}`,
+      `src/molecules/${name}/index.tsx`,
+    ]),
   ...fs
     .readdirSync(path.resolve(import.meta.dirname, `src/modules`))
-    .map((name) => [`modules/${name}`, `src/modules/${name}/index.tsx`]),
+    .map((name): readonly [string, string] => [
+      `modules/${name}`,
+      `src/modules/${name}/index.tsx`,
+    ]),
   ...fs
     .readdirSync(path.resolve(import.meta.dirname, `src/utils`))
-    .map((name) => [`utils/${name}`, `src/utils/${name}/index.ts`]),
+    .map((name): readonly [string, string] => [
+      `utils/${name}`,
+      `src/utils/${name}/index.ts`,
+    ]),
 ];
 
 const externalPackages = new Set([
@@ -88,9 +100,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: Object.fromEntries(
-        entries.map((entry) => [
-          entry[0],
-          path.resolve(import.meta.dirname, entry[1]),
+        entries.map(([name, entry]) => [
+          name,
+          path.resolve(import.meta.dirname, entry),
         ]),
       ),
       formats: ["es"],

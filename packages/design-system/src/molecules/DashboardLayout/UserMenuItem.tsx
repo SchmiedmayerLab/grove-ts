@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { useContext } from "react";
+import { use } from "react";
 import { cn } from "@/utils/className";
 import { DashboardContext } from "./DashboardContext";
 import { Avatar } from "../../components/Avatar";
@@ -39,7 +39,7 @@ type UserMenuItemProps = Omit<ButtonProps, "name"> & {
  * ```
  */
 export const UserMenuItem = ({ name, img, ...props }: UserMenuItemProps) => {
-  const { shrinkable } = useContext(DashboardContext);
+  const { shrinkable } = use(DashboardContext);
   return (
     <Button
       data-slot="user-menu-item"

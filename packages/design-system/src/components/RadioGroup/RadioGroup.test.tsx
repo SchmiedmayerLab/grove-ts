@@ -49,8 +49,7 @@ describe("RadioGroup component", () => {
 
     render(<RadioGroup options={options} onChange={handleChange} />);
 
-    const secondRadio = screen.getAllByRole("radio")[1];
-    fireEvent.click(secondRadio);
+    fireEvent.click(screen.getByRole("radio", { name: "Option 2" }));
 
     expect(handleChange).toHaveBeenCalledWith("option2");
   });

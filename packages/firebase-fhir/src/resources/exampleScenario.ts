@@ -36,6 +36,7 @@ import {
 } from '../elements/index.js'
 import {
   exampleScenarioActorTypeSchema,
+  fhirResourceTypeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
 
@@ -135,7 +136,7 @@ const exampleScenarioInstanceSchema: ZodType<ExampleScenarioInstance> =
     _name: elementSchema.optional(),
     resourceId: stringSchema,
     _resourceId: elementSchema.optional(),
-    resourceType: stringSchema,
+    resourceType: fhirResourceTypeSchema,
     _resourceType: elementSchema.optional(),
     version: exampleScenarioInstanceVersionSchema.array().optional(),
   })

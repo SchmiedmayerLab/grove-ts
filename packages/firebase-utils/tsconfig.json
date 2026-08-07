@@ -16,7 +16,6 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "dist",
-    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],

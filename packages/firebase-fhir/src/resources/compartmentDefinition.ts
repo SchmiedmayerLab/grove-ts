@@ -25,12 +25,13 @@ import {
 } from '../elements/index.js'
 import {
   compartmentDefinitionCodeSchema,
+  fhirResourceTypeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
 
 const compartmentDefinitionResourceSchema: ZodType<CompartmentDefinitionResource> =
   backboneElementSchema.extend({
-    code: stringSchema,
+    code: fhirResourceTypeSchema,
     _code: elementSchema.optional(),
     documentation: stringSchema.optional(),
     _documentation: elementSchema.optional(),

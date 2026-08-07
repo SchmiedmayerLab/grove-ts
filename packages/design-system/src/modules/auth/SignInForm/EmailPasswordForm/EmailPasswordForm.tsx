@@ -31,7 +31,7 @@ interface EmailPasswordFormProps {
   /**
    * Size of the submit button.
    */
-  buttonSize?: ButtonProps["size"];
+  buttonSize?: NonNullable<ButtonProps["size"]>;
 }
 
 /**

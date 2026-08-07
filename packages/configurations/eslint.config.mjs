@@ -6,6 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-const { getEslintNodeConfig } = require('./dist')
+import { getEslintNodeConfig } from './dist/index.mjs'
 
-module.exports = getEslintNodeConfig({ tsconfigRootDir: __dirname })
+export default getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname })

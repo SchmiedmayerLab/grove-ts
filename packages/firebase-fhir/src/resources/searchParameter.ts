@@ -25,6 +25,7 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import {
+  fhirResourceTypeSchema,
   publicationStatusSchema,
   searchParameterComparatorSchema,
   searchParameterModifierSchema,
@@ -46,7 +47,7 @@ const searchParameterComponentSchema: ZodType<SearchParameterComponent> =
 export const untypedSearchParameterSchema = z.lazy(() =>
   domainResourceSchema.extend({
     resourceType: z.literal('SearchParameter').readonly(),
-    base: stringSchema.array(),
+    base: fhirResourceTypeSchema.array(),
     _base: elementSchema.array().optional(),
     chain: stringSchema.array().optional(),
     _chain: elementSchema.array().optional(),
@@ -81,7 +82,7 @@ export const untypedSearchParameterSchema = z.lazy(() =>
     _purpose: elementSchema.optional(),
     status: publicationStatusSchema,
     _status: elementSchema.optional(),
-    target: stringSchema.array().optional(),
+    target: fhirResourceTypeSchema.array().optional(),
     _target: elementSchema.array().optional(),
     type: searchParameterTypeSchema,
     _type: elementSchema.optional(),

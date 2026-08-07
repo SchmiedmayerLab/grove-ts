@@ -22,6 +22,11 @@ export type DatePickerProps = ComponentProps<typeof Calendar>;
 export const DatePicker = (props: DatePickerProps) => {
   const { showTimePicker } = props;
   const selected = props.mode !== undefined ? props.selected : null;
+  const timeFormat = showTimePicker ? " - p" : "";
+  const displayValue =
+    selected && isDate(selected) ?
+      format(selected, `PPP${timeFormat}`)
+    : "Pick a date";
   return (
     <PopoverRoot>
       <PopoverTrigger asChild>
@@ -34,9 +39,7 @@ export const DatePicker = (props: DatePickerProps) => {
           )}
         >
           <CalendarIcon className="size-4" />
-          {selected && isDate(selected) ?
-            format(selected, `PPP${showTimePicker ? " - p" : ""}`)
-          : "Pick a date"}
+          {displayValue}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto! p-0!">

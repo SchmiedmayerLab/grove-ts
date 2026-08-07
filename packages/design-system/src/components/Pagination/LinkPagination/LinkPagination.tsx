@@ -94,7 +94,9 @@ export const LinkPagination = ({
           }
           if (rangePage === PaginationItemType.DOTS)
             return (
-              <PaginationItemContainer key={`${rangePage}-${index}`}>
+              <PaginationItemContainer
+                key={index < range.length / 2 ? "dots-start" : "dots-end"}
+              >
                 <PaginationEllipsis />
               </PaginationItemContainer>
             );

@@ -22,9 +22,9 @@
   "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "engines": {
     "node": ">=24",
-    "npm": ">=11"
+    "npm": ">=12"
   },
-  "packageManager": "npm@11.19.0",
+  "packageManager": "npm@12.0.2",
   "workspaces": [
     "packages/configurations",
     "packages/design-system",
@@ -65,20 +65,11 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
+    "@storybook/react-vite": "^10.5.5",
     "knip": "^6.29.0",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "publint": "^0.3.22"
-  },
-  "overrides": {
-    "js-yaml": "4.3.1",
-    "next": {
-      "postcss": "8.5.26",
-      "sharp": "0.35.3"
-    },
-    "teeny-request": {
-      "uuid": "11.1.1"
-    }
   },
   "allowScripts": {
     "@firebase/util@1.15.2": true,
@@ -102,6 +93,7 @@
         ],
         "ignoreDependencies": [
           "@arethetypeswrong/cli",
+          "@storybook/react-vite",
           "publint"
         ]
       },
@@ -113,8 +105,6 @@
           "src/**/*.ts"
         ],
         "ignoreDependencies": [
-          "@parcel/packager-ts",
-          "@parcel/transformer-typescript-types",
           "prettier-plugin-tailwindcss"
         ]
       },

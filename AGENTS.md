@@ -27,7 +27,7 @@ Guidance for contributors working in this repository.
 
 ## Working Rules
 
-- Use Node.js 24 and npm 11.
+- Use Node.js 24 and npm 12.
 - Run `npm ci` after changing dependencies and commit the resulting lockfile.
 - Run `npm run validate` before requesting review.
 - Keep package entry points, published files, engine requirements, repository metadata, and scripts consistent across all publishable workspaces.

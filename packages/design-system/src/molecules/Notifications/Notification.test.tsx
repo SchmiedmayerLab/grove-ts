@@ -70,6 +70,25 @@ describe("Notification", () => {
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/users");
   });
+
+  it("renders numeric content", () => {
+    renderWithProviders(<Notification isRead={false} message={0} />);
+
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
+
+  it("renders time and actions independently", () => {
+    renderWithProviders(
+      <Notification
+        actions={<button type="button">Dismiss</button>}
+        isRead={false}
+        time={new Date("2024-07-15T14:00:00")}
+      />,
+    );
+
+    expect(screen.getByText(/7\/15\/2024/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
+  });
 });
 
 describe("NotificationActions", () => {
@@ -80,7 +99,7 @@ describe("NotificationActions", () => {
     renderWithProviders(
       <div onClick={parentClick} role="presentation">
         <NotificationActions onClick={actionsClick}>
-          <button>Delete</button>
+          <button type="button">Delete</button>
         </NotificationActions>
       </div>,
     );
@@ -99,7 +118,7 @@ describe("NotificationActions", () => {
   it("renders without onClick handler", () => {
     renderWithProviders(
       <NotificationActions>
-        <button>Mark as read</button>
+        <button type="button">Mark as read</button>
       </NotificationActions>,
     );
 

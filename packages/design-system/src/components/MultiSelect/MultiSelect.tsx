@@ -11,9 +11,10 @@ import { CheckIcon, ChevronsUpDownIcon, XIcon } from "lucide-react";
 import {
   createContext,
   useCallback,
-  useContext,
+  use,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -45,7 +46,7 @@ interface MultiSelectContextType {
 const MultiSelectContext = createContext<MultiSelectContextType | null>(null);
 
 const useMultiSelectContext = () => {
-  const context = useContext(MultiSelectContext);
+  const context = use(MultiSelectContext);
   if (context == null) {
     throw new Error(
       "useMultiSelectContext must be used within a MultiSelectContext",
@@ -98,43 +99,49 @@ export const MultiSelect = ({
 }: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
   const [selectedValues, setSelectedValues] = useState(
-    new Set(values ?? defaultValues),
+    () => new Set(values ?? defaultValues),
   );
-  const [items, setItems] = useState(new Map<string, ReactNode>());
+  const [items, setItems] = useState(() => new Map<string, ReactNode>());
 
-  const toggleValue = (value: string) => {
-    const newSet = new Set(selectedValues);
-    if (newSet.has(value)) {
-      newSet.delete(value);
-    } else {
-      newSet.add(value);
-    }
-    setSelectedValues(newSet);
-    onValuesChange?.(Array.from(newSet));
-  };
+  const toggleValue = useCallback(
+    (value: string) => {
+      const newSet = new Set(selectedValues);
+      if (newSet.has(value)) {
+        newSet.delete(value);
+      } else {
+        newSet.add(value);
+      }
+      setSelectedValues(newSet);
+      onValuesChange?.(Array.from(newSet));
+    },
+    [onValuesChange, selectedValues],
+  );
 
-  const onItemAdded = (value: string, label: ReactNode) => {
+  const onItemAdded = useCallback((value: string, label: ReactNode) => {
     setItems((prev) => {
       if (prev.get(value) === label) return prev;
       return new Map(prev).set(value, label);
     });
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      open,
+      setOpen,
+      selectedValues: values ? new Set(values) : selectedValues,
+      toggleValue,
+      items,
+      onItemAdded,
+    }),
+    [items, onItemAdded, open, selectedValues, toggleValue, values],
+  );
 
   return (
-    <MultiSelectContext.Provider
-      value={{
-        open,
-        setOpen,
-        selectedValues: values ? new Set(values) : selectedValues,
-        toggleValue,
-        items,
-        onItemAdded,
-      }}
-    >
+    <MultiSelectContext value={contextValue}>
       <PopoverRoot open={open} onOpenChange={setOpen}>
         {children}
       </PopoverRoot>
-    </MultiSelectContext.Provider>
+    </MultiSelectContext>
   );
 };
 
@@ -252,6 +259,7 @@ export const MultiSelectValue = ({
     let amount = 0;
     for (let i = items.length - 1; i >= 0; i--) {
       const child = items[i];
+      if (child == null) continue;
       if (containerElement.scrollWidth <= containerElement.clientWidth) {
         break;
       }
@@ -259,12 +267,12 @@ export const MultiSelectValue = ({
       child.style.display = "none";
       overflowElement?.style.removeProperty("display");
     }
+    // The state reflects a DOM measurement and must be synchronized after layout.
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     setOverflowAmount(amount);
   }, []);
 
   useLayoutEffect(() => {
-    // Syncs DOM measurements with state — legitimate effect usage
-
     checkOverflow();
   }, [selectedValues, checkOverflow, shouldWrap]);
 
@@ -417,7 +425,7 @@ export const MultiSelectContent = ({
         <Command {...props}>
           {searchObject ?
             <CommandInput placeholder={searchObject.placeholder} />
-          : <button autoFocus className="sr-only" />}
+          : <button type="button" autoFocus className="sr-only" />}
           <CommandList>
             {searchObject && (
               <CommandEmpty>{searchObject.emptyMessage}</CommandEmpty>

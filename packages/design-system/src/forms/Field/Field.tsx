@@ -121,10 +121,12 @@ export const Field = <
           <div className={className}>
             {tooltip || label ?
               <LabelContainer>
-                {label && <Label htmlFor={id}>{label}</Label>}
-                {tooltip && (
+                {label ?
+                  <Label htmlFor={id}>{label}</Label>
+                : null}
+                {tooltip ?
                   <FieldTooltip tooltip={tooltip} label={label} id={id} />
-                )}
+                : null}
               </LabelContainer>
             : null}
             {render({

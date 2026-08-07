@@ -34,17 +34,19 @@ describe("Toaster", () => {
 
     // When no duration provided, default to 5000
     toast.error("Lorem");
-    expect(spy).toHaveBeenCalledTimes(1);
-    const firstCall = spy.mock.calls[0];
-    const firstOptions = firstCall[1];
-    expect(firstOptions?.duration).toBe(5000);
+    expect(spy).toHaveBeenNthCalledWith(
+      1,
+      "Lorem",
+      expect.objectContaining({ duration: 5000 }),
+    );
 
     // When duration provided, it should override the default
     toast.error("Lorem", { duration: 3000 });
-    expect(spy).toHaveBeenCalledTimes(2);
-    const secondCall = spy.mock.calls[1];
-    const secondOptions = secondCall[1];
-    expect(secondOptions?.duration).toBe(3000);
+    expect(spy).toHaveBeenNthCalledWith(
+      2,
+      "Lorem",
+      expect.objectContaining({ duration: 3000 }),
+    );
 
     spy.mockRestore();
   });

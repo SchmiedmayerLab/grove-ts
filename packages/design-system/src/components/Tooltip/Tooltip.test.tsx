@@ -40,4 +40,10 @@ describe("Tooltip", () => {
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toBeInTheDocument();
   });
+
+  it("renders without a trigger", () => {
+    render(<Tooltip tooltip="Lorem" />);
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
 });

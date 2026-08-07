@@ -53,8 +53,9 @@ export const combineQueries = (queries: Query[]) => ({
  * parseUnknownError({}); // "Unknown error happened"
  * ```
  */
-export const parseUnknownError = (error: unknown) =>
-  isObject(error) && "message" in error && isString(error.message) ?
-    error.message
-  : isString(error) ? error
-  : "Unknown error happened";
+export const parseUnknownError = (error: unknown) => {
+  if (isObject(error) && "message" in error && isString(error.message))
+    return error.message;
+  if (isString(error)) return error;
+  return "Unknown error happened";
+};

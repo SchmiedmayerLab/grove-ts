@@ -228,6 +228,14 @@ export const DataTable = <Data,>({
   });
 
   const viewProps = { table, entityName, rows };
+  let emptyState: AsyncProps["empty"] = defaultEmptyProps;
+  if (isObject(empty)) emptyState = { ...defaultEmptyProps, ...empty };
+  else if (isBoolean(empty)) emptyState = empty;
+
+  const content =
+    children ?
+      children(viewProps)
+    : <DataTableTableView {...tableView} {...viewProps} />;
 
   return (
     <div
@@ -251,16 +259,9 @@ export const DataTable = <Data,>({
         error={error}
         loading={loading}
         entityName={entityName}
-        empty={
-          isObject(empty) ? { ...defaultEmptyProps, ...empty }
-          : isBoolean(empty) ?
-            empty
-          : defaultEmptyProps
-        }
+        empty={emptyState}
       >
-        {children ?
-          children(viewProps)
-        : <DataTableTableView {...tableView} {...viewProps} />}
+        {content}
       </Async>
       {(!minimal || table.getPageCount() > 1) && !isEmpty && (
         <footer className="flex items-center justify-between border-t p-4">

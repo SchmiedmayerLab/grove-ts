@@ -7,7 +7,6 @@
 //
 
 import { type UserInfo as AuthUserInfo } from "firebase/auth";
-import { type Nil } from "@/utils/misc";
 
 /**
  * Converts complete Firebase UserInfo to plain object with properties
@@ -27,9 +26,9 @@ export type UserInfo = ReturnType<typeof getUserInfo>;
  * Converts user object to displayable name
  */
 export const getUserName = (user: {
-  displayName?: Nil<string>;
-  email?: Nil<string>;
-  uid?: Nil<string>;
+  displayName?: string | null;
+  email?: string | null;
+  uid?: string | null;
   // We want to exclude empty strings if possible
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 }) => user.displayName || user.email || user.uid;

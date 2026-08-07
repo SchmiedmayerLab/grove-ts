@@ -7,7 +7,7 @@
 //
 
 import { Check, CircleAlert } from "lucide-react";
-import { type ComponentProps } from "react";
+import { type ComponentProps, type ReactNode } from "react";
 import { cn } from "@/utils/className";
 import { useTimedFlag } from "@/utils/useTimedFlag";
 import { Button } from "../Button";
@@ -77,18 +77,33 @@ export const SaveButton = ({
 }: SaveButtonProps) => {
   const localIsSuccess = useTimedFlag(isSuccess, successTimeout);
   const localIsError = useTimedFlag(isError, errorTimeout);
+  let variant: "default" | "destructive" | "success" = "default";
+  let content: ReactNode = "Save";
+
+  if (localIsSuccess) {
+    variant = "success";
+    content = (
+      <div className="flex items-center gap-2">
+        <span>Saved</span>
+        <Check className="size-4" strokeWidth={3} />
+      </div>
+    );
+  } else if (localIsError) {
+    variant = "destructive";
+    content = (
+      <div className="flex w-full items-center gap-2">
+        <CircleAlert className="size-4" />
+        Error
+      </div>
+    );
+  }
 
   return (
     <Button
       data-slot="save-button"
       disabled={disabled ?? isPending}
       isPending={isPending}
-      variant={
-        localIsSuccess ? "success"
-        : localIsError ?
-          "destructive"
-        : "default"
-      }
+      variant={variant}
       className={cn(
         "border-2 border-transparent transition-all",
         localIsSuccess || localIsError ? "w-28" : "w-20",
@@ -96,17 +111,7 @@ export const SaveButton = ({
       )}
       {...props}
     >
-      {localIsSuccess ?
-        <div className="flex items-center gap-2">
-          <span>Saved</span>
-          <Check className="size-4" strokeWidth={3} />
-        </div>
-      : localIsError ?
-        <div className="flex w-full items-center gap-2">
-          <CircleAlert className="size-4" />
-          Error
-        </div>
-      : "Save"}
+      {content}
     </Button>
   );
 };

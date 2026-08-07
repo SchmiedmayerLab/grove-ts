@@ -119,6 +119,7 @@ export const untypedTestReportSchema = z.lazy(() =>
     result: testReportResultSchema,
     _result: elementSchema.optional(),
     score: decimalSchema.optional(),
+    _score: elementSchema.optional(),
     setup: testReportSetupSchema.optional(),
     status: testReportStatusSchema,
     _status: elementSchema.optional(),

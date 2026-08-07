@@ -19,9 +19,9 @@ import { DataTable } from ".";
 
 describe("DataTable", () => {
   const getTBody = () => {
-    // tBody exists, guaranteed by previous tests
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return screen.getByRole("table").querySelector("tbody")!;
+    const tBody = screen.getByRole("table").querySelector("tbody");
+    if (!tBody) throw new Error("Expected the data table body to exist");
+    return tBody;
   };
 
   const getRows = () => within(getTBody()).getAllByRole("row");

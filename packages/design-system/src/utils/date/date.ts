@@ -12,8 +12,8 @@ import { type Nil } from "@/utils/misc";
 export type DateInput = Date | string | number;
 
 export interface DateRange {
-  start?: Nil<DateInput>;
-  end?: Nil<DateInput>;
+  start?: DateInput | null;
+  end?: DateInput | null;
 }
 
 /**

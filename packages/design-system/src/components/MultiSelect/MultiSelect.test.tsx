@@ -42,16 +42,13 @@ describe("MultiSelect", () => {
     const triggerEl = triggerButtons[0] as HTMLButtonElement;
     fireEvent.click(triggerEl);
 
-    // Select Alpha (pick first match)
-    const alphaOptions = screen.getAllByRole("option", { name: "Alpha" });
-    fireEvent.click(alphaOptions[0]);
+    fireEvent.click(screen.getByRole("option", { name: "Alpha" }));
 
     // Badge appears inside trigger
     expect(within(triggerEl).getByText("Alpha")).toBeInTheDocument();
 
     // Select Beta
-    const betaOptions = screen.getAllByRole("option", { name: "Beta" });
-    fireEvent.click(betaOptions[0]);
+    fireEvent.click(screen.getByRole("option", { name: "Beta" }));
     expect(within(triggerEl).getByText("Beta")).toBeInTheDocument();
   });
 

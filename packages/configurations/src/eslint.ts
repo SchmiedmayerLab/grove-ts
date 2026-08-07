@@ -6,25 +6,26 @@
 // SPDX-License-Identifier: MIT
 //
 import eslint from '@eslint/js'
+import reactPlugin from '@eslint-react/eslint-plugin'
 import { type Processor } from '@typescript-eslint/utils/ts-eslint'
+import { defineConfig } from 'eslint/config'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+import { flatConfigs as importConfigs } from 'eslint-plugin-import-x'
 import * as preferArrow from 'eslint-plugin-prefer-arrow-functions'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
-import reactPlugin from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
-import sonarjs from 'eslint-plugin-sonarjs'
+import { configs as sonarConfigs } from 'eslint-plugin-sonarjs'
 import globals from 'globals'
-import tseslint, { configs, type ConfigWithExtends } from 'typescript-eslint'
+import { configs, type ConfigWithExtends } from 'typescript-eslint'
 
-const sonarRecommended = sonarjs.configs
-  ?.recommended as unknown as ConfigWithExtends
-// require is necessary to prevent Parcel from treating it as ESM
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const importPlugin = require('eslint-plugin-import') as {
-  flatConfigs: {
-    recommended: ConfigWithExtends
-    typescript: ConfigWithExtends
-  }
-}
+const sonarRecommended =
+  sonarConfigs.recommended as unknown as ConfigWithExtends
+
+/**
+ * Bridges typescript-eslint's config type to ESLint 10's native config helper.
+ * The runtime shapes are compatible, but their independently published types differ.
+ */
+const defineTypedConfig = (...config: ConfigWithExtends[]) =>
+  defineConfig(config as unknown as Parameters<typeof defineConfig>[0])
 
 interface EslintConfigParams {
   /**
@@ -37,12 +38,6 @@ interface EslintConfigParams {
    * Required if there are multiple files with references.
    * */
   tsConfigsDirs?: string[]
-  /**
-   * Changes every rule to "warning" instead of "error".
-   * This prevents ESLint to fail if any rule fails.
-   * Useful when migrating large codebases. Use with caution.
-   * */
-  changeEveryRuleToWarning?: boolean
 }
 
 /**
@@ -88,20 +83,22 @@ export const getEslintRules = (): ConfigWithExtends[] => [
 export const getImportRules = (
   tsConfigsDirs: string[],
 ): ConfigWithExtends[] => [
-  importPlugin.flatConfigs.recommended,
-  importPlugin.flatConfigs.typescript,
+  importConfigs.recommended,
+  importConfigs.typescript,
   {
     settings: {
-      'import/resolver': {
-        typescript: { project: ['./tsconfig.json', ...tsConfigsDirs] },
-      },
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver({
+          project: ['./tsconfig.json', ...tsConfigsDirs],
+        }),
+      ],
     },
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     rules: {
-      'import/order': [
-        'warn',
+      'import-x/order': [
+        'error',
         {
           groups: ['builtin', 'external', 'internal', ['parent', 'sibling']],
           pathGroupsExcludedImportTypes: ['builtin'],
@@ -112,24 +109,33 @@ export const getImportRules = (
           },
         },
       ],
-      'import/no-empty-named-blocks': 'error',
-      'import/no-mutable-exports': 'error',
-      'import/no-cycle': 'error',
-      'import/extensions': [
-        'warn',
+      'import-x/no-empty-named-blocks': 'error',
+      'import-x/no-mutable-exports': 'error',
+      'import-x/no-cycle': 'error',
+      'import-x/extensions': [
+        'error',
         'always',
         {
-          ts: 'never',
-          tsx: 'never',
-          js: 'never',
-          jsx: 'never',
-          mjs: 'never',
+          ignorePackages: true,
+          pathGroupOverrides: [
+            {
+              pattern: 'fhir/**',
+              action: 'ignore',
+            },
+          ],
+          pattern: {
+            ts: 'never',
+            tsx: 'never',
+            js: 'never',
+            jsx: 'never',
+            mjs: 'never',
+          },
         },
       ],
-      'import/newline-after-import': 'warn',
-      'import/no-anonymous-default-export': 'warn',
-      'import/no-default-export': 'error',
-      'import/no-duplicates': [
+      'import-x/newline-after-import': 'error',
+      'import-x/no-anonymous-default-export': 'error',
+      'import-x/no-default-export': 'error',
+      'import-x/no-duplicates': [
         'error',
         {
           'prefer-inline': true,
@@ -165,7 +171,7 @@ export const getPreferArrowFunctions = (): ConfigWithExtends => ({
   },
   rules: {
     'prefer-arrow-functions/prefer-arrow-functions': [
-      'warn',
+      'error',
       {
         allowedNames: [],
         allowNamedFunctions: false,
@@ -206,7 +212,7 @@ export const getTslint = (): ConfigWithExtends => ({
   } satisfies Processor.ProcessorModule,
   rules: {
     '@typescript-eslint/consistent-type-imports': [
-      'warn',
+      'error',
       {
         prefer: 'type-imports',
         fixStyle: 'inline-type-imports',
@@ -233,7 +239,7 @@ export const getTslint = (): ConfigWithExtends => ({
       { ignoreArrowShorthand: true },
     ],
     '@typescript-eslint/array-type': [
-      'warn',
+      'error',
       { default: 'array-simple', readonly: 'array-simple' },
     ],
     // allow unused vars prefixed with `_`
@@ -291,50 +297,13 @@ export const getSonarRules = (): ConfigWithExtends => ({
 })
 
 /**
- * Configures react, react hooks plugin and customized rules
+ * Configures strict, type-aware React rules and scoped compatibility overrides.
  * */
 export const getReactPlugins = (): ConfigWithExtends[] => [
-  reactHooks.configs.flat['recommended-latest'],
   {
-    ...reactPlugin.configs.flat.recommended,
-    settings: {
-      react: {
-        version: 'detect',
-      },
-    },
-    rules: {
-      ...reactPlugin.configs.flat.recommended.rules,
-      'react/jsx-curly-brace-presence': [
-        'warn',
-        { props: 'never', children: 'never', propElementValues: 'always' },
-      ],
-      'react/jsx-fragments': ['warn', 'syntax'],
-      'react/self-closing-comp': [
-        'warn',
-        {
-          component: true,
-          html: false,
-        },
-      ],
-    },
-  },
-  {
+    ...(reactPlugin.configs['strict-type-checked'] as ConfigWithExtends),
     files: ['**/*.{ts,tsx}'],
-    rules: {
-      // TypeScript declarations are the source of truth for component props.
-      'react/prop-types': 'off',
-    },
   },
-  {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    rules: {
-      // These reject idiomatic React callbacks, JSX rendering, and explicit optional props.
-      'sonarjs/no-nested-conditional': 'off',
-      'sonarjs/no-nested-functions': 'off',
-      'sonarjs/no-redundant-optional': 'off',
-    },
-  },
-  reactPlugin.configs.flat['jsx-runtime'],
 ]
 
 /**
@@ -353,41 +322,8 @@ export const getIgnoreDefaultExportRule = (): ConfigWithExtends => ({
     '**/{jest,vitest}.config.{ts,js,cjs,mjs}',
   ],
   rules: {
-    'import/no-default-export': 'off',
+    'import-x/no-default-export': 'off',
   },
-})
-
-/**
- * Allows test fixtures to use representative secrets and repeated schema cases.
- * Type-safety rules remain enabled unless a package scopes an exception further.
- * */
-export const getTestRules = (): ConfigWithExtends => ({
-  files: [
-    '**/*.{test,spec}.{js,jsx,ts,tsx}',
-    '**/{test,tests,__tests__}/**/*.{js,jsx,ts,tsx}',
-  ],
-  rules: {
-    // Placeholder credentials and repetitive fixture-validation tests are intentional.
-    'sonarjs/no-hardcoded-passwords': 'off',
-    'sonarjs/parameterized-tests': 'off',
-  },
-})
-
-/**
- * Transforms ALL rules severities to 'warn'
- * */
-export const getTransformAllRulesToWarn = (): ConfigWithExtends => ({
-  rules: {},
-  languageOptions: {},
-  processor: {
-    preprocess: (text) => [text],
-    postprocess: (messages) =>
-      messages.flat().map((message) => ({
-        ...message,
-        severity: 1, // 1 is 'warn', 2 is 'error'
-      })),
-    supportsAutofix: true,
-  } satisfies Processor.ProcessorModule,
 })
 
 /**
@@ -400,10 +336,8 @@ export const getPrettierPlugin = (): ConfigWithExtends[] => [
 export const getEslintReactConfig = ({
   tsconfigRootDir,
   tsConfigsDirs = [],
-  changeEveryRuleToWarning,
 }: EslintConfigParams) => {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- Native ESLint and typescript-eslint config types are not yet compatible.
-  return tseslint.config(
+  return defineTypedConfig(
     getIgnoredDirs(),
     getLinterOptions(),
     ...getEslintRules(),
@@ -425,18 +359,14 @@ export const getEslintReactConfig = ({
     ...getReactPlugins(),
     ...getPrettierPlugin(),
     getIgnoreDefaultExportRule(),
-    getTestRules(),
-    changeEveryRuleToWarning ? getTransformAllRulesToWarn() : {},
   )
 }
 
 export const getEslintNodeConfig = ({
   tsconfigRootDir,
   tsConfigsDirs = [],
-  changeEveryRuleToWarning,
 }: EslintConfigParams) => {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- Native ESLint and typescript-eslint config types are not yet compatible.
-  return tseslint.config(
+  return defineTypedConfig(
     getIgnoredDirs(),
     getLinterOptions(),
     ...getEslintRules(),
@@ -457,7 +387,5 @@ export const getEslintNodeConfig = ({
     getSonarRules(),
     ...getPrettierPlugin(),
     getIgnoreDefaultExportRule(),
-    getTestRules(),
-    changeEveryRuleToWarning ? getTransformAllRulesToWarn() : {},
   )
 }

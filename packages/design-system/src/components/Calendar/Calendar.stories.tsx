@@ -20,21 +20,21 @@ const meta: Meta<typeof Calendar> = {
 export default meta;
 
 export const Default = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(() => new Date());
   return <Calendar mode="single" selected={date} onSelect={setDate} />;
 };
 
 export const WithTimePicker = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(() => new Date());
   return (
     <Calendar mode="single" selected={date} onSelect={setDate} showTimePicker />
   );
 };
 
 export const Range = () => {
-  const [date, setDate] = useState<DateRange | undefined>({
+  const [date, setDate] = useState<DateRange | undefined>(() => ({
     from: new Date(),
     to: addDays(new Date(), 2),
-  });
+  }));
   return <Calendar mode="range" selected={date} onSelect={setDate} />;
 };

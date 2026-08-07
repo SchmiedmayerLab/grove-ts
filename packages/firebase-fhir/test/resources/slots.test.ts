@@ -29,4 +29,17 @@ describe('Slot Resource', () => {
       )
     })
   })
+
+  it('exposes validated slot boundaries as dates', () => {
+    const slot = FhirSlot.parse({
+      resourceType: 'Slot',
+      schedule: { reference: 'Schedule/example' },
+      status: 'free',
+      start: '2024-12-15T09:00:00Z',
+      end: '2024-12-15T09:30:00Z',
+    })
+
+    expect(slot.startDate.toISOString()).toBe('2024-12-15T09:00:00.000Z')
+    expect(slot.endDate.toISOString()).toBe('2024-12-15T09:30:00.000Z')
+  })
 })

@@ -76,4 +76,20 @@ describe("NavigationBlocker", () => {
 
     addSpy.mockRestore();
   });
+
+  it("supports a dialog without a description", () => {
+    render(
+      <NavigationBlocker
+        status="blocked"
+        shouldBlock={true}
+        description={null}
+        proceed={() => undefined}
+        reset={() => undefined}
+      />,
+    );
+
+    expect(
+      screen.queryByText("You have unsaved changes that will be lost."),
+    ).not.toBeInTheDocument();
+  });
 });

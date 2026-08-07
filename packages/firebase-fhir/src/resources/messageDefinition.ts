@@ -30,6 +30,7 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import {
+  fhirResourceTypeSchema,
   messageDefinitionCategorySchema,
   messageDefinitionResponseRequiredSchema,
   publicationStatusSchema,
@@ -45,7 +46,7 @@ const messageDefinitionAllowedResponseSchema: ZodType<MessageDefinitionAllowedRe
 
 const messageDefinitionFocusSchema: ZodType<MessageDefinitionFocus> =
   backboneElementSchema.extend({
-    code: stringSchema,
+    code: fhirResourceTypeSchema,
     _code: elementSchema.optional(),
     max: stringSchema.optional(),
     _max: elementSchema.optional(),

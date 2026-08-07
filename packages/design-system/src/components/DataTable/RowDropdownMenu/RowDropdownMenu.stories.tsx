@@ -21,10 +21,6 @@ type Story = StoryObj<typeof RowDropdownMenu>;
 
 export const Default: Story = {
   args: {
-    children: (
-      <>
-        <DropdownMenuItem>Edit</DropdownMenuItem>
-      </>
-    ),
+    children: <DropdownMenuItem>Edit</DropdownMenuItem>,
   },
 };

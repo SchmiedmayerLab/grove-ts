@@ -8,11 +8,8 @@
 
 import { type ParameterDefinition } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import {
-  codeSchema,
-  intSchema,
-  stringSchema,
-} from '../dataTypes/primitiveTypes.js'
+import { fhirTypeSchema } from '../../valueSets/index.js'
+import { intSchema, stringSchema } from '../dataTypes/primitiveTypes.js'
 import { elementSchema } from '../element.js'
 
 const parameterDefinitionUseSchema = z.enum(['in', 'out'])
@@ -34,7 +31,7 @@ export const untypedParameterDefinitionSchema = z.lazy(() =>
     _max: elementSchema.optional(),
     documentation: stringSchema.optional(),
     _documentation: elementSchema.optional(),
-    type: codeSchema,
+    type: fhirTypeSchema,
     _type: elementSchema.optional(),
     profile: stringSchema.optional(),
     _profile: elementSchema.optional(),

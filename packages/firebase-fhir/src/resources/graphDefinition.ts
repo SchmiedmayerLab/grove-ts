@@ -29,6 +29,7 @@ import {
 } from '../elements/index.js'
 import {
   compartmentDefinitionCodeSchema,
+  fhirResourceTypeSchema,
   graphDefinitionLinkTargetCompartmentRuleSchema,
   graphDefinitionLinkTargetCompartmentUseSchema,
   publicationStatusSchema,
@@ -58,7 +59,7 @@ const graphDefinitionLinkTargetSchema: ZodType<GraphDefinitionLinkTarget> =
     _params: elementSchema.optional(),
     profile: urlSchema.optional(),
     _profile: elementSchema.optional(),
-    type: stringSchema,
+    type: fhirResourceTypeSchema,
     _type: elementSchema.optional(),
   })
 
@@ -99,7 +100,7 @@ export const untypedGraphDefinitionSchema = z.lazy(() =>
     _publisher: elementSchema.optional(),
     purpose: stringSchema.optional(),
     _purpose: elementSchema.optional(),
-    start: stringSchema,
+    start: fhirResourceTypeSchema,
     _start: elementSchema.optional(),
     status: publicationStatusSchema,
     _status: elementSchema.optional(),

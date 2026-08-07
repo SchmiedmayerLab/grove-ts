@@ -51,14 +51,14 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@types/fhir": "^0.0.41",
+    "@types/fhir": "^0.0.44",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@schmiedmayerlab/grove-configurations": "0.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.0",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "expect-type": "^1.3.0",
     "jest": "^30.4.2",

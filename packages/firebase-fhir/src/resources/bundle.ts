@@ -13,7 +13,7 @@ import {
   type BundleEntrySearch,
   type BundleLink,
   type Bundle,
-  type DomainResource,
+  type Resource,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
 import { FhirDomainResource } from './fhirDomainResource.js'
@@ -21,10 +21,10 @@ import { fhirResourceSchema } from './fhirResource.js'
 import {
   backboneElementSchema,
   decimalSchema,
-  domainResourceSchema,
   elementSchema,
   identifierSchema,
   instantSchema,
+  resourceSchema,
   signatureSchema,
   stringSchema,
   unsignedIntSchema,
@@ -88,7 +88,7 @@ const bundleEntryResponseSchema: ZodType<BundleEntryResponse> =
  * @param schema - The Zod schema for the resource type
  * @returns A Zod schema for BundleEntry containing the specified resource type
  */
-const bundleEntrySchema = <R extends DomainResource>(
+const bundleEntrySchema = <R extends Resource>(
   schema: ZodType<R>,
 ): ZodType<BundleEntry<R>> =>
   backboneElementSchema.extend({
@@ -107,10 +107,8 @@ const bundleEntrySchema = <R extends DomainResource>(
  * @param schema - The Zod schema for the resource type
  * @returns A Zod schema for Bundle containing the specified resource type
  */
-export const untypedBundleSchema = <R extends DomainResource>(
-  schema: ZodType<R>,
-) =>
-  domainResourceSchema.extend({
+export const untypedBundleSchema = <R extends Resource>(schema: ZodType<R>) =>
+  resourceSchema.extend({
     resourceType: z.literal('Bundle').readonly(),
     identifier: identifierSchema.optional(),
     type: bundleTypeSchema,
@@ -118,6 +116,7 @@ export const untypedBundleSchema = <R extends DomainResource>(
     timestamp: instantSchema.optional(),
     _timestamp: elementSchema.optional(),
     total: unsignedIntSchema.optional(),
+    _total: elementSchema.optional(),
     link: bundleLinkSchema.array().optional(),
     get entry() {
       return bundleEntrySchema(schema).array().optional()
@@ -131,16 +130,17 @@ export const untypedBundleSchema = <R extends DomainResource>(
  * @param schema - The Zod schema for the resource type
  * @returns A Zod schema for Bundle containing the specified resource type
  */
-export const bundleSchema = <R extends DomainResource>(
+export const bundleSchema = <R extends Resource>(
   schema: ZodType<R>,
 ): ZodType<Bundle<R>> => untypedBundleSchema(schema)
 
 /**
  * Zod schema for FHIR Bundle resource (untyped version, generic).
  */
-export const untypedGenericBundleSchema = z.lazy(() =>
-  untypedBundleSchema(fhirResourceSchema),
-)
+export const untypedGenericBundleSchema = z.lazy(() => {
+  const resourceCompatibleSchema: ZodType<Resource> = fhirResourceSchema
+  return untypedBundleSchema(resourceCompatibleSchema)
+})
 
 /**
  * Zod schema for FHIR Bundle resource (generic).
@@ -153,7 +153,7 @@ export const genericBundleSchema: ZodType<Bundle> = untypedGenericBundleSchema
  *
  * @template R - The type of resources contained in the bundle
  */
-export class FhirBundle<R extends DomainResource> extends FhirDomainResource<
+export class FhirBundle<R extends Resource> extends FhirDomainResource<
   Bundle<R>
 > {
   // Static Functions
@@ -162,9 +162,9 @@ export class FhirBundle<R extends DomainResource> extends FhirDomainResource<
    * Parses a generic FHIR Bundle from unknown data.
    *
    * @param value - The data to parse
-   * @returns A FhirBundle instance containing any DomainResource
+   * @returns A FhirBundle instance containing any FHIR resource
    */
-  public static parseGeneric(value: unknown): FhirBundle<DomainResource> {
+  public static parseGeneric(value: unknown): FhirBundle<Resource> {
     return new FhirBundle(genericBundleSchema.parse(value))
   }
 
@@ -176,7 +176,7 @@ export class FhirBundle<R extends DomainResource> extends FhirDomainResource<
    * @param schema - Zod schema for validating the resource type
    * @returns A FhirBundle instance containing resources of type R
    */
-  public static parse<R extends DomainResource>(
+  public static parse<R extends Resource>(
     value: unknown,
     schema: ZodType<R>,
   ): FhirBundle<R> {

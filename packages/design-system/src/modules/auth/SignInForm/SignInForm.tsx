@@ -45,7 +45,7 @@ export interface SignInFormProps {
   providers: Array<{
     provider: AuthProvider;
     name: string;
-    icon?: ReactNode;
+    icon?: Exclude<ReactNode, undefined>;
   }>;
   /**
    * If false, the email/password form will not be displayed.
@@ -66,7 +66,7 @@ export interface SignInFormProps {
   /**
    * Size of submit and SSO buttons.
    */
-  buttonSize?: ButtonProps["size"];
+  buttonSize?: NonNullable<ButtonProps["size"]>;
 }
 
 /**
@@ -112,11 +112,11 @@ export const SignInForm = ({
             }
           }}
         >
-          {provider.icon && (
+          {provider.icon ?
             <span className={cn("flex", buttonSize === "lg" ? "h-8" : "h-6")}>
               {provider.icon}
             </span>
-          )}
+          : null}
           {t("signIn_provider", { provider: provider.name })}
         </Button>
       ))}

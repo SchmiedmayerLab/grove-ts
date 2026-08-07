@@ -35,10 +35,7 @@ for (const workspace of manifest.workspaces) {
 
 for (const workspace of manifest.workspaces) {
   const arguments_ = ['exec', '--offline', '--', 'attw', '--pack', workspace]
-  if (workspace === 'packages/configurations') {
-    // This package intentionally exposes CommonJS for ESLint configuration files.
-    arguments_.push('--ignore-rules', 'named-exports')
-  } else {
+  if (workspace !== 'packages/configurations') {
     // Runtime packages intentionally expose ESM-only entry points.
     arguments_.push('--profile', 'esm-only')
   }

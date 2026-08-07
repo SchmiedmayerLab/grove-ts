@@ -131,7 +131,7 @@ describe("IconPicker", () => {
     const user = userEvent.setup();
     renderWithProviders(
       <IconPicker icons={mockIcons}>
-        <button>Custom Trigger</button>
+        <button type="button">Custom Trigger</button>
       </IconPicker>,
     );
 

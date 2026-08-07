@@ -11,6 +11,8 @@ import { screens } from "@/theme/breakpoints";
 import { useIsTouchDevice, useIsScreen } from "./useMedia";
 
 describe("useMedia", () => {
+  let matchMediaMock = vi.fn<typeof window.matchMedia>();
+
   const createMediaQueryList = (matches: boolean) => ({
     matches,
     media: "",
@@ -24,7 +26,8 @@ describe("useMedia", () => {
 
   const mockMatchMedia = (matches: boolean) => {
     const mediaQueryList = createMediaQueryList(matches);
-    window.matchMedia = vi.fn().mockImplementation(() => mediaQueryList);
+    matchMediaMock = vi.fn().mockImplementation(() => mediaQueryList);
+    window.matchMedia = matchMediaMock;
     return mediaQueryList;
   };
 
@@ -54,8 +57,10 @@ describe("useMedia", () => {
       // Simulate media query change
       act(() => {
         mediaQueryList.matches = true;
-        // this is onChange handler
-        mediaQueryList.addEventListener.mock.calls[0][1]();
+        const changeListener =
+          mediaQueryList.addEventListener.mock.calls[0]?.[1];
+        if (changeListener == null) throw new Error("Missing change listener.");
+        changeListener();
       });
 
       expect(result.current).toBe(true);
@@ -79,10 +84,7 @@ describe("useMedia", () => {
       mockMatchMedia(false);
       renderHook(() => useIsScreen("md"));
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(window.matchMedia).toHaveBeenCalledWith(
-        `(min-width: ${screens.md})`,
-      );
+      expect(matchMediaMock).toHaveBeenCalledWith(`(min-width: ${screens.md})`);
     });
 
     it("updates when media query changes", () => {
@@ -94,8 +96,10 @@ describe("useMedia", () => {
       // Simulate media query change
       act(() => {
         mediaQueryList.matches = true;
-        // this is onChange handler
-        mediaQueryList.addEventListener.mock.calls[0][1]();
+        const changeListener =
+          mediaQueryList.addEventListener.mock.calls[0]?.[1];
+        if (changeListener == null) throw new Error("Missing change listener.");
+        changeListener();
       });
 
       expect(result.current).toBe(true);

@@ -65,6 +65,8 @@ const ItemNames = ({ itemNames }: ItemNamesProps) => {
     <>
       <br />
       {visibleItems.map((name, index) => (
+        // The public API accepts arbitrary React nodes, which do not have stable semantic keys.
+        // eslint-disable-next-line @eslint-react/no-array-index-key
         <span key={index}>
           {index > 0 && ", "}
           <b className="text-foreground font-medium">{name}</b>
@@ -111,10 +113,8 @@ export const ConfirmDeleteDialog = ({
   isPending,
   ...props
 }: ConfirmDeleteDialogProps) => {
-  const itemNames =
-    !itemName ? null
-    : Array.isArray(itemName) ? itemName
-    : [itemName];
+  let itemNames: ReactNode[] | null = null;
+  if (itemName) itemNames = Array.isArray(itemName) ? itemName : [itemName];
 
   return (
     <Dialog {...props}>

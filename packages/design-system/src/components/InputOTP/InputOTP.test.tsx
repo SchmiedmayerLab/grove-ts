@@ -7,7 +7,7 @@
 //
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { InputOTP } from ".";
+import { InputOTP, InputOTPRoot, InputOTPSlot } from ".";
 
 describe("InputOTP", () => {
   beforeEach(() => {
@@ -32,5 +32,15 @@ describe("InputOTP", () => {
     value.split("").forEach((number) => {
       expect(screen.getByText(number)).toBeInTheDocument();
     });
+  });
+
+  it.each([-1, 1])("rejects an invalid slot index of %i", (index) => {
+    expect(() =>
+      render(
+        <InputOTPRoot maxLength={1}>
+          <InputOTPSlot index={index} />
+        </InputOTPRoot>,
+      ),
+    ).toThrow(new RangeError(`No OTP slot exists at index ${index}.`));
   });
 });

@@ -21,7 +21,6 @@ import {
   base64BinarySchema,
   booleanSchema,
   codeableConceptSchema,
-  codeSchema,
   codingSchema,
   domainResourceSchema,
   elementSchema,
@@ -32,11 +31,15 @@ import {
   uriSchema,
 } from '../elements/index.js'
 
+const auditEventActionSchema = z.enum(['C', 'R', 'U', 'D', 'E'])
+const auditEventAgentNetworkTypeSchema = z.enum(['1', '2', '3', '4', '5'])
+const auditEventOutcomeSchema = z.enum(['0', '4', '8', '12'])
+
 const auditEventAgentNetworkSchema: ZodType<AuditEventAgentNetwork> =
   backboneElementSchema.extend({
     address: stringSchema.optional(),
     _address: elementSchema.optional(),
-    type: codeSchema.optional(),
+    type: auditEventAgentNetworkTypeSchema.optional(),
     _type: elementSchema.optional(),
   })
 
@@ -101,12 +104,12 @@ export const untypedAuditEventSchema = z.lazy(() =>
     resourceType: z.literal('AuditEvent').readonly(),
     type: codingSchema,
     subtype: codingSchema.array().optional(),
-    action: codeSchema.optional(),
+    action: auditEventActionSchema.optional(),
     _action: elementSchema.optional(),
     period: periodSchema.optional(),
     recorded: instantSchema,
     _recorded: elementSchema.optional(),
-    outcome: codeSchema.optional(),
+    outcome: auditEventOutcomeSchema.optional(),
     _outcome: elementSchema.optional(),
     outcomeDesc: stringSchema.optional(),
     _outcomeDesc: elementSchema.optional(),

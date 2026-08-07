@@ -60,8 +60,7 @@ describe("CheckboxGroup component", () => {
 
     render(<CheckboxGroup options={options} onChange={handleChange} />);
 
-    const secondCheckbox = screen.getAllByRole("checkbox")[1];
-    fireEvent.click(secondCheckbox);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Option 2" }));
 
     expect(handleChange).toHaveBeenCalledWith(["option2"]);
   });
@@ -71,15 +70,14 @@ describe("CheckboxGroup component", () => {
 
     render(<CheckboxGroup options={options} onChange={handleChange} />);
 
-    const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[0]);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Option 1" }));
     expect(handleChange).toHaveBeenCalledWith(["option1"]);
 
     // Reset mock to check next call clearly
     handleChange.mockReset();
 
     // Now select second checkbox while first is already selected
-    fireEvent.click(checkboxes[1]);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Option 2" }));
     expect(handleChange).toHaveBeenCalledWith(["option1", "option2"]);
   });
 
@@ -94,8 +92,7 @@ describe("CheckboxGroup component", () => {
       />,
     );
 
-    const firstCheckbox = screen.getAllByRole("checkbox")[0];
-    fireEvent.click(firstCheckbox);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Option 1" }));
 
     expect(handleChange).toHaveBeenCalledWith(["option2"]);
   });
@@ -119,7 +116,7 @@ describe("CheckboxGroup component", () => {
     const checkboxes = screen.getAllByRole("checkbox");
     expect(checkboxes[0]).toBeChecked();
 
-    fireEvent.click(checkboxes[1]);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Option 2" }));
     expect(handleChange).toHaveBeenCalledWith([1, 2]);
   });
 
@@ -127,7 +124,7 @@ describe("CheckboxGroup component", () => {
     render(<CheckboxGroup options={options} className="test-class" />);
 
     const root = screen
-      .getAllByRole("checkbox")[0]
+      .getByRole("checkbox", { name: "Option 1" })
       .closest("div[role='group']");
     expect(root).toHaveClass("test-class");
   });

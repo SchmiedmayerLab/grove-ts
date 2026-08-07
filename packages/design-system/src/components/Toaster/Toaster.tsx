@@ -39,9 +39,8 @@ type ToastTitle = (() => ReactNode) | ReactNode;
  */
 export const toast: typeof sonnerToast = Object.assign(
   (message: ToastTitle, data?: ExternalToast) => sonnerToast(message, data), // Base callable function
+  sonnerToast,
   {
-    // eslint-disable-next-line @typescript-eslint/no-misused-spread
-    ...sonnerToast, // Spread all original properties/methods
     error: (message: ToastTitle, options?: ExternalToast) =>
       sonnerToast.error(message, {
         duration: 5000,

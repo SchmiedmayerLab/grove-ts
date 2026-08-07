@@ -18,6 +18,12 @@ import { NotificationRoot } from "./NotificationRoot";
 import { NotificationTime } from "./NotificationTime";
 import { NotificationTitle } from "./NotificationTitle";
 
+const hasRenderableContent = (content: ReactNode) =>
+  content !== null &&
+  content !== undefined &&
+  content !== false &&
+  content !== "";
+
 export interface NotificationProps extends NotificationContextType {
   /**
    * Title text of notification.
@@ -99,15 +105,22 @@ export const Notification = ({
     <>
       <NotificationImage src={image} />
       <NotificationContentContainer>
-        {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
-        {(title || time) && (
+        {hasRenderableContent(title) || time !== undefined ?
           <NotificationHeader>
-            {title && <NotificationTitle>{title}</NotificationTitle>}
-            {time && <NotificationTime time={time} />}
+            {hasRenderableContent(title) ?
+              <NotificationTitle>{title}</NotificationTitle>
+            : null}
+            {time !== undefined ?
+              <NotificationTime time={time} />
+            : null}
           </NotificationHeader>
-        )}
-        {message && <NotificationMessage>{message}</NotificationMessage>}
-        {actions && <NotificationActions>{actions}</NotificationActions>}
+        : null}
+        {hasRenderableContent(message) ?
+          <NotificationMessage>{message}</NotificationMessage>
+        : null}
+        {hasRenderableContent(actions) ?
+          <NotificationActions>{actions}</NotificationActions>
+        : null}
       </NotificationContentContainer>
     </>
   );

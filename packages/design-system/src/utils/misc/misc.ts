@@ -249,6 +249,12 @@ export const formatNilBoolean = (value: Nil<boolean>) =>
  * ```
  */
 export const joinPaths = (...segments: Array<Nil<string | number>>) => {
+  const removeTrailingSlashes = (value: string) => {
+    let end = value.length;
+    while (end > 0 && value.at(end - 1) === "/") end -= 1;
+    return value.slice(0, end);
+  };
+
   const normalizedSegments = segments
     .filter(
       (segment): segment is string | number =>
@@ -265,10 +271,9 @@ export const joinPaths = (...segments: Array<Nil<string | number>>) => {
 
       // Remove trailing slashes from non-last segments to avoid duplicate separators.
       const withoutTrailingSlash =
-        isLastSegment ? withoutLeadingSlash
-          // Anchoring bounds this replacement to a single path-segment suffix.
-          // eslint-disable-next-line sonarjs/super-linear-regex
-        : withoutLeadingSlash.replace(/\/+$/, "");
+        isLastSegment ? withoutLeadingSlash : (
+          removeTrailingSlashes(withoutLeadingSlash)
+        );
 
       return withoutTrailingSlash;
     })

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ReactNode, useContext } from "react";
+import { type ReactNode, use } from "react";
 import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
 import { DashboardContext } from "./DashboardContext";
@@ -68,7 +68,7 @@ export const MenuItem = ({
   isHighlighted,
   children,
 }: MenuItemProps) => {
-  const { shrinkable } = useContext(DashboardContext);
+  const { shrinkable } = use(DashboardContext);
   const {
     router: { Link },
   } = useGroveContext();

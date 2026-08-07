@@ -7,7 +7,7 @@
 //
 
 import { Tabs as TabsPrimitive } from "radix-ui";
-import { type ComponentProps, createContext, useContext } from "react";
+import { type ComponentProps, createContext, use, useMemo } from "react";
 import { cn } from "@/utils/className";
 
 /**
@@ -79,19 +79,22 @@ const TabsListContext = createContext<TabsListContextProps>({
  * </TabsList>
  * ```
  */
-export const TabsList = ({ className, grow, ...props }: TabsListProps) => (
-  <TabsListContext.Provider value={{ grow }}>
-    <TabsPrimitive.List
-      data-slot="tabs-list"
-      className={cn(
-        "inline-flex-center text-muted-foreground h-10 p-1",
-        grow && "w-full",
-        className,
-      )}
-      {...props}
-    />
-  </TabsListContext.Provider>
-);
+export const TabsList = ({ className, grow, ...props }: TabsListProps) => {
+  const contextValue = useMemo(() => ({ grow }), [grow]);
+  return (
+    <TabsListContext value={contextValue}>
+      <TabsPrimitive.List
+        data-slot="tabs-list"
+        className={cn(
+          "inline-flex-center text-muted-foreground h-10 p-1",
+          grow && "w-full",
+          className,
+        )}
+        {...props}
+      />
+    </TabsListContext>
+  );
+};
 
 /**
  * Trigger for a single tab. Should be wrapped with {@link TabsList}`.
@@ -101,7 +104,7 @@ export const TabsTrigger = ({
   className,
   ...props
 }: ComponentProps<typeof TabsPrimitive.Trigger>) => {
-  const { grow } = useContext(TabsListContext);
+  const { grow } = use(TabsListContext);
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"

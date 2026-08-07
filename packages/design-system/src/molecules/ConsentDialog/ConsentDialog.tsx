@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, useMemo, useState } from "react";
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import {
@@ -54,9 +54,13 @@ interface ConsentDialogProps extends Omit<
  */
 export const ConsentDialog = ({ children, ...props }: ConsentDialogProps) => {
   const [isChecked, setIsChecked] = useState(false);
+  const contextValue = useMemo(
+    () => ({ isChecked, setIsChecked }),
+    [isChecked],
+  );
 
   return (
-    <ConsentDialogContext.Provider value={{ isChecked, setIsChecked }}>
+    <ConsentDialogContext value={contextValue}>
       <Dialog {...props}>
         <DialogPortal>
           <DialogOverlay />
@@ -65,7 +69,7 @@ export const ConsentDialog = ({ children, ...props }: ConsentDialogProps) => {
           </DialogContentElement>
         </DialogPortal>
       </Dialog>
-    </ConsentDialogContext.Provider>
+    </ConsentDialogContext>
   );
 };
 

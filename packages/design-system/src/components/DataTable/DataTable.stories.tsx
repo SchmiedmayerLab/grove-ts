@@ -53,11 +53,9 @@ export const HeaderAction: Story = {
   args: {
     ...Default.args,
     header: (
-      <>
-        <Button className="ml-auto" size="sm">
-          Action
-        </Button>
-      </>
+      <Button className="ml-auto" size="sm">
+        Action
+      </Button>
     ),
   },
 };

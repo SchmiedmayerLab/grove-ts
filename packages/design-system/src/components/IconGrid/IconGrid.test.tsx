@@ -92,6 +92,28 @@ describe("IconGrid", () => {
     expect(handleValueChange).toHaveBeenCalledWith("bird");
   });
 
+  it("does not submit a containing form when an icon is selected", async () => {
+    const user = userEvent.setup();
+    const handleSubmit = vi.fn();
+    const handleValueChange = vi.fn();
+
+    renderWithProviders(
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSubmit();
+        }}
+      >
+        <IconGrid icons={mockIcons} onValueChange={handleValueChange} />
+      </form>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /bird/i }));
+
+    expect(handleValueChange).toHaveBeenCalledWith("bird");
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
   it("shows loading skeleton when data is loading", () => {
     // Mock the import to simulate loading state
     vi.doMock("../IconPicker/iconsData", () => ({

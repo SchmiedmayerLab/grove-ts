@@ -76,14 +76,16 @@ export const LongContent: Story = {
         <DialogDescription>Please review our privacy policy</DialogDescription>
       </DialogHeader>
       <ConsentDialogContent>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <p key={i}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat.
-          </p>
-        ))}
+        {Array.from({ length: 10 }, (_, index) => index + 1).map(
+          (paragraphNumber) => (
+            <p key={paragraphNumber}>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </p>
+          ),
+        )}
       </ConsentDialogContent>
       <ConsentDialogCheckbox label="I have read and agree to the privacy policy" />
       <ConsentDialogSubmit onClick={action("onSubmit")}>

@@ -31,20 +31,27 @@
   "publishConfig": {
     "access": "public"
   },
-  "type": "commonjs",
+  "type": "module",
   "source": "src/index.ts",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "scripts": {
-    "build": "parcel build",
-    "clean": "rimraf dist .parcel-cache",
-    "dev": "parcel watch",
+    "build": "tsdown src/index.ts --format esm,cjs --dts --clean --out-dir dist",
+    "clean": "rimraf dist",
+    "dev": "tsdown src/index.ts --format esm,cjs --dts --watch --out-dir dist",
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
@@ -53,21 +60,20 @@
     "version": "node ../../scripts/sync-workspace-versions.mjs"
   },
   "dependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint-react/eslint-plugin": "^5.18.1",
+    "@eslint/js": "^10.0.1",
     "@typescript-eslint/utils": "^8.65.0",
     "eslint-config-prettier": "^10",
-    "eslint-plugin-import": "^2",
+    "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-prefer-arrow-functions": "^3.9.1",
     "eslint-plugin-prettier": "^5",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-sonarjs": "^4.2.0",
     "globals": "^17.3.0",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript-eslint": "^8.65.0"
   },
   "peerDependencies": {
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-import-resolver-typescript": "^4.4.5",
     "prettier": "^3"
   },
@@ -75,11 +81,9 @@
     "node": ">=24"
   },
   "devDependencies": {
-    "@parcel/packager-ts": "^2.16.4",
-    "@parcel/transformer-typescript-types": "^2.16.4",
     "@types/node": "^24.10.0",
-    "parcel": "^2.16.4",
     "rimraf": "^6.1.2",
+    "tsdown": "^0.22.14",
     "typescript": "^6.0.3"
   }
 }

@@ -5,6 +5,7 @@
     "target": "es2020",
     "lib": ["es2020"],
     "allowJs": true,
+    // Typedoc traverses dependency declarations with incompatible module and DOM assumptions.
     "skipLibCheck": true,
     "noEmit": false,
     "esModuleInterop": true,

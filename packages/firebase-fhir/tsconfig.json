@@ -8,7 +8,6 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "dist",
-    "skipLibCheck": true,
     "isolatedModules": true,
     "sourceMap": true,
     "resolveJsonModule": true,

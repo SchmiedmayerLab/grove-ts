@@ -7,7 +7,7 @@
 //
 
 import { Menu } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
   DashboardContext,
   type DashboardContextValue,
@@ -74,9 +74,10 @@ export const DashboardLayout = ({
   shrinkable = true,
 }: DashboardLayoutProps) => {
   const menu = useOpenState();
+  const contextValue = useMemo(() => ({ shrinkable }), [shrinkable]);
 
   return (
-    <DashboardContext.Provider value={{ shrinkable }}>
+    <DashboardContext value={contextValue}>
       <div
         data-slot="dashboard-layout"
         className={cn(
@@ -122,13 +123,15 @@ export const DashboardLayout = ({
           hidden={!menu.isOpen}
           data-testid="mobileMenu"
         >
-          {actions && <div className="p-4">{actions}</div>}
+          {actions ?
+            <div className="p-4">{actions}</div>
+          : null}
           {mobile}
         </nav>
         <div className="flex min-h-[calc(100vh-var(--headerHeight))] flex-col px-4 pt-6 pb-12 md:px-12 md:pt-10 md:pb-16 lg:ml-(--asideWidth)">
           {children}
         </div>
       </div>
-    </DashboardContext.Provider>
+    </DashboardContext>
   );
 };
