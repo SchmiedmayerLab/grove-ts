@@ -10,6 +10,7 @@ SPDX-License-Identifier: MIT
 
 # Grove
 
+[![GitHub Release](https://img.shields.io/github/v/release/SchmiedmayerLab/grove-ts?display_name=tag&include_prereleases&sort=semver)](https://github.com/SchmiedmayerLab/grove-ts/releases)
 [![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
 [![CodeQL](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml)
 [![Deployment](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml)
@@ -53,12 +54,28 @@ See each package's README for installation and API details.
 
 ## Publishing
 
-Releases publish every package with npm Trusted Publishing through [`deployment.yml`](.github/workflows/deployment.yml); normal releases need no npm token.
-For the initial `0.1.0` publication:
+Grove uses fixed, bare semantic versions such as `0.1.0` across all packages; prerelease versions such as `0.2.0-beta.1` use the npm `next` tag.
+Publishing a GitHub release runs the full validation pipeline, publishes missing versions with npm Trusted Publishing, verifies them on npm, and deploys GitHub Pages.
+Create a normal release in the GitHub interface or with:
 
-1. Add an `NPM_TOKEN` repository secret with publish access and manually run **Deployment** with `bootstrapWithToken` enabled.
-2. For every npm package, configure a GitHub Actions trusted publisher for `SchmiedmayerLab/grove-ts` and the caller workflow `deployment.yml`.
-3. Delete the token secret; publish subsequent versions by creating a GitHub release or running **Deployment** without bootstrap mode.
+```bash
+gh release create 0.2.0 --target main --title 0.2.0 --generate-notes
+```
+
+An unpublished package requires a one-time token bootstrap before it can use Trusted Publishing.
+Temporarily add an `NPM_TOKEN` repository secret and manually run **Deployment** from `main`, using `*` for the repository's first release or comma-separated package names for newly added packages:
+
+```bash
+gh workflow run deployment.yml --ref main \
+  -f packageVersion=0.1.0 \
+  -f bootstrapPackages='*'
+```
+
+For example, set `bootstrapPackages` to `@schmiedmayerlab/grove-new-package` when adding a single workspace later.
+
+The successful workflow creates the matching GitHub release and version tag without triggering a duplicate deployment.
+Configure each new npm package's GitHub Actions trusted publisher for organization `SchmiedmayerLab`, repository `grove-ts`, workflow `deployment.yml`, and the `npm publish` action, then delete the token secret.
+Rerunning the same release is safe because versions already present on npm are verified and skipped.
 
 ## Contributing
 
