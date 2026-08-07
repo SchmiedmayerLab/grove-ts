@@ -27,7 +27,7 @@ export const validateReleaseVersion = (version) => {
 /** Resolve npm and GitHub prerelease metadata from the semantic version. */
 export const releaseChannel = (version) => {
   validateReleaseVersion(version)
-  const prerelease = version.includes('-')
+  const prerelease = semverPattern.exec(version)[4] !== undefined
   return { npmTag: prerelease ? 'next' : 'latest', prerelease }
 }
 
@@ -146,7 +146,10 @@ export const createReleasePlan = async ({
 export const lookupNpmPackage = async (name, fetchImplementation = fetch) => {
   const response = await fetchImplementation(
     `https://registry.npmjs.org/${encodeURIComponent(name)}`,
-    { headers: { accept: 'application/json' } },
+    {
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(30_000),
+    },
   )
   if (response.status === 404) return null
   if (!response.ok) {

@@ -46,6 +46,10 @@ describe('release version validation', () => {
       npmTag: 'next',
       prerelease: true,
     })
+    assert.deepEqual(releaseChannel('0.2.0+build-1'), {
+      npmTag: 'latest',
+      prerelease: false,
+    })
   })
 })
 

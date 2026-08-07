@@ -13,7 +13,6 @@ import { validateReleaseVersion } from './release-plan.mjs'
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const rootPackagePath = resolve(repositoryRoot, 'package.json')
-const rootPackage = JSON.parse(await readFile(rootPackagePath, 'utf8'))
 
 const dependencyFields = [
   'dependencies',
@@ -50,6 +49,7 @@ export const synchronizeWorkspaceManifests = (manifests, targetVersion) => {
 
 const run = async () => {
   const targetVersion = process.argv[2]
+  const rootPackage = JSON.parse(await readFile(rootPackagePath, 'utf8'))
   const workspacePackages = await Promise.all(
     rootPackage.workspaces.map(async (workspace) => {
       const path = resolve(repositoryRoot, workspace, 'package.json')

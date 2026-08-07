@@ -62,6 +62,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: Validate release source
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -88,7 +89,14 @@ jobs:
         id: release-metadata
         env:
           PACKAGE_VERSION: ${{ github.event.release.tag_name || inputs.packageVersion }}
-        run: echo "version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFile } from 'node:fs/promises'
+          import { validateReleaseVersion } from './scripts/release-plan.mjs'
+
+          const version = validateReleaseVersion(process.env.PACKAGE_VERSION)
+          await appendFile(process.env.GITHUB_OUTPUT, `version=${version}\n`)
+          NODE
       - name: Plan release
         id: release-plan
         env:
@@ -156,9 +164,16 @@ jobs:
           NPM_TAG: ${{ needs.plan.outputs.npm-tag }}
           PACKAGES: ${{ needs.plan.outputs.oidc }}
         run: |
-          while IFS= read -r PACKAGE_NAME; do
+          set -euo pipefail
+          PACKAGE_LINES="$(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')"
+          if [ -z "$PACKAGE_LINES" ]; then
+            echo "The OIDC publication list is empty."
+            exit 1
+          fi
+          mapfile -t PACKAGE_NAMES <<< "$PACKAGE_LINES"
+          for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
             npm publish --workspace "$PACKAGE_NAME" --provenance --access public --tag "$NPM_TAG"
-          done < <(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')
+          done
       - name: Bootstrap unpublished packages with npm token
         if: needs.plan.outputs.bootstrap != '[]'
         env:
@@ -166,20 +181,34 @@ jobs:
           NPM_TAG: ${{ needs.plan.outputs.npm-tag }}
           PACKAGES: ${{ needs.plan.outputs.bootstrap }}
         run: |
+          set -euo pipefail
           if [ -z "$NODE_AUTH_TOKEN" ]; then
             echo "NPM_TOKEN is required to bootstrap unpublished packages."
             exit 1
           fi
 
-          while IFS= read -r PACKAGE_NAME; do
+          PACKAGE_LINES="$(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')"
+          if [ -z "$PACKAGE_LINES" ]; then
+            echo "The bootstrap publication list is empty."
+            exit 1
+          fi
+          mapfile -t PACKAGE_NAMES <<< "$PACKAGE_LINES"
+          for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
             npm publish --workspace "$PACKAGE_NAME" --provenance --access public --tag "$NPM_TAG"
-          done < <(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')
+          done
       - name: Verify published package versions
         env:
           PACKAGE_VERSION: ${{ needs.plan.outputs.version }}
           PACKAGES: ${{ needs.plan.outputs.all }}
         run: |
-          while IFS= read -r PACKAGE_NAME; do
+          set -euo pipefail
+          PACKAGE_LINES="$(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')"
+          if [ -z "$PACKAGE_LINES" ]; then
+            echo "The package verification list is empty."
+            exit 1
+          fi
+          mapfile -t PACKAGE_NAMES <<< "$PACKAGE_LINES"
+          for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
             for ATTEMPT in {1..6}; do
               if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version >/dev/null; then
                 echo "Verified $PACKAGE_NAME@$PACKAGE_VERSION."
@@ -191,7 +220,7 @@ jobs:
               fi
               sleep 10
             done
-          done < <(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')
+          done
 
   deploy-pages:
     name: Deploy GitHub Pages
