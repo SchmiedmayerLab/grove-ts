@@ -70,6 +70,12 @@ describe("Notification", () => {
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/users");
   });
+
+  it("renders numeric content", () => {
+    renderWithProviders(<Notification isRead={false} message={0} />);
+
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
 });
 
 describe("NotificationActions", () => {

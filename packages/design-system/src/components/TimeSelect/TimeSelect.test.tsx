@@ -85,4 +85,24 @@ describe("TimeSelect", () => {
 
     expect(onChange).toHaveBeenCalledWith({ hours: 9, minutes: 0 });
   });
+
+  it("ignores a created value without a complete time", async () => {
+    const onChange = vi.fn();
+
+    render(
+      <TimeSelect
+        value={null}
+        onChange={onChange}
+        create={true}
+        search={true}
+      />,
+    );
+
+    const trigger = screen.getByRole("combobox");
+    await userEvent.click(trigger);
+    await userEvent.type(screen.getByPlaceholderText("Search..."), "9");
+    await userEvent.click(screen.getByText('Create "9"'));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });
