@@ -22,6 +22,7 @@
 **/out/
 
 # production
+/deploy/
 **/build/
 **/dist/
 **/lib/

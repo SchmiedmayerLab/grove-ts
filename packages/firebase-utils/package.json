@@ -23,8 +23,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json",
-    "prepublishOnly": "npm run clean && npm run build",
-    "version": "node ../../scripts/sync-workspace-versions.mjs"
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "author": "Schmiedmayer Lab",
   "license": "MIT",

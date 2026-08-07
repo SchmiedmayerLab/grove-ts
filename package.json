@@ -64,6 +64,7 @@
     "validate": "npm run build && npm run format:check && npm run lint:ci && npm run analyze && npm run typecheck && npm test && npm run docs:ci && npm run pack:check && npm run pack:lint && npm run audit && npm run audit:docs",
     "docs": "npm run dev --prefix packages/design-system/docs",
     "docs:ci": "npm run build --prefix packages/design-system/docs",
+    "pages:build": "npm ci --prefix packages/design-system/docs && npm run audit:docs && npm run showcase && npm run docs:ci && node scripts/prepare-pages.mjs",
     "showcase": "npm run build-storybook --workspace @schmiedmayerlab/grove-design-system && npm run showcase:generate",
     "showcase:generate": "node scripts/generate-showcase.mjs"
   },

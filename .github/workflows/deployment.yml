@@ -38,210 +38,22 @@ jobs:
       pull-requests: read
     secrets: inherit
 
-  plan:
-    name: Plan Package Publication
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    outputs:
-      all: ${{ steps.release-plan.outputs.all }}
-      bootstrap: ${{ steps.release-plan.outputs.bootstrap }}
-      npm-tag: ${{ steps.release-plan.outputs.npm-tag }}
-      oidc: ${{ steps.release-plan.outputs.oidc }}
-      prerelease: ${{ steps.release-plan.outputs.prerelease }}
-      skipped: ${{ steps.release-plan.outputs.skipped }}
-      version: ${{ steps.release-metadata.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          package-manager-cache: false
-      - name: Validate release source
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          EVENT_NAME: ${{ github.event_name }}
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_REF: ${{ github.ref }}
-          RELEASE_SHA: ${{ github.sha }}
-        run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            if [ "$RELEASE_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
-              echo "Manual releases must run from the default branch ($DEFAULT_BRANCH)."
-              exit 1
-            fi
-            MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$DEFAULT_BRANCH" --jq .object.sha)"
-            if [ "$RELEASE_SHA" != "$MAIN_SHA" ]; then
-              echo "Release candidate $RELEASE_SHA is not the current $DEFAULT_BRANCH commit $MAIN_SHA."
-              exit 1
-            fi
-          elif ! git merge-base --is-ancestor "$RELEASE_SHA" "origin/$DEFAULT_BRANCH"; then
-            echo "Release candidate $RELEASE_SHA is not part of $DEFAULT_BRANCH."
-            exit 1
-          fi
-      - name: Resolve release metadata
-        id: release-metadata
-        env:
-          PACKAGE_VERSION: ${{ github.event.release.tag_name || inputs.packageVersion }}
-        run: |
-          node --input-type=module <<'NODE'
-          import { appendFile } from 'node:fs/promises'
-          import { validateReleaseVersion } from './scripts/release-plan.mjs'
-
-          const version = validateReleaseVersion(process.env.PACKAGE_VERSION)
-          await appendFile(process.env.GITHUB_OUTPUT, `version=${version}\n`)
-          NODE
-      - name: Plan release
-        id: release-plan
-        env:
-          BOOTSTRAP_PACKAGES: ${{ inputs.bootstrapPackages || '' }}
-          PACKAGE_VERSION: ${{ steps.release-metadata.outputs.version }}
-        run: |
-          ARGS=(--version "$PACKAGE_VERSION")
-          if [ -n "$BOOTSTRAP_PACKAGES" ]; then
-            ARGS+=(--bootstrap-packages "$BOOTSTRAP_PACKAGES")
-          fi
-          node scripts/release-plan.mjs "${ARGS[@]}"
-
   publish-packages:
     name: Publish Packages
-    needs:
-      - build-and-test
-      - plan
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    needs: build-and-test
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-release.yml@reusable-npm-workflows
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-          registry-url: https://registry.npmjs.org
-      - name: Set up npm
-        run: npm install --global --ignore-scripts npm@12.0.2
-      - name: Install dependencies
-        run: npm ci
-      - name: Confirm manual release candidate remains current
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_SHA: ${{ github.sha }}
-        run: |
-          MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$DEFAULT_BRANCH" --jq .object.sha)"
-          if [ "$RELEASE_SHA" != "$MAIN_SHA" ]; then
-            echo "$DEFAULT_BRANCH advanced to $MAIN_SHA while the release was validating."
-            exit 1
-          fi
-      - name: Set release version
-        env:
-          PACKAGE_VERSION: ${{ needs.plan.outputs.version }}
-        run: |
-          node scripts/sync-workspace-versions.mjs "$PACKAGE_VERSION"
-          npm install --package-lock-only --ignore-scripts
-      - name: Build packages
-        run: npm run build
-      - name: Verify release package contents
-        run: |
-          npm run pack:check
-          npm run pack:lint
-      - name: Publish existing packages with npm Trusted Publishing
-        if: needs.plan.outputs.oidc != '[]'
-        env:
-          NPM_TAG: ${{ needs.plan.outputs.npm-tag }}
-          PACKAGES: ${{ needs.plan.outputs.oidc }}
-        run: |
-          set -euo pipefail
-          PACKAGE_LINES="$(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')"
-          if [ -z "$PACKAGE_LINES" ]; then
-            echo "The OIDC publication list is empty."
-            exit 1
-          fi
-          mapfile -t PACKAGE_NAMES <<< "$PACKAGE_LINES"
-          for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
-            npm publish --workspace "$PACKAGE_NAME" --provenance --access public --tag "$NPM_TAG"
-          done
-      - name: Bootstrap unpublished packages with npm token
-        if: needs.plan.outputs.bootstrap != '[]'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TAG: ${{ needs.plan.outputs.npm-tag }}
-          PACKAGES: ${{ needs.plan.outputs.bootstrap }}
-        run: |
-          set -euo pipefail
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "NPM_TOKEN is required to bootstrap unpublished packages."
-            exit 1
-          fi
-
-          PACKAGE_LINES="$(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')"
-          if [ -z "$PACKAGE_LINES" ]; then
-            echo "The bootstrap publication list is empty."
-            exit 1
-          fi
-          mapfile -t PACKAGE_NAMES <<< "$PACKAGE_LINES"
-          for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
-            npm publish --workspace "$PACKAGE_NAME" --provenance --access public --tag "$NPM_TAG"
-          done
-      - name: Summarize Trusted Publisher setup
-        if: needs.plan.outputs.bootstrap != '[]'
-        env:
-          PACKAGES: ${{ needs.plan.outputs.bootstrap }}
-        run: |
-          PACKAGE_SELECTION="$(node --input-type=module -e 'console.log(JSON.parse(process.env.PACKAGES).join(","))')"
-          {
-            echo "### Complete npm Trusted Publisher setup"
-            echo
-            echo "npm requires an interactive maintainer session with two-factor authentication."
-            echo "The bypass-2FA token used to create the package cannot configure this setting."
-            echo "Run this command from the repository's default branch:"
-            echo
-            echo "    npm run configure:trusted-publishing -- --packages '$PACKAGE_SELECTION'"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Verify published package versions
-        env:
-          PACKAGE_VERSION: ${{ needs.plan.outputs.version }}
-          PACKAGES: ${{ needs.plan.outputs.all }}
-        run: |
-          set -euo pipefail
-          PACKAGE_LINES="$(node --input-type=module -e 'for (const name of JSON.parse(process.env.PACKAGES)) console.log(name)')"
-          if [ -z "$PACKAGE_LINES" ]; then
-            echo "The package verification list is empty."
-            exit 1
-          fi
-          mapfile -t PACKAGE_NAMES <<< "$PACKAGE_LINES"
-          for PACKAGE_NAME in "${PACKAGE_NAMES[@]}"; do
-            for ATTEMPT in {1..6}; do
-              if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version >/dev/null; then
-                echo "Verified $PACKAGE_NAME@$PACKAGE_VERSION."
-                break
-              fi
-              if [ "$ATTEMPT" -eq 6 ]; then
-                echo "Unable to verify $PACKAGE_NAME@$PACKAGE_VERSION on npm."
-                exit 1
-              fi
-              sleep 10
-            done
-          done
+    with:
+      packageVersion: ${{ github.event.release.tag_name || inputs.packageVersion }}
+      bootstrapPackages: ${{ inputs.bootstrapPackages || '' }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   deploy-pages:
     name: Deploy GitHub Pages
-    needs:
-      - build-and-test
-      - plan
+    needs: build-and-test
     uses: ./.github/workflows/deploy-pages.yml
     permissions:
       contents: read
@@ -256,7 +68,6 @@ jobs:
       needs.publish-packages.result == 'success'
     needs:
       - deploy-pages
-      - plan
       - publish-packages
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -266,8 +77,8 @@ jobs:
       - name: Create release and version tag
         env:
           GH_TOKEN: ${{ github.token }}
-          PACKAGE_VERSION: ${{ needs.plan.outputs.version }}
-          PRERELEASE: ${{ needs.plan.outputs.prerelease }}
+          PACKAGE_VERSION: ${{ needs.publish-packages.outputs.version }}
+          PRERELEASE: ${{ needs.publish-packages.outputs.prerelease }}
           RELEASE_SHA: ${{ github.sha }}
         run: |
           TAG_SHA="$(gh api "repos/$GITHUB_REPOSITORY/commits/$PACKAGE_VERSION" --jq .sha 2>/dev/null || true)"
@@ -301,7 +112,6 @@ jobs:
     needs:
       - create-release
       - deploy-pages
-      - plan
       - publish-packages
     runs-on: ubuntu-latest
     steps:
@@ -309,11 +119,9 @@ jobs:
         env:
           CREATE_RELEASE_RESULT: ${{ needs.create-release.result }}
           DEPLOY_PAGES_RESULT: ${{ needs.deploy-pages.result }}
-          PLAN_RESULT: ${{ needs.plan.result }}
           PUBLISH_RESULT: ${{ needs.publish-packages.result }}
         run: |
-          if [ "$PLAN_RESULT" != "success" ] ||
-             [ "$PUBLISH_RESULT" != "success" ] ||
+          if [ "$PUBLISH_RESULT" != "success" ] ||
              [ "$DEPLOY_PAGES_RESULT" != "success" ]; then
             exit 1
           fi

@@ -96,35 +96,19 @@ jobs:
         run: npm test
   documentation:
     name: Build Documentation
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            packages/design-system/docs/package-lock.json
-      - name: Set up npm
-        run: npm install --global --ignore-scripts npm@12.0.2
-      - name: Install package dependencies
-        run: npm ci
-      - name: Install documentation dependencies
-        run: npm ci --prefix packages/design-system/docs
-      - name: Audit documentation dependencies
-        run: npm run audit:docs
-      - name: Build Storybook
-        run: npm run build-storybook --workspace @schmiedmayerlab/grove-design-system
-      - name: Generate README showcase
-        run: npm run showcase:generate
-      - name: Build documentation site
-        run: npm run docs:ci
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-pages.yml@reusable-npm-workflows
+    permissions:
+      contents: read
+    with:
+      deploy: false
+  release-dry-run:
+    name: Release Dry Run
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-release.yml@reusable-npm-workflows
+    permissions:
+      contents: read
+    with:
+      packageVersion: 0.0.0-ci
+      dryRun: true
   tests:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3
@@ -161,6 +145,7 @@ jobs:
       - markdown-links
       - node-current
       - quality
+      - release-dry-run
       - reuse
       - tests
     runs-on: ubuntu-latest
