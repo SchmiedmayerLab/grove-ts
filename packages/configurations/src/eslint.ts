@@ -30,7 +30,7 @@ const defineTypedConfig = (...config: ConfigWithExtends[]) =>
 interface EslintConfigParams {
   /**
    * Root of the project, where tsconfig exists.
-   * Most likely it's going to be `import.meta.dirname` or `__dirname`.
+   * Most likely it's going to be `import.meta.dirname`.
    * */
   tsconfigRootDir: string
   /**

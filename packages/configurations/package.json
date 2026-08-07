@@ -33,28 +33,22 @@
   },
   "type": "module",
   "source": "src/index.ts",
-  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts --format esm,cjs --dts --clean --out-dir dist",
+    "build": "tsdown src/index.ts --format esm --dts --clean --out-dir dist",
     "clean": "rimraf dist",
-    "dev": "tsdown src/index.ts --format esm,cjs --dts --watch --out-dir dist",
+    "dev": "tsdown src/index.ts --format esm --dts --watch --out-dir dist",
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
+    "test": "node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run clean && npm run build",
     "version": "node ../../scripts/sync-workspace-versions.mjs"
