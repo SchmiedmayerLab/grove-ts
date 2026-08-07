@@ -79,8 +79,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public get startDate(): Date {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return FhirDomainResource.parseDateTime(this.value.start)!
+    return new Date(this.value.start)
   }
 
   /**
@@ -95,8 +94,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public get endDate(): Date {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return FhirDomainResource.parseDateTime(this.value.end)!
+    return new Date(this.value.end)
   }
 
   /**

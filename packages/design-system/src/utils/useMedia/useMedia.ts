@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { screens } from "@/theme/breakpoints";
 
 /**
@@ -18,27 +18,19 @@ import { screens } from "@/theme/breakpoints";
  * ```
  */
 const useMedia = (query: string) => {
-  const [isMatching, setIsMatching] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(query).matches,
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      const match = window.matchMedia(query);
+      match.addEventListener("change", onStoreChange);
+      return () => match.removeEventListener("change", onStoreChange);
+    },
+    [query],
   );
-
-  useEffect(() => {
-    const match = window.matchMedia(query);
-    // Syncs initial state with the current media query match,
-    // before the "change" event happens
-    // eslint-disable-next-line @eslint-react/set-state-in-effect
-    setIsMatching(match.matches);
-
-    const onChange = () => {
-      setIsMatching(match.matches);
-    };
-
-    match.addEventListener("change", onChange);
-
-    return () => match.removeEventListener("change", onChange);
-  }, [query]);
-
-  return isMatching;
+  const getSnapshot = useCallback(
+    () => window.matchMedia(query).matches,
+    [query],
+  );
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 };
 
 /**

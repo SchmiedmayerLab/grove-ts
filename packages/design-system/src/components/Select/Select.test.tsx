@@ -19,7 +19,11 @@ import {
   SelectValue,
 } from ".";
 
-const queryItem = (value: string) => screen.queryAllByText(value).at(1);
+const getItem = (value: string) => {
+  const item = screen.queryAllByText(value).at(1);
+  if (!item) throw new Error(`Expected the ${value} option to exist`);
+  return item;
+};
 
 describe("Select", () => {
   it("forwards id from Select to SelectTrigger", () => {
@@ -79,9 +83,8 @@ describe("Select", () => {
     });
 
     expect(screen.queryByRole("listbox")).toBeInTheDocument();
-    const sirOption = queryItem("Sir");
+    const sirOption = getItem("Sir");
     expect(sirOption).toBeInTheDocument();
-    // @ts-expect-error sirOption is checked to be in the document
     await userEvent.click(sirOption);
 
     // just in the hidden select
@@ -240,8 +243,7 @@ describe("Select", () => {
     const trigger = screen.getByRole("combobox");
     await userEvent.click(trigger);
 
-    const appleOption = queryItem("Apple");
-    // @ts-expect-error appleOption exists
+    const appleOption = getItem("Apple");
     await userEvent.click(appleOption);
 
     expect(onValueChange).toHaveBeenCalledWith("apple");

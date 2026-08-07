@@ -37,33 +37,11 @@ export default [
   },
   {
     files: [
-      'src/components/Async/Async.tsx',
-      'src/components/Avatar/Avatar.tsx',
-      'src/components/Button/SaveButton/SaveButton.tsx',
-      'src/components/DataTable/DataTable.tsx',
-      'src/components/DataTable/ToggleSortButton.tsx',
-      'src/components/DatePicker/DatePicker.tsx',
-      'src/components/EmptyState/EmptyState.tsx',
-      'src/components/Sheet/Sheet.tsx',
-      'src/molecules/ConfirmDeleteDialog/ConfirmDeleteDialog.tsx',
-      'src/utils/query/query.ts',
+      'src/modules/auth/SignInForm/EmailPasswordForm/EmailPasswordForm.test.tsx',
     ],
     rules: {
-      // These conditional rendering branches are more readable alongside their JSX.
-      'sonarjs/no-nested-conditional': 'off',
-    },
-  },
-  {
-    files: [
-      'src/components/Avatar/Avatar.tsx',
-      'src/modules/auth/SignInForm/EmailPasswordForm/EmailPasswordForm.tsx',
-      'src/modules/auth/SignInForm/SignInForm.tsx',
-      'src/modules/auth/user.ts',
-      'src/utils/date/date.ts',
-    ],
-    rules: {
-      // Explicit undefined remains part of these public optional-property types.
-      'sonarjs/no-redundant-optional': 'off',
+      // This credential is synthetic test data.
+      'sonarjs/no-hardcoded-passwords': 'off',
     },
   },
   {

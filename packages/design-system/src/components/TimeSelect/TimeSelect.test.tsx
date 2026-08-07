@@ -79,8 +79,7 @@ describe("TimeSelect", () => {
     });
 
     const option = screen.queryAllByText(formatExpected(9, 0)).at(1);
-    expect(option).toBeDefined();
-    // @ts-expect-error option is checked to be defined
+    if (!option) throw new Error("Expected the 09:00 option to exist");
     await userEvent.click(option);
 
     expect(onChange).toHaveBeenCalledWith({ hours: 9, minutes: 0 });

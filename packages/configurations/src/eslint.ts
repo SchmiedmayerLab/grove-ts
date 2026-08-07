@@ -38,12 +38,6 @@ interface EslintConfigParams {
    * Required if there are multiple files with references.
    * */
   tsConfigsDirs?: string[]
-  /**
-   * Changes every rule to "warning" instead of "error".
-   * This prevents ESLint to fail if any rule fails.
-   * Useful when migrating large codebases. Use with caution.
-   * */
-  changeEveryRuleToWarning?: boolean
 }
 
 /**
@@ -104,7 +98,7 @@ export const getImportRules = (
     files: ['**/*.{js,jsx,ts,tsx}'],
     rules: {
       'import-x/order': [
-        'warn',
+        'error',
         {
           groups: ['builtin', 'external', 'internal', ['parent', 'sibling']],
           pathGroupsExcludedImportTypes: ['builtin'],
@@ -119,7 +113,7 @@ export const getImportRules = (
       'import-x/no-mutable-exports': 'error',
       'import-x/no-cycle': 'error',
       'import-x/extensions': [
-        'warn',
+        'error',
         'always',
         {
           ignorePackages: true,
@@ -138,8 +132,8 @@ export const getImportRules = (
           },
         },
       ],
-      'import-x/newline-after-import': 'warn',
-      'import-x/no-anonymous-default-export': 'warn',
+      'import-x/newline-after-import': 'error',
+      'import-x/no-anonymous-default-export': 'error',
       'import-x/no-default-export': 'error',
       'import-x/no-duplicates': [
         'error',
@@ -177,7 +171,7 @@ export const getPreferArrowFunctions = (): ConfigWithExtends => ({
   },
   rules: {
     'prefer-arrow-functions/prefer-arrow-functions': [
-      'warn',
+      'error',
       {
         allowedNames: [],
         allowNamedFunctions: false,
@@ -218,7 +212,7 @@ export const getTslint = (): ConfigWithExtends => ({
   } satisfies Processor.ProcessorModule,
   rules: {
     '@typescript-eslint/consistent-type-imports': [
-      'warn',
+      'error',
       {
         prefer: 'type-imports',
         fixStyle: 'inline-type-imports',
@@ -245,7 +239,7 @@ export const getTslint = (): ConfigWithExtends => ({
       { ignoreArrowShorthand: true },
     ],
     '@typescript-eslint/array-type': [
-      'warn',
+      'error',
       { default: 'array-simple', readonly: 'array-simple' },
     ],
     // allow unused vars prefixed with `_`
@@ -333,39 +327,6 @@ export const getIgnoreDefaultExportRule = (): ConfigWithExtends => ({
 })
 
 /**
- * Allows test fixtures to use representative secrets and repeated schema cases.
- * Type-safety rules remain enabled unless a package scopes an exception further.
- * */
-export const getTestRules = (): ConfigWithExtends => ({
-  files: [
-    '**/*.{test,spec}.{js,jsx,ts,tsx}',
-    '**/{test,tests,__tests__}/**/*.{js,jsx,ts,tsx}',
-  ],
-  rules: {
-    // Placeholder credentials and repetitive fixture-validation tests are intentional.
-    'sonarjs/no-hardcoded-passwords': 'off',
-    'sonarjs/parameterized-tests': 'off',
-  },
-})
-
-/**
- * Transforms ALL rules severities to 'warn'
- * */
-export const getTransformAllRulesToWarn = (): ConfigWithExtends => ({
-  rules: {},
-  languageOptions: {},
-  processor: {
-    preprocess: (text) => [text],
-    postprocess: (messages) =>
-      messages.flat().map((message) => ({
-        ...message,
-        severity: 1, // 1 is 'warn', 2 is 'error'
-      })),
-    supportsAutofix: true,
-  } satisfies Processor.ProcessorModule,
-})
-
-/**
  * Forces correct prettier formatting with auto-fix support
  * */
 export const getPrettierPlugin = (): ConfigWithExtends[] => [
@@ -375,7 +336,6 @@ export const getPrettierPlugin = (): ConfigWithExtends[] => [
 export const getEslintReactConfig = ({
   tsconfigRootDir,
   tsConfigsDirs = [],
-  changeEveryRuleToWarning,
 }: EslintConfigParams) => {
   return defineTypedConfig(
     getIgnoredDirs(),
@@ -399,15 +359,12 @@ export const getEslintReactConfig = ({
     ...getReactPlugins(),
     ...getPrettierPlugin(),
     getIgnoreDefaultExportRule(),
-    getTestRules(),
-    changeEveryRuleToWarning ? getTransformAllRulesToWarn() : {},
   )
 }
 
 export const getEslintNodeConfig = ({
   tsconfigRootDir,
   tsConfigsDirs = [],
-  changeEveryRuleToWarning,
 }: EslintConfigParams) => {
   return defineTypedConfig(
     getIgnoredDirs(),
@@ -430,7 +387,5 @@ export const getEslintNodeConfig = ({
     getSonarRules(),
     ...getPrettierPlugin(),
     getIgnoreDefaultExportRule(),
-    getTestRules(),
-    changeEveryRuleToWarning ? getTransformAllRulesToWarn() : {},
   )
 }

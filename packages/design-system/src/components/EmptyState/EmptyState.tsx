@@ -96,34 +96,39 @@ export const EmptyState = ({
   children,
   actions,
   ...props
-}: EmptyStateProps) => (
-  <div
-    data-slot="empty-state"
-    role="status"
-    aria-live="polite"
-    className={cn("text-muted-foreground flex gap-3", className)}
-    {...props}
-  >
-    {textFilter ?
-      <SearchX />
-    : <ListX />}
-    <span className="flex flex-col gap-3">
-      {children ?? (
-        <span>
-          No {entityName ?? "results"} found
-          {textFilter ?
-            <>
-              &nbsp;for <i>&quot;{textFilter}&quot;</i> search
-            </>
-          : hasFilters ?
-            <>&nbsp;for your selected filters</>
-          : null}
-          .
-        </span>
-      )}
-      {actions ?
-        <div className="flex gap-2">{actions}</div>
-      : null}
-    </span>
-  </div>
-);
+}: EmptyStateProps) => {
+  let filterDescription: ReactNode = null;
+  if (textFilter) {
+    filterDescription = (
+      <>
+        &nbsp;for <i>&quot;{textFilter}&quot;</i> search
+      </>
+    );
+  } else if (hasFilters) {
+    filterDescription = <>&nbsp;for your selected filters</>;
+  }
+
+  return (
+    <div
+      data-slot="empty-state"
+      role="status"
+      aria-live="polite"
+      className={cn("text-muted-foreground flex gap-3", className)}
+      {...props}
+    >
+      {textFilter ?
+        <SearchX />
+      : <ListX />}
+      <span className="flex flex-col gap-3">
+        {children ?? (
+          <span>
+            No {entityName ?? "results"} found{filterDescription}.
+          </span>
+        )}
+        {actions ?
+          <div className="flex gap-2">{actions}</div>
+        : null}
+      </span>
+    </div>
+  );
+};

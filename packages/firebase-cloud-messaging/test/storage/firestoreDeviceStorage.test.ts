@@ -81,8 +81,7 @@ describe('FirestoreDeviceStorage', () => {
     mockFirestore = {
       collection: vi.fn().mockReturnValue(mockCollection),
       collectionGroup: vi.fn().mockReturnValue(mockCollectionGroup),
-      // eslint-disable-next-line @typescript-eslint/require-await
-      runTransaction: vi.fn().mockImplementation(async (callback: any) => {
+      runTransaction: vi.fn().mockImplementation((callback: any) => {
         return callback(mockTransaction)
       }),
     }
@@ -96,7 +95,7 @@ describe('FirestoreDeviceStorage', () => {
   })
 
   describe('constructor', () => {
-    test('should initialize with custom options', () => {
+    test('should initialize with custom options', async () => {
       const options = {
         devicesCollection: 'custom_devices',
         userDevicesPathTemplate: 'custom_users/{userId}/custom_devices',
@@ -105,8 +104,7 @@ describe('FirestoreDeviceStorage', () => {
       const storage = new FirestoreDeviceStorage(mockFirestore, options)
 
       // We'll test by calling a method that uses the templates
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      storage.getUserDevices('test')
+      await storage.getUserDevices('test')
 
       expect(mockFirestore.collection).toHaveBeenCalledWith(
         'custom_users/test/custom_devices',
@@ -133,8 +131,7 @@ describe('FirestoreDeviceStorage', () => {
 
       mockFirestore.runTransaction = vi
         .fn()
-        // eslint-disable-next-line @typescript-eslint/require-await
-        .mockImplementation(async (transactionCallback: any) => {
+        .mockImplementation((transactionCallback: any) => {
           // Create a transaction mock that matches what FirestoreDeviceStorage expects
           const transaction = {
             get: vi.fn().mockResolvedValue({
@@ -238,8 +235,7 @@ describe('FirestoreDeviceStorage', () => {
       // Create a custom mock implementation for this test
       mockFirestore.runTransaction = vi
         .fn()
-        // eslint-disable-next-line @typescript-eslint/require-await
-        .mockImplementation(async (transactionCallback: any) => {
+        .mockImplementation((transactionCallback: any) => {
           // Override the transaction object with a proper implementation for this test
           const transaction = {
             get: vi.fn().mockResolvedValue({
@@ -285,8 +281,7 @@ describe('FirestoreDeviceStorage', () => {
       // Create a custom mock implementation for this test
       mockFirestore.runTransaction = vi
         .fn()
-        // eslint-disable-next-line @typescript-eslint/require-await
-        .mockImplementation(async (transactionCallback: any) => {
+        .mockImplementation((transactionCallback: any) => {
           // Override the transaction object with a proper implementation for this test
           const transaction = {
             get: vi.fn().mockResolvedValue({
@@ -417,8 +412,7 @@ describe('FirestoreDeviceStorage', () => {
       // Create a custom mock implementation for this test
       mockFirestore.runTransaction = vi
         .fn()
-        // eslint-disable-next-line @typescript-eslint/require-await
-        .mockImplementation(async (transactionCallback: any) => {
+        .mockImplementation((transactionCallback: any) => {
           // Override the transaction object with a proper implementation for this test
           const transaction = {
             get: vi.fn().mockResolvedValue({

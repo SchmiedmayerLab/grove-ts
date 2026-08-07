@@ -9,7 +9,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { type ComponentProps, type ReactNode, useState } from "react";
 import { cn } from "@/utils/className";
-import { isEmpty, type Nil } from "@/utils/misc";
+import { isEmpty } from "@/utils/misc";
 
 type AvatarProps = VariantProps<typeof avatarVariance> &
   ComponentProps<"div"> & {
@@ -18,7 +18,7 @@ type AvatarProps = VariantProps<typeof avatarVariance> &
      * If provided, the image will be displayed.
      * If the image fails to load, the fallback content will be shown.
      */
-    src?: Nil<string>;
+    src?: string | null;
     /**
      * Custom fallback content to display when:
      * - No src is provided
@@ -34,7 +34,7 @@ type AvatarProps = VariantProps<typeof avatarVariance> &
      * - Generating fallback initials when no fallback is provided
      * - Setting the alt text for the image
      */
-    name?: Nil<string>;
+    name?: string | null;
     /**
      * Overlay content to render on top of the avatar.
      * Can be any ReactNode - badges, status indicators, icons, etc.
@@ -138,10 +138,9 @@ export const Avatar = ({
     setIsImageLoaded(false);
   }
 
-  const fallbackContent =
-    isImageLoaded ? null
-    : name ? getInitials(name)
-    : fallback;
+  let fallbackContent = fallback;
+  if (isImageLoaded) fallbackContent = null;
+  else if (name) fallbackContent = getInitials(name);
 
   return (
     <div

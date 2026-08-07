@@ -113,10 +113,8 @@ export const ConfirmDeleteDialog = ({
   isPending,
   ...props
 }: ConfirmDeleteDialogProps) => {
-  const itemNames =
-    !itemName ? null
-    : Array.isArray(itemName) ? itemName
-    : [itemName];
+  let itemNames: ReactNode[] | null = null;
+  if (itemName) itemNames = Array.isArray(itemName) ? itemName : [itemName];
 
   return (
     <Dialog {...props}>

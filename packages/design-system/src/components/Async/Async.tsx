@@ -185,19 +185,27 @@ export const Async = ({
   const error = parseError(errorProp);
   const empty = parseEmpty(emptyProp);
 
-  const specialState =
-    error.show ?
+  let specialState: ReactNode = null;
+  if (error.show) {
+    specialState = (
       <ErrorState entityName={entityName} {...omit(error, ["show"])} />
-    : loading ? <Spinner />
-    : empty.show ?
+    );
+  } else if (loading) {
+    specialState = <Spinner />;
+  } else if (empty.show) {
+    specialState = (
       <EmptyState entityName={entityName} {...omit(empty, ["show"])} />
-    : null;
+    );
+  }
 
-  return (
-    !specialState ? children
-    : renderState ? renderState(specialState)
-    : <StateContainer grow={grow} className={className} padding={padding}>
+  let content = children;
+  if (specialState && renderState) content = renderState(specialState);
+  else if (specialState)
+    content = (
+      <StateContainer grow={grow} className={className} padding={padding}>
         {specialState}
       </StateContainer>
-  );
+    );
+
+  return <>{content}</>;
 };

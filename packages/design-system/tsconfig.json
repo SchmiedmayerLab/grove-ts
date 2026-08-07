@@ -4,6 +4,7 @@
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    // ast-types and lucide-react currently fail TypeScript 6 declaration checking.
     "skipLibCheck": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -29,5 +30,5 @@
     ".storybook/**/*.ts",
     ".storybook/**/*.tsx"
   ],
-  "exclude": ["node_modules", "docs"]
+  "exclude": ["node_modules", "dist", "docs", "storybook-static"]
 }

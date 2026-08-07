@@ -71,19 +71,6 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "publint": "^0.3.22"
   },
-  "overrides": {
-    "@google-cloud/storage": {
-      "gaxios": "6.3.0"
-    },
-    "js-yaml": "4.3.1",
-    "next": {
-      "postcss": "8.5.26",
-      "sharp": "0.35.3"
-    },
-    "teeny-request": {
-      "uuid": "11.1.1"
-    }
-  },
   "allowScripts": {
     "@firebase/util@1.15.2": true,
     "@parcel/watcher@2.6.0": true,

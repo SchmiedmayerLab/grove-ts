@@ -140,6 +140,15 @@ export interface SheetContentElementProps extends ComponentProps<
   size?: Size | null;
 }
 
+const placementClasses: Record<SheetSide, string> = {
+  right:
+    "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right right-0 border-l",
+  left: "data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left left-0 border-r",
+  top: "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top top-0 border-b",
+  bottom:
+    "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom bottom-0 border-t",
+};
+
 /**
  * Ready to use SheetContent. Provides default modality styling and animations.
  */
@@ -149,31 +158,30 @@ export const SheetContentElement = ({
   size = "sm",
   children,
   ...props
-}: SheetContentElementProps) => (
-  <SheetPrimitive.Content
-    className={cn(
-      "bg-surface data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 overflow-y-auto p-4 shadow-lg transition duration-300 [--screenGap:2rem] lg:[--screenGap:3rem]",
-      side === "right" || side === "left" ?
-        [
-          "inset-y-0 h-full w-[calc(100vw-var(--screenGap))]",
-          size && sizeToMaxWidthRecord[size],
-        ]
-      : "inset-x-0 h-auto max-h-[calc(100vh-var(--screenGap))]",
-      side === "right" ?
-        "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right right-0 border-l"
-      : side === "left" ?
-        "data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left left-0 border-r"
-      : side === "top" ?
-        "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top top-0 border-b"
-      : "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom bottom-0 border-t",
-      className,
-    )}
-    data-slot="sheet-content"
-    {...props}
-  >
-    {children}
-  </SheetPrimitive.Content>
-);
+}: SheetContentElementProps) => {
+  const isHorizontal = side === "right" || side === "left";
+  const dimensions =
+    isHorizontal ?
+      [
+        "inset-y-0 h-full w-[calc(100vw-var(--screenGap))]",
+        size && sizeToMaxWidthRecord[size],
+      ]
+    : "inset-x-0 h-auto max-h-[calc(100vh-var(--screenGap))]";
+  return (
+    <SheetPrimitive.Content
+      className={cn(
+        "bg-surface data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 overflow-y-auto p-4 shadow-lg transition duration-300 [--screenGap:2rem] lg:[--screenGap:3rem]",
+        dimensions,
+        placementClasses[side],
+        className,
+      )}
+      data-slot="sheet-content"
+      {...props}
+    >
+      {children}
+    </SheetPrimitive.Content>
+  );
+};
 
 export interface SheetContentProps extends SheetContentElementProps {}
 

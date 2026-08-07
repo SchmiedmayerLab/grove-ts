@@ -12,15 +12,13 @@ import { type z, type ZodType } from 'zod'
  * Extract the forward schema type from a BidirectionalSchema
  */
 export type Forward<S> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  S extends BidirectionalSchema<infer Forward, any> ? Forward : never
+  S extends BidirectionalSchema<infer Forward, ZodType> ? Forward : never
 
 /**
  * Extract the backward schema type from a BidirectionalSchema
  */
 export type Backward<S> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  S extends BidirectionalSchema<any, infer Backward> ? Backward : never
+  S extends BidirectionalSchema<ZodType, infer Backward> ? Backward : never
 
 /**
  * Extract the input type from a schema

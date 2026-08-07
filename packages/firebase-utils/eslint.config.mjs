@@ -15,8 +15,5 @@ export default [
     // Examples and tool configuration are intentionally outside the production TS program.
     ...configs.disableTypeChecked,
     files: ['examples/**/*.ts', 'vitest.config.ts'],
-    rules: {
-      ...configs.disableTypeChecked.rules,
-    },
   },
 ]

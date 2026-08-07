@@ -27,17 +27,22 @@ export const ToggleSortButton = <Data,>({
   const isSorted = header.column.getIsSorted();
 
   const nextSorting = header.column.getNextSortingOrder();
+  let sortingAction = "Disable sorting";
+  if (nextSorting === "asc") sortingAction = "Sort ascending";
+  else if (nextSorting === "desc") sortingAction = "Sort descending";
 
   const label = [
-    nextSorting === "asc" ? "Sort ascending"
-    : nextSorting === "desc" ? "Sort descending"
-    : "Disable sorting",
+    sortingAction,
     "by",
     typeof children === "string" ? children : null,
     "column",
   ]
     .filter(Boolean)
     .join(" ");
+
+  let sortingIcon = <div aria-hidden className="size-4" />;
+  if (isSorted === "asc") sortingIcon = <ArrowDownAZ className="size-4" />;
+  else if (isSorted === "desc") sortingIcon = <ArrowUpZA className="size-4" />;
 
   return (
     <Button
@@ -49,11 +54,7 @@ export const ToggleSortButton = <Data,>({
       aria-label={label}
     >
       {children}
-      {isSorted === "asc" ?
-        <ArrowDownAZ className="size-4" />
-      : isSorted === "desc" ?
-        <ArrowUpZA className="size-4" />
-      : <div aria-hidden className="size-4" />}
+      {sortingIcon}
     </Button>
   );
 };

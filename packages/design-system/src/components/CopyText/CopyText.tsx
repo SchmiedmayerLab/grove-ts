@@ -45,9 +45,14 @@ type CopyTextProps = (StringChildrenProps | ReactNodeChildrenProps) & {
  * ```
  */
 export const CopyText = ({ children, className, value }: CopyTextProps) => {
-  // It's resolved by types
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
-  const copyValue = value ?? String(children);
+  let copyValue = value;
+  if (copyValue === undefined) {
+    if (typeof children !== "string")
+      throw new TypeError(
+        "CopyText requires a string child or an explicit value",
+      );
+    copyValue = children;
+  }
   return (
     <button
       data-slot="copy-text"
