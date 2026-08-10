@@ -10,12 +10,13 @@ SPDX-License-Identifier: MIT
 
 # Grove
 
-[![GitHub Release](https://img.shields.io/github/v/release/SchmiedmayerLab/grove-ts?display_name=tag&include_prereleases&sort=semver)](https://github.com/SchmiedmayerLab/grove-ts/releases)
-[![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
-[![CodeQL](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml)
-[![Deployment](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml/badge.svg?branch=main)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml)
-[![codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/branch/main/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
+[![Deployment](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/deployment.yml)
+[![CodeQL](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml)
+[![Codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/branch/main/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
+[![REUSE status](https://api.reuse.software/badge/github.com/SchmiedmayerLab/grove-ts)](https://api.reuse.software/info/github.com/SchmiedmayerLab/grove-ts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/SchmiedmayerLab/grove-ts/blob/main/LICENSE.md)
+[![Release](https://img.shields.io/github/v/release/SchmiedmayerLab/grove-ts?display_name=tag&include_prereleases&sort=semver)](https://github.com/SchmiedmayerLab/grove-ts/releases)
 
 Grove gives TypeScript teams a dependable foundation for building web and cloud applications.
 It packages recurring engineering decisions—from code quality rules to interface and data integrations—so projects can start consistently, stay type-safe, and focus on their own functionality.
@@ -171,24 +172,19 @@ gh run rerun <release-run-id> --failed
 
 ## Contributing
 
-Contributions to this project are welcome. Please read the [contribution guidelines](https://github.com/SchmiedmayerLab/.github/blob/main/CONTRIBUTING.md) and the [Contributor Covenant Code of Conduct](https://github.com/SchmiedmayerLab/.github/blob/main/CODE_OF_CONDUCT.md) first.
-Planned work is tracked in [GitHub Issues](https://github.com/SchmiedmayerLab/grove-ts/issues) and the organization-wide [Grove Project](https://github.com/orgs/SchmiedmayerLab/projects/3).
+Contributions to this project are welcome. Please make sure to read the [contribution guidelines](https://github.com/SchmiedmayerLab/.github/blob/main/CONTRIBUTING.md) and the [contributor covenant code of conduct](https://github.com/SchmiedmayerLab/.github/blob/main/CODE_OF_CONDUCT.md) first. You can find a list of contributors in the [CONTRIBUTORS.md](CONTRIBUTORS.md) file.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md), [LICENSES](LICENSES), and [CONTRIBUTORS.md](CONTRIBUTORS.md) for more information.
+This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md) for more information.
 
-## Contributors
+## Citation
 
-This project is developed as part of the Schmiedmayer Lab at Stanford University.
-See [CONTRIBUTORS.md](CONTRIBUTORS.md) for a full list of all contributors.
+If you use this software, please cite it using the metadata in [CITATION.cff](CITATION.cff), which GitHub surfaces through the [*Cite this repository*](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-citation-files) button.
 
 ## Our Research
 
 For more information, visit the [Schmiedmayer Lab GitHub organization](https://github.com/SchmiedmayerLab).
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png">
-  <img alt="Stanford and Stanford Medicine logos" src="https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/stanford-footer-light.png">
-</picture>
+![Schmiedmayer Lab](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/footer-light.png#gh-light-mode-only)
+![Schmiedmayer Lab](https://raw.githubusercontent.com/SchmiedmayerLab/.github/main/assets/footer-dark.png#gh-dark-mode-only)

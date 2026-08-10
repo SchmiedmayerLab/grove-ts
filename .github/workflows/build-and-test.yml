@@ -27,13 +27,13 @@ on:
 jobs:
   reuse:
     name: REUSE Compliance Check
-    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/reuse.yml@v0.5
   actionlint:
     name: GitHub Actions Workflow Check
-    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/actionlint.yml@v0.5
   markdown-links:
     name: Markdown Link Check
-    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.5
   quality:
     name: Build and Quality Checks
     runs-on: ubuntu-latest
@@ -127,14 +127,13 @@ jobs:
         run: npm run pages:build
   tests:
     name: Test and Coverage
-    uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.3
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.5
     with:
       coverage-files: >-
         packages/design-system/coverage/lcov.info,
         packages/firebase-cloud-messaging/coverage/lcov.info,
         packages/firebase-fhir/coverage/lcov.info,
         packages/firebase-utils/coverage/lcov.info
-      nodeVersion: '24'
       npmVersion: '12.0.2'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
