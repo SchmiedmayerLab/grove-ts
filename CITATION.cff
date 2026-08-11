@@ -10,19 +10,19 @@ cff-version: 1.2.0
 message: If you use this software, please cite it as below.
 type: software
 authors:
-- family-names: Bachorski
-  given-names: Arkadiusz
-- family-names: Kraft
-  given-names: Paul Johannes
-  orcid: https://orcid.org/0000-0001-8157-8151
-- family-names: Heckmann
-  given-names: Michael
-- family-names: Goldschmidt
-  given-names: Paul
-  orcid: https://orcid.org/0009-0005-9748-3858
-- family-names: Schmiedmayer
-  given-names: Paul
-  orcid: https://orcid.org/0000-0002-8607-9148
+  - family-names: Bachorski
+    given-names: Arkadiusz
+  - family-names: Kraft
+    given-names: Paul Johannes
+    orcid: https://orcid.org/0000-0001-8157-8151
+  - family-names: Heckmann
+    given-names: Michael
+  - family-names: Goldschmidt
+    given-names: Paul
+    orcid: https://orcid.org/0009-0005-9748-3858
+  - family-names: Schmiedmayer
+    given-names: Paul
+    orcid: https://orcid.org/0000-0002-8607-9148
 title: Grove
 license: MIT
 url: https://github.com/SchmiedmayerLab/grove-ts
