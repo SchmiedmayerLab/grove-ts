@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT
 [![CodeQL](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/codeql.yml)
 [![Codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/branch/main/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
 [![REUSE status](https://api.reuse.software/badge/github.com/SchmiedmayerLab/grove-ts)](https://api.reuse.software/info/github.com/SchmiedmayerLab/grove-ts)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/SchmiedmayerLab/grove-ts/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 [![Release](https://img.shields.io/github/v/release/SchmiedmayerLab/grove-ts?display_name=tag&include_prereleases&sort=semver)](https://github.com/SchmiedmayerLab/grove-ts/releases)
 
 Grove gives TypeScript teams a dependable foundation for building web and cloud applications.
