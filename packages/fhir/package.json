@@ -1,7 +1,7 @@
 {
-  "name": "@schmiedmayerlab/grove-firebase-fhir",
+  "name": "@schmiedmayerlab/grove-fhir",
   "version": "0.0.0",
-  "description": "FHIR schemas and Firebase utilities for Grove applications",
+  "description": "FHIR schemas for Grove applications",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,7 +27,6 @@
   },
   "keywords": [
     "grove",
-    "firebase",
     "fhir"
   ],
   "author": "Schmiedmayer Lab",
@@ -35,7 +34,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
-    "directory": "packages/firebase-fhir"
+    "directory": "packages/fhir"
   },
   "bugs": {
     "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"

@@ -29,12 +29,12 @@
     "packages/configurations",
     "packages/design-system",
     "packages/firebase-utils",
-    "packages/firebase-fhir",
+    "packages/fhir",
     "packages/firebase-cloud-messaging"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:fhir": "npm run build -w @schmiedmayerlab/grove-firebase-fhir",
+    "build:fhir": "npm run build -w @schmiedmayerlab/grove-fhir",
     "build:utils": "npm run build -w @schmiedmayerlab/grove-firebase-utils",
     "build:cloud-messaging": "npm run build -w @schmiedmayerlab/grove-firebase-cloud-messaging",
     "clean": "npm run clean --workspaces --if-present",
@@ -46,12 +46,12 @@
     "lint:fix": "npm run lint:fix --workspaces --if-present",
     "lint:ci": "npm run lint:ci --workspaces --if-present",
     "lint:strict": "npm run lint:ci",
-    "analyze": "knip --include files,dependencies,unlisted,exports --no-config-hints && knip --cycles --workspace '!packages/firebase-fhir' --no-config-hints",
+    "analyze": "knip --include files,dependencies,unlisted,exports --no-config-hints && knip --cycles --workspace '!packages/fhir' --no-config-hints",
     "pretest": "npm run build",
     "test": "npm run test:release && npm run test --workspaces --if-present",
     "test:release": "node --test scripts/*.test.mjs",
     "test:coverage": "npm run test:coverage --workspaces --if-present",
-    "test:fhir": "npm run test -w @schmiedmayerlab/grove-firebase-fhir",
+    "test:fhir": "npm run test -w @schmiedmayerlab/grove-fhir",
     "test:utils": "npm run test -w @schmiedmayerlab/grove-firebase-utils",
     "test:cloud-messaging": "npm run test -w @schmiedmayerlab/grove-firebase-cloud-messaging",
     "typecheck": "npm run typecheck --workspaces --if-present",
@@ -136,7 +136,7 @@
           "test/**/*.ts"
         ]
       },
-      "packages/firebase-fhir": {
+      "packages/fhir": {
         "project": [
           "src/**/*.ts",
           "test/**/*.ts"

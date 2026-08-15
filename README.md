@@ -41,7 +41,7 @@ Explore the [live Storybook](https://schmiedmayerlab.github.io/grove-ts/storyboo
 | [`@schmiedmayerlab/grove-configurations`](./packages/configurations)                     | Shared ESLint and Prettier configuration for Node and React  |
 | [`@schmiedmayerlab/grove-design-system`](./packages/design-system)                       | React components, layouts, forms, themes, and utilities      |
 | [`@schmiedmayerlab/grove-firebase-cloud-messaging`](./packages/firebase-cloud-messaging) | Cloud Messaging, device registration, and notification flows |
-| [`@schmiedmayerlab/grove-firebase-fhir`](./packages/firebase-fhir)                       | FHIR R4B schemas, validation, and Firebase helpers           |
+| [`@schmiedmayerlab/grove-fhir`](./packages/fhir)                                         | FHIR R4B schemas and validation                              |
 | [`@schmiedmayerlab/grove-firebase-utils`](./packages/firebase-utils)                     | Shared Firebase converters and application utilities         |
 
 Each package README contains focused setup and usage guidance.
