@@ -132,7 +132,7 @@ jobs:
       coverage-files: >-
         packages/design-system/coverage/lcov.info,
         packages/firebase-cloud-messaging/coverage/lcov.info,
-        packages/firebase-fhir/coverage/lcov.info,
+        packages/fhir/coverage/lcov.info,
         packages/firebase-utils/coverage/lcov.info
       npmVersion: '12.0.2'
     secrets:

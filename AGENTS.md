@@ -20,7 +20,7 @@ Guidance for contributors working in this repository.
 | Shared ESLint and Prettier configuration  | [packages/configurations](packages/configurations)                                                                              |
 | React component library and Storybook     | [packages/design-system](packages/design-system)                                                                                |
 | Firebase Cloud Messaging utilities        | [packages/firebase-cloud-messaging](packages/firebase-cloud-messaging)                                                          |
-| FHIR schemas and Firebase helpers         | [packages/firebase-fhir](packages/firebase-fhir)                                                                                |
+| FHIR schemas                              | [packages/fhir](packages/fhir)                                                                                                  |
 | Shared Firebase utilities                 | [packages/firebase-utils](packages/firebase-utils)                                                                              |
 | Contributor attribution                   | [CONTRIBUTORS.md](CONTRIBUTORS.md)                                                                                              |
 | Pull request format                       | [Schmiedmayer Lab pull request template](https://github.com/SchmiedmayerLab/.github/blob/main/.github/pull_request_template.md) |

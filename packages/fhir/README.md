@@ -8,12 +8,12 @@ SPDX-License-Identifier: MIT
 
 -->
 
-# Grove Firebase FHIR
+# Grove FHIR
 
 [![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
 [![codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
 
-Type-safe FHIR R4B resource schemas and utilities for Firebase applications. This package provides comprehensive [Zod](https://zod.dev) schemas for FHIR (Fast Healthcare Interoperability Resources) data validation, making it easy to work with healthcare data in Firebase Functions, Firestore, and TypeScript applications.
+Type-safe FHIR R4B resource schemas and utilities for TypeScript applications. This package provides comprehensive [Zod](https://zod.dev) schemas for FHIR (Fast Healthcare Interoperability Resources) data validation, making it easy to work with healthcare data in TypeScript applications, including those built on Firebase Functions and Firestore.
 
 This package is part of the [Grove](https://github.com/SchmiedmayerLab/grove-ts) project, bringing standardized healthcare data exchange to TypeScript applications.
 
@@ -23,14 +23,14 @@ Working with FHIR resources in TypeScript can be challenging due to their comple
 
 - **Type Safety**: Leverage TypeScript's type system with automatically generated types from Zod schemas
 - **Runtime Validation**: Validate FHIR resources at runtime to catch data issues early
-- **Firebase Integration**: Designed to work seamlessly with Firebase Functions and Firestore
+- **Framework Agnostic**: Plain TypeScript/Zod schemas that work anywhere, including Firebase Functions and Firestore
 - **Standards Compliance**: Schemas based on FHIR R4B specification
 - **Developer Experience**: Intuitive API with helpful utility methods
 
 ## Installation
 
 ```bash
-npm install @schmiedmayerlab/grove-firebase-fhir
+npm install @schmiedmayerlab/grove-fhir
 ```
 
 ## Features
@@ -50,7 +50,7 @@ Patient, Practitioner, Observation, Medication, MedicationRequest, Appointment, 
 ### Validating FHIR Resources
 
 ```typescript
-import { FhirPatient } from '@schmiedmayerlab/grove-firebase-fhir'
+import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
 
 // Parse and validate a patient resource
 const rawData = {
@@ -75,7 +75,7 @@ console.log(patient.value.name?.[0]?.family) // 'Smith'
 ### Working with Observations
 
 ```typescript
-import { FhirObservation } from '@schmiedmayerlab/grove-firebase-fhir'
+import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
 
 const observationData = {
   resourceType: 'Observation',
@@ -107,7 +107,7 @@ console.log(observation.value.valueQuantity?.value) // 72.5
 ### Using Helper Methods
 
 ```typescript
-import { FhirCondition } from '@schmiedmayerlab/grove-firebase-fhir'
+import { FhirCondition } from '@schmiedmayerlab/grove-fhir'
 
 const condition = FhirCondition.parse({
   resourceType: 'Condition',
@@ -143,7 +143,7 @@ console.log(codes) // ['73211009']
 ```typescript
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
-import { FhirPatient } from '@schmiedmayerlab/grove-firebase-fhir'
+import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
 
 export const createPatient = onCall(async (request) => {
   const patientData = request.data
@@ -166,7 +166,7 @@ export const createPatient = onCall(async (request) => {
 
 ```typescript
 import { getFirestore } from 'firebase-admin/firestore'
-import { FhirObservation } from '@schmiedmayerlab/grove-firebase-fhir'
+import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
 
 const firestore = getFirestore()
 
@@ -194,7 +194,7 @@ import {
   FhirObservation,
   FhirMedicationRequest,
   FhirAppointment,
-} from '@schmiedmayerlab/grove-firebase-fhir'
+} from '@schmiedmayerlab/grove-fhir'
 
 // Each resource has a parse method
 const patient = FhirPatient.parse(rawData)

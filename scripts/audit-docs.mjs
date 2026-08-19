@@ -84,10 +84,19 @@ export const validateAuditReport = (report, exceptions = auditExceptions) => {
     throw new Error(`Remove resolved npm audit exceptions: ${stale.join(', ')}`)
   }
 
+  /**
+   * A fix is only actionable on the vulnerable package itself or on a
+   * directly declared dependency: npm audit also reports `fixAvailable` on
+   * deeply transitive intermediaries that are already at their latest
+   * release, which does not resolve the finding.
+   */
   const fixable = [...findingsById.entries()]
     .filter(([, records]) =>
       records.some(({ vulnerabilities: traversal }) =>
-        traversal.some(({ fixAvailable }) => fixAvailable),
+        traversal.some(
+          ({ isDirect, fixAvailable }, index) =>
+            fixAvailable && (isDirect || index === traversal.length - 1),
+        ),
       ),
     )
     .map(([id]) => id)
