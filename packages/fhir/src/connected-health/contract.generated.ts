@@ -142,11 +142,38 @@ const connectedHealthAdapterCatalogValue = {
     'intentionally-unsupported':
       'Version 0.2.0 deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
   },
-  sourceReference: {
-    repository: 'https://github.com/SchmiedmayerLab/MyHeartCounts-Firebase.git',
-    revision: 'c16f5bbd18aac8d16b393a0cb64e9816c04930e3',
+  sourceEvidence: {
+    accessed: '2026-08-20',
     scope:
-      'Exact source types and consumed elements in the Google Health API, Oura, and Withings provider adapters; API fetching behavior is not part of this contract.',
+      'Exact provider data-type tokens and consumed fields frozen in providers[].sourceTypes; conversion operates only on already-obtained payloads and defines no provider fetching.',
+    tokenBinding:
+      'Each providers[].sourceTypes[].token and elements[].path is part of the exact v0.2.0 consumed source surface.',
+    providers: [
+      {
+        id: 'google-health-api',
+        surface: 'Google Health API REST',
+        version: 'v4',
+        documentation: [
+          'https://developers.google.com/health/data-types',
+          'https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints',
+        ],
+      },
+      {
+        id: 'oura',
+        surface: 'Oura API',
+        version: '2.0',
+        documentation: ['https://cloud.ouraring.com/v2/docs'],
+      },
+      {
+        id: 'withings',
+        surface: 'Withings Health Data API',
+        version: '2.0',
+        documentation: [
+          'https://developer.withings.com/api-reference/',
+          'https://developer.withings.com/developer-guide/v3/integration-guide/public-health-data-api/data-api/all-available-health-data/',
+        ],
+      },
+    ],
   },
   identity: {
     canonicalization:

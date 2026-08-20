@@ -16,10 +16,10 @@ import { isDeepStrictEqual } from 'node:util'
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const fixtureRoot = resolve(packageRoot, 'fixtures/conformance')
 const manifest = resolve(fixtureRoot, 'manifest.json')
-const catalogRoot = resolve(packageRoot, 'catalog/grove-fhir')
+const catalogRoot = resolve(packageRoot, '.grove-fhir/catalog')
 const semanticCorpus = resolve(
   packageRoot,
-  'catalog/grove-fhir-conformance/mobile-semantics-corpus.json',
+  '.grove-fhir/Conformance/corpora/mobile-semantics/corpus.json',
 )
 
 const argument = (name) => {

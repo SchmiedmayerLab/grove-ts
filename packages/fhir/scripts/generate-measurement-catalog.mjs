@@ -8,13 +8,13 @@
 
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
-import { argv, stderr } from 'node:process'
+import { argv } from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import { format } from 'prettier'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const catalogRoot = resolve(packageRoot, 'catalog/grove-fhir')
+const catalogRoot = resolve(packageRoot, '.grove-fhir/catalog')
 const capabilityPath = resolve(
   packageRoot,
   'catalog/measurement-capabilities.json',
@@ -34,10 +34,10 @@ const healthConnectIdentityPath = resolve(
 )
 const healthKitAdapterPath = resolve(catalogRoot, 'healthkit-adapter.json')
 const sensorKitAdapterPath = resolve(catalogRoot, 'sensorkit-adapter.json')
-const sourceRefPath = resolve(catalogRoot, 'source-ref.json')
+const sourceRefPath = resolve(packageRoot, 'grove-fhir.json')
 const semanticCorpusPath = resolve(
   packageRoot,
-  'catalog/grove-fhir-conformance/mobile-semantics-corpus.json',
+  '.grove-fhir/Conformance/corpora/mobile-semantics/corpus.json',
 )
 const outputPaths = {
   mobile: resolve(packageRoot, 'src/mobile/measurement-catalog.generated.ts'),
@@ -244,19 +244,9 @@ for (const consumedCatalog of [
 
 if (
   sourceRef.repository !== 'https://github.com/SchmiedmayerLab/grove-fhir' ||
-  sourceRef.ref !== 'feature/fhir-v020-adapters' ||
-  !/^[\da-f]{40}$/u.test(sourceRef.resolvedSha) ||
-  typeof sourceRef.dirty !== 'boolean'
+  !/^[\da-f]{40}$/u.test(sourceRef.sha)
 ) {
-  throw new Error(
-    'The moving IG development ref and its resolved SHA must be recorded.',
-  )
-}
-
-if (argv.includes('--check') && sourceRef.dirty) {
-  stderr.write(
-    'Grove FHIR catalogs were synchronized from a dirty development tree; refresh the resolved SHA before review.\n',
-  )
+  throw new Error('The IG commit these catalogs were read from must be pinned.')
 }
 
 const packages = Object.fromEntries(

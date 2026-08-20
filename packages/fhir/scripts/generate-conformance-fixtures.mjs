@@ -49,14 +49,14 @@ const semanticCorpus = JSON.parse(
   await readFile(
     resolve(
       root,
-      'catalog/grove-fhir-conformance/mobile-semantics-corpus.json',
+      '.grove-fhir/Conformance/corpora/mobile-semantics/corpus.json',
     ),
     'utf8',
   ),
 )
 const packageGraph = JSON.parse(
   await readFile(
-    resolve(root, 'catalog/grove-fhir/package-graph.json'),
+    resolve(root, '.grove-fhir/catalog/package-graph.json'),
     'utf8',
   ),
 )
