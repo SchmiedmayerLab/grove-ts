@@ -8,226 +8,78 @@ SPDX-License-Identifier: MIT
 
 -->
 
-# Grove FHIR
+# Grove FHIR for TypeScript
 
-[![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
-[![codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
+`@schmiedmayerlab/grove-fhir` provides strict FHIR R4 contracts and Grove resource builders for TypeScript applications.
+Version 0.2 is a deliberate, source-incompatible replacement for the former R4B resource-class API.
 
-Type-safe FHIR R4B resource schemas and utilities for TypeScript applications. This package provides comprehensive [Zod](https://zod.dev) schemas for FHIR (Fast Healthcare Interoperability Resources) data validation, making it easy to work with healthcare data in TypeScript applications, including those built on Firebase Functions and Firestore.
+The package targets FHIR R4 4.0.1 only.
+It has no Firebase dependency and does not fetch health data, authenticate with providers, persist resources, or define transport behavior.
 
-This package is part of the [Grove](https://github.com/SchmiedmayerLab/grove-ts) project, bringing standardized healthcare data exchange to TypeScript applications.
+## Requirements
 
-## Why Use This Package?
+- Node.js 24 or newer
+- npm 12 for repository development
+- TypeScript 6 for repository development
 
-Working with FHIR resources in TypeScript can be challenging due to their complex, nested structures and strict validation requirements. This package solves that by providing:
+The published JavaScript uses portable ES2022 and Web Platform APIs.
 
-- **Type Safety**: Leverage TypeScript's type system with automatically generated types from Zod schemas
-- **Runtime Validation**: Validate FHIR resources at runtime to catch data issues early
-- **Framework Agnostic**: Plain TypeScript/Zod schemas that work anywhere, including Firebase Functions and Firestore
-- **Standards Compliance**: Schemas based on FHIR R4B specification
-- **Developer Experience**: Intuitive API with helpful utility methods
+## Design
 
-## Installation
+- FHIR resources are immutable plain JSON values.
+- Runtime schemas are strict and reject unknown properties instead of silently removing them.
+- The supported R4 closure is intentionally bounded to the resources Grove constructs and validates.
+- Expected input failures use a discriminated `Result<T>` with stable issue codes and paths.
+- Validated strings use branded types for instants, canonical URLs, FHIR ids, Patient references, and `urn:uuid` full URLs.
+- Resource identifiers, full URLs, repository ids, conversion time, and issued time are supplied by the caller.
+- `Resource.id` is omitted unless the caller supplies a repository-assigned id.
 
-```bash
-npm install @schmiedmayerlab/grove-fhir
-```
+## Entry points
 
-## Features
-
-- **Comprehensive FHIR Resources**: Schemas for 40+ FHIR resources including Patient, Observation, Medication, Appointment, and more
-- **FHIR Elements**: Support for all FHIR data types (CodeableConcept, Quantity, Reference, etc.)
-- **Value Sets**: Pre-defined schemas for FHIR value sets and enumerations
-- **Helper Methods**: Convenient utilities for working with coded concepts and extensions
-- **Full Type Inference**: Get complete TypeScript autocompletion and type checking
-
-### Supported FHIR Resources
-
-Patient, Practitioner, Observation, Medication, MedicationRequest, Appointment, AllergyIntolerance, Condition, Procedure, DiagnosticReport, Immunization, Questionnaire, QuestionnaireResponse, and many more. See the [full list](./src/index.ts).
-
-## Quick Start
-
-### Validating FHIR Resources
-
-```typescript
-import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
-
-// Parse and validate a patient resource
-const rawData = {
-  resourceType: 'Patient',
-  id: 'patient-123',
-  name: [
-    {
-      use: 'official',
-      family: 'Smith',
-      given: ['John', 'Michael'],
-    },
-  ],
-  gender: 'male',
-  birthDate: '1980-01-15',
-}
-
-// Validate the data and get a typed resource
-const patient = FhirPatient.parse(rawData)
-console.log(patient.value.name?.[0]?.family) // 'Smith'
-```
-
-### Working with Observations
-
-```typescript
-import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
-
-const observationData = {
-  resourceType: 'Observation',
-  status: 'final',
-  code: {
-    coding: [
-      {
-        system: 'http://loinc.org',
-        code: '29463-7',
-        display: 'Body Weight',
-      },
-    ],
-  },
-  subject: {
-    reference: 'Patient/patient-123',
-  },
-  valueQuantity: {
-    value: 72.5,
-    unit: 'kg',
-    system: 'http://unitsofmeasure.org',
-    code: 'kg',
-  },
-}
-
-const observation = FhirObservation.parse(observationData)
-console.log(observation.value.valueQuantity?.value) // 72.5
-```
-
-### Using Helper Methods
-
-```typescript
-import { FhirCondition } from '@schmiedmayerlab/grove-fhir'
-
-const condition = FhirCondition.parse({
-  resourceType: 'Condition',
-  code: {
-    coding: [
-      {
-        system: 'http://snomed.info/sct',
-        code: '73211009',
-        display: 'Diabetes mellitus',
-      },
-    ],
-  },
-  // ... other fields
-})
-
-// Check if condition contains specific coding
-const hasDiabetes = condition.containsCoding(condition.value.code, [
-  {
-    system: 'http://snomed.info/sct',
-    code: '73211009',
-  },
-])
-
-// Extract codes from CodeableConcept
-const codes = condition.codes(condition.value.code, {
-  system: 'http://snomed.info/sct',
-})
-console.log(codes) // ['73211009']
-```
-
-### Firebase Functions Integration
-
-```typescript
-import { onCall } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
-import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
-
-export const createPatient = onCall(async (request) => {
-  const patientData = request.data
-
-  // Validate the patient data
-  const patient = FhirPatient.parse(patientData)
-
-  // Store in Firestore
-  const firestore = getFirestore()
-  await firestore
-    .collection('patients')
-    .doc(patient.value.id)
-    .set(patient.value)
-
-  return { success: true, id: patient.value.id }
-})
-```
-
-### Firestore Integration
-
-```typescript
-import { getFirestore } from 'firebase-admin/firestore'
-import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
-
-const firestore = getFirestore()
-
-// Read and validate from Firestore
-const doc = await firestore.collection('observations').doc('obs-123').get()
-const observation = FhirObservation.parse(doc.data())
-
-// Write validated data to Firestore
-const newObservation = FhirObservation.parse({/* ... */})
-await firestore
-  .collection('observations')
-  .doc(newObservation.value.id)
-  .set(newObservation.value)
-```
-
-## API Overview
-
-### Resource Classes
-
-All FHIR resources are exported as classes that extend `FhirDomainResource`:
+Use the root entry point for high-level parsing and validated primitives:
 
 ```typescript
 import {
-  FhirPatient,
-  FhirObservation,
-  FhirMedicationRequest,
-  FhirAppointment,
+  parseFhirInstant,
+  parseObservation,
+  type Result,
 } from '@schmiedmayerlab/grove-fhir'
-
-// Each resource has a parse method
-const patient = FhirPatient.parse(rawData)
-
-// Access the validated value
-console.log(patient.value) // Typed FHIR Patient resource
 ```
 
-### Helper Methods
-
-The `FhirDomainResource` base class provides useful utilities:
-
-- **`codes(concept, filter)`**: Extract code values from a CodeableConcept
-- **`containsCoding(concept, filter)`**: Check if a CodeableConcept contains specific codings
-- **`getExtension(url)`**: Retrieve extensions by URL
-
-### Type Safety
-
-All schemas provide full TypeScript type inference:
+Use the R4 entry point for the bounded resource schemas and types:
 
 ```typescript
-import { type Patient } from 'fhir/r4b.js'
-
-// The parsed value is fully typed
-const patient = FhirPatient.parse(data)
-const name: string | undefined = patient.value.name?.[0]?.family
+import {
+  parseCollectionBundle,
+  type CollectionBundle,
+} from '@schmiedmayerlab/grove-fhir/r4'
 ```
+
+Parsing never returns a partially accepted resource:
+
+```typescript
+const result = parseObservation(input)
+
+if (!result.ok) {
+  for (const issue of result.issues) {
+    console.error(issue.path, issue.code, issue.message)
+  }
+}
+```
+
+## R4 boundary
+
+The runtime schemas validate the exact Grove-supported subset of each R4 resource.
+They preserve admitted primitive metadata such as `_effectiveDateTime` and reject properties outside that subset.
+Passing the runtime schema is an application preflight, not a declaration of profile conformance.
+Normative conformance is established by validating generated fixtures with the official HL7 FHIR Validator and the pinned Grove implementation-guide packages.
 
 ## License
 
-This project is licensed under the MIT License. See [Licenses](https://github.com/SchmiedmayerLab/grove-ts/tree/main/LICENSES) for more information.
+This project is licensed under the MIT License.
+See [Licenses](https://github.com/SchmiedmayerLab/grove-ts/tree/main/LICENSES) for more information.
 
 ## Contributors
 
-This project is developed as part of the Schmiedmayer Lab at Stanford University.
-See the repository's [CONTRIBUTORS.md](../../CONTRIBUTORS.md).
+This package is developed by the Schmiedmayer Lab at Stanford University.
+See [CONTRIBUTORS.md](../../CONTRIBUTORS.md).

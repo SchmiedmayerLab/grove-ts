@@ -6,13 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
+export { deepFreeze, type ReadonlyDeep } from './freeze.js'
 export {
-  collectResults,
-  deepFreeze,
-  err,
-  issues,
-  mapResult,
-  ok,
   parseAbsoluteUri,
   parseCanonical,
   parseFhirId,
@@ -23,24 +18,17 @@ export {
   type Canonical,
   type FhirId,
   type FhirInstant,
+  type PatientReference,
+  type UrnUuid,
+} from './primitives.js'
+export {
+  collectResults,
+  err,
+  issues,
+  mapResult,
+  ok,
   type Issue,
   type IssueCode,
   type IssueSeverity,
-  type PatientReference,
-  type ReadonlyDeep,
   type Result,
-  type UrnUuid,
-} from './core/index.js'
-
-export {
-  parseCollectionBundle,
-  parseDevice,
-  parseObservation,
-  parseProvenance,
-  parseSupportedR4Resource,
-  type CollectionBundle,
-  type Device,
-  type Observation,
-  type Provenance,
-  type SupportedR4Resource,
-} from './r4/index.js'
+} from './result.js'
