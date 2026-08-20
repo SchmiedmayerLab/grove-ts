@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "canonicalRoot": "https://grovealliance.org/fhir/mobile/StructureDefinition",
+  "statusVocabulary": [
+    "supported",
+    "mapped-standard",
+    "provider-specific",
+    "deferred",
+    "intentionally-unsupported"
+  ],
+  "measurements": [
+    {
+      "id": "active-energy",
+      "profile": "grove-mobile-active-energy",
+      "standardProfile": null,
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "active-energy-burned"
+      },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "kcal" },
+      "effective": "Period",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "basal-body-temperature",
+      "profile": "grove-mobile-basal-body-temperature",
+      "standardProfile": null,
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "basal-body-temperature"
+      },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "Cel" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "deferred",
+        "oura": "provider-specific",
+        "withings": "deferred"
+      }
+    },
+    {
+      "id": "blood-glucose",
+      "profile": "grove-mobile-blood-glucose",
+      "standardProfile": null,
+      "code": { "system": "http://loinc.org", "code": "2339-0" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+      "specimen": {
+        "system": "http://snomed.info/sct",
+        "code": "258580003",
+        "display": "Whole blood sample"
+      },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "deferred",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "deferred"
+      }
+    },
+    {
+      "id": "capillary-blood-glucose",
+      "profile": "grove-mobile-capillary-blood-glucose",
+      "standardProfile": null,
+      "code": { "system": "http://loinc.org", "code": "32016-8" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+      "specimen": {
+        "system": "http://snomed.info/sct",
+        "code": "122554006",
+        "display": "Capillary blood specimen"
+      },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "deferred",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "deferred"
+      }
+    },
+    {
+      "id": "serum-plasma-glucose",
+      "profile": "grove-mobile-serum-plasma-glucose",
+      "standardProfile": null,
+      "code": { "system": "http://loinc.org", "code": "2345-7" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+      "specimenAlternatives": [
+        {
+          "id": "plasma",
+          "system": "http://snomed.info/sct",
+          "code": "119361006",
+          "display": "Plasma specimen"
+        },
+        {
+          "id": "serum",
+          "system": "http://snomed.info/sct",
+          "code": "119364003",
+          "display": "Serum specimen"
+        }
+      ],
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "deferred",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "deferred"
+      }
+    },
+    {
+      "id": "interstitial-glucose",
+      "profile": "grove-mobile-interstitial-glucose",
+      "standardProfile": null,
+      "code": { "system": "http://loinc.org", "code": "99504-3" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+      "specimen": {
+        "system": "http://snomed.info/sct",
+        "code": "258479004",
+        "display": "Interstitial fluid specimen"
+      },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "deferred",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "deferred"
+      }
+    },
+    {
+      "id": "blood-pressure",
+      "profile": "grove-mobile-blood-pressure",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/bp",
+      "code": { "system": "http://loinc.org", "code": "85354-9" },
+      "components": [
+        {
+          "id": "systolic",
+          "system": "http://loinc.org",
+          "code": "8480-6",
+          "quantity": {
+            "system": "http://unitsofmeasure.org",
+            "code": "mm[Hg]"
+          }
+        },
+        {
+          "id": "diastolic",
+          "system": "http://loinc.org",
+          "code": "8462-4",
+          "quantity": {
+            "system": "http://unitsofmeasure.org",
+            "code": "mm[Hg]"
+          }
+        }
+      ],
+      "quantity": null,
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "body-height",
+      "profile": "grove-mobile-body-height",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/bodyheight",
+      "code": { "system": "http://loinc.org", "code": "8302-2" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "cm" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "body-mass-index",
+      "profile": "grove-mobile-bmi",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/bmi",
+      "code": { "system": "http://loinc.org", "code": "39156-5" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "kg/m2" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "intentionally-unsupported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "body-temperature",
+      "profile": "grove-mobile-body-temperature",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/bodytemp",
+      "code": { "system": "http://loinc.org", "code": "8310-5" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "Cel" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "provider-specific",
+        "google-health-api": "supported",
+        "oura": "provider-specific",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "body-weight",
+      "profile": "grove-mobile-body-weight",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/bodyweight",
+      "code": { "system": "http://loinc.org", "code": "29463-7" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "kg" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "intentionally-unsupported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "distance",
+      "profile": "grove-mobile-distance",
+      "standardProfile": null,
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "distance-traveled"
+      },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "m" },
+      "effective": "Period",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "mapped-standard",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "heart-rate",
+      "profile": "grove-mobile-heart-rate",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/heartrate",
+      "code": { "system": "http://loinc.org", "code": "8867-4" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "/min" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "supported",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "oxygen-saturation",
+      "profile": "grove-mobile-oxygen-saturation",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/oxygensat",
+      "code": { "system": "http://loinc.org", "code": "2708-6" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "%" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "respiratory-rate",
+      "profile": "grove-mobile-respiratory-rate",
+      "standardProfile": "http://hl7.org/fhir/StructureDefinition/resprate",
+      "code": { "system": "http://loinc.org", "code": "9279-1" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "/min" },
+      "effective": "dateTime",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "intentionally-unsupported",
+        "google-health-api": "supported",
+        "oura": "mapped-standard",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "sleep-duration",
+      "profile": "grove-mobile-sleep-duration",
+      "standardProfile": null,
+      "code": { "system": "http://loinc.org", "code": "93832-4" },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "h" },
+      "effective": "Period",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "mapped-standard",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "sleep-stage",
+      "profile": "grove-mobile-sleep-stage",
+      "standardProfile": null,
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "sleep-stage"
+      },
+      "quantity": null,
+      "valueSet": "https://grovealliance.org/fhir/mobile/ValueSet/grove-sleep-stage",
+      "resultCodeSystem": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-sleep-stage",
+      "allowedValues": [
+        "awake",
+        "in-bed",
+        "out-of-bed",
+        "asleep-unspecified",
+        "light",
+        "deep",
+        "rem",
+        "unknown"
+      ],
+      "effective": "Period",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "mapped-standard",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    },
+    {
+      "id": "step-count",
+      "profile": "grove-mobile-step-count",
+      "standardProfile": null,
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "step-count-total"
+      },
+      "quantity": { "system": "http://unitsofmeasure.org", "code": "{steps}" },
+      "effective": "Period",
+      "coverage": {
+        "healthkit": "supported",
+        "health-connect": "supported",
+        "sensorkit": "supported",
+        "google-health-api": "supported",
+        "oura": "supported",
+        "withings": "supported"
+      }
+    }
+  ]
+}

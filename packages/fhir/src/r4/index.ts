@@ -11,6 +11,7 @@ export {
   parseDevice,
   parseObservation,
   parseProvenance,
+  parseSpecimen,
   parseSupportedR4Resource,
 } from './parse.js'
 export {
@@ -32,6 +33,7 @@ export {
   quantitySchema,
   referenceSchema,
   sampledDataSchema,
+  specimenSchema,
   supportedR4ResourceSchema,
 } from './schemas.js'
 export type {
@@ -47,5 +49,6 @@ export type {
   Quantity,
   Reference,
   SampledData,
+  Specimen,
   SupportedR4Resource,
 } from './types.js'

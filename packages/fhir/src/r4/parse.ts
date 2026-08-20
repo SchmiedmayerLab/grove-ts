@@ -12,6 +12,7 @@ import {
   deviceSchema,
   observationSchema,
   provenanceSchema,
+  specimenSchema,
   supportedR4ResourceSchema,
 } from './schemas.js'
 import type {
@@ -19,6 +20,7 @@ import type {
   Device,
   Observation,
   Provenance,
+  Specimen,
   SupportedR4Resource,
 } from './types.js'
 import {
@@ -56,6 +58,9 @@ export const parseDevice = (input: unknown): Result<Device> =>
 
 export const parseProvenance = (input: unknown): Result<Provenance> =>
   parseWith(provenanceSchema, input)
+
+export const parseSpecimen = (input: unknown): Result<Specimen> =>
+  parseWith(specimenSchema, input)
 
 export const parseCollectionBundle = (
   input: unknown,

@@ -1,0 +1,41 @@
+{
+  "source": {
+    "adapter": {
+      "kind": "connected-health",
+      "provider": "google-health"
+    },
+    "identifier": {
+      "system": "https://example.org/google-health/records",
+      "value": "synthetic-capillary-glucose-2026-08-20"
+    },
+    "display": "Synthetic Google Health capillary glucose record",
+    "recordingMethod": "automatically-recorded",
+    "dataOrigin": {
+      "identity": {
+        "fullUrl": "urn:uuid:818fbb83-d44a-56fa-ba81-874a39ae5757",
+        "identifier": {
+          "system": "https://example.org/data-origins",
+          "value": "google-health"
+        }
+      },
+      "name": "Google Health"
+    }
+  },
+  "measurement": {
+    "kind": "capillary-blood-glucose",
+    "value": 92,
+    "effective": {
+      "kind": "date-time",
+      "value": "2026-08-20T07:05:00Z"
+    },
+    "specimen": {
+      "identity": {
+        "fullUrl": "urn:uuid:e6fdf486-ac28-51c4-bf02-5e80a9abdd42",
+        "identifier": {
+          "system": "https://example.org/specimens",
+          "value": "google-capillary-20260820"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "canonicalRoot": "https://grovealliance.org/fhir",
+  "packages": [
+    {
+      "source": "mobile",
+      "packageId": "org.grovealliance.fhir.mobile",
+      "canonical": "https://grovealliance.org/fhir/mobile",
+      "dependencies": [],
+      "profiles": [
+        "grove-application-device",
+        "grove-mobile-active-energy",
+        "grove-mobile-basal-body-temperature",
+        "grove-mobile-blood-glucose",
+        "grove-mobile-blood-pressure",
+        "grove-mobile-bmi",
+        "grove-mobile-body-height",
+        "grove-mobile-body-temperature",
+        "grove-mobile-body-weight",
+        "grove-mobile-capillary-blood-glucose",
+        "grove-mobile-conversion-provenance",
+        "grove-mobile-distance",
+        "grove-mobile-exchange-bundle",
+        "grove-mobile-heart-rate",
+        "grove-mobile-interstitial-glucose",
+        "grove-mobile-observation",
+        "grove-mobile-oxygen-saturation",
+        "grove-mobile-respiratory-rate",
+        "grove-mobile-serum-plasma-glucose",
+        "grove-mobile-sleep-duration",
+        "grove-mobile-sleep-stage",
+        "grove-mobile-step-count",
+        "grove-recording-device"
+      ]
+    },
+    {
+      "source": "questionnaire",
+      "packageId": "org.grovealliance.fhir.questionnaire",
+      "canonical": "https://grovealliance.org/fhir/questionnaire",
+      "dependencies": ["hl7.fhir.uv.sdc#4.0.0"],
+      "profiles": ["grove-questionnaire", "grove-questionnaire-response"]
+    },
+    {
+      "source": "sensor",
+      "packageId": "org.grovealliance.fhir.sensor",
+      "canonical": "https://grovealliance.org/fhir/sensor",
+      "dependencies": [
+        "org.grovealliance.fhir.mobile#0.2.0",
+        "hl7.fhir.uv.phd#2.0.0"
+      ],
+      "profiles": [
+        "grove-sensor-ecg-observation",
+        "grove-sensor-recording-document",
+        "grove-sensor-sampled-data-observation"
+      ]
+    },
+    {
+      "source": "healthkit",
+      "packageId": "org.grovealliance.fhir.healthkit",
+      "canonical": "https://grovealliance.org/fhir/healthkit",
+      "dependencies": [
+        "org.grovealliance.fhir.mobile#0.2.0",
+        "org.grovealliance.fhir.sensor#0.2.0"
+      ],
+      "profiles": ["healthkit-observation"]
+    },
+    {
+      "source": "health-connect",
+      "packageId": "org.grovealliance.fhir.health-connect",
+      "canonical": "https://grovealliance.org/fhir/health-connect",
+      "dependencies": ["org.grovealliance.fhir.mobile#0.2.0"],
+      "profiles": [
+        "health-connect-conversion-provenance",
+        "health-connect-observation"
+      ]
+    },
+    {
+      "source": "connected-health",
+      "packageId": "org.grovealliance.fhir.connected-health",
+      "canonical": "https://grovealliance.org/fhir/connected-health",
+      "dependencies": ["org.grovealliance.fhir.mobile#0.2.0"],
+      "profiles": [
+        "connected-health-conversion-provenance",
+        "connected-health-observation"
+      ]
+    }
+  ]
+}

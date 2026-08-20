@@ -1,0 +1,521 @@
+{
+  "schemaVersion": 1,
+  "igVersion": "0.2.0",
+  "canonicalBase": "https://grovealliance.org/fhir",
+  "statuses": {
+    "implemented": "A closed public builder emits resources conforming to the listed v0.2 profile.",
+    "planned-shared": "The concept is shared by multiple sources but has no admitted v0.2 Grove builder.",
+    "adapter-specific": "The semantics are source-specific and must not be collapsed into a shared concept.",
+    "sensor-ig": "The concept belongs to the Sensor and Waveform contract.",
+    "not-in-scope": "The source exposes the record, but it is not a mobile measurement admitted by this package."
+  },
+  "measurements": [
+    {
+      "key": "heart-rate",
+      "status": "implemented",
+      "profile": "grove-mobile-heart-rate",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/heartrate"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8867-4",
+        "display": "Heart rate"
+      },
+      "unit": { "code": "/min", "display": "beats/minute" },
+      "effective": "dateTime",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "body-weight",
+      "status": "implemented",
+      "profile": "grove-mobile-body-weight",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/bodyweight"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "29463-7",
+        "display": "Body weight"
+      },
+      "unit": { "code": "kg", "display": "kg" },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+    },
+    {
+      "key": "blood-pressure",
+      "status": "implemented",
+      "profile": "grove-mobile-blood-pressure",
+      "authoritativeProfiles": ["http://hl7.org/fhir/StructureDefinition/bp"],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "85354-9",
+        "display": "Blood pressure panel"
+      },
+      "unit": { "code": "mm[Hg]", "display": "mmHg" },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "withings"]
+    },
+    {
+      "key": "body-temperature",
+      "status": "implemented",
+      "profile": "grove-mobile-body-temperature",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/bodytemp"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8310-5",
+        "display": "Body temperature"
+      },
+      "unit": { "code": "Cel", "display": "°C" },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+    },
+    {
+      "key": "respiratory-rate",
+      "status": "implemented",
+      "profile": "grove-mobile-respiratory-rate",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/resprate"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "9279-1",
+        "display": "Respiratory rate"
+      },
+      "unit": { "code": "/min", "display": "breaths/minute" },
+      "effective": "dateTime",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "oxygen-saturation",
+      "status": "implemented",
+      "profile": "grove-mobile-oxygen-saturation",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/oxygensat"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2708-6",
+        "display": "Oxygen saturation"
+      },
+      "unit": { "code": "%", "display": "%" },
+      "effective": "dateTime",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "body-height",
+      "status": "implemented",
+      "profile": "grove-mobile-body-height",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/bodyheight"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8302-2",
+        "display": "Body height"
+      },
+      "unit": { "code": "cm", "display": "cm" },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+    },
+    {
+      "key": "body-mass-index",
+      "status": "implemented",
+      "profile": "grove-mobile-bmi",
+      "authoritativeProfiles": ["http://hl7.org/fhir/StructureDefinition/bmi"],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "39156-5",
+        "display": "Body mass index"
+      },
+      "unit": { "code": "kg/m2", "display": "kg/m²" },
+      "effective": "dateTime",
+      "sources": ["healthkit", "google-health", "withings"]
+    },
+    {
+      "key": "step-count",
+      "status": "implemented",
+      "profile": "grove-mobile-step-count",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "step-count-total",
+        "display": "Step count total"
+      },
+      "unit": { "code": "{steps}", "display": "steps" },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "distance",
+      "status": "implemented",
+      "profile": "grove-mobile-distance",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "distance-traveled",
+        "display": "Distance traveled"
+      },
+      "unit": { "code": "m", "display": "m" },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "active-energy",
+      "status": "implemented",
+      "profile": "grove-mobile-active-energy",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "active-energy-burned",
+        "display": "Active energy burned"
+      },
+      "unit": { "code": "kcal", "display": "kcal" },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "blood-glucose",
+      "status": "implemented",
+      "profile": "grove-mobile-blood-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2339-0",
+        "display": "Glucose in blood"
+      },
+      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "effective": "dateTime",
+      "sources": ["health-connect", "google-health"]
+    },
+    {
+      "key": "capillary-blood-glucose",
+      "status": "implemented",
+      "profile": "grove-mobile-capillary-blood-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "32016-8",
+        "display": "Glucose in capillary blood"
+      },
+      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "effective": "dateTime",
+      "sources": ["health-connect", "google-health"]
+    },
+    {
+      "key": "serum-plasma-glucose",
+      "status": "implemented",
+      "profile": "grove-mobile-serum-plasma-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2345-7",
+        "display": "Glucose in serum or plasma"
+      },
+      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "effective": "dateTime",
+      "sources": ["health-connect", "google-health"]
+    },
+    {
+      "key": "interstitial-glucose",
+      "status": "implemented",
+      "profile": "grove-mobile-interstitial-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "99504-3",
+        "display": "Glucose in interstitial fluid"
+      },
+      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "effective": "dateTime",
+      "sources": ["health-connect", "google-health"]
+    },
+    {
+      "key": "sleep-duration",
+      "status": "implemented",
+      "profile": "grove-mobile-sleep-duration",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "93832-4",
+        "display": "Sleep duration"
+      },
+      "unit": { "code": "h", "display": "h" },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "sleep-stage",
+      "status": "implemented",
+      "profile": "grove-mobile-sleep-stage",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "sleep-stage",
+        "display": "Sleep stage"
+      },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "resting-heart-rate",
+      "status": "planned-shared",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ],
+      "reason": "Requires a reviewed context-of-use contract distinct from instantaneous heart rate."
+    },
+    {
+      "key": "heart-rate-variability-sdnn",
+      "status": "planned-shared",
+      "sources": ["healthkit", "google-health"],
+      "reason": "SDNN must not be conflated with RMSSD."
+    },
+    {
+      "key": "heart-rate-variability-rmssd",
+      "status": "planned-shared",
+      "sources": ["health-connect", "oura", "withings"],
+      "reason": "RMSSD must not be conflated with SDNN."
+    },
+    {
+      "key": "body-fat-percentage",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+    },
+    {
+      "key": "lean-body-mass",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect"]
+    },
+    {
+      "key": "bone-mass",
+      "status": "planned-shared",
+      "sources": ["health-connect", "withings"]
+    },
+    {
+      "key": "waist-circumference",
+      "status": "planned-shared",
+      "sources": ["healthkit", "withings"]
+    },
+    {
+      "key": "basal-body-temperature",
+      "status": "implemented",
+      "profile": "grove-mobile-basal-body-temperature",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "basal-body-temperature",
+        "display": "Basal body temperature"
+      },
+      "unit": { "code": "Cel", "display": "°C" },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"]
+    },
+    {
+      "key": "skin-temperature",
+      "status": "planned-shared",
+      "sources": ["health-connect", "oura", "withings"],
+      "reason": "Skin temperature is not body temperature."
+    },
+    {
+      "key": "basal-energy",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health"]
+    },
+    {
+      "key": "total-energy",
+      "status": "planned-shared",
+      "sources": ["health-connect", "google-health", "oura", "withings"]
+    },
+    {
+      "key": "flights-or-floors-climbed",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health", "withings"],
+      "reason": "A precise conversion between flights and floors is not assumed."
+    },
+    {
+      "key": "elevation-gained",
+      "status": "planned-shared",
+      "sources": ["health-connect", "google-health", "oura", "withings"]
+    },
+    {
+      "key": "vo2-max",
+      "status": "planned-shared",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "walking-speed",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health"]
+    },
+    {
+      "key": "running-speed",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health"]
+    },
+    {
+      "key": "cycling-cadence",
+      "status": "planned-shared",
+      "sources": ["health-connect", "google-health", "withings"]
+    },
+    {
+      "key": "step-cadence",
+      "status": "planned-shared",
+      "sources": ["health-connect", "google-health"]
+    },
+    {
+      "key": "power",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health"]
+    },
+    {
+      "key": "hydration",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health"]
+    },
+    {
+      "key": "nutrition",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect", "google-health"]
+    },
+    {
+      "key": "sleep-stage",
+      "status": "planned-shared",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ],
+      "reason": "Stage intervals require a shared stage vocabulary and overlap rules."
+    },
+    {
+      "key": "exercise-session",
+      "status": "planned-shared",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "mindfulness-session",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect"]
+    },
+    {
+      "key": "wheelchair-pushes",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect"]
+    },
+    {
+      "key": "six-minute-walk-distance",
+      "status": "planned-shared",
+      "sources": ["healthkit", "health-connect"]
+    },
+    {
+      "key": "cardiovascular-age",
+      "status": "adapter-specific",
+      "sources": ["oura", "withings"],
+      "reason": "Provider algorithms are not semantically interchangeable without an explicit method."
+    },
+    {
+      "key": "readiness-score",
+      "status": "adapter-specific",
+      "sources": ["oura"],
+      "reason": "Oura-specific computed score."
+    },
+    {
+      "key": "apple-stand-hour",
+      "status": "adapter-specific",
+      "sources": ["healthkit"],
+      "reason": "Apple-specific behavioral classification."
+    },
+    {
+      "key": "apple-exercise-time",
+      "status": "adapter-specific",
+      "sources": ["healthkit"],
+      "reason": "Apple-specific algorithmic classification."
+    },
+    {
+      "key": "electrocardiogram-waveform",
+      "status": "sensor-ig",
+      "sources": ["healthkit", "connected-device"]
+    },
+    {
+      "key": "photoplethysmogram-waveform",
+      "status": "sensor-ig",
+      "sources": ["connected-device"]
+    },
+    {
+      "key": "accelerometer-series",
+      "status": "sensor-ig",
+      "sources": ["sensorkit", "connected-device"]
+    },
+    {
+      "key": "reproductive-health-record",
+      "status": "not-in-scope",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "These clinical event records require a separate reviewed domain contract."
+    },
+    {
+      "key": "sexual-activity-record",
+      "status": "not-in-scope",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "These event records are not treated as generic mobile measurements."
+    }
+  ]
+}

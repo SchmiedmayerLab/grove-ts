@@ -481,6 +481,21 @@ export const deviceSchema = z.strictObject({
   parent: referenceSchema.optional(),
 })
 
+export const specimenSchema = z.strictObject({
+  resourceType: z.literal('Specimen'),
+  ...commonDomainResourceFields,
+  identifier: z.array(identifierSchema).min(1),
+  accessionIdentifier: identifierSchema.optional(),
+  status: z
+    .enum(['available', 'unavailable', 'unsatisfactory', 'entered-in-error'])
+    .optional(),
+  _status: primitiveMetadata,
+  type: codeableConceptSchema,
+  subject: referenceSchema,
+  receivedTime: z.string().optional(),
+  _receivedTime: primitiveMetadata,
+})
+
 const provenanceAgentSchema = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
@@ -532,6 +547,7 @@ export const graphResourceSchema = z.discriminatedUnion('resourceType', [
   observationSchema,
   deviceSchema,
   provenanceSchema,
+  specimenSchema,
 ])
 
 export const collectionBundleSchema = z.strictObject({
@@ -550,7 +566,11 @@ export const collectionBundleSchema = z.strictObject({
         id: z.string().optional(),
         extension: z.array(extensionSchema).optional(),
         modifierExtension: z.array(extensionSchema).optional(),
-        fullUrl: z.string().regex(/^urn:uuid:[0-9a-f-]{36}$/u),
+        fullUrl: z
+          .string()
+          .regex(
+            /^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+          ),
         _fullUrl: primitiveMetadata,
         resource: graphResourceSchema,
       }),
@@ -562,6 +582,7 @@ export const supportedR4ResourceSchema = z.discriminatedUnion('resourceType', [
   observationSchema,
   deviceSchema,
   provenanceSchema,
+  specimenSchema,
   collectionBundleSchema,
 ])
 

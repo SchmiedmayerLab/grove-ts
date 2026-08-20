@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "observationAdapterClaim": {
+    "cardinality": 2,
+    "members": [
+      "exactly one shared measurement profile from catalog/measurement-catalog.json",
+      "exactly one adapter profile listed below"
+    ],
+    "inheritedProfilesAreNotDeclared": true,
+    "adapterProfiles": [
+      "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
+      "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation",
+      "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation"
+    ],
+    "forbiddenExplicitProfiles": [
+      "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-observation",
+      "http://hl7.org/fhir/StructureDefinition/bp",
+      "http://hl7.org/fhir/StructureDefinition/bodyheight",
+      "http://hl7.org/fhir/StructureDefinition/bmi",
+      "http://hl7.org/fhir/StructureDefinition/bodytemp",
+      "http://hl7.org/fhir/StructureDefinition/bodyweight",
+      "http://hl7.org/fhir/StructureDefinition/heartrate",
+      "http://hl7.org/fhir/StructureDefinition/oxygensat",
+      "http://hl7.org/fhir/StructureDefinition/resprate"
+    ]
+  }
+}

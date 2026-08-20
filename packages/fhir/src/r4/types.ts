@@ -18,6 +18,7 @@ import type {
   Quantity as R4Quantity,
   Reference as R4Reference,
   SampledData as R4SampledData,
+  Specimen as R4Specimen,
 } from 'fhir/r4.js'
 import type { ReadonlyDeep } from '../core/index.js'
 
@@ -31,16 +32,21 @@ export type Provenance = ReadonlyDeep<R4Provenance>
 export type Quantity = ReadonlyDeep<R4Quantity>
 export type Reference = ReadonlyDeep<R4Reference>
 export type SampledData = ReadonlyDeep<R4SampledData>
+export type Specimen = ReadonlyDeep<R4Specimen>
 
-export type GraphResource = Device | Observation | Provenance
+export type GraphResource = Device | Observation | Provenance | Specimen
+
+type BundleEntry = ReadonlyDeep<NonNullable<R4Bundle['entry']>[number]>
 
 export type CollectionBundle = ReadonlyDeep<
   Omit<R4Bundle, 'entry' | 'type'> & {
     readonly type: 'collection'
-    readonly entry: ReadonlyArray<{
-      readonly fullUrl: string
-      readonly resource: GraphResource
-    }>
+    readonly entry: ReadonlyArray<
+      Omit<BundleEntry, 'fullUrl' | 'resource'> & {
+        readonly fullUrl: string
+        readonly resource: GraphResource
+      }
+    >
   }
 >
 

@@ -34,6 +34,49 @@ The published JavaScript uses portable ES2022 and Web Platform APIs.
 - Resource identifiers, full URLs, repository ids, conversion time, and issued time are supplied by the caller.
 - `Resource.id` is omitted unless the caller supplies a repository-assigned id.
 
+## Mobile measurements
+
+The `mobile` entry point exposes one closed, discriminated input union for every
+measurement admitted by the Grove Mobile 0.2 catalog. It includes point and
+period quantities, composite blood pressure, and source-neutral sleep stages.
+There is intentionally no unprofiled fallback builder.
+
+```typescript
+import {
+  buildMobileBundle,
+  createEntryIdentity,
+  parseNormalizedProviderMeasurement,
+  type MobileBundleInput,
+} from '@schmiedmayerlab/grove-fhir/mobile'
+```
+
+`parseNormalizedProviderMeasurement(unknown)` is the strict boundary for data
+that an application has already mapped from Google Health API, Oura, or
+Withings. Its schema rejects unknown fields and raw provider responses. This
+package contains no provider client, authentication, pagination, webhook, or
+fetching behavior.
+
+The high-level builder accepts a validated `MobileBundleInput` and returns a
+`Result<CollectionBundle>`. The collection contains the Observation,
+application and recording Devices when present, and conversion Provenance.
+Every internal edge uses a `urn:uuid` Bundle full URL. Each entry carries the
+complete business Identifier used to derive that URL.
+
+`createEntryIdentity(identifier, id?)` explicitly derives the normative UUID-v5
+full URL from the IG's RFC 8785/JCS identity contract. The builder independently
+checks every supplied full URL against its Identifier. It never generates time,
+business identity, or repository ids.
+
+Source-native sample types may be retained as an additional
+`Observation.code.coding`. A more-specific native sleep state may likewise be
+retained as a second `Observation.valueCodeableConcept.coding`; the required
+shared Grove sleep-stage coding remains first.
+
+The synchronized normative catalog and its resolved development reference live
+under `catalog/grove-fhir`. `catalog/measurement-capabilities.json` distinguishes
+the 18 constructible shared measurements from reviewed future, adapter-only,
+sensor, and out-of-scope candidates.
+
 ## Entry points
 
 Use the root entry point for high-level parsing and validated primitives:
