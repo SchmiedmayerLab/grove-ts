@@ -9,6 +9,7 @@
 export {
   parseCollectionBundle,
   parseDevice,
+  parseDocumentReference,
   parseObservation,
   parseProvenance,
   parseSpecimen,
@@ -20,6 +21,7 @@ export {
   codingSchema,
   collectionBundleSchema,
   deviceSchema,
+  documentReferenceSchema,
   expressionSchema,
   extensionSchema,
   graphResourceSchema,
@@ -42,6 +44,7 @@ export type {
   Coding,
   CollectionBundle,
   Device,
+  DocumentReference,
   Extension,
   GraphResource,
   Identifier,

@@ -19,6 +19,10 @@
       "types": "./dist/mobile/index.d.ts",
       "default": "./dist/mobile/index.js"
     },
+    "./connected-health": {
+      "types": "./dist/connected-health/index.d.ts",
+      "default": "./dist/connected-health/index.js"
+    },
     "./questionnaire": {
       "types": "./dist/questionnaire/index.d.ts",
       "default": "./dist/questionnaire/index.js"
@@ -31,15 +35,21 @@
   "scripts": {
     "generate:catalog": "node scripts/generate-measurement-catalog.mjs",
     "check:catalog": "node scripts/generate-measurement-catalog.mjs --check",
+    "generate:fixtures": "npm run build && node scripts/generate-conformance-fixtures.mjs",
+    "check:fixtures": "npm run build && node scripts/generate-conformance-fixtures.mjs --check",
+    "conformance": "npm run build && node scripts/validate-conformance.mjs",
+    "conformance:structural": "npm run build && node scripts/validate-conformance.mjs --structural-only",
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
     "build": "tsc",
     "watch": "tsc --watch",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "npm run test:unit && npm run test:package",
     "test:browser": "npm run build && node scripts/browser-smoke.mjs",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:package": "npm run build && node scripts/package-smoke.mjs",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "typecheck": "npm run check:catalog && tsc --noEmit && tsc -p test/tsconfig.json",
     "prepublishOnly": "npm run clean && npm run build"
@@ -72,6 +82,7 @@
     "LICENSE"
   ],
   "dependencies": {
+    "@noble/hashes": "2.3.0",
     "@types/fhir": "^0.0.44",
     "uuid": "^14.0.1",
     "zod": "^4.4.3"

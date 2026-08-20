@@ -5,25 +5,141 @@
   "observationAdapterClaim": {
     "cardinality": 2,
     "members": [
-      "exactly one shared measurement profile from catalog/measurement-catalog.json",
+      "exactly one shared semantic profile from catalog/measurement-catalog.json, sharedSensorProfiles, or standardAdapterClaims",
       "exactly one adapter profile listed below"
     ],
     "inheritedProfilesAreNotDeclared": true,
     "adapterProfiles": [
       "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
+      "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation",
       "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation",
-      "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation"
+      "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation",
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-observation",
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation"
+    ],
+    "sharedSensorProfiles": [
+      "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation",
+      "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-sampled-data-observation"
+    ],
+    "standardAdapterClaims": [
+      {
+        "id": "healthkit-body-mass-index",
+        "semanticProfile": "http://hl7.org/fhir/StructureDefinition/bmi",
+        "adapterProfile": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
+        "cardinality": 2,
+        "reason": "The authoritative R4 BMI profile is reused directly; BMI is not a one-source Mobile profile."
+      }
     ],
     "forbiddenExplicitProfiles": [
       "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-observation",
       "http://hl7.org/fhir/StructureDefinition/bp",
       "http://hl7.org/fhir/StructureDefinition/bodyheight",
-      "http://hl7.org/fhir/StructureDefinition/bmi",
       "http://hl7.org/fhir/StructureDefinition/bodytemp",
       "http://hl7.org/fhir/StructureDefinition/bodyweight",
       "http://hl7.org/fhir/StructureDefinition/heartrate",
       "http://hl7.org/fhir/StructureDefinition/oxygensat",
       "http://hl7.org/fhir/StructureDefinition/resprate"
     ]
+  },
+  "healthConnectProviderSpecificClaims": {
+    "cardinality": 1,
+    "profiles": [
+      "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+      "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
+      "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
+      "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose"
+    ],
+    "otherProfilesAllowed": false
+  },
+  "sensorKitRecordingDocumentClaim": {
+    "identifierSystem": "https://grovealliance.org/fhir/sensorkit/NamingSystem/sensorkit-record-id",
+    "cardinality": 2,
+    "profiles": [
+      "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document"
+    ],
+    "otherProfilesAllowed": false
+  },
+  "connectedHealthRecordingDocumentClaim": {
+    "identifierSystem": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id",
+    "cardinality": 2,
+    "profiles": [
+      "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+      "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document"
+    ],
+    "otherProfilesAllowed": false
+  },
+  "adapterConversionProvenanceClaims": [
+    {
+      "adapter": "healthkit",
+      "profile": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-conversion-provenance",
+      "sourceIdentifierSystem": "https://grovealliance.org/fhir/healthkit/NamingSystem/healthkit-object-id",
+      "targetAdapterProfiles": [
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation"
+      ],
+      "rule": "One Provenance in the exchange graph targets every HealthKit Observation produced from its exact sole source-object Identifier; every target is an internal UUID reference."
+    },
+    {
+      "adapter": "health-connect",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-conversion-provenance",
+      "sourceIdentifierSystem": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+      "targetAdapterProfiles": [
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
+        "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose"
+      ],
+      "rule": "One Provenance in the exchange graph targets every Health Connect Observation produced from its exact sole source-record Identifier; every target is an internal UUID reference. The Provenance directly declares only the Health Connect conversion profile; its inherited Mobile profile is not repeated."
+    },
+    {
+      "adapter": "connected-health",
+      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance",
+      "sourceIdentifierSystem": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id",
+      "targetAdapterProfiles": [
+        "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation",
+        "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document"
+      ],
+      "rule": "One Provenance in the exchange graph targets every connected-provider Observation and Recording Document carrying its exact sole source-record Identifier; every target is an internal UUID reference."
+    },
+    {
+      "adapter": "sensorkit",
+      "profile": "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-conversion-provenance",
+      "sourceIdentifierSystem": "https://grovealliance.org/fhir/sensorkit/NamingSystem/sensorkit-record-id",
+      "targetAdapterProfiles": [
+        "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-observation",
+        "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document",
+        "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-device-usage-observation",
+        "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation",
+        "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-on-wrist-observation",
+        "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-visit-observation"
+      ],
+      "rule": "One Provenance in the exchange graph targets every SensorKit structured and raw output carrying its exact sole source-record Identifier; every target is an internal UUID reference."
+    }
+  ],
+  "sensorKitProviderSpecificClaims": {
+    "cardinality": 1,
+    "profiles": [
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-device-usage-observation",
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-on-wrist-observation",
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-visit-observation"
+    ],
+    "otherProfilesAllowed": false
+  },
+  "sensorKitHybridObservationClaims": {
+    "cardinality": 2,
+    "profiles": [
+      "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation",
+      "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation"
+    ],
+    "requiredCompanionProfile": "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document",
+    "rule": "The ECG Observation and exact native Recording Document are linked in one exchange graph, share the exact source-record Identifier, and are both targeted by one SensorKit conversion Provenance."
+  },
+  "healthConnectSpecimenClaim": {
+    "identifierSystem": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-specimen-id",
+    "cardinality": 1,
+    "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-specimen",
+    "otherProfilesAllowed": false
   }
 }

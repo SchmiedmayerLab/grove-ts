@@ -1,30 +1,33 @@
 {
   "source": {
-    "adapter": { "kind": "connected-health", "provider": "google-health" },
-    "identifier": {
-      "system": "https://example.org/google-health/records",
-      "value": "synthetic-active-energy-2026-08-20"
+    "adapter": { "kind": "connected-health", "provider": "google-health-api" },
+    "providerAccountIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-google-001",
+      "assurance": "deployment-scoped-pseudonym"
     },
-    "display": "Synthetic Google Health active-energy record",
+    "sourceType": "active-energy-burned",
+    "sourceNativeId": "synthetic-active-energy-2026-08-20",
     "recordingMethod": "automatically-recorded",
     "dataOrigin": {
       "identity": {
-        "fullUrl": "urn:uuid:818fbb83-d44a-56fa-ba81-874a39ae5757",
         "identifier": {
           "system": "https://example.org/data-origins",
-          "value": "google-health"
+          "value": "google-health-api"
         }
       },
       "name": "Google Health"
     }
   },
-  "measurement": {
-    "kind": "active-energy",
-    "value": 430.5,
-    "effective": {
-      "kind": "period",
-      "start": "2026-08-20T00:00:00Z",
-      "end": "2026-08-20T12:00:00Z"
+  "measurements": [
+    {
+      "kind": "active-energy",
+      "value": 430.5,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-20T12:00:00Z"
+      }
     }
-  }
+  ]
 }

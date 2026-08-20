@@ -21,6 +21,7 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
   workflow_dispatch:
   workflow_call:
 
@@ -34,14 +35,73 @@ jobs:
   markdown-links:
     name: Markdown Link Check
     uses: SchmiedmayerLab/.github/.github/workflows/markdown-links.yml@v0.5
+  fhir-draft:
+    name: Draft FHIR Stack — Scoped Quality and Structural Conformance
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft &&
+      startsWith(github.head_ref, 'feature/fhir-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Grove TypeScript
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Checkout the moving Grove FHIR development ref
+        uses: actions/checkout@v7
+        with:
+          repository: SchmiedmayerLab/grove-fhir
+          ref: feature/fhir-v020-adapters
+          path: .build/grove-fhir
+          persist-credentials: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Set up npm
+        run: npm install --global --ignore-scripts npm@12.0.2
+      - name: Install dependencies
+        run: npm ci
+      - name: Build shared lint configuration
+        run: npm run build --workspace @schmiedmayerlab/grove-configurations
+      - name: Check scoped formatting
+        run: >-
+          npm exec prettier -- --check
+          packages/fhir
+          .github/workflows/build-and-test.yml
+          .github/workflows/fhir-conformance.yml
+      - name: Check generated contracts and strict types
+        run: |
+          npm run check:catalog --workspace @schmiedmayerlab/grove-fhir
+          npm run typecheck --workspace @schmiedmayerlab/grove-fhir
+      - name: Lint and test the FHIR package
+        run: |
+          npm run lint:ci --workspace @schmiedmayerlab/grove-fhir
+          npm test --workspace @schmiedmayerlab/grove-fhir
+      - name: Check browser and deterministic fixtures
+        run: |
+          npm run test:browser --workspace @schmiedmayerlab/grove-fhir
+          npm run check:fixtures --workspace @schmiedmayerlab/grove-fhir
+      - name: Run producer-neutral structural conformance
+        run: >-
+          npm run conformance:structural --workspace @schmiedmayerlab/grove-fhir --
+          --ig "$GITHUB_WORKSPACE/.build/grove-fhir"
   quality:
     name: Build and Quality Checks
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      !startsWith(github.head_ref, 'feature/fhir-')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -72,12 +132,17 @@ jobs:
         run: npm run audit:signatures
   node-current:
     name: Node.js 26 Compatibility
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      !startsWith(github.head_ref, 'feature/fhir-')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -96,12 +161,17 @@ jobs:
         run: npm test
   documentation:
     name: Build Pages
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      !startsWith(github.head_ref, 'feature/fhir-')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -127,6 +197,10 @@ jobs:
         run: npm run pages:build
   tests:
     name: Test and Coverage
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      !startsWith(github.head_ref, 'feature/fhir-')
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.5
     with:
       coverage-files: >-
@@ -137,6 +211,39 @@ jobs:
       npmVersion: '12.0.2'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
+  tests-exact-head:
+    name: Exact PR Head — Test and Coverage
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      !startsWith(github.head_ref, 'feature/fhir-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify the checked-out PR head
+        if: github.event_name == 'pull_request'
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Set up npm
+        run: npm install --global --ignore-scripts npm@12.0.2
+      - name: Install dependencies
+        run: npm ci
+      - name: Run every package coverage gate on the exact head
+        run: |
+          npm run build
+          npm run test:release
+          npm run test:coverage
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
@@ -150,24 +257,85 @@ jobs:
         with:
           fail-on-severity: moderate
           fail-on-scopes: runtime, development
+  draft-ci:
+    name: Draft FHIR Stack — Scoped Checks (Not Release Readiness)
+    if: >-
+      always() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft &&
+      startsWith(github.head_ref, 'feature/fhir-')
+    needs:
+      - actionlint
+      - dependency-review
+      - fhir-draft
+      - markdown-links
+      - reuse
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check scoped draft jobs
+        env:
+          ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
+          DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
+          FHIR_DRAFT_RESULT: ${{ needs.fhir-draft.result }}
+          MARKDOWN_LINKS_RESULT: ${{ needs.markdown-links.result }}
+          REUSE_RESULT: ${{ needs.reuse.result }}
+        run: |
+          for result in \
+            "$ACTIONLINT_RESULT" \
+            "$DEPENDENCY_REVIEW_RESULT" \
+            "$FHIR_DRAFT_RESULT" \
+            "$MARKDOWN_LINKS_RESULT" \
+            "$REUSE_RESULT"; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
   ci:
-    name: CI
+    name: CI — Full Release Readiness
     if: always()
     needs:
       - actionlint
       - dependency-review
       - documentation
+      - fhir-draft
       - markdown-links
       - node-current
       - quality
       - reuse
       - tests
+      - tests-exact-head
     runs-on: ubuntu-latest
     steps:
       - name: Check required jobs
         env:
-          RESULTS: ${{ join(needs.*.result, ',') }}
+          ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
+          DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
+          DOCUMENTATION_RESULT: ${{ needs.documentation.result }}
+          IS_FHIR_DRAFT: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft && startsWith(github.head_ref, 'feature/fhir-') }}
+          MARKDOWN_LINKS_RESULT: ${{ needs.markdown-links.result }}
+          NODE_CURRENT_RESULT: ${{ needs.node-current.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          REUSE_RESULT: ${{ needs.reuse.result }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+          TESTS_EXACT_HEAD_RESULT: ${{ needs.tests-exact-head.result }}
         run: |
-          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+          if [[ "$IS_FHIR_DRAFT" == true ]]; then
+            echo "Draft-scoped checks do not establish full release readiness." >&2
+            exit 1
+          fi
+          for result in \
+            "$ACTIONLINT_RESULT" \
+            "$DOCUMENTATION_RESULT" \
+            "$MARKDOWN_LINKS_RESULT" \
+            "$NODE_CURRENT_RESULT" \
+            "$QUALITY_RESULT" \
+            "$REUSE_RESULT" \
+            "$TESTS_RESULT" \
+            "$TESTS_EXACT_HEAD_RESULT"; do
+            if [[ "$result" != success ]]; then
+              exit 1
+            fi
+          done
+          if [[ "${{ github.event_name }}" == pull_request && "$DEPENDENCY_REVIEW_RESULT" != success ]]; then
             exit 1
           fi

@@ -6,11 +6,45 @@
 // SPDX-License-Identifier: MIT
 //
 
+import type {
+  Attachment as R4Attachment,
+  CodeableConcept as R4CodeableConcept,
+  Coding as R4Coding,
+  Device as R4Device,
+  DocumentReference as R4DocumentReference,
+  Element as R4Element,
+  Expression as R4Expression,
+  Extension as R4Extension,
+  Identifier as R4Identifier,
+  Meta as R4Meta,
+  Observation as R4Observation,
+  ObservationComponent as R4ObservationComponent,
+  Period as R4Period,
+  Provenance as R4Provenance,
+  Quantity as R4Quantity,
+  Reference as R4Reference,
+  SampledData as R4SampledData,
+  Specimen as R4Specimen,
+} from 'fhir/r4.js'
 import { z } from 'zod'
+import type {
+  CollectionBundle,
+  GraphResource,
+  SupportedR4Resource,
+} from './types.js'
 
-export const extensionSchema: z.ZodType = z.lazy(createExtensionSchema)
+const nonBlankStringSchema = z
+  .string()
+  .refine((value) => value.trim() !== '', 'Expected a non-blank string.')
+const r4IntegerSchema = z.number().int().min(-2_147_483_648).max(2_147_483_647)
+const r4UnsignedIntSchema = z.number().int().min(0).max(2_147_483_647)
+const r4PositiveIntSchema = z.number().int().min(1).max(2_147_483_647)
 
-export const primitiveElementSchema: z.ZodType = z.lazy(() =>
+export const extensionSchema: z.ZodType<R4Extension> = z.lazy(
+  createExtensionSchema,
+)
+
+export const primitiveElementSchema: z.ZodType<R4Element> = z.lazy(() =>
   z.strictObject({
     id: z.string().optional(),
     extension: z.array(extensionSchema).optional(),
@@ -19,30 +53,33 @@ export const primitiveElementSchema: z.ZodType = z.lazy(() =>
 
 const primitiveMetadata = primitiveElementSchema.optional()
 
-export const codingSchema = z.strictObject({
+const codingSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   system: z.url().optional(),
   _system: primitiveMetadata,
   version: z.string().optional(),
   _version: primitiveMetadata,
-  code: z.string().optional(),
+  code: nonBlankStringSchema.optional(),
   _code: primitiveMetadata,
   display: z.string().optional(),
   _display: primitiveMetadata,
   userSelected: z.boolean().optional(),
   _userSelected: primitiveMetadata,
 })
+export const codingSchema: z.ZodType<R4Coding> = codingSchemaValue
 
-export const codeableConceptSchema = z.strictObject({
+const codeableConceptSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   coding: z.array(codingSchema).optional(),
   text: z.string().optional(),
   _text: primitiveMetadata,
 })
+export const codeableConceptSchema: z.ZodType<R4CodeableConcept> =
+  codeableConceptSchemaValue
 
-export const identifierSchema = z.strictObject({
+const identifierSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   use: z.enum(['usual', 'official', 'temp', 'secondary', 'old']).optional(),
@@ -50,13 +87,14 @@ export const identifierSchema = z.strictObject({
   type: codeableConceptSchema.optional(),
   system: z.url(),
   _system: primitiveMetadata,
-  value: z.string().min(1),
+  value: nonBlankStringSchema,
   _value: primitiveMetadata,
   period: z.lazy(() => periodSchema).optional(),
   assigner: z.lazy(() => referenceSchema).optional(),
 })
+export const identifierSchema: z.ZodType<R4Identifier> = identifierSchemaValue
 
-export const referenceSchema: z.ZodType = z.lazy(() =>
+export const referenceSchema: z.ZodType<R4Reference> = z.lazy(() =>
   z
     .strictObject({
       id: z.string().optional(),
@@ -78,7 +116,7 @@ export const referenceSchema: z.ZodType = z.lazy(() =>
     ),
 )
 
-export const quantitySchema = z.strictObject({
+const quantitySchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   value: z.number().optional(),
@@ -89,11 +127,12 @@ export const quantitySchema = z.strictObject({
   _unit: primitiveMetadata,
   system: z.url().optional(),
   _system: primitiveMetadata,
-  code: z.string().optional(),
+  code: nonBlankStringSchema.optional(),
   _code: primitiveMetadata,
 })
+export const quantitySchema: z.ZodType<R4Quantity> = quantitySchemaValue
 
-export const periodSchema = z
+const periodSchemaValue = z
   .strictObject({
     id: z.string().optional(),
     extension: z.array(extensionSchema).optional(),
@@ -109,23 +148,25 @@ export const periodSchema = z
       Date.parse(value.start) <= Date.parse(value.end),
     { message: 'Period.start must not be later than Period.end.' },
   )
+export const periodSchema: z.ZodType<R4Period> = periodSchemaValue
 
-export const expressionSchema = z.strictObject({
+const expressionSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   description: z.string().optional(),
   _description: primitiveMetadata,
   name: z.string().optional(),
   _name: primitiveMetadata,
-  language: z.string().min(1),
+  language: nonBlankStringSchema,
   _language: primitiveMetadata,
   expression: z.string().optional(),
   _expression: primitiveMetadata,
   reference: z.string().optional(),
   _reference: primitiveMetadata,
 })
+export const expressionSchema: z.ZodType<R4Expression> = expressionSchemaValue
 
-export const attachmentSchema = z.strictObject({
+const attachmentSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   contentType: z.string().optional(),
@@ -136,7 +177,7 @@ export const attachmentSchema = z.strictObject({
   _data: primitiveMetadata,
   url: z.string().optional(),
   _url: primitiveMetadata,
-  size: z.number().int().nonnegative().optional(),
+  size: r4UnsignedIntSchema.optional(),
   _size: primitiveMetadata,
   hash: z.string().optional(),
   _hash: primitiveMetadata,
@@ -145,6 +186,7 @@ export const attachmentSchema = z.strictObject({
   creation: z.string().optional(),
   _creation: primitiveMetadata,
 })
+export const attachmentSchema: z.ZodType<R4Attachment> = attachmentSchemaValue
 
 const extensionValueKeys = [
   'valueBoolean',
@@ -159,6 +201,7 @@ const extensionValueKeys = [
   'valueIdentifier',
   'valueInstant',
   'valueInteger',
+  'valueId',
   'valueQuantity',
   'valueReference',
   'valueString',
@@ -167,18 +210,18 @@ const extensionValueKeys = [
   'valueUrl',
 ] as const
 
-function createExtensionSchema(): z.ZodType {
+function createExtensionSchema(): z.ZodType<R4Extension> {
   return z
     .strictObject({
       id: z.string().optional(),
-      extension: z.array(extensionSchema).optional(),
+      extension: z.array(extensionSchema).min(1).optional(),
       url: z.string().min(1),
       _url: primitiveMetadata,
       valueBoolean: z.boolean().optional(),
       _valueBoolean: primitiveMetadata,
       valueCanonical: z.string().optional(),
       _valueCanonical: primitiveMetadata,
-      valueCode: z.string().optional(),
+      valueCode: nonBlankStringSchema.optional(),
       _valueCode: primitiveMetadata,
       valueCodeableConcept: codeableConceptSchema.optional(),
       valueCoding: codingSchema.optional(),
@@ -192,8 +235,10 @@ function createExtensionSchema(): z.ZodType {
       valueIdentifier: identifierSchema.optional(),
       valueInstant: z.string().optional(),
       _valueInstant: primitiveMetadata,
-      valueInteger: z.number().int().optional(),
+      valueInteger: r4IntegerSchema.optional(),
       _valueInteger: primitiveMetadata,
+      valueId: z.string().optional(),
+      _valueId: primitiveMetadata,
       valueQuantity: quantitySchema.optional(),
       valueReference: referenceSchema.optional(),
       valueString: z.string().optional(),
@@ -209,17 +254,22 @@ function createExtensionSchema(): z.ZodType {
       const populated = extensionValueKeys.filter(
         (key) => value[key] !== undefined,
       ).length
-      if (populated > 1 || (populated === 1 && value.extension !== undefined)) {
+      const hasNestedExtensions = value.extension !== undefined
+      if (
+        populated > 1 ||
+        (populated === 1 && hasNestedExtensions) ||
+        (populated === 0 && !hasNestedExtensions)
+      ) {
         context.addIssue({
           code: 'custom',
           message:
-            'Extension may contain nested extensions or one value[x], but not both.',
+            'Extension must contain nested extensions or exactly one value[x], but not both.',
         })
       }
     })
 }
 
-export const metaSchema = z.strictObject({
+const metaSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   versionId: z.string().optional(),
@@ -233,6 +283,8 @@ export const metaSchema = z.strictObject({
   security: z.array(codingSchema).optional(),
   tag: z.array(codingSchema).optional(),
 })
+export const metaSchema: z.ZodType<R4Meta> =
+  metaSchemaValue as z.ZodType<R4Meta>
 
 const annotationSchema = z.strictObject({
   id: z.string().optional(),
@@ -262,7 +314,7 @@ const commonDomainResourceFields = {
   modifierExtension: z.array(extensionSchema).optional(),
 } as const
 
-export const sampledDataSchema = z.strictObject({
+const sampledDataSchemaValue = z.strictObject({
   id: z.string().optional(),
   extension: z.array(extensionSchema).optional(),
   origin: quantitySchema,
@@ -274,13 +326,15 @@ export const sampledDataSchema = z.strictObject({
   _lowerLimit: primitiveMetadata,
   upperLimit: z.number().optional(),
   _upperLimit: primitiveMetadata,
-  dimensions: z.number().int().positive(),
+  dimensions: r4PositiveIntSchema,
   _dimensions: primitiveMetadata,
   data: z.string().optional(),
   _data: primitiveMetadata,
 })
+export const sampledDataSchema: z.ZodType<R4SampledData> =
+  sampledDataSchemaValue
 
-export const observationComponentSchema = z
+const observationComponentSchemaValue = z
   .strictObject({
     id: z.string().optional(),
     extension: z.array(extensionSchema).optional(),
@@ -292,7 +346,7 @@ export const observationComponentSchema = z
     _valueString: primitiveMetadata,
     valueBoolean: z.boolean().optional(),
     _valueBoolean: primitiveMetadata,
-    valueInteger: z.number().int().optional(),
+    valueInteger: r4IntegerSchema.optional(),
     _valueInteger: primitiveMetadata,
     valueSampledData: sampledDataSchema.optional(),
     dataAbsentReason: codeableConceptSchema.optional(),
@@ -338,8 +392,10 @@ export const observationComponentSchema = z
       })
     }
   })
+export const observationComponentSchema: z.ZodType<R4ObservationComponent> =
+  observationComponentSchemaValue
 
-export const observationSchema = z
+const observationSchemaValue = z
   .strictObject({
     resourceType: z.literal('Observation'),
     ...commonDomainResourceFields,
@@ -374,7 +430,7 @@ export const observationSchema = z
     _valueString: primitiveMetadata,
     valueBoolean: z.boolean().optional(),
     _valueBoolean: primitiveMetadata,
-    valueInteger: z.number().int().optional(),
+    valueInteger: r4IntegerSchema.optional(),
     _valueInteger: primitiveMetadata,
     valueSampledData: sampledDataSchema.optional(),
     dataAbsentReason: codeableConceptSchema.optional(),
@@ -418,6 +474,8 @@ export const observationSchema = z
       })
     }
   })
+export const observationSchema: z.ZodType<R4Observation> =
+  observationSchemaValue
 
 const deviceNameSchema = z.strictObject({
   id: z.string().optional(),
@@ -446,7 +504,7 @@ const deviceVersionSchema = z.strictObject({
   _value: primitiveMetadata,
 })
 
-export const deviceSchema = z.strictObject({
+const deviceSchemaValue = z.strictObject({
   resourceType: z.literal('Device'),
   ...commonDomainResourceFields,
   identifier: z.array(identifierSchema).optional(),
@@ -480,8 +538,71 @@ export const deviceSchema = z.strictObject({
   safety: z.array(codeableConceptSchema).optional(),
   parent: referenceSchema.optional(),
 })
+export const deviceSchema: z.ZodType<R4Device> = deviceSchemaValue
 
-export const specimenSchema = z.strictObject({
+const documentReferenceContentSchema = z.strictObject({
+  id: z.string().optional(),
+  extension: z.array(extensionSchema).optional(),
+  modifierExtension: z.array(extensionSchema).optional(),
+  attachment: attachmentSchema,
+  format: codingSchema.optional(),
+})
+
+const documentReferenceContextSchema = z.strictObject({
+  id: z.string().optional(),
+  extension: z.array(extensionSchema).optional(),
+  modifierExtension: z.array(extensionSchema).optional(),
+  encounter: z.array(referenceSchema).optional(),
+  event: z.array(codeableConceptSchema).optional(),
+  period: periodSchema.optional(),
+  facilityType: codeableConceptSchema.optional(),
+  practiceSetting: codeableConceptSchema.optional(),
+  sourcePatientInfo: referenceSchema.optional(),
+  related: z.array(referenceSchema).optional(),
+})
+
+/** Strict bounded R4 surface required by the Sensor recording contract. */
+const documentReferenceSchemaValue = z.strictObject({
+  resourceType: z.literal('DocumentReference'),
+  ...commonDomainResourceFields,
+  masterIdentifier: identifierSchema.optional(),
+  identifier: z.array(identifierSchema).optional(),
+  status: z.enum(['current', 'superseded', 'entered-in-error']),
+  _status: primitiveMetadata,
+  docStatus: z
+    .enum(['preliminary', 'final', 'amended', 'entered-in-error'])
+    .optional(),
+  _docStatus: primitiveMetadata,
+  type: codeableConceptSchema.optional(),
+  category: z.array(codeableConceptSchema).optional(),
+  subject: referenceSchema.optional(),
+  date: z.string().optional(),
+  _date: primitiveMetadata,
+  author: z.array(referenceSchema).optional(),
+  authenticator: referenceSchema.optional(),
+  custodian: referenceSchema.optional(),
+  relatesTo: z
+    .array(
+      z.strictObject({
+        id: z.string().optional(),
+        extension: z.array(extensionSchema).optional(),
+        modifierExtension: z.array(extensionSchema).optional(),
+        code: z.enum(['replaces', 'transforms', 'signs', 'appends']),
+        _code: primitiveMetadata,
+        target: referenceSchema,
+      }),
+    )
+    .optional(),
+  description: z.string().optional(),
+  _description: primitiveMetadata,
+  securityLabel: z.array(codeableConceptSchema).optional(),
+  content: z.array(documentReferenceContentSchema).min(1),
+  context: documentReferenceContextSchema.optional(),
+})
+export const documentReferenceSchema: z.ZodType<R4DocumentReference> =
+  documentReferenceSchemaValue
+
+const specimenSchemaValue = z.strictObject({
   resourceType: z.literal('Specimen'),
   ...commonDomainResourceFields,
   identifier: z.array(identifierSchema).min(1),
@@ -495,6 +616,7 @@ export const specimenSchema = z.strictObject({
   receivedTime: z.string().optional(),
   _receivedTime: primitiveMetadata,
 })
+export const specimenSchema: z.ZodType<R4Specimen> = specimenSchemaValue
 
 const provenanceAgentSchema = z.strictObject({
   id: z.string().optional(),
@@ -518,7 +640,7 @@ const provenanceEntitySchema: z.ZodType = z.lazy(() =>
   }),
 )
 
-export const provenanceSchema = z
+const provenanceSchemaValue = z
   .strictObject({
     resourceType: z.literal('Provenance'),
     ...commonDomainResourceFields,
@@ -542,15 +664,20 @@ export const provenanceSchema = z
       value.occurredPeriod === undefined,
     { message: 'Provenance permits one occurred[x].' },
   )
+export const provenanceSchema: z.ZodType<R4Provenance> =
+  provenanceSchemaValue as z.ZodType<R4Provenance>
 
-export const graphResourceSchema = z.discriminatedUnion('resourceType', [
-  observationSchema,
-  deviceSchema,
-  provenanceSchema,
-  specimenSchema,
+const graphResourceSchemaValue = z.discriminatedUnion('resourceType', [
+  observationSchemaValue,
+  deviceSchemaValue,
+  documentReferenceSchemaValue,
+  provenanceSchemaValue,
+  specimenSchemaValue,
 ])
+export const graphResourceSchema: z.ZodType<GraphResource> =
+  graphResourceSchemaValue as z.ZodType<GraphResource>
 
-export const collectionBundleSchema = z.strictObject({
+const collectionBundleSchemaValue = z.strictObject({
   resourceType: z.literal('Bundle'),
   ...commonResourceFields,
   identifier: identifierSchema.optional(),
@@ -558,8 +685,6 @@ export const collectionBundleSchema = z.strictObject({
   _type: primitiveMetadata,
   timestamp: z.string().optional(),
   _timestamp: primitiveMetadata,
-  total: z.number().int().nonnegative().optional(),
-  _total: primitiveMetadata,
   entry: z
     .array(
       z.strictObject({
@@ -577,13 +702,16 @@ export const collectionBundleSchema = z.strictObject({
     )
     .min(1),
 })
+export const collectionBundleSchema: z.ZodType<CollectionBundle> =
+  collectionBundleSchemaValue
 
-export const supportedR4ResourceSchema = z.discriminatedUnion('resourceType', [
-  observationSchema,
-  deviceSchema,
-  provenanceSchema,
-  specimenSchema,
-  collectionBundleSchema,
+const supportedR4ResourceSchemaValue = z.discriminatedUnion('resourceType', [
+  observationSchemaValue,
+  deviceSchemaValue,
+  documentReferenceSchemaValue,
+  provenanceSchemaValue,
+  specimenSchemaValue,
+  collectionBundleSchemaValue,
 ])
-
-export const strictObjectSchema = z.strictObject
+export const supportedR4ResourceSchema: z.ZodType<SupportedR4Resource> =
+  supportedR4ResourceSchemaValue as z.ZodType<SupportedR4Resource>

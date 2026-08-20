@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "sourceVersion": "androidx.health.connect:connect-client:1.1.0",
+  "digest": {
+    "algorithm": "SHA-256",
+    "output": "v1:<64 lowercase hexadecimal digits>",
+    "input": "UTF-8 without BOM of the RFC 8785/JCS serialization specified below"
+  },
+  "canonicalization": {
+    "jsonTypes": ["array", "string"],
+    "objectsNumbersBooleansAndNullAllowed": false,
+    "unicode": "Every string contains only Unicode scalar values; isolated UTF-16 surrogates are rejected.",
+    "escaping": "Escape quotation mark and reverse solidus; use \\b, \\t, \\n, \\f, and \\r; encode every other U+0000 through U+001F control as lowercase \\u00xx; do not escape solidus or any other scalar value.",
+    "whitespace": "none",
+    "identifierSetOrder": "Sort each canonical [system,value] serialization by unsigned lexicographic UTF-8 byte order; reject duplicate tuples."
+  },
+  "namingSystems": {
+    "record": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+    "output": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-output-id",
+    "specimen": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-specimen-id",
+    "conversion": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-conversion-id",
+    "exchange": "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-exchange-id",
+    "androidPackage": "https://grovealliance.org/fhir/health-connect/NamingSystem/android-package-name"
+  },
+  "preimages": {
+    "record": [
+      "health-connect-record-id-v1",
+      "repositoryScope",
+      "recordTypeToken",
+      "rawRecordId"
+    ],
+    "singleOutput": [
+      "health-connect-output-id-v1",
+      ["sourceIdentifier.system", "sourceIdentifier.value"],
+      "single"
+    ],
+    "heartRateSampleOutput": [
+      "health-connect-output-id-v1",
+      ["sourceIdentifier.system", "sourceIdentifier.value"],
+      "sample",
+      "sampleInstantUtc9",
+      "beatsPerMinuteUnsignedDecimal",
+      "occurrenceUnsignedDecimal"
+    ],
+    "sleepStageOutput": [
+      "health-connect-output-id-v1",
+      ["sourceIdentifier.system", "sourceIdentifier.value"],
+      "sleep-stage",
+      "startInstantUtc9",
+      "endInstantUtc9",
+      "sourceStageToken",
+      "occurrenceUnsignedDecimal"
+    ],
+    "specimen": [
+      "health-connect-specimen-id-v1",
+      ["sourceIdentifier.system", "sourceIdentifier.value"],
+      "sourceSpecimenToken"
+    ],
+    "conversion": [
+      "health-connect-conversion-id-v1",
+      [["sortedSourceIdentifier.system", "sortedSourceIdentifier.value"]],
+      "eventSequencePositiveDecimal"
+    ],
+    "exchange": [
+      "health-connect-exchange-id-v1",
+      [["sortedSourceIdentifier.system", "sortedSourceIdentifier.value"]],
+      "eventSequencePositiveDecimal"
+    ]
+  },
+  "lexicalRules": {
+    "repositoryScope": "lowercase 8-4-4-4-12 UUID text",
+    "recordTypeToken": "an exact token from catalog/health-connect-adapter.json",
+    "rawRecordId": "a non-empty Unicode scalar string exactly as supplied by Health Connect",
+    "sourceIdentifier": "a two-item [system,value] array of non-empty Unicode scalar strings",
+    "sampleInstantUtc9": "UTC FHIR instant YYYY-MM-DDThh:mm:ss.nnnnnnnnnZ with exactly nine fractional digits",
+    "unsignedDecimal": "0 or a non-zero ASCII digit followed by zero or more ASCII digits; no sign or leading zero",
+    "eventSequencePositiveDecimal": "a non-zero ASCII digit followed by zero or more ASCII digits; no sign or leading zero"
+  },
+  "resourcePlacement": {
+    "record": "Observation.identifier source-record slice and Provenance.entity.what.identifier",
+    "output": "Observation.identifier output slice",
+    "specimen": "Specimen.identifier",
+    "conversion": "Grove exchange entry identifier for the Provenance entry; Provenance has no native identifier in R4",
+    "exchange": "Bundle.identifier",
+    "androidPackage": "Device.identifier for the source or converting application",
+    "resourceId": "optional repository-assigned logical id; never populated from these source or conversion identifiers"
+  },
+  "canonicalizationVectors": [
+    {
+      "case": "quote-reverse-solidus-and-solidus",
+      "input": "quote\" reverse\\ solidus/",
+      "canonical": "\"quote\\\" reverse\\\\ solidus/\"",
+      "arrayDigest": "v1:d8563ae3ce8e2d54fc7c4822b28cf56c496a98d45d3101f32fa27687762873f3"
+    },
+    {
+      "case": "short-and-hex-control-escapes",
+      "input": "\b\t\n\f\r\u0000\u0001\u001f",
+      "canonical": "\"\\b\\t\\n\\f\\r\\u0000\\u0001\\u001f\"",
+      "arrayDigest": "v1:bf5fb35a1fb9f98dda5ccbc0cebe1a6f97ab30cd677c36327be8b6625df9f47c"
+    },
+    {
+      "case": "non-ascii-is-not-escaped",
+      "input": "café 💚  ",
+      "canonical": "\"café 💚  \"",
+      "arrayDigest": "v1:a63f97b98e64ea9538a47015494beeddae9743cd70bcd7e3f7d2cbe65677fff4"
+    }
+  ],
+  "vectors": [
+    {
+      "case": "record",
+      "input": [
+        "health-connect-record-id-v1",
+        "1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+        "HeartRateRecord",
+        "record-heart-001"
+      ],
+      "canonical": "[\"health-connect-record-id-v1\",\"1f5c58aa-6ec6-4e79-a682-829a9debd3f5\",\"HeartRateRecord\",\"record-heart-001\"]",
+      "value": "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+    },
+    {
+      "case": "single-output",
+      "input": [
+        "health-connect-output-id-v1",
+        [
+          "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+          "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+        ],
+        "single"
+      ],
+      "canonical": "[\"health-connect-output-id-v1\",[\"https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id\",\"v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4\"],\"single\"]",
+      "value": "v1:5f20ccaf7c4e804be90daa1739b2ae607ba6060b7d73dd96dfa5ca5e8e05fa32"
+    },
+    {
+      "case": "heart-rate-sample-output",
+      "input": [
+        "health-connect-output-id-v1",
+        [
+          "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+          "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+        ],
+        "sample",
+        "2026-08-20T17:30:15.000000000Z",
+        "72",
+        "0"
+      ],
+      "canonical": "[\"health-connect-output-id-v1\",[\"https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id\",\"v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4\"],\"sample\",\"2026-08-20T17:30:15.000000000Z\",\"72\",\"0\"]",
+      "value": "v1:5084f55b849b401293bda218f1a69936ffb0e95c168b402f57de7385a85a5fbc"
+    },
+    {
+      "case": "sleep-stage-output",
+      "input": [
+        "health-connect-output-id-v1",
+        [
+          "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+          "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+        ],
+        "sleep-stage",
+        "2026-08-20T17:30:00.000000000Z",
+        "2026-08-20T18:00:00.000000000Z",
+        "STAGE_TYPE_LIGHT",
+        "0"
+      ],
+      "canonical": "[\"health-connect-output-id-v1\",[\"https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id\",\"v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4\"],\"sleep-stage\",\"2026-08-20T17:30:00.000000000Z\",\"2026-08-20T18:00:00.000000000Z\",\"STAGE_TYPE_LIGHT\",\"0\"]",
+      "value": "v1:bd2af8db32c5e94ba50352f045ac9e82e668d3105f17034a661883f125b79bce"
+    },
+    {
+      "case": "specimen",
+      "input": [
+        "health-connect-specimen-id-v1",
+        [
+          "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+          "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+        ],
+        "SPECIMEN_SOURCE_WHOLE_BLOOD"
+      ],
+      "canonical": "[\"health-connect-specimen-id-v1\",[\"https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id\",\"v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4\"],\"SPECIMEN_SOURCE_WHOLE_BLOOD\"]",
+      "value": "v1:8413b0d259e7dce3e061a886197deafb936d5248cb1b8651d4811233441db8f1"
+    },
+    {
+      "case": "conversion",
+      "input": [
+        "health-connect-conversion-id-v1",
+        [
+          [
+            "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+            "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+          ]
+        ],
+        "1"
+      ],
+      "canonical": "[\"health-connect-conversion-id-v1\",[[\"https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id\",\"v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4\"]],\"1\"]",
+      "value": "v1:95402c870f705567a92c0ca087bc744321a817f6a11a2def986ea3a1482a0e85"
+    },
+    {
+      "case": "exchange",
+      "input": [
+        "health-connect-exchange-id-v1",
+        [
+          [
+            "https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id",
+            "v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4"
+          ]
+        ],
+        "1"
+      ],
+      "canonical": "[\"health-connect-exchange-id-v1\",[[\"https://grovealliance.org/fhir/health-connect/NamingSystem/health-connect-record-id\",\"v1:01deb07850ba71d43d6e8ddc78de08b36a4c5e4c0905511d08ee7d3a9f12dff4\"]],\"1\"]",
+      "value": "v1:369f8146f2c4052f64ad205aa01cb7395f4f977e602263dfd197f15356a962b8"
+    }
+  ]
+}

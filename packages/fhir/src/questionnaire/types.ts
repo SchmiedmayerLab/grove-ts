@@ -182,7 +182,7 @@ export interface QuestionnaireResponseInput {
 
 export type GroveQuestionnaire = Readonly<
   Omit<Questionnaire, 'item'> & {
-    readonly item: readonly QuestionnaireItemInput[]
+    readonly item: NonNullable<Questionnaire['item']>
   }
 >
 
@@ -194,7 +194,7 @@ export type GroveQuestionnaireResponse = Readonly<
     readonly identifier: Identifier
     readonly questionnaire: string
     readonly authored: string
-    readonly item?: readonly QuestionnaireResponseItemInput[]
+    readonly item?: QuestionnaireResponse['item']
   }
 >
 

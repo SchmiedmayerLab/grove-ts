@@ -1,0 +1,248 @@
+{
+  "resourceType": "Bundle",
+  "meta": {
+    "profile": [
+      "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+    ]
+  },
+  "identifier": {
+    "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-exchange-id",
+    "value": "v1:dfc534d68656abf02eec016c7cdfd82a2ce48a799008cddd53962cd3fbaf5cae"
+  },
+  "type": "collection",
+  "timestamp": "2026-08-20T12:02:00Z",
+  "entry": [
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id",
+            "value": "v1:9ce03c8a7d34df1ccbf351969068c1ebe19c24f170f8219e7f1a6c646c74f2d1"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:75526f4e-46dd-5d4b-9ed2-11c20b0bc1e9",
+      "resource": {
+        "resourceType": "Observation",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-temperature",
+            "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-provider",
+            "valueCode": "google-health-api"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-source-type",
+            "valueCode": "google-health-api/core-body-temperature"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-method",
+            "valueCoding": {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-recording-method",
+              "code": "automatically-recorded"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id",
+            "value": "v1:5305a0fca8ce9c0175a5a9bae217f1d5c3cf19a1dedabc392c0714fec138b55d"
+          },
+          {
+            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id",
+            "value": "v1:9ce03c8a7d34df1ccbf351969068c1ebe19c24f170f8219e7f1a6c646c74f2d1"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital Signs"
+              }
+            ],
+            "text": "Vital Signs"
+          }
+        ],
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "8310-5" }]
+        },
+        "subject": { "reference": "Patient/example" },
+        "effectiveDateTime": "2026-08-20T08:20:00.000-07:00",
+        "issued": "2026-08-20T12:01:00Z",
+        "valueQuantity": {
+          "value": 37.1,
+          "unit": "Cel",
+          "system": "http://unitsofmeasure.org",
+          "code": "Cel"
+        }
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/testing/data-origins",
+            "value": "connected-provider"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:7c06980e-c131-564a-9d90-26a23d9c1264",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/testing/data-origins",
+            "value": "connected-provider"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Synthetic connected provider",
+            "type": "user-friendly-name"
+          }
+        ]
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/testing/applications",
+            "value": "grove-ts-0.2"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:ed2738ad-fee1-53b8-976d-0fd5b9512aa8",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/testing/applications",
+            "value": "grove-ts-0.2"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Grove TypeScript conformance producer",
+            "type": "user-friendly-name"
+          }
+        ],
+        "version": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "urn:iso:std:iso:11073:10101",
+                  "code": "531975",
+                  "display": "Software revision"
+                }
+              ]
+            },
+            "value": "0.0.0"
+          }
+        ]
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-conversion-id",
+            "value": "v1:dfc534d68656abf02eec016c7cdfd82a2ce48a799008cddd53962cd3fbaf5cae"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:d0c78ff2-5985-574e-b8bc-e4e2fec3cf68",
+      "resource": {
+        "resourceType": "Provenance",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance"
+          ]
+        },
+        "target": [
+          { "reference": "urn:uuid:75526f4e-46dd-5d4b-9ed2-11c20b0bc1e9" }
+        ],
+        "recorded": "2026-08-20T12:02:00Z",
+        "activity": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle",
+              "code": "transform",
+              "display": "Transform/Translate Record Lifecycle Event"
+            }
+          ],
+          "text": "Transform/Translate Record Lifecycle Event"
+        },
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler",
+                  "display": "Assembler"
+                }
+              ],
+              "text": "Assembler"
+            },
+            "who": {
+              "reference": "urn:uuid:ed2738ad-fee1-53b8-976d-0fd5b9512aa8"
+            }
+          }
+        ],
+        "entity": [
+          {
+            "role": "source",
+            "what": {
+              "identifier": {
+                "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id",
+                "value": "v1:5305a0fca8ce9c0175a5a9bae217f1d5c3cf19a1dedabc392c0714fec138b55d"
+              }
+            },
+            "agent": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                      "code": "enterer",
+                      "display": "Enterer"
+                    }
+                  ],
+                  "text": "Enterer"
+                },
+                "who": {
+                  "reference": "urn:uuid:7c06980e-c131-564a-9d90-26a23d9c1264"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

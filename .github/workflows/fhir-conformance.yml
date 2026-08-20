@@ -1,0 +1,166 @@
+#
+# This source file is part of the Grove open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: FHIR R4 Targeted Conformance
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
+    paths:
+      - .github/workflows/build-and-test.yml
+      - .github/workflows/fhir-conformance.yml
+      - .nvmrc
+      - package-lock.json
+      - package.json
+      - packages/configurations/**
+      - packages/fhir/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fhir-conformance.yml
+      - package-lock.json
+      - package.json
+      - packages/configurations/**
+      - packages/fhir/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fhir-r4:
+    name: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft && 'Draft Scope — Public API and Structural Conformance' || 'Readiness — Public API, Browser, and Official Validator' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout Grove TypeScript
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify the checked-out PR head
+        if: github.event_name == 'pull_request'
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+
+      - name: Checkout the moving Grove FHIR development ref
+        uses: actions/checkout@v7
+        with:
+          repository: SchmiedmayerLab/grove-fhir
+          ref: feature/fhir-v020-adapters
+          path: .build/grove-fhir
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            .build/grove-fhir/package-lock.json
+
+      - name: Set up npm 12
+        run: npm install --global --ignore-scripts npm@12.0.2
+
+      - name: Set up Java
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21.0.10+7.0.LTS'
+
+      - name: Set up Ruby
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.12'
+          working-directory: .build/grove-fhir
+
+      - name: Install the IG-locked Bundler
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        run: gem install bundler -v 4.0.16 --no-document
+
+      - name: Cache checksum-pinned FHIR tools and packages
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        uses: actions/cache@v5
+        with:
+          path: |
+            .build/grove-fhir/.build/bundle
+            .build/grove-fhir/.build/fhir-tools
+            .build/grove-fhir/.build/fhir-home/.fhir/packages
+          key: fhir-r4-${{ runner.os }}-${{ hashFiles('.build/grove-fhir/Gemfile.lock', '.build/grove-fhir/Scripts/download-fhir-tools.sh') }}
+
+      - name: Install TypeScript dependencies
+        run: npm ci
+
+      - name: Install IG dependencies
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        working-directory: .build/grove-fhir
+        run: npm ci
+
+      - name: Build shared lint configuration
+        run: npm run build --workspace @schmiedmayerlab/grove-configurations
+
+      - name: Check targeted formatting
+        run: npm exec prettier -- --check packages/fhir .github/workflows/fhir-conformance.yml .github/workflows/build-and-test.yml
+
+      - name: Check synchronized catalogs and strict types
+        run: |
+          npm run check:catalog --workspace @schmiedmayerlab/grove-fhir
+          npm run typecheck --workspace @schmiedmayerlab/grove-fhir
+
+      - name: Lint and test the FHIR package
+        run: |
+          npm run lint:ci --workspace @schmiedmayerlab/grove-fhir
+          npm test --workspace @schmiedmayerlab/grove-fhir
+
+      - name: Exercise the public ESM bundle in a browser
+        run: npm run test:browser --workspace @schmiedmayerlab/grove-fhir
+
+      - name: Check deterministic public-API fixtures
+        run: npm run check:fixtures --workspace @schmiedmayerlab/grove-fhir
+
+      - name: Run fast structural conformance
+        run: >-
+          npm run conformance:structural --workspace @schmiedmayerlab/grove-fhir --
+          --ig "$GITHUB_WORKSPACE/.build/grove-fhir"
+
+      - name: Build only the required IG packages
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        working-directory: .build/grove-fhir
+        run: ./Scripts/build-guides.sh mobile sensor questionnaire connected-health
+
+      - name: Run official FHIR R4 Validator conformance
+        if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+        run: >-
+          npm run conformance --workspace @schmiedmayerlab/grove-fhir --
+          --ig "$GITHUB_WORKSPACE/.build/grove-fhir"
+
+  fhir-readiness:
+    name: FHIR R4 — Full Release Readiness
+    if: always()
+    needs: fhir-r4
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the full exact-head Validator lane
+        env:
+          FHIR_RESULT: ${{ needs.fhir-r4.result }}
+          IS_DRAFT: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
+        run: |
+          if [[ "$IS_DRAFT" == true ]]; then
+            echo "Draft structural checks do not establish FHIR release readiness." >&2
+            exit 1
+          fi
+          test "$FHIR_RESULT" = success

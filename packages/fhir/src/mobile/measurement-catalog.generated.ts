@@ -9,98 +9,24 @@
 
 /* eslint-disable sonarjs/no-clear-text-protocols */
 
-export const groveFhirPackageGraph = {
-  schemaVersion: 1,
+import { deepFreeze } from '../core/index.js'
+
+export const groveFhirContractVersion = '0.2.0' as const
+
+export const groveFhirVersion = '4.0.1' as const
+
+const groveMobilePackageMetadataValue = {
   fhirVersion: '4.0.1',
   version: '0.2.0',
-  canonicalRoot: 'https://grovealliance.org/fhir',
-  packages: [
-    {
-      source: 'mobile',
-      packageId: 'org.grovealliance.fhir.mobile',
-      canonical: 'https://grovealliance.org/fhir/mobile',
-      dependencies: [],
-      profiles: [
-        'grove-application-device',
-        'grove-mobile-active-energy',
-        'grove-mobile-basal-body-temperature',
-        'grove-mobile-blood-glucose',
-        'grove-mobile-blood-pressure',
-        'grove-mobile-bmi',
-        'grove-mobile-body-height',
-        'grove-mobile-body-temperature',
-        'grove-mobile-body-weight',
-        'grove-mobile-capillary-blood-glucose',
-        'grove-mobile-conversion-provenance',
-        'grove-mobile-distance',
-        'grove-mobile-exchange-bundle',
-        'grove-mobile-heart-rate',
-        'grove-mobile-interstitial-glucose',
-        'grove-mobile-observation',
-        'grove-mobile-oxygen-saturation',
-        'grove-mobile-respiratory-rate',
-        'grove-mobile-serum-plasma-glucose',
-        'grove-mobile-sleep-duration',
-        'grove-mobile-sleep-stage',
-        'grove-mobile-step-count',
-        'grove-recording-device',
-      ],
-    },
-    {
-      source: 'questionnaire',
-      packageId: 'org.grovealliance.fhir.questionnaire',
-      canonical: 'https://grovealliance.org/fhir/questionnaire',
-      dependencies: ['hl7.fhir.uv.sdc#4.0.0'],
-      profiles: ['grove-questionnaire', 'grove-questionnaire-response'],
-    },
-    {
-      source: 'sensor',
-      packageId: 'org.grovealliance.fhir.sensor',
-      canonical: 'https://grovealliance.org/fhir/sensor',
-      dependencies: [
-        'org.grovealliance.fhir.mobile#0.2.0',
-        'hl7.fhir.uv.phd#2.0.0',
-      ],
-      profiles: [
-        'grove-sensor-ecg-observation',
-        'grove-sensor-recording-document',
-        'grove-sensor-sampled-data-observation',
-      ],
-    },
-    {
-      source: 'healthkit',
-      packageId: 'org.grovealliance.fhir.healthkit',
-      canonical: 'https://grovealliance.org/fhir/healthkit',
-      dependencies: [
-        'org.grovealliance.fhir.mobile#0.2.0',
-        'org.grovealliance.fhir.sensor#0.2.0',
-      ],
-      profiles: ['healthkit-observation'],
-    },
-    {
-      source: 'health-connect',
-      packageId: 'org.grovealliance.fhir.health-connect',
-      canonical: 'https://grovealliance.org/fhir/health-connect',
-      dependencies: ['org.grovealliance.fhir.mobile#0.2.0'],
-      profiles: [
-        'health-connect-conversion-provenance',
-        'health-connect-observation',
-      ],
-    },
-    {
-      source: 'connected-health',
-      packageId: 'org.grovealliance.fhir.connected-health',
-      canonical: 'https://grovealliance.org/fhir/connected-health',
-      dependencies: ['org.grovealliance.fhir.mobile#0.2.0'],
-      profiles: [
-        'connected-health-conversion-provenance',
-        'connected-health-observation',
-      ],
-    },
-  ],
+  packageId: 'org.grovealliance.fhir.mobile',
+  canonical: 'https://grovealliance.org/fhir/mobile',
+  dependencies: [],
 } as const
 
-export const groveFhirExchangeIdentity = {
+export const groveMobilePackageMetadata: typeof groveMobilePackageMetadataValue =
+  deepFreeze(groveMobilePackageMetadataValue)
+
+const groveFhirExchangeIdentityValue = {
   schemaVersion: 1,
   profile:
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
@@ -166,115 +92,10 @@ export const groveFhirExchangeIdentity = {
   ],
 } as const
 
-export const groveFhirProfileClaims = {
-  schemaVersion: 1,
-  fhirVersion: '4.0.1',
-  version: '0.2.0',
-  observationAdapterClaim: {
-    cardinality: 2,
-    members: [
-      'exactly one shared measurement profile from catalog/measurement-catalog.json',
-      'exactly one adapter profile listed below',
-    ],
-    inheritedProfilesAreNotDeclared: true,
-    adapterProfiles: [
-      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation',
-      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation',
-      'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation',
-    ],
-    forbiddenExplicitProfiles: [
-      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-observation',
-      'http://hl7.org/fhir/StructureDefinition/bp',
-      'http://hl7.org/fhir/StructureDefinition/bodyheight',
-      'http://hl7.org/fhir/StructureDefinition/bmi',
-      'http://hl7.org/fhir/StructureDefinition/bodytemp',
-      'http://hl7.org/fhir/StructureDefinition/bodyweight',
-      'http://hl7.org/fhir/StructureDefinition/heartrate',
-      'http://hl7.org/fhir/StructureDefinition/oxygensat',
-      'http://hl7.org/fhir/StructureDefinition/resprate',
-    ],
-  },
-} as const
+export const groveFhirExchangeIdentity: typeof groveFhirExchangeIdentityValue =
+  deepFreeze(groveFhirExchangeIdentityValue)
 
-export const groveFhirPackageCanonicals = {
-  mobile: 'https://grovealliance.org/fhir/mobile',
-  questionnaire: 'https://grovealliance.org/fhir/questionnaire',
-  sensor: 'https://grovealliance.org/fhir/sensor',
-  healthkit: 'https://grovealliance.org/fhir/healthkit',
-  'health-connect': 'https://grovealliance.org/fhir/health-connect',
-  'connected-health': 'https://grovealliance.org/fhir/connected-health',
-} as const
-
-export const groveFhirProfileCanonicals = {
-  'grove-application-device':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
-  'grove-mobile-active-energy':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy',
-  'grove-mobile-basal-body-temperature':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-basal-body-temperature',
-  'grove-mobile-blood-glucose':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-blood-glucose',
-  'grove-mobile-blood-pressure':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-blood-pressure',
-  'grove-mobile-bmi':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-bmi',
-  'grove-mobile-body-height':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-height',
-  'grove-mobile-body-temperature':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-temperature',
-  'grove-mobile-body-weight':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-weight',
-  'grove-mobile-capillary-blood-glucose':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-capillary-blood-glucose',
-  'grove-mobile-conversion-provenance':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-conversion-provenance',
-  'grove-mobile-distance':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance',
-  'grove-mobile-exchange-bundle':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
-  'grove-mobile-heart-rate':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-heart-rate',
-  'grove-mobile-interstitial-glucose':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-interstitial-glucose',
-  'grove-mobile-observation':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-observation',
-  'grove-mobile-oxygen-saturation':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-oxygen-saturation',
-  'grove-mobile-respiratory-rate':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-respiratory-rate',
-  'grove-mobile-serum-plasma-glucose':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-serum-plasma-glucose',
-  'grove-mobile-sleep-duration':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-duration',
-  'grove-mobile-sleep-stage':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-stage',
-  'grove-mobile-step-count':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-step-count',
-  'grove-recording-device':
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
-  'grove-questionnaire':
-    'https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire',
-  'grove-questionnaire-response':
-    'https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response',
-  'grove-sensor-ecg-observation':
-    'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation',
-  'grove-sensor-recording-document':
-    'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
-  'grove-sensor-sampled-data-observation':
-    'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-sampled-data-observation',
-  'healthkit-observation':
-    'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation',
-  'health-connect-conversion-provenance':
-    'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-conversion-provenance',
-  'health-connect-observation':
-    'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation',
-  'connected-health-conversion-provenance':
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance',
-  'connected-health-observation':
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation',
-} as const
-
-export const implementedMeasurementCatalog = {
+const sharedMobileMeasurementCatalogValue = {
   'active-energy': {
     id: 'active-energy',
     profile: 'grove-mobile-active-energy',
@@ -287,16 +108,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'kcal',
+      unit: 'kcal',
     },
     effective: 'Period',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
   'basal-body-temperature': {
     id: 'basal-body-temperature',
@@ -310,133 +124,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'Cel',
+      unit: 'Cel',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'deferred',
-      oura: 'provider-specific',
-      withings: 'deferred',
-    },
-  },
-  'blood-glucose': {
-    id: 'blood-glucose',
-    profile: 'grove-mobile-blood-glucose',
-    standardProfile: null,
-    code: {
-      system: 'http://loinc.org',
-      code: '2339-0',
-    },
-    quantity: {
-      system: 'http://unitsofmeasure.org',
-      code: 'mg/dL',
-    },
-    specimen: {
-      system: 'http://snomed.info/sct',
-      code: '258580003',
-      display: 'Whole blood sample',
-    },
-    effective: 'dateTime',
-    coverage: {
-      healthkit: 'deferred',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'deferred',
-    },
-  },
-  'capillary-blood-glucose': {
-    id: 'capillary-blood-glucose',
-    profile: 'grove-mobile-capillary-blood-glucose',
-    standardProfile: null,
-    code: {
-      system: 'http://loinc.org',
-      code: '32016-8',
-    },
-    quantity: {
-      system: 'http://unitsofmeasure.org',
-      code: 'mg/dL',
-    },
-    specimen: {
-      system: 'http://snomed.info/sct',
-      code: '122554006',
-      display: 'Capillary blood specimen',
-    },
-    effective: 'dateTime',
-    coverage: {
-      healthkit: 'deferred',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'deferred',
-    },
-  },
-  'serum-plasma-glucose': {
-    id: 'serum-plasma-glucose',
-    profile: 'grove-mobile-serum-plasma-glucose',
-    standardProfile: null,
-    code: {
-      system: 'http://loinc.org',
-      code: '2345-7',
-    },
-    quantity: {
-      system: 'http://unitsofmeasure.org',
-      code: 'mg/dL',
-    },
-    specimenAlternatives: [
-      {
-        id: 'plasma',
-        system: 'http://snomed.info/sct',
-        code: '119361006',
-        display: 'Plasma specimen',
-      },
-      {
-        id: 'serum',
-        system: 'http://snomed.info/sct',
-        code: '119364003',
-        display: 'Serum specimen',
-      },
-    ],
-    effective: 'dateTime',
-    coverage: {
-      healthkit: 'deferred',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'deferred',
-    },
-  },
-  'interstitial-glucose': {
-    id: 'interstitial-glucose',
-    profile: 'grove-mobile-interstitial-glucose',
-    standardProfile: null,
-    code: {
-      system: 'http://loinc.org',
-      code: '99504-3',
-    },
-    quantity: {
-      system: 'http://unitsofmeasure.org',
-      code: 'mg/dL',
-    },
-    specimen: {
-      system: 'http://snomed.info/sct',
-      code: '258479004',
-      display: 'Interstitial fluid specimen',
-    },
-    effective: 'dateTime',
-    coverage: {
-      healthkit: 'deferred',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'deferred',
-    },
   },
   'blood-pressure': {
     id: 'blood-pressure',
@@ -454,6 +144,7 @@ export const implementedMeasurementCatalog = {
         quantity: {
           system: 'http://unitsofmeasure.org',
           code: 'mm[Hg]',
+          unit: 'mmHg',
         },
       },
       {
@@ -463,19 +154,12 @@ export const implementedMeasurementCatalog = {
         quantity: {
           system: 'http://unitsofmeasure.org',
           code: 'mm[Hg]',
+          unit: 'mmHg',
         },
       },
     ],
     quantity: null,
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'supported',
-    },
   },
   'body-height': {
     id: 'body-height',
@@ -488,38 +172,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'cm',
+      unit: 'cm',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'supported',
-    },
-  },
-  'body-mass-index': {
-    id: 'body-mass-index',
-    profile: 'grove-mobile-bmi',
-    standardProfile: 'http://hl7.org/fhir/StructureDefinition/bmi',
-    code: {
-      system: 'http://loinc.org',
-      code: '39156-5',
-    },
-    quantity: {
-      system: 'http://unitsofmeasure.org',
-      code: 'kg/m2',
-    },
-    effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'intentionally-unsupported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'supported',
-    },
   },
   'body-temperature': {
     id: 'body-temperature',
@@ -532,16 +187,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'Cel',
+      unit: 'Cel',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'provider-specific',
-      'google-health-api': 'supported',
-      oura: 'provider-specific',
-      withings: 'supported',
-    },
   },
   'body-weight': {
     id: 'body-weight',
@@ -554,39 +202,24 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'kg',
+      unit: 'kg',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'intentionally-unsupported',
-      withings: 'supported',
-    },
   },
   distance: {
     id: 'distance',
     profile: 'grove-mobile-distance',
     standardProfile: null,
     code: {
-      system:
-        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
-      code: 'distance-traveled',
+      system: 'http://loinc.org',
+      code: '103208-5',
     },
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'm',
+      unit: 'm',
     },
     effective: 'Period',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'mapped-standard',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
   'heart-rate': {
     id: 'heart-rate',
@@ -599,16 +232,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '/min',
+      unit: 'beats/minute',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'supported',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
   'oxygen-saturation': {
     id: 'oxygen-saturation',
@@ -621,16 +247,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '%',
+      unit: '%',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
   'respiratory-rate': {
     id: 'respiratory-rate',
@@ -643,16 +262,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '/min',
+      unit: 'breaths/minute',
     },
     effective: 'dateTime',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'intentionally-unsupported',
-      'google-health-api': 'supported',
-      oura: 'mapped-standard',
-      withings: 'supported',
-    },
   },
   'sleep-duration': {
     id: 'sleep-duration',
@@ -665,16 +277,9 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'h',
+      unit: 'h',
     },
     effective: 'Period',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'mapped-standard',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
   'sleep-stage': {
     id: 'sleep-stage',
@@ -701,14 +306,6 @@ export const implementedMeasurementCatalog = {
       'unknown',
     ],
     effective: 'Period',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'mapped-standard',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
   'step-count': {
     id: 'step-count',
@@ -722,18 +319,63 @@ export const implementedMeasurementCatalog = {
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '{steps}',
+      unit: 'steps',
     },
     effective: 'Period',
-    coverage: {
-      healthkit: 'supported',
-      'health-connect': 'supported',
-      sensorkit: 'supported',
-      'google-health-api': 'supported',
-      oura: 'supported',
-      withings: 'supported',
-    },
   },
 } as const
 
-export type ImplementedMeasurementKind =
-  keyof typeof implementedMeasurementCatalog
+export const sharedMobileMeasurementCatalog: typeof sharedMobileMeasurementCatalogValue =
+  deepFreeze(sharedMobileMeasurementCatalogValue)
+
+const mobileEffectiveCanonicalizationValue = {
+  scope:
+    'Every Mobile scalar or aggregate effectiveDateTime and effectivePeriod endpoint; Sensor and ECG SampledData timing is excluded.',
+  precision: 'millisecond',
+  rounding: 'half-even',
+  epoch: '1970-01-01T00:00:00Z',
+  offsetPolicy:
+    'Preserve the caller/source numeric UTC offset when it is available; never invent an offset.',
+} as const
+
+export const mobileEffectiveCanonicalization: typeof mobileEffectiveCanonicalizationValue =
+  deepFreeze(mobileEffectiveCanonicalizationValue)
+
+const mobileEffectiveCanonicalizationVectorsValue = [
+  {
+    id: 'positive-below-half',
+    input: '1970-01-01T00:00:00.000499999Z',
+    output: '1970-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'positive-half-to-even',
+    input: '1970-01-01T00:00:00.000500000Z',
+    output: '1970-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'positive-half-to-next-even',
+    input: '1970-01-01T00:00:00.001500000Z',
+    output: '1970-01-01T00:00:00.002Z',
+  },
+  {
+    id: 'negative-half-to-even',
+    input: '1969-12-31T23:59:59.999500000Z',
+    output: '1970-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'negative-half-to-previous-even',
+    input: '1969-12-31T23:59:59.998500000Z',
+    output: '1969-12-31T23:59:59.998Z',
+  },
+  {
+    id: 'offset-preserved',
+    input: '2026-08-20T08:30:00.251499999-07:00',
+    output: '2026-08-20T08:30:00.251-07:00',
+  },
+] as const
+
+export const mobileEffectiveCanonicalizationVectors: typeof mobileEffectiveCanonicalizationVectorsValue =
+  deepFreeze(mobileEffectiveCanonicalizationVectorsValue)
+
+export type SharedMobileMeasurementKind =
+  keyof typeof sharedMobileMeasurementCatalog

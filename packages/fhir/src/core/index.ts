@@ -8,11 +8,14 @@
 
 export { deepFreeze, type ReadonlyDeep } from './freeze.js'
 export {
+  compareFhirInstants,
   parseAbsoluteUri,
   parseCanonical,
   parseFhirId,
   parseFhirInstant,
   parsePatientReference,
+  parsePositiveInteger,
+  parseResearchStudyReference,
   parseSemVer,
   parseUrnUuid,
   type AbsoluteUri,
@@ -20,6 +23,8 @@ export {
   type FhirId,
   type FhirInstant,
   type PatientReference,
+  type PositiveInteger,
+  type ResearchStudyReference,
   type SemVer,
   type UrnUuid,
 } from './primitives.js'

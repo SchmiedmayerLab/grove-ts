@@ -1,15 +1,16 @@
 {
   "source": {
     "adapter": { "kind": "connected-health", "provider": "oura" },
-    "identifier": {
-      "system": "https://example.org/oura/records",
-      "value": "synthetic-sleep-2026-08-19"
+    "providerAccountIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-oura-001",
+      "assurance": "deployment-scoped-pseudonym"
     },
-    "display": "Synthetic Oura sleep record",
+    "sourceType": "sleep",
+    "sourceNativeId": "synthetic-sleep-2026-08-19",
     "recordingMethod": "automatically-recorded",
     "dataOrigin": {
       "identity": {
-        "fullUrl": "urn:uuid:2289b1a0-0a67-5ff7-b8ec-13589ad81679",
         "identifier": {
           "system": "https://example.org/data-origins",
           "value": "oura"
@@ -18,13 +19,15 @@
       "name": "Oura"
     }
   },
-  "measurement": {
-    "kind": "sleep-duration",
-    "value": 7.4,
-    "effective": {
-      "kind": "period",
-      "start": "2026-08-19T22:30:00Z",
-      "end": "2026-08-20T06:20:00Z"
+  "measurements": [
+    {
+      "kind": "sleep-duration",
+      "value": 7.4,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-19T22:30:00Z",
+        "end": "2026-08-20T06:20:00Z"
+      }
     }
-  }
+  ]
 }

@@ -15,6 +15,7 @@ import { chromium } from 'playwright'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const groveRoot = resolve(packageRoot, 'dist')
+const nobleRoot = resolve(packageRoot, '../../node_modules/@noble/hashes')
 const uuidRoot = resolve(packageRoot, '../../node_modules/uuid/dist')
 const zodRoot = resolve(packageRoot, '../../node_modules/zod')
 
@@ -28,6 +29,8 @@ const resolveRequest = (url) => {
   const route =
     parsed.pathname.startsWith('/grove/') ?
       { root: groveRoot, relative: parsed.pathname.slice('/grove/'.length) }
+    : parsed.pathname.startsWith('/noble/') ?
+      { root: nobleRoot, relative: parsed.pathname.slice('/noble/'.length) }
     : parsed.pathname.startsWith('/uuid/') ?
       { root: uuidRoot, relative: parsed.pathname.slice('/uuid/'.length) }
     : parsed.pathname.startsWith('/zod/') ?
@@ -45,7 +48,7 @@ const server = createServer(async (request, response) => {
     response.end(`<!doctype html>
       <meta charset="utf-8">
       <script type="importmap">
-        {"imports":{"uuid":"/uuid/index.js","zod":"/zod/index.js"}}
+        {"imports":{"@noble/hashes/":"/noble/","uuid":"/uuid/index.js","zod":"/zod/index.js"}}
       </script>`)
     return
   }
@@ -93,22 +96,180 @@ try {
   const page = await browser.newPage()
   await page.goto(origin)
   const result = await page.evaluate(async (base) => {
-    const grove = await import(`${base}/grove/mobile/index.js`)
-    const absolute = grove.deriveEntryFullUrl({
+    const grove = await import(`${base}/grove/index.js`)
+    const mobile = await import(`${base}/grove/mobile/index.js`)
+    const connectedHealth = await import(
+      `${base}/grove/connected-health/index.js`
+    )
+    const questionnaire = await import(`${base}/grove/questionnaire/index.js`)
+    const absolute = mobile.deriveEntryFullUrl({
       system: 'https://study.example.org/fhir/identifiers/mobile-observation',
       value: 'heart-rate-20260820-001',
     })
+    const measurementGraph =
+      connectedHealth.buildConnectedHealthMeasurementBundle({
+        subject: 'Patient/browser',
+        measurements: [
+          {
+            kind: 'heart-rate',
+            value: 64,
+            effective: { kind: 'date-time', value: '2026-08-20T12:00:00Z' },
+          },
+        ],
+        source: {
+          adapter: { kind: 'connected-health', provider: 'withings' },
+          providerAccountIdentifier: {
+            system: 'https://example.org/provider-account-pseudonyms',
+            value: 'browser-account',
+            assurance: 'deployment-scoped-pseudonym',
+          },
+          sourceType: 'getmeas:11',
+          sourceNativeId: 'browser-heart-rate',
+          dataOrigin: {
+            identity: {
+              identifier: {
+                system: 'https://example.org/data-origins',
+                value: 'withings',
+              },
+            },
+            name: 'Withings',
+          },
+        },
+        application: {
+          identity: {
+            identifier: {
+              system: 'https://example.org/applications',
+              value: 'browser-converter',
+            },
+          },
+          name: 'Browser converter',
+        },
+        eventSequence: 1,
+        issued: '2026-08-20T12:01:00Z',
+        recorded: '2026-08-20T12:02:00Z',
+      })
+    const recording = connectedHealth.buildConnectedHealthRecordingBundle({
+      source: {
+        adapter: { kind: 'connected-health', provider: 'google-health-api' },
+        providerAccountIdentifier: {
+          system: 'https://example.org/provider-account-pseudonyms',
+          value: 'browser-raw-account',
+          assurance: 'deployment-scoped-pseudonym',
+        },
+        sourceType: 'heart-rate',
+        sourceNativeId: 'browser-native-recording-42',
+        dataOrigin: {
+          identity: {
+            identifier: {
+              system: 'https://example.org/data-origins',
+              value: 'google-health-api',
+            },
+          },
+          name: 'Google Health API',
+        },
+      },
+      attachment: {
+        kind: 'embedded',
+        contentType: 'application/octet-stream',
+        title: 'Authorized minimized provider recording',
+        payloadAssertion: 'caller-authorized-opaque-payload',
+        dataBase64: 'AQID',
+      },
+      subject: 'Patient/browser',
+      application: {
+        identity: {
+          identifier: {
+            system: 'https://example.org/applications',
+            value: 'browser-raw-converter',
+          },
+        },
+        name: 'Browser raw converter',
+      },
+      eventSequence: 2,
+      documentDate: '2026-08-20T12:01:00Z',
+      recorded: '2026-08-20T12:02:00Z',
+    })
+    const instrument = questionnaire.buildQuestionnaire({
+      url: 'https://example.org/Questionnaire/browser',
+      version: '1.0.0',
+      status: 'active',
+      items: [
+        {
+          linkId: 'ready',
+          text: 'Are you ready?',
+          type: 'boolean',
+          required: true,
+        },
+      ],
+    })
+    const response = questionnaire.buildQuestionnaireResponse({
+      questionnaire: 'https://example.org/Questionnaire/browser|1.0.0',
+      identifier: {
+        system: 'https://example.org/responses',
+        value: 'browser-1',
+      },
+      status: 'completed',
+      authored: '2026-08-20T12:00:00Z',
+      items: [
+        {
+          linkId: 'ready',
+          text: 'Are you ready?',
+          answer: [{ valueBoolean: true }],
+        },
+      ],
+    })
+    const pair =
+      instrument.ok && response.ok ?
+        questionnaire.preflightQuestionnairePair(
+          instrument.value,
+          response.value,
+        )
+      : undefined
     return {
       fullUrl: absolute.ok ? absolute.value : undefined,
       hasNodeProcess: typeof globalThis.process !== 'undefined',
-      measurementCount: Object.keys(grove.implementedMeasurementCatalog).length,
+      measurementCount: Object.keys(mobile.sharedMobileMeasurementCatalog)
+        .length,
+      measurementGraph: measurementGraph.ok,
+      recordingGraph: recording.ok,
+      rawSourceCount: Object.values(
+        connectedHealth.connectedHealthRawMappings,
+      ).reduce((count, mappings) => count + Object.keys(mappings).length, 0),
+      scalarMeasurementCount: new Set(
+        Object.values(connectedHealth.connectedHealthScalarMappings).flatMap(
+          (sourceMappings) =>
+            Object.values(sourceMappings).flatMap((mapping) =>
+              Object.keys(mapping),
+            ),
+        ),
+      ).size,
+      providerApiVisibleFromMobile:
+        'buildConnectedHealthMeasurementBundle' in mobile ||
+        'buildConnectedHealthRecordingBundle' in mobile,
+      providerApiVisibleFromRoot:
+        'buildConnectedHealthMeasurementBundle' in grove ||
+        'buildConnectedHealthRecordingBundle' in grove,
+      internalGraphVisible:
+        'groveFhirPackageGraph' in grove ||
+        'groveFhirProfileClaims' in grove ||
+        'groveFhirPackageGraph' in mobile ||
+        'groveFhirProfileClaims' in mobile,
+      questionnairePair: pair?.ok,
     }
   }, origin)
 
   if (
     result.fullUrl !== 'urn:uuid:cd27941b-2a75-5f7a-bd25-71e9480eac24' ||
     result.hasNodeProcess ||
-    result.measurementCount !== 18
+    result.measurementCount !== 13 ||
+    result.measurementGraph !== true ||
+    result.recordingGraph !== true ||
+    result.rawSourceCount !== 4 ||
+    result.scalarMeasurementCount !== 10 ||
+    result.providerApiVisibleFromMobile ||
+    result.providerApiVisibleFromRoot ||
+    result.internalGraphVisible ||
+    result.questionnairePair !== true
   ) {
     throw new Error(`Browser contract failed: ${JSON.stringify(result)}`)
   }

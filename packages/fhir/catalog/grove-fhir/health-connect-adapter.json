@@ -1,0 +1,767 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "source": {
+    "package": "androidx.health.connect:connect-client",
+    "version": "1.1.0",
+    "inventory": "RecordType.all",
+    "recordTypeCount": 41
+  },
+  "sourceTypeExtension": {
+    "url": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-record-type",
+    "codeSystem": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-record-type",
+    "element": "Observation.extension.valueCode",
+    "cardinality": "exactly one",
+    "rule": "Every admitted output preserves the exact AndroidX Health Connect 1.1 Record class token; the token is lineage and does not replace Observation.code."
+  },
+  "statusVocabulary": {
+    "supported": "The 0.2.0 adapter defines and validates emitted FHIR output.",
+    "mapped-standard": "The source maps directly to an established external FHIR profile without a Grove semantic profile.",
+    "provider-specific": "The 0.2.0 adapter defines output whose meaning remains source-specific.",
+    "deferred": "No FHIR output for this source type is admitted by the 0.2.0 adapter.",
+    "intentionally-unsupported": "The 0.2.0 contract explicitly rejects this source meaning rather than approximating it."
+  },
+  "adapterMeasurements": [
+    {
+      "id": "blood-glucose",
+      "scope": "health-connect-adapter",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+      "claimMode": "exactly-one-adapter-specific-profile",
+      "code": { "system": "http://loinc.org", "code": "2339-0" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL",
+        "unit": "mg/dL"
+      },
+      "specimen": {
+        "system": "http://snomed.info/sct",
+        "code": "258580003",
+        "display": "Whole blood sample"
+      },
+      "effective": "dateTime"
+    },
+    {
+      "id": "capillary-blood-glucose",
+      "scope": "health-connect-adapter",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
+      "claimMode": "exactly-one-adapter-specific-profile",
+      "code": { "system": "http://loinc.org", "code": "32016-8" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL",
+        "unit": "mg/dL"
+      },
+      "specimen": {
+        "system": "http://snomed.info/sct",
+        "code": "122554006",
+        "display": "Capillary blood specimen"
+      },
+      "effective": "dateTime"
+    },
+    {
+      "id": "serum-plasma-glucose",
+      "scope": "health-connect-adapter",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
+      "claimMode": "exactly-one-adapter-specific-profile",
+      "code": { "system": "http://loinc.org", "code": "2345-7" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL",
+        "unit": "mg/dL"
+      },
+      "specimenAlternatives": [
+        {
+          "id": "plasma",
+          "system": "http://snomed.info/sct",
+          "code": "119361006",
+          "display": "Plasma specimen"
+        },
+        {
+          "id": "serum",
+          "system": "http://snomed.info/sct",
+          "code": "119364003",
+          "display": "Serum specimen"
+        }
+      ],
+      "effective": "dateTime"
+    },
+    {
+      "id": "interstitial-glucose",
+      "scope": "health-connect-adapter",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose",
+      "claimMode": "exactly-one-adapter-specific-profile",
+      "code": { "system": "http://loinc.org", "code": "99504-3" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "mg/dL",
+        "unit": "mg/dL"
+      },
+      "specimen": {
+        "system": "http://snomed.info/sct",
+        "code": "258479004",
+        "display": "Interstitial fluid specimen"
+      },
+      "effective": "dateTime"
+    }
+  ],
+  "recordTypes": [
+    {
+      "token": "ActiveCaloriesBurnedRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "active-energy", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "BasalBodyTemperatureRecord",
+      "status": "supported",
+      "outputs": [
+        { "measurement": "basal-body-temperature", "cardinality": "1" }
+      ],
+      "context": ["temperatureMeasurementLocation"]
+    },
+    {
+      "token": "BasalMetabolicRateRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "BloodGlucoseRecord",
+      "status": "supported",
+      "outputs": [
+        {
+          "measurement": "blood-glucose",
+          "when": "SPECIMEN_SOURCE_WHOLE_BLOOD",
+          "cardinality": "1"
+        },
+        {
+          "measurement": "capillary-blood-glucose",
+          "when": "SPECIMEN_SOURCE_CAPILLARY_BLOOD",
+          "cardinality": "1"
+        },
+        {
+          "measurement": "serum-plasma-glucose",
+          "when": "SPECIMEN_SOURCE_PLASMA or SPECIMEN_SOURCE_SERUM",
+          "cardinality": "1"
+        },
+        {
+          "measurement": "interstitial-glucose",
+          "when": "SPECIMEN_SOURCE_INTERSTITIAL_FLUID",
+          "cardinality": "1"
+        }
+      ],
+      "context": ["bloodGlucoseSpecimen", "bloodGlucoseMealContext"]
+    },
+    {
+      "token": "BloodPressureRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "blood-pressure", "cardinality": "1" }],
+      "context": [
+        "bloodPressureBodyPosition",
+        "bloodPressureMeasurementLocation"
+      ]
+    },
+    {
+      "token": "BodyFatRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "BodyTemperatureRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "body-temperature", "cardinality": "1" }],
+      "context": ["temperatureMeasurementLocation"]
+    },
+    {
+      "token": "BodyWaterMassRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "BoneMassRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "CervicalMucusRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "CyclingPedalingCadenceRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "DistanceRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "distance", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "ElevationGainedRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "ExerciseSessionRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "FloorsClimbedRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "HeartRateRecord",
+      "status": "supported",
+      "outputs": [
+        {
+          "measurement": "heart-rate",
+          "cardinality": "0..*",
+          "onePer": "sample"
+        }
+      ],
+      "context": []
+    },
+    {
+      "token": "HeartRateVariabilityRmssdRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "HeightRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "body-height", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "HydrationRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "IntermenstrualBleedingRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "LeanBodyMassRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "MenstruationFlowRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "MenstruationPeriodRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "MindfulnessSessionRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "NutritionRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "OvulationTestRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "OxygenSaturationRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "oxygen-saturation", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "PlannedExerciseSessionRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "PowerRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "RespiratoryRateRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "respiratory-rate", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "RestingHeartRateRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "SexualActivityRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "SkinTemperatureRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "SleepSessionRecord",
+      "status": "supported",
+      "outputs": [
+        { "measurement": "sleep-duration", "cardinality": "1" },
+        {
+          "measurement": "sleep-stage",
+          "cardinality": "0..*",
+          "onePer": "stage"
+        }
+      ],
+      "context": ["sleepStage", "sleepTitle", "sleepNotes"]
+    },
+    {
+      "token": "SpeedRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "StepsCadenceRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "StepsRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "step-count", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "TotalCaloriesBurnedRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "Vo2MaxRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    },
+    {
+      "token": "WeightRecord",
+      "status": "supported",
+      "outputs": [{ "measurement": "body-weight", "cardinality": "1" }],
+      "context": []
+    },
+    {
+      "token": "WheelchairPushesRecord",
+      "status": "deferred",
+      "outputs": [],
+      "context": []
+    }
+  ],
+  "contextMappings": {
+    "bloodGlucoseSpecimen": {
+      "element": "Observation.specimen -> Specimen.type",
+      "unknownPolicy": "reject",
+      "values": [
+        {
+          "id": "whole-blood",
+          "source": "SPECIMEN_SOURCE_WHOLE_BLOOD",
+          "status": "supported",
+          "measurement": "blood-glucose",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "258580003",
+            "display": "Whole blood sample"
+          }
+        },
+        {
+          "id": "capillary-blood",
+          "source": "SPECIMEN_SOURCE_CAPILLARY_BLOOD",
+          "status": "supported",
+          "measurement": "capillary-blood-glucose",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "122554006",
+            "display": "Capillary blood specimen"
+          }
+        },
+        {
+          "id": "plasma",
+          "source": "SPECIMEN_SOURCE_PLASMA",
+          "status": "supported",
+          "measurement": "serum-plasma-glucose",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "119361006",
+            "display": "Plasma specimen"
+          }
+        },
+        {
+          "id": "serum",
+          "source": "SPECIMEN_SOURCE_SERUM",
+          "status": "supported",
+          "measurement": "serum-plasma-glucose",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "119364003",
+            "display": "Serum specimen"
+          }
+        },
+        {
+          "id": "interstitial-fluid",
+          "source": "SPECIMEN_SOURCE_INTERSTITIAL_FLUID",
+          "status": "supported",
+          "measurement": "interstitial-glucose",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "258479004",
+            "display": "Interstitial fluid specimen"
+          }
+        },
+        {
+          "id": "tears",
+          "source": "SPECIMEN_SOURCE_TEARS",
+          "status": "intentionally-unsupported",
+          "measurement": null,
+          "coding": null
+        },
+        {
+          "id": "unknown",
+          "source": "SPECIMEN_SOURCE_UNKNOWN",
+          "status": "intentionally-unsupported",
+          "measurement": null,
+          "coding": null
+        }
+      ]
+    },
+    "bloodGlucoseMealContext": {
+      "extension": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-glucose-meal-context",
+      "unknownPolicy": "omit the unknown subextension; omit the complex extension when both fields are unknown",
+      "relationToMeal": {
+        "codeSystem": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-relation-to-meal",
+        "values": [
+          {
+            "source": "RELATION_TO_MEAL_UNKNOWN",
+            "coding": null,
+            "policy": "omit"
+          },
+          {
+            "source": "RELATION_TO_MEAL_GENERAL",
+            "coding": {
+              "code": "RELATION_TO_MEAL_GENERAL",
+              "display": "General"
+            }
+          },
+          {
+            "source": "RELATION_TO_MEAL_FASTING",
+            "coding": {
+              "code": "RELATION_TO_MEAL_FASTING",
+              "display": "Fasting"
+            }
+          },
+          {
+            "source": "RELATION_TO_MEAL_BEFORE_MEAL",
+            "coding": {
+              "code": "RELATION_TO_MEAL_BEFORE_MEAL",
+              "display": "Before meal"
+            }
+          },
+          {
+            "source": "RELATION_TO_MEAL_AFTER_MEAL",
+            "coding": {
+              "code": "RELATION_TO_MEAL_AFTER_MEAL",
+              "display": "After meal"
+            }
+          }
+        ]
+      },
+      "mealType": {
+        "codeSystem": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-meal-type",
+        "values": [
+          { "source": "MEAL_TYPE_UNKNOWN", "coding": null, "policy": "omit" },
+          {
+            "source": "MEAL_TYPE_BREAKFAST",
+            "coding": { "code": "MEAL_TYPE_BREAKFAST", "display": "Breakfast" }
+          },
+          {
+            "source": "MEAL_TYPE_LUNCH",
+            "coding": { "code": "MEAL_TYPE_LUNCH", "display": "Lunch" }
+          },
+          {
+            "source": "MEAL_TYPE_DINNER",
+            "coding": { "code": "MEAL_TYPE_DINNER", "display": "Dinner" }
+          },
+          {
+            "source": "MEAL_TYPE_SNACK",
+            "coding": { "code": "MEAL_TYPE_SNACK", "display": "Snack" }
+          }
+        ]
+      }
+    },
+    "bloodPressureBodyPosition": {
+      "element": "Observation.extension('http://hl7.org/fhir/StructureDefinition/observation-bodyPosition').valueCodeableConcept",
+      "unknownPolicy": "omit",
+      "values": [
+        { "source": "BODY_POSITION_UNKNOWN", "coding": null },
+        {
+          "source": "BODY_POSITION_STANDING_UP",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "10904000",
+            "display": "Orthostatic body position"
+          }
+        },
+        {
+          "source": "BODY_POSITION_SITTING_DOWN",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "33586001",
+            "display": "Sitting position"
+          }
+        },
+        {
+          "source": "BODY_POSITION_LYING_DOWN",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "102538003",
+            "display": "Recumbent body position"
+          }
+        },
+        {
+          "source": "BODY_POSITION_RECLINING",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "272580008",
+            "display": "Semi-recumbent position"
+          }
+        }
+      ]
+    },
+    "bloodPressureMeasurementLocation": {
+      "element": "Observation.bodySite",
+      "unknownPolicy": "omit",
+      "values": [
+        { "source": "MEASUREMENT_LOCATION_UNKNOWN", "coding": null },
+        {
+          "source": "MEASUREMENT_LOCATION_LEFT_WRIST",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "5951000",
+            "display": "Structure of left wrist region"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_RIGHT_WRIST",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "9736006",
+            "display": "Structure of right wrist"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_LEFT_UPPER_ARM",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "368208006",
+            "display": "Left upper arm structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_RIGHT_UPPER_ARM",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "368209003",
+            "display": "Right upper arm structure"
+          }
+        }
+      ]
+    },
+    "temperatureMeasurementLocation": {
+      "element": "Observation.bodySite",
+      "unknownPolicy": "omit",
+      "appliesTo": ["BasalBodyTemperatureRecord", "BodyTemperatureRecord"],
+      "values": [
+        { "source": "MEASUREMENT_LOCATION_UNKNOWN", "coding": null },
+        {
+          "source": "MEASUREMENT_LOCATION_ARMPIT",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "422543003",
+            "display": "Structure of axillary fossa"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_FINGER",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "7569003",
+            "display": "Finger structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_FOREHEAD",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "52795006",
+            "display": "Forehead structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_MOUTH",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "74262004",
+            "display": "Oral cavity structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_RECTUM",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "34402009",
+            "display": "Rectum structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_TEMPORAL_ARTERY",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "15672000",
+            "display": "Structure of superficial temporal artery"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_TOE",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "29707007",
+            "display": "Toe structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_EAR",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "117590005",
+            "display": "Ear structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_WRIST",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "8205005",
+            "display": "Wrist region structure"
+          }
+        },
+        {
+          "source": "MEASUREMENT_LOCATION_VAGINA",
+          "coding": {
+            "system": "http://snomed.info/sct",
+            "code": "76784001",
+            "display": "Vaginal structure"
+          }
+        }
+      ]
+    },
+    "sleepStage": {
+      "sourceCodeSystem": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-sleep-stage",
+      "element": "Observation.valueCodeableConcept.coding (additional coding after the shared Grove stage coding)",
+      "values": [
+        {
+          "source": "STAGE_TYPE_UNKNOWN",
+          "code": "STAGE_TYPE_UNKNOWN",
+          "display": "Unknown",
+          "shared": "unknown"
+        },
+        {
+          "source": "STAGE_TYPE_AWAKE",
+          "code": "STAGE_TYPE_AWAKE",
+          "display": "Awake",
+          "shared": "awake"
+        },
+        {
+          "source": "STAGE_TYPE_SLEEPING",
+          "code": "STAGE_TYPE_SLEEPING",
+          "display": "Sleeping",
+          "shared": "asleep-unspecified"
+        },
+        {
+          "source": "STAGE_TYPE_OUT_OF_BED",
+          "code": "STAGE_TYPE_OUT_OF_BED",
+          "display": "Out of bed",
+          "shared": "out-of-bed"
+        },
+        {
+          "source": "STAGE_TYPE_LIGHT",
+          "code": "STAGE_TYPE_LIGHT",
+          "display": "Light sleep",
+          "shared": "light"
+        },
+        {
+          "source": "STAGE_TYPE_DEEP",
+          "code": "STAGE_TYPE_DEEP",
+          "display": "Deep sleep",
+          "shared": "deep"
+        },
+        {
+          "source": "STAGE_TYPE_REM",
+          "code": "STAGE_TYPE_REM",
+          "display": "REM sleep",
+          "shared": "rem"
+        },
+        {
+          "source": "STAGE_TYPE_AWAKE_IN_BED",
+          "code": "STAGE_TYPE_AWAKE_IN_BED",
+          "display": "Awake in bed",
+          "shared": "awake"
+        }
+      ]
+    },
+    "sleepTitle": {
+      "extension": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-sleep-title",
+      "valueType": "string",
+      "appliesTo": "sleep-duration summary Observation only",
+      "blankPolicy": "omit"
+    },
+    "sleepNotes": {
+      "element": "Observation.note.text",
+      "authorAndTime": "omit because Health Connect supplies neither",
+      "blankPolicy": "omit"
+    }
+  }
+}

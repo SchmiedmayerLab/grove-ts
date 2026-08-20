@@ -1,0 +1,28 @@
+{
+  "source": {
+    "adapter": { "kind": "connected-health", "provider": "withings" },
+    "providerAccountIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-withings-001",
+      "assurance": "deployment-scoped-pseudonym"
+    },
+    "sourceType": "activityIntraday",
+    "sourceNativeId": "synthetic-withings-activity-series-001",
+    "dataOrigin": {
+      "identity": {
+        "identifier": {
+          "system": "https://example.org/data-origins",
+          "value": "withings"
+        }
+      },
+      "name": "Withings"
+    }
+  },
+  "attachment": {
+    "kind": "embedded",
+    "contentType": "application/octet-stream",
+    "title": "Authorized minimized Withings activity recording",
+    "payloadAssertion": "caller-authorized-opaque-payload",
+    "dataBase64": "AQID"
+  }
+}

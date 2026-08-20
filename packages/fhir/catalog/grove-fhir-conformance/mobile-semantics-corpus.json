@@ -1,0 +1,471 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "catalog": "catalog/measurement-catalog.json",
+  "purpose": "Implementation-neutral normalized clinical projections used by Swift, Kotlin, and TypeScript producer CI. These vectors contain no source business identity and execute no producer implementation.",
+  "comparisonRule": "Compare exactly profile, code, effective, and result after removing adapter lineage/context. Every Mobile scalar or aggregate effective endpoint is first rounded to the nearest millisecond with ties to even, then serialized with the caller/source numeric UTC offset when available; Sensor and ECG SampledData timing is excluded. Parse offset-bearing FHIR endpoints without precision loss, require the emitted endpoint already to be millisecond-canonical, and normalize equal instants to the vector representation. Compare the remaining projection using RFC 8785/JCS JSON. Adapter context is admitted only by the referenced closed sourceContextRules and is not part of the source-neutral clinical projection.",
+  "effectiveCanonicalization": {
+    "precision": "millisecond",
+    "rounding": "half-even",
+    "epoch": "1970-01-01T00:00:00Z",
+    "offsetPolicy": "preserve-source-offset",
+    "excludedContracts": ["Sensor SampledData", "ECG SampledData"],
+    "vectors": [
+      {
+        "id": "positive-below-half",
+        "input": "1970-01-01T00:00:00.000499999Z",
+        "output": "1970-01-01T00:00:00.000Z"
+      },
+      {
+        "id": "positive-half-to-even",
+        "input": "1970-01-01T00:00:00.000500000Z",
+        "output": "1970-01-01T00:00:00.000Z"
+      },
+      {
+        "id": "positive-half-to-next-even",
+        "input": "1970-01-01T00:00:00.001500000Z",
+        "output": "1970-01-01T00:00:00.002Z"
+      },
+      {
+        "id": "negative-half-to-even",
+        "input": "1969-12-31T23:59:59.999500000Z",
+        "output": "1970-01-01T00:00:00.000Z"
+      },
+      {
+        "id": "negative-half-to-previous-even",
+        "input": "1969-12-31T23:59:59.998500000Z",
+        "output": "1969-12-31T23:59:59.998Z"
+      },
+      {
+        "id": "offset-preserved",
+        "input": "2026-08-20T08:30:00.251499999-07:00",
+        "output": "2026-08-20T08:30:00.251-07:00"
+      }
+    ]
+  },
+  "sourceContextRules": {
+    "healthkit.default": {
+      "required": [
+        "Observation.code.coding[system=https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-source-type]"
+      ],
+      "allowedAdditions": [
+        "Observation.identifier[healthKitObjectId]",
+        "Observation.device",
+        "Observation.extension[recordingMethod]",
+        "Observation.extension[gatewayDevice]",
+        "Observation.extension[researchStudy]",
+        "Observation.derivedFrom"
+      ]
+    },
+    "healthkit.heart-rate": {
+      "inherits": "healthkit.default",
+      "allowedAdditions": [
+        "Observation.component[HKMetadataKeyHeartRateMotionContext]"
+      ]
+    },
+    "healthkit.sleep-stage": {
+      "inherits": "healthkit.default",
+      "required": [
+        "Observation.valueCodeableConcept.coding[system=https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-sleep-analysis]"
+      ],
+      "allowedAdditions": []
+    },
+    "health-connect.default": {
+      "required": ["Observation.extension[health-connect-record-type]"],
+      "allowedAdditions": [
+        "Observation.identifier[healthConnectRecordId]",
+        "Observation.identifier[healthConnectOutputId]",
+        "Observation.device",
+        "Observation.extension[recordingMethod]",
+        "Observation.extension[gatewayDevice]",
+        "Observation.extension[researchStudy]",
+        "Observation.derivedFrom"
+      ]
+    },
+    "health-connect.blood-pressure": {
+      "inherits": "health-connect.default",
+      "allowedAdditions": ["Observation.bodySite", "Observation.method"]
+    },
+    "health-connect.temperature": {
+      "inherits": "health-connect.default",
+      "allowedAdditions": ["Observation.bodySite"]
+    },
+    "health-connect.sleep-duration": {
+      "inherits": "health-connect.default",
+      "allowedAdditions": [
+        "Observation.extension[health-connect-sleep-title]",
+        "Observation.note",
+        "Observation.hasMember"
+      ]
+    },
+    "health-connect.sleep-stage": {
+      "inherits": "health-connect.default",
+      "required": [
+        "Observation.valueCodeableConcept.coding[system=https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-sleep-stage]"
+      ],
+      "allowedAdditions": []
+    },
+    "connected-health.default": {
+      "required": [
+        "Observation.extension[connected-health-provider]",
+        "Observation.extension[connected-health-source-type]"
+      ],
+      "allowedAdditions": [
+        "Observation.identifier[connectedHealthSourceRecordId]",
+        "Observation.identifier[connectedHealthOutputId]",
+        "Observation.device",
+        "Observation.extension[recordingMethod]",
+        "Observation.extension[gatewayDevice]",
+        "Observation.extension[researchStudy]",
+        "Observation.derivedFrom"
+      ]
+    },
+    "connected-health.withings-blood-pressure": {
+      "inherits": "connected-health.default",
+      "required": [
+        "Observation.extension[connected-health-source-type].valueCode=withings/getmeas:9+10"
+      ],
+      "allowedAdditions": []
+    }
+  },
+  "vectors": [
+    {
+      "id": "active-energy",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "active-energy-burned"
+      },
+      "effective": {
+        "type": "Period",
+        "start": "2026-08-20T08:00:00-07:00",
+        "end": "2026-08-20T09:00:00-07:00"
+      },
+      "result": {
+        "type": "Quantity",
+        "value": 312.5,
+        "system": "http://unitsofmeasure.org",
+        "code": "kcal",
+        "unit": "kcal"
+      },
+      "edgeRules": [
+        "The effective Period has an exact start and end.",
+        "No rate conversion is admitted; value is total active energy for the Period."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default",
+        "google-health-api": "connected-health.default",
+        "oura": "connected-health.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "basal-body-temperature",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-basal-body-temperature",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "basal-body-temperature"
+      },
+      "effective": { "type": "dateTime", "value": "2026-08-20T06:45:00-07:00" },
+      "result": {
+        "type": "Quantity",
+        "value": 36.52,
+        "system": "http://unitsofmeasure.org",
+        "code": "Cel",
+        "unit": "Cel"
+      },
+      "edgeRules": [
+        "Basal/resting semantics must be evidenced by the admitted source type; general body temperature is not substituted.",
+        "Quantity.comparator is not admitted."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.temperature"
+      }
+    },
+    {
+      "id": "blood-pressure",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-blood-pressure",
+      "code": { "system": "http://loinc.org", "code": "85354-9" },
+      "effective": { "type": "dateTime", "value": "2026-08-20T08:10:00-07:00" },
+      "result": {
+        "type": "components",
+        "components": [
+          {
+            "id": "systolic",
+            "system": "http://loinc.org",
+            "code": "8480-6",
+            "value": 118,
+            "quantitySystem": "http://unitsofmeasure.org",
+            "quantityCode": "mm[Hg]",
+            "unit": "mmHg"
+          },
+          {
+            "id": "diastolic",
+            "system": "http://loinc.org",
+            "code": "8462-4",
+            "value": 76,
+            "quantitySystem": "http://unitsofmeasure.org",
+            "quantityCode": "mm[Hg]",
+            "unit": "mmHg"
+          }
+        ]
+      },
+      "edgeRules": [
+        "Observation.value[x] is absent.",
+        "Exactly one populated systolic and one populated diastolic component are required; a partial panel fails closed."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.blood-pressure",
+        "withings": "connected-health.withings-blood-pressure"
+      }
+    },
+    {
+      "id": "body-height",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-height",
+      "code": { "system": "http://loinc.org", "code": "8302-2" },
+      "effective": { "type": "dateTime", "value": "2026-08-20T08:15:00-07:00" },
+      "result": {
+        "type": "Quantity",
+        "value": 171.2,
+        "system": "http://unitsofmeasure.org",
+        "code": "cm",
+        "unit": "cm"
+      },
+      "edgeRules": [
+        "The normalized result is centimetres; source units must be converted exactly before projection."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default",
+        "google-health-api": "connected-health.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "body-temperature",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-temperature",
+      "code": { "system": "http://loinc.org", "code": "8310-5" },
+      "effective": { "type": "dateTime", "value": "2026-08-20T08:20:00-07:00" },
+      "result": {
+        "type": "Quantity",
+        "value": 37.1,
+        "system": "http://unitsofmeasure.org",
+        "code": "Cel",
+        "unit": "Cel"
+      },
+      "edgeRules": [
+        "This is general body temperature; basal/resting temperature is not substituted.",
+        "Source measurement location is adapter context and does not change the clinical projection."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.temperature",
+        "google-health-api": "connected-health.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "body-weight",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-weight",
+      "code": { "system": "http://loinc.org", "code": "29463-7" },
+      "effective": { "type": "dateTime", "value": "2026-08-20T08:25:00-07:00" },
+      "result": {
+        "type": "Quantity",
+        "value": 68.4,
+        "system": "http://unitsofmeasure.org",
+        "code": "kg",
+        "unit": "kg"
+      },
+      "edgeRules": [
+        "The normalized result is kilograms; source units must be converted exactly before projection."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default",
+        "google-health-api": "connected-health.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "distance",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance",
+      "code": { "system": "http://loinc.org", "code": "103208-5" },
+      "effective": {
+        "type": "Period",
+        "start": "2026-08-20T07:00:00-07:00",
+        "end": "2026-08-20T07:30:00-07:00"
+      },
+      "result": {
+        "type": "Quantity",
+        "value": 4820.5,
+        "system": "http://unitsofmeasure.org",
+        "code": "m",
+        "unit": "m"
+      },
+      "edgeRules": [
+        "The result is distance over the exact Period, not speed or a fixed-day aggregate.",
+        "HealthKit activity-specific source type remains adapter lineage and is not discarded from the full resource."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default",
+        "google-health-api": "connected-health.default",
+        "oura": "connected-health.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "heart-rate",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-heart-rate",
+      "code": { "system": "http://loinc.org", "code": "8867-4" },
+      "effective": {
+        "type": "dateTime",
+        "value": "2026-08-20T08:30:00.251-07:00"
+      },
+      "result": {
+        "type": "Quantity",
+        "value": 72,
+        "system": "http://unitsofmeasure.org",
+        "code": "/min",
+        "unit": "beats/minute"
+      },
+      "edgeRules": [
+        "Only a scalar heart-rate sample is admitted; high-frequency series use the Sensor contract or a native Recording Document.",
+        "HealthKit motion context is adapter context and does not alter the normalized value."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.heart-rate",
+        "health-connect": "health-connect.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "oxygen-saturation",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-oxygen-saturation",
+      "code": { "system": "http://loinc.org", "code": "2708-6" },
+      "effective": { "type": "dateTime", "value": "2026-08-20T08:35:00-07:00" },
+      "result": {
+        "type": "Quantity",
+        "value": 98,
+        "system": "http://unitsofmeasure.org",
+        "code": "%",
+        "unit": "%"
+      },
+      "edgeRules": [
+        "Fractional source values are converted to percent exactly; 0.98 becomes 98, not 0.98 percent."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default",
+        "withings": "connected-health.default"
+      }
+    },
+    {
+      "id": "respiratory-rate",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-respiratory-rate",
+      "code": { "system": "http://loinc.org", "code": "9279-1" },
+      "effective": { "type": "dateTime", "value": "2026-08-20T08:40:00-07:00" },
+      "result": {
+        "type": "Quantity",
+        "value": 15,
+        "system": "http://unitsofmeasure.org",
+        "code": "/min",
+        "unit": "breaths/minute"
+      },
+      "edgeRules": [
+        "The normalized result is breaths per minute and is a scalar point observation."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default"
+      }
+    },
+    {
+      "id": "sleep-duration",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-duration",
+      "code": { "system": "http://loinc.org", "code": "93832-4" },
+      "effective": {
+        "type": "Period",
+        "start": "2026-08-19T23:00:00-07:00",
+        "end": "2026-08-20T06:30:00-07:00"
+      },
+      "result": {
+        "type": "Quantity",
+        "value": 7.5,
+        "system": "http://unitsofmeasure.org",
+        "code": "h",
+        "unit": "h"
+      },
+      "edgeRules": [
+        "Duration and effective Period are both required and must describe the same admitted source summary semantics.",
+        "HealthKit has no admitted v0.2.0 aggregate rule and must not synthesize this projection."
+      ],
+      "admittedSourceContext": {
+        "health-connect": "health-connect.sleep-duration",
+        "google-health-api": "connected-health.default",
+        "oura": "connected-health.default"
+      }
+    },
+    {
+      "id": "sleep-stage",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-stage",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "sleep-stage"
+      },
+      "effective": {
+        "type": "Period",
+        "start": "2026-08-20T00:10:00-07:00",
+        "end": "2026-08-20T00:42:00-07:00"
+      },
+      "result": {
+        "type": "CodeableConcept",
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-sleep-stage",
+        "code": "light"
+      },
+      "edgeRules": [
+        "Exactly one source-neutral stage from the closed value set is the normalized result.",
+        "Known in-bed, out-of-bed, or asleep-unspecified states are not collapsed to awake or unknown; the exact source stage is retained as adapter coding."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.sleep-stage",
+        "health-connect": "health-connect.sleep-stage"
+      }
+    },
+    {
+      "id": "step-count",
+      "profile": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-step-count",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "step-count-total"
+      },
+      "effective": {
+        "type": "Period",
+        "start": "2026-08-20T08:00:00-07:00",
+        "end": "2026-08-20T09:00:00-07:00"
+      },
+      "result": {
+        "type": "Quantity",
+        "value": 1042,
+        "system": "http://unitsofmeasure.org",
+        "code": "{steps}",
+        "unit": "steps"
+      },
+      "edgeRules": [
+        "The Period is non-zero.",
+        "A populated step count is non-negative and represents the exact source interval, not an assumed 24-hour total."
+      ],
+      "admittedSourceContext": {
+        "healthkit": "healthkit.default",
+        "health-connect": "health-connect.default",
+        "google-health-api": "connected-health.default",
+        "oura": "connected-health.default",
+        "withings": "connected-health.default"
+      }
+    }
+  ]
+}

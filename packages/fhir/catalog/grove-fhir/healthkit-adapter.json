@@ -1,0 +1,2075 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "version": "0.2.0",
+  "source": {
+    "inventory": "Grove SampleType all-known quantities, categories, correlations, other sample types, clinical records, ECG, workout, and explicit sleep aggregate",
+    "sdkBaseline": "Apple HealthKit source surface captured at the exact Grove repository revision below",
+    "groveRepository": "https://github.com/SchmiedmayerLab/Grove",
+    "groveRevision": "bf7e25d1a59bc3afc20476f856ad54d2649edee4",
+    "rowCount": 209
+  },
+  "swiftProducer": {
+    "numericCanonicalization": {
+      "mobileEffectiveContract": "catalog/measurement-catalog.json#effectiveCanonicalization",
+      "effectivePrecision": "millisecond",
+      "effectiveRounding": "half-even",
+      "scalarQuantityDecimal": "shortest-round-trip",
+      "identityPreimages": "unmodified",
+      "sensorAndEcgTiming": "excluded"
+    }
+  },
+  "sourceTypeCoding": {
+    "system": "https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-source-type",
+    "element": "Observation.code.coding",
+    "cardinality": "exactly one",
+    "rule": "Every admitted HealthKit Observation preserves its exact sourceTypeIdentifier as an additional provider coding; the shared or authoritative standard coding remains the normative result meaning."
+  },
+  "conversionProvenanceProfile": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-conversion-provenance",
+  "statusVocabulary": {
+    "supported": "The 0.2.0 HealthKit adapter defines and validates emitted FHIR output.",
+    "mapped-standard": "The source is represented by another exact Grove or authoritative standard package rather than a Mobile measurement profile.",
+    "provider-specific": "The 0.2.0 adapter defines output whose meaning remains HealthKit-specific.",
+    "deferred": "No FHIR output for this source type is admitted by the 0.2.0 adapter.",
+    "intentionally-unsupported": "The 0.2.0 contract explicitly rejects this source meaning rather than approximating it."
+  },
+  "standardAdapterClaims": {
+    "body-mass-index": {
+      "claimMode": "exactly-standard-plus-adapter",
+      "profiles": [
+        "http://hl7.org/fhir/StructureDefinition/bmi",
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation"
+      ],
+      "code": { "system": "http://loinc.org", "code": "39156-5" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "kg/m2",
+        "unit": "kg/m2"
+      },
+      "effective": "dateTime",
+      "reason": "FHIR R4 already publishes an authoritative BMI profile; a one-source Grove Mobile wrapper would duplicate it."
+    }
+  },
+  "sensorAdapterClaims": {
+    "electrocardiogram": {
+      "claimMode": "exactly-sensor-plus-adapter",
+      "profiles": [
+        "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation",
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation"
+      ],
+      "sourceTypeIdentifier": "HKDataTypeIdentifierElectrocardiogram",
+      "sourceLead": "HKElectrocardiogram.Lead.appleWatchSimilarToLeadI",
+      "leadCode": {
+        "system": "urn:iso:std:iso:11073:10101",
+        "code": "131329",
+        "display": "MDC_ECG_ELEC_POTL_I"
+      },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "mV",
+        "unit": "mV"
+      },
+      "callerEvidence": [
+        "HKElectrocardiogram",
+        "all HKElectrocardiogram.VoltageMeasurement values and timeSinceSampleStart offsets",
+        "the exact associated HKCategorySample objects when symptomsStatus is present"
+      ],
+      "requiredContext": [
+        "classification",
+        "symptomsStatus",
+        "numberOfVoltageMeasurements",
+        "HKElectrocardiogram.startDate/endDate"
+      ],
+      "optionalContext": [
+        "averageHeartRate",
+        "samplingFrequency",
+        "HKMetadataKeyAppleECGAlgorithmVersion"
+      ],
+      "correlatedSymptomEvidence": {
+        "url": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-correlated-symptom",
+        "cardinality": "0..7",
+        "children": [
+          {
+            "url": "sourceIdentifier",
+            "type": "Identifier",
+            "meaning": "Exact HKCategorySample UUID under the HealthKit object NamingSystem"
+          },
+          {
+            "url": "effectivePeriod",
+            "type": "Period",
+            "meaning": "Exact HKCategorySample startDate/endDate"
+          },
+          {
+            "url": "symptomType",
+            "type": "code",
+            "meaning": "Exact admitted HealthKit symptom category identifier"
+          },
+          {
+            "url": "severity",
+            "type": "code",
+            "meaning": "Exact admitted HealthKit symptom severity"
+          },
+          {
+            "url": "sourceName",
+            "type": "string",
+            "cardinality": "1..1",
+            "meaning": "Exact HKSourceRevision.source.name"
+          },
+          {
+            "url": "sourceBundleIdentifier",
+            "type": "string",
+            "cardinality": "1..1",
+            "meaning": "Exact HKSourceRevision.source.bundleIdentifier"
+          },
+          {
+            "url": "sourceVersion",
+            "type": "string",
+            "cardinality": "0..1",
+            "meaning": "Exact HKSourceRevision.version when present"
+          },
+          {
+            "url": "sourceProductType",
+            "type": "string",
+            "cardinality": "0..1",
+            "meaning": "Exact HKSourceRevision.productType when present"
+          },
+          {
+            "url": "sourceOperatingSystemMajorVersion",
+            "type": "integer",
+            "cardinality": "1..1",
+            "meaning": "Exact HKSourceRevision.operatingSystemVersion.majorVersion"
+          },
+          {
+            "url": "sourceOperatingSystemMinorVersion",
+            "type": "integer",
+            "cardinality": "1..1",
+            "meaning": "Exact HKSourceRevision.operatingSystemVersion.minorVersion"
+          },
+          {
+            "url": "sourceOperatingSystemPatchVersion",
+            "type": "integer",
+            "cardinality": "1..1",
+            "meaning": "Exact HKSourceRevision.operatingSystemVersion.patchVersion"
+          }
+        ]
+      },
+      "sourceRevisionDisclosure": {
+        "requiredProducerInput": "explicitly-authorized",
+        "failureRule": "Without explicit caller authorization to disclose every correlated symptom HKSourceRevision field, the structured HealthKit ECG output is not admitted and conversion fails closed.",
+        "scope": "Authorization is producer input and is not encoded as a FHIR consent or authorization assertion."
+      },
+      "effectiveRule": "Observation.effectivePeriod starts at HKElectrocardiogram.startDate plus the exact first timeSinceSampleStart and ends at the exact last supplied voltage instant. The required healthkit-ecg-source-period extension separately preserves the HKElectrocardiogram startDate/endDate.",
+      "admissionRule": "The caller supplies already-obtained evidence. The supplied voltage count equals numberOfVoltageMeasurements; offsets are complete, unique, sorted, and satisfy offset[i] = offset[0] + i * SampledData.period exactly; every voltage is present; and samplingFrequency, when reported, equals 1000 / period in milliseconds exactly. Every associated symptom is supplied as its exact HKCategorySample UUID, start/end, type, severity, and complete HKSourceRevision fields. Symptom UUIDs are unique; distinct samples with the same symptom type remain distinct and are admitted. Missing, non-uniform, duplicate-UUID, resampled, or inconsistent evidence fails closed; the adapter performs no HealthKit query."
+    }
+  },
+  "rows": [
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierAbdominalCramps",
+      "title": "Abdominal Cramps",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierAcne",
+      "title": "Acne",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierAppetiteChanges",
+      "title": "Appetite Changes",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierAppleStandHour",
+      "title": "Apple Stand Hour",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierAppleWalkingSteadinessEvent",
+      "title": "Apple Walking Steadiness Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierAudioExposureEvent",
+      "title": "Environmental Audio Exposure Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierBladderIncontinence",
+      "title": "Bladder Incontinence",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierBleedingAfterPregnancy",
+      "title": "Bleeding After Pregnancy",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierBleedingDuringPregnancy",
+      "title": "Bleeding During Pregnancy",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierBloating",
+      "title": "Bloating",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierBreastPain",
+      "title": "Breast Pain",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierCervicalMucusQuality",
+      "title": "Cervical Mucus Quality",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierChestTightnessOrPain",
+      "title": "Chest Tightness/Pain",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierChills",
+      "title": "Chills",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierConstipation",
+      "title": "Constipation",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierContraceptive",
+      "title": "Contraceptive",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierCoughing",
+      "title": "Coughing",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierDiarrhea",
+      "title": "Diarrhea",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierDizziness",
+      "title": "Dizziness",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierDrySkin",
+      "title": "Dry Skin",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierFainting",
+      "title": "Fainting",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierFatigue",
+      "title": "Fatigue",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierFever",
+      "title": "Fever",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierGeneralizedBodyAche",
+      "title": "Generalized Body Ache",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHairLoss",
+      "title": "Hair Loss",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHandwashingEvent",
+      "title": "Handwashing Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHeadache",
+      "title": "Headache",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHeadphoneAudioExposureEvent",
+      "title": "Headphone Audio Exposure Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHeartburn",
+      "title": "Heartburn",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHighHeartRateEvent",
+      "title": "High Heart Rate Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierHotFlashes",
+      "title": "Hot Flashes",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierInfrequentMenstrualCycles",
+      "title": "Infrequent Menstrual Cycles",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierIntermenstrualBleeding",
+      "title": "Intermenstrual Bleeding",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierIrregularHeartRhythmEvent",
+      "title": "Irregular Heart Rhythm Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierIrregularMenstrualCycles",
+      "title": "Irregular Menstrual Cycles",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierLactation",
+      "title": "Lactation",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierLossOfSmell",
+      "title": "Loss of Smell",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierLossOfTaste",
+      "title": "Loss of Taste",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierLowCardioFitnessEvent",
+      "title": "Low Cardio Fitness Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierLowHeartRateEvent",
+      "title": "Low Heart Rate Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierLowerBackPain",
+      "title": "Lower Back Pain",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierMemoryLapse",
+      "title": "Memory Lapse",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierMenstrualFlow",
+      "title": "Menstrual Flow",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierMindfulSession",
+      "title": "Mindful Session",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierMoodChanges",
+      "title": "Mood Changes",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierNausea",
+      "title": "Nausea",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierNightSweats",
+      "title": "Night Sweats",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierOvulationTestResult",
+      "title": "Ovulation Test Result",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierPelvicPain",
+      "title": "Pelvic Pain",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierPersistentIntermenstrualBleeding",
+      "title": "Persistent Intermenstrual Bleeding",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierPregnancy",
+      "title": "Pregnancy",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierPregnancyTestResult",
+      "title": "Pregnancy Test Result",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierProgesteroneTestResult",
+      "title": "Progesterone Test Result",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierProlongedMenstrualPeriods",
+      "title": "Prolonged Menstrual Periods",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierRapidPoundingOrFlutteringHeartbeat",
+      "title": "Rapid/Pounding/Fluttering Heartbeat",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierRunnyNose",
+      "title": "Runny Nose",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSexualActivity",
+      "title": "Sexual Activity",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierShortnessOfBreath",
+      "title": "Shortness of Breath",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSinusCongestion",
+      "title": "Sinus Congestion",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSkippedHeartbeat",
+      "title": "Skipped Heartbeat",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSleepAnalysis",
+      "title": "Sleep Analysis",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["sleep-stage"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-stage"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSleepAnalysis#session-aggregate",
+      "title": "Sleep Duration Session Aggregate",
+      "status": "deferred",
+      "swiftImplementationStatus": "deferred",
+      "measurementIDs": ["sleep-duration"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-duration"
+      ],
+      "requirement": "Requires an explicit session aggregation contract; individual samples map to sleep stage."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSleepApneaEvent",
+      "title": "Sleep Apnea Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSleepChanges",
+      "title": "Sleep Changes",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierSoreThroat",
+      "title": "Sore Throat",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierToothbrushingEvent",
+      "title": "Toothbrushing Event",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierVaginalDryness",
+      "title": "Vaginal Dryness",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierVomiting",
+      "title": "Vomiting",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKCategoryTypeIdentifierWheezing",
+      "title": "Wheezing",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierAllergyRecord",
+      "title": "Allergy Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierClinicalNoteRecord",
+      "title": "Clinical Note Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierConditionRecord",
+      "title": "Condition Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierCoverageRecord",
+      "title": "Coverage Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierImmunizationRecord",
+      "title": "Immunization Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierLabResultRecord",
+      "title": "Lab Result Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierMedicationRecord",
+      "title": "Medication Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierProcedureRecord",
+      "title": "Procedure Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKClinicalTypeIdentifierVitalSignRecord",
+      "title": "Vital Sign Record",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit clinical records already carry provider FHIR; the v0.2 HealthKit Observation adapter does not rewrite or re-profile them."
+    },
+    {
+      "sourceTypeIdentifier": "HKCorrelationTypeIdentifierBloodPressure",
+      "title": "Blood Pressure",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["blood-pressure"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-blood-pressure"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKCorrelationTypeIdentifierFood",
+      "title": "Food",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKDataTypeIdentifierAudiogram",
+      "title": "Audiogram",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    },
+    {
+      "sourceTypeIdentifier": "HKDataTypeIdentifierElectrocardiogram",
+      "title": "ECG",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["electrocardiogram"],
+      "profiles": [
+        "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation",
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation"
+      ],
+      "requirement": "The caller supplies the HKElectrocardiogram, every voltage measurement with its exact timeSinceSampleStart, and each associated HKCategorySample when symptomsStatus is present. The adapter preserves symptom UUID/timing/type/severity and complete HKSourceRevision fields, classification, average heart rate, sampling frequency, reported count, Apple ECG algorithm-version metadata when present, source and waveform intervals, lead, offsets, and voltages without fetching or resampling. Explicit caller authorization for linkable symptom-source disclosure is required; otherwise conversion fails closed."
+    },
+    {
+      "sourceTypeIdentifier": "HKDataTypeIdentifierHeartbeatSeries",
+      "title": "Heartbeat Series",
+      "status": "deferred",
+      "swiftImplementationStatus": "deferred",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "Use a Grove Sensor waveform graph once the HealthKit heartbeat-series adapter is implemented."
+    },
+    {
+      "sourceTypeIdentifier": "HKDataTypeStateOfMind",
+      "title": "State of Mind",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierActiveEnergyBurned",
+      "title": "Active Energy Burned",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["active-energy"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAppleExerciseTime",
+      "title": "Apple Exercise Time",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAppleMoveTime",
+      "title": "Apple Move Time",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances",
+      "title": "Apple Sleeping Breathing Disturbances",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAppleSleepingWristTemperature",
+      "title": "Apple Sleeping Wrist Temperature",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAppleStandTime",
+      "title": "Apple Stand Time",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAppleWalkingSteadiness",
+      "title": "Apple Walking Steadiness",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierAtrialFibrillationBurden",
+      "title": "AFib Burden",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBasalBodyTemperature",
+      "title": "Basal Body Temperature",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["basal-body-temperature"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-basal-body-temperature"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBasalEnergyBurned",
+      "title": "Basal Energy Burned",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBloodAlcoholContent",
+      "title": "Blood Alcohol Content",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBloodGlucose",
+      "title": "Blood Glucose",
+      "status": "deferred",
+      "swiftImplementationStatus": "deferred",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "HealthKit does not identify the specimen needed by the Health Connect-only glucose profiles; source-only conversion fails closed."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBloodPressureDiastolic",
+      "title": "Blood Pressure (Diastolic)",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBloodPressureSystolic",
+      "title": "Blood Pressure (Systolic)",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBodyFatPercentage",
+      "title": "Body Fat Percentage",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBodyMass",
+      "title": "Body Mass",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["body-weight"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-weight"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBodyMassIndex",
+      "title": "BMI",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["body-mass-index"],
+      "profiles": [
+        "http://hl7.org/fhir/StructureDefinition/bmi",
+        "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierBodyTemperature",
+      "title": "Body Temperature",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["body-temperature"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-temperature"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierCrossCountrySkiingSpeed",
+      "title": "Cross Country Skiing Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierCyclingCadence",
+      "title": "Cycling Cadence",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierCyclingFunctionalThresholdPower",
+      "title": "Cycling Functional Threshold Power",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierCyclingPower",
+      "title": "Cycling Power",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierCyclingSpeed",
+      "title": "Cycling Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryBiotin",
+      "title": "Dietary Biotin Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryCaffeine",
+      "title": "Dietary Caffeine Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryCalcium",
+      "title": "Dietary Calcium Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryCarbohydrates",
+      "title": "Dietary Carbohydrates Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryChloride",
+      "title": "Dietary Chloride Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryCholesterol",
+      "title": "Dietary Cholesterol Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryChromium",
+      "title": "Dietary Chromium Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryCopper",
+      "title": "Dietary Copper Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryEnergyConsumed",
+      "title": "Dietary Energy Consumed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryFatMonounsaturated",
+      "title": "Dietary Monounsaturated Fat Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryFatPolyunsaturated",
+      "title": "Dietary Polyunsaturated Fat Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryFatSaturated",
+      "title": "Dietary Saturated Fat Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryFatTotal",
+      "title": "Dietary Total Fat Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryFiber",
+      "title": "Dietary Fiber Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryFolate",
+      "title": "Dietary Folate Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryIodine",
+      "title": "Dietary Iodine Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryIron",
+      "title": "Dietary Iron Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryMagnesium",
+      "title": "Dietary Magnesium Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryManganese",
+      "title": "Dietary Manganese Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryMolybdenum",
+      "title": "Dietary Molybdenum Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryNiacin",
+      "title": "Dietary Niacin Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryPantothenicAcid",
+      "title": "Dietary Pantothenic Acid Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryPhosphorus",
+      "title": "Dietary Phosphorus Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryPotassium",
+      "title": "Dietary Potassium Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryProtein",
+      "title": "Dietary Protein Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryRiboflavin",
+      "title": "Dietary Riboflavin Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietarySelenium",
+      "title": "Dietary Selenium Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietarySodium",
+      "title": "Dietary Sodium Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietarySugar",
+      "title": "Dietary Sugar Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryThiamin",
+      "title": "Dietary Thiamin Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminA",
+      "title": "Dietary Vitamin A Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminB12",
+      "title": "Dietary Vitamin B12 Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminB6",
+      "title": "Dietary Vitamin B6 Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminC",
+      "title": "Dietary Vitamin C Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminD",
+      "title": "Dietary Vitamin D Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminE",
+      "title": "Dietary Vitamin E Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryVitaminK",
+      "title": "Dietary Vitamin K Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryWater",
+      "title": "Dietary Water Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDietaryZinc",
+      "title": "Dietary Zinc Intake",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceCrossCountrySkiing",
+      "title": "Cross-Country Skiing Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceCycling",
+      "title": "Cycling Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceDownhillSnowSports",
+      "title": "Downhill Snow Sports Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistancePaddleSports",
+      "title": "Paddle Sports Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceRowing",
+      "title": "Rowing Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceSkatingSports",
+      "title": "Skating Sports Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceSwimming",
+      "title": "Swimming Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceWalkingRunning",
+      "title": "Distance Walking/Running",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierDistanceWheelchair",
+      "title": "Wheelchair Distance",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["distance"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierElectrodermalActivity",
+      "title": "Electrodermal Activity",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierEnvironmentalAudioExposure",
+      "title": "Environmental Audio Exposure",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierEnvironmentalSoundReduction",
+      "title": "Environmental Sound Reduction",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierEstimatedWorkoutEffortScore",
+      "title": "Estimated Workout Effort",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierFlightsClimbed",
+      "title": "Flights Climbed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierForcedExpiratoryVolume1",
+      "title": "Forced Expiratory Volume (1 sec)",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierForcedVitalCapacity",
+      "title": "Forced Vital Capacity",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierHeadphoneAudioExposure",
+      "title": "Headphone Audio Exposure",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierHeartRate",
+      "title": "Heart Rate",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["heart-rate"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-heart-rate"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierHeartRateRecoveryOneMinute",
+      "title": "Heart Rate Recovery (1 min)",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
+      "title": "Heart Rate Variability SDNN",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierHeight",
+      "title": "Height",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["body-height"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-height"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierInhalerUsage",
+      "title": "Inhaler Usage",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierInsulinDelivery",
+      "title": "Insulin Delivery",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierLeanBodyMass",
+      "title": "Lean Body Mass",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierNikeFuel",
+      "title": "NikeFuel",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierNumberOfAlcoholicBeverages",
+      "title": "Number of Alcoholic Beverages",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierNumberOfTimesFallen",
+      "title": "Number of Times Fallen",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierOxygenSaturation",
+      "title": "Oxygen Saturation",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["oxygen-saturation"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-oxygen-saturation"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierPaddleSportsSpeed",
+      "title": "Paddle Sports Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierPeakExpiratoryFlowRate",
+      "title": "Peak Expiratory Flow Rate",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierPeripheralPerfusionIndex",
+      "title": "Peripheral Perfusion Index",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierPhysicalEffort",
+      "title": "Physical Effort",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierPushCount",
+      "title": "Wheelchair Push Count",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRespiratoryRate",
+      "title": "Respiratory Rate",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["respiratory-rate"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-respiratory-rate"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRestingHeartRate",
+      "title": "Resting Heart Rate",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRowingSpeed",
+      "title": "Rowing Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRunningGroundContactTime",
+      "title": "Ground Contact Time",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRunningPower",
+      "title": "Running Power",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRunningSpeed",
+      "title": "Running Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRunningStrideLength",
+      "title": "Running Stride Length",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierRunningVerticalOscillation",
+      "title": "Running Vertical Oscillation",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierSixMinuteWalkTestDistance",
+      "title": "6 Minute Walk Test Distance",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierStairAscentSpeed",
+      "title": "Stair Ascent Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierStairDescentSpeed",
+      "title": "Stair Descent Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierStepCount",
+      "title": "Step Count",
+      "status": "supported",
+      "swiftImplementationStatus": "supported",
+      "measurementIDs": ["step-count"],
+      "profiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-step-count"
+      ]
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierSwimmingStrokeCount",
+      "title": "Swimming Stroke Count",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierTimeInDaylight",
+      "title": "Time in Daylight",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierUVExposure",
+      "title": "UV Exposure",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierUnderwaterDepth",
+      "title": "Underwater Depth",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierVO2Max",
+      "title": "VO2Max",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWaistCircumference",
+      "title": "Waist Circumference",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWalkingAsymmetryPercentage",
+      "title": "Walking Asymmetry Percentage",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWalkingDoubleSupportPercentage",
+      "title": "Walking Double Support Percentage",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWalkingHeartRateAverage",
+      "title": "Walking Heart Rate Average",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWalkingSpeed",
+      "title": "Walking Speed",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWalkingStepLength",
+      "title": "Walking Step Length",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWaterTemperature",
+      "title": "Water Temperature",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKQuantityTypeIdentifierWorkoutEffortScore",
+      "title": "Workout Effort",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or adapter-specific v0.2 output contract is published for this type."
+    },
+    {
+      "sourceTypeIdentifier": "HKScoredAssessmentTypeIdentifierGAD7",
+      "title": "GAD-7",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    },
+    {
+      "sourceTypeIdentifier": "HKScoredAssessmentTypeIdentifierPHQ9",
+      "title": "PHQ-9",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    },
+    {
+      "sourceTypeIdentifier": "HKVisionPrescriptionTypeIdentifier",
+      "title": "Vision Prescription",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    },
+    {
+      "sourceTypeIdentifier": "HKWorkoutRouteTypeIdentifier",
+      "title": "Workout Route",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    },
+    {
+      "sourceTypeIdentifier": "HKWorkoutTypeIdentifier",
+      "title": "Workout",
+      "status": "deferred",
+      "swiftImplementationStatus": "no-published-contract",
+      "measurementIDs": [],
+      "profiles": [],
+      "requirement": "No shared or HealthKit-adapter v0.2 output contract is published for this sample type."
+    }
+  ]
+}

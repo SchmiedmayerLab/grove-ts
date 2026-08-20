@@ -10,6 +10,20 @@
     "deferred",
     "intentionally-unsupported"
   ],
+  "statusDefinitions": {
+    "supported": "The named adapter emits and validates this exact Mobile profile in version 0.2.0.",
+    "mapped-standard": "Related source data is admitted only in the coverageDetails alternate representation. It does not implement or claim this Mobile profile.",
+    "provider-specific": "The source meaning is admitted only by an adapter/provider-specific profile and does not implement this Mobile profile.",
+    "deferred": "The source has related data, but version 0.2.0 admits no output for this Mobile meaning.",
+    "intentionally-unsupported": "The source has no semantically exact mapping to this Mobile meaning in the closed version 0.2.0 contract."
+  },
+  "effectiveCanonicalization": {
+    "scope": "Every Mobile scalar or aggregate effectiveDateTime and effectivePeriod endpoint; Sensor and ECG SampledData timing is excluded.",
+    "precision": "millisecond",
+    "rounding": "half-even",
+    "epoch": "1970-01-01T00:00:00Z",
+    "offsetPolicy": "Preserve the caller/source numeric UTC offset when it is available; never invent an offset."
+  },
   "measurements": [
     {
       "id": "active-energy",
@@ -19,7 +33,11 @@
         "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
         "code": "active-energy-burned"
       },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "kcal" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "kcal",
+        "unit": "kcal"
+      },
       "effective": "Period",
       "coverage": {
         "healthkit": "supported",
@@ -38,108 +56,19 @@
         "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
         "code": "basal-body-temperature"
       },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "Cel" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "Cel",
+        "unit": "Cel"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
         "sensorkit": "intentionally-unsupported",
-        "google-health-api": "deferred",
-        "oura": "provider-specific",
-        "withings": "deferred"
-      }
-    },
-    {
-      "id": "blood-glucose",
-      "profile": "grove-mobile-blood-glucose",
-      "standardProfile": null,
-      "code": { "system": "http://loinc.org", "code": "2339-0" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
-      "specimen": {
-        "system": "http://snomed.info/sct",
-        "code": "258580003",
-        "display": "Whole blood sample"
-      },
-      "effective": "dateTime",
-      "coverage": {
-        "healthkit": "deferred",
-        "health-connect": "supported",
-        "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
+        "google-health-api": "intentionally-unsupported",
         "oura": "intentionally-unsupported",
-        "withings": "deferred"
-      }
-    },
-    {
-      "id": "capillary-blood-glucose",
-      "profile": "grove-mobile-capillary-blood-glucose",
-      "standardProfile": null,
-      "code": { "system": "http://loinc.org", "code": "32016-8" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
-      "specimen": {
-        "system": "http://snomed.info/sct",
-        "code": "122554006",
-        "display": "Capillary blood specimen"
-      },
-      "effective": "dateTime",
-      "coverage": {
-        "healthkit": "deferred",
-        "health-connect": "supported",
-        "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
-        "oura": "intentionally-unsupported",
-        "withings": "deferred"
-      }
-    },
-    {
-      "id": "serum-plasma-glucose",
-      "profile": "grove-mobile-serum-plasma-glucose",
-      "standardProfile": null,
-      "code": { "system": "http://loinc.org", "code": "2345-7" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
-      "specimenAlternatives": [
-        {
-          "id": "plasma",
-          "system": "http://snomed.info/sct",
-          "code": "119361006",
-          "display": "Plasma specimen"
-        },
-        {
-          "id": "serum",
-          "system": "http://snomed.info/sct",
-          "code": "119364003",
-          "display": "Serum specimen"
-        }
-      ],
-      "effective": "dateTime",
-      "coverage": {
-        "healthkit": "deferred",
-        "health-connect": "supported",
-        "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
-        "oura": "intentionally-unsupported",
-        "withings": "deferred"
-      }
-    },
-    {
-      "id": "interstitial-glucose",
-      "profile": "grove-mobile-interstitial-glucose",
-      "standardProfile": null,
-      "code": { "system": "http://loinc.org", "code": "99504-3" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "mg/dL" },
-      "specimen": {
-        "system": "http://snomed.info/sct",
-        "code": "258479004",
-        "display": "Interstitial fluid specimen"
-      },
-      "effective": "dateTime",
-      "coverage": {
-        "healthkit": "deferred",
-        "health-connect": "supported",
-        "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
-        "oura": "intentionally-unsupported",
-        "withings": "deferred"
+        "withings": "intentionally-unsupported"
       }
     },
     {
@@ -154,7 +83,8 @@
           "code": "8480-6",
           "quantity": {
             "system": "http://unitsofmeasure.org",
-            "code": "mm[Hg]"
+            "code": "mm[Hg]",
+            "unit": "mmHg"
           }
         },
         {
@@ -163,7 +93,8 @@
           "code": "8462-4",
           "quantity": {
             "system": "http://unitsofmeasure.org",
-            "code": "mm[Hg]"
+            "code": "mm[Hg]",
+            "unit": "mmHg"
           }
         }
       ],
@@ -173,7 +104,7 @@
         "healthkit": "supported",
         "health-connect": "supported",
         "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
+        "google-health-api": "intentionally-unsupported",
         "oura": "intentionally-unsupported",
         "withings": "supported"
       }
@@ -183,27 +114,15 @@
       "profile": "grove-mobile-body-height",
       "standardProfile": "http://hl7.org/fhir/StructureDefinition/bodyheight",
       "code": { "system": "http://loinc.org", "code": "8302-2" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "cm" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "cm",
+        "unit": "cm"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
-        "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
-        "oura": "intentionally-unsupported",
-        "withings": "supported"
-      }
-    },
-    {
-      "id": "body-mass-index",
-      "profile": "grove-mobile-bmi",
-      "standardProfile": "http://hl7.org/fhir/StructureDefinition/bmi",
-      "code": { "system": "http://loinc.org", "code": "39156-5" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "kg/m2" },
-      "effective": "dateTime",
-      "coverage": {
-        "healthkit": "supported",
-        "health-connect": "intentionally-unsupported",
         "sensorkit": "intentionally-unsupported",
         "google-health-api": "supported",
         "oura": "intentionally-unsupported",
@@ -215,14 +134,18 @@
       "profile": "grove-mobile-body-temperature",
       "standardProfile": "http://hl7.org/fhir/StructureDefinition/bodytemp",
       "code": { "system": "http://loinc.org", "code": "8310-5" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "Cel" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "Cel",
+        "unit": "Cel"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
-        "sensorkit": "provider-specific",
+        "sensorkit": "deferred",
         "google-health-api": "supported",
-        "oura": "provider-specific",
+        "oura": "intentionally-unsupported",
         "withings": "supported"
       }
     },
@@ -231,7 +154,11 @@
       "profile": "grove-mobile-body-weight",
       "standardProfile": "http://hl7.org/fhir/StructureDefinition/bodyweight",
       "code": { "system": "http://loinc.org", "code": "29463-7" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "kg" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "kg",
+        "unit": "kg"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
@@ -246,11 +173,12 @@
       "id": "distance",
       "profile": "grove-mobile-distance",
       "standardProfile": null,
-      "code": {
-        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
-        "code": "distance-traveled"
+      "code": { "system": "http://loinc.org", "code": "103208-5" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "m",
+        "unit": "m"
       },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "m" },
       "effective": "Period",
       "coverage": {
         "healthkit": "supported",
@@ -259,6 +187,13 @@
         "google-health-api": "supported",
         "oura": "supported",
         "withings": "supported"
+      },
+      "coverageDetails": {
+        "sensorkit": {
+          "sourceTokens": ["SRSensor.odometer"],
+          "alternateRepresentation": "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document",
+          "reason": "The heterogeneous odometer record is retained as an exact raw recording; it does not implement the Mobile distance profile."
+        }
       }
     },
     {
@@ -266,15 +201,36 @@
       "profile": "grove-mobile-heart-rate",
       "standardProfile": "http://hl7.org/fhir/StructureDefinition/heartrate",
       "code": { "system": "http://loinc.org", "code": "8867-4" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "/min" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "/min",
+        "unit": "beats/minute"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
-        "sensorkit": "supported",
-        "google-health-api": "supported",
-        "oura": "supported",
+        "sensorkit": "mapped-standard",
+        "google-health-api": "mapped-standard",
+        "oura": "mapped-standard",
         "withings": "supported"
+      },
+      "coverageDetails": {
+        "sensorkit": {
+          "sourceTokens": ["SRSensor.heartRate"],
+          "alternateRepresentation": "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document",
+          "reason": "The high-frequency series and per-point confidence are retained as an exact raw recording; it does not implement the Mobile heart-rate profile."
+        },
+        "google-health-api": {
+          "sourceTokens": ["heart-rate"],
+          "alternateRepresentation": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+          "reason": "Irregular provider points are retained as an exact raw recording; it does not implement the Mobile heart-rate profile."
+        },
+        "oura": {
+          "sourceTokens": ["heartrate"],
+          "alternateRepresentation": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+          "reason": "Irregular provider points are retained as an exact raw recording; it does not implement the Mobile heart-rate profile."
+        }
       }
     },
     {
@@ -282,14 +238,18 @@
       "profile": "grove-mobile-oxygen-saturation",
       "standardProfile": "http://hl7.org/fhir/StructureDefinition/oxygensat",
       "code": { "system": "http://loinc.org", "code": "2708-6" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "%" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "%",
+        "unit": "%"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
         "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
-        "oura": "supported",
+        "google-health-api": "deferred",
+        "oura": "deferred",
         "withings": "supported"
       }
     },
@@ -298,15 +258,19 @@
       "profile": "grove-mobile-respiratory-rate",
       "standardProfile": "http://hl7.org/fhir/StructureDefinition/resprate",
       "code": { "system": "http://loinc.org", "code": "9279-1" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "/min" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "/min",
+        "unit": "breaths/minute"
+      },
       "effective": "dateTime",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
         "sensorkit": "intentionally-unsupported",
-        "google-health-api": "supported",
-        "oura": "mapped-standard",
-        "withings": "supported"
+        "google-health-api": "deferred",
+        "oura": "deferred",
+        "withings": "deferred"
       }
     },
     {
@@ -314,15 +278,19 @@
       "profile": "grove-mobile-sleep-duration",
       "standardProfile": null,
       "code": { "system": "http://loinc.org", "code": "93832-4" },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "h" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "h",
+        "unit": "h"
+      },
       "effective": "Period",
       "coverage": {
-        "healthkit": "supported",
+        "healthkit": "deferred",
         "health-connect": "supported",
-        "sensorkit": "mapped-standard",
+        "sensorkit": "deferred",
         "google-health-api": "supported",
         "oura": "supported",
-        "withings": "supported"
+        "withings": "deferred"
       }
     },
     {
@@ -350,10 +318,10 @@
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
-        "sensorkit": "mapped-standard",
-        "google-health-api": "supported",
-        "oura": "supported",
-        "withings": "supported"
+        "sensorkit": "deferred",
+        "google-health-api": "deferred",
+        "oura": "deferred",
+        "withings": "deferred"
       }
     },
     {
@@ -364,15 +332,26 @@
         "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
         "code": "step-count-total"
       },
-      "quantity": { "system": "http://unitsofmeasure.org", "code": "{steps}" },
+      "quantity": {
+        "system": "http://unitsofmeasure.org",
+        "code": "{steps}",
+        "unit": "steps"
+      },
       "effective": "Period",
       "coverage": {
         "healthkit": "supported",
         "health-connect": "supported",
-        "sensorkit": "supported",
+        "sensorkit": "mapped-standard",
         "google-health-api": "supported",
         "oura": "supported",
         "withings": "supported"
+      },
+      "coverageDetails": {
+        "sensorkit": {
+          "sourceTokens": ["SRSensor.pedometerData"],
+          "alternateRepresentation": "https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document",
+          "reason": "The composite pedometer record is retained as an exact raw recording; it does not implement the Mobile step-count profile."
+        }
       }
     }
   ]

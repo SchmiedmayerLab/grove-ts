@@ -1,6 +1,6 @@
 {
-  "repository": "https://github.com/GroveAlliance/grove-fhir",
-  "ref": "feature/fhir-v020-mobile-catalog",
-  "resolvedSha": "025cfe69caf8795e33a33658a53eccb041a8c206",
-  "dirty": false
+  "repository": "https://github.com/SchmiedmayerLab/grove-fhir",
+  "ref": "feature/fhir-v020-adapters",
+  "resolvedSha": "2763fe14f1659527ed9a5099fc0523dbafc2a173",
+  "dirty": true
 }

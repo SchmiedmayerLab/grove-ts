@@ -6,5 +6,4 @@
 // SPDX-License-Identifier: MIT
 //
 
-export { PROFILES, SYSTEMS } from '../mobile/profiles.js'
 export { parseProvenance, type Provenance } from '../r4/index.js'

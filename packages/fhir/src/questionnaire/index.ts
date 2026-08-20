@@ -7,6 +7,11 @@
 //
 
 export { buildQuestionnaire, buildQuestionnaireResponse } from './builder.js'
+export {
+  groveFhirContractVersion,
+  groveFhirVersion,
+  groveQuestionnairePackageMetadata,
+} from './contract.generated.js'
 export { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
 export { preflightQuestionnairePair } from './preflight.js'
 export {

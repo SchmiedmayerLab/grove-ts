@@ -10,6 +10,7 @@ import { type z } from 'zod'
 import {
   collectionBundleSchema,
   deviceSchema,
+  documentReferenceSchema,
   observationSchema,
   provenanceSchema,
   specimenSchema,
@@ -18,6 +19,7 @@ import {
 import type {
   CollectionBundle,
   Device,
+  DocumentReference,
   Observation,
   Provenance,
   Specimen,
@@ -55,6 +57,10 @@ export const parseObservation = (input: unknown): Result<Observation> =>
 
 export const parseDevice = (input: unknown): Result<Device> =>
   parseWith(deviceSchema, input)
+
+export const parseDocumentReference = (
+  input: unknown,
+): Result<DocumentReference> => parseWith(documentReferenceSchema, input)
 
 export const parseProvenance = (input: unknown): Result<Provenance> =>
   parseWith(provenanceSchema, input)

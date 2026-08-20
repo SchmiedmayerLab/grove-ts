@@ -8,7 +8,8 @@
 
 export type ReadonlyDeep<T> =
   T extends (...arguments_: never[]) => unknown ? T
-  : T extends ReadonlyArray<infer Item> ? ReadonlyArray<ReadonlyDeep<Item>>
+  : T extends readonly unknown[] ?
+    Readonly<{ [Index in keyof T]: ReadonlyDeep<T[Index]> }>
   : T extends object ? { readonly [Key in keyof T]: ReadonlyDeep<T[Key]> }
   : T
 

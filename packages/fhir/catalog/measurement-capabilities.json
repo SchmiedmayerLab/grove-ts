@@ -2,8 +2,18 @@
   "schemaVersion": 1,
   "igVersion": "0.2.0",
   "canonicalBase": "https://grovealliance.org/fhir",
+  "recordConversion": {
+    "input": "One connected-provider source record with a non-empty unique subset of the catalog-admitted outputs actually present.",
+    "atomicity": "Every present output is validated before construction; any failure rejects the whole conversion without a partial graph.",
+    "provenance": "Exactly one conversion Provenance targets every output emitted for the source record.",
+    "ordering": "Catalog order is used only for deterministic serialization and has no FHIR semantic meaning.",
+    "fetchBoundary": "Provider clients, authentication, pagination, webhooks, and raw response models remain outside grove-fhir."
+  },
   "statuses": {
     "implemented": "A closed public builder emits resources conforming to the listed v0.2 profile.",
+    "implemented-recording": "The closed native-recording builder emits the exact Sensor + Connected Health DocumentReference graph for this catalogued provider source token.",
+    "profiled-not-admitted": "The shared profile exists, but this adapter facade has no supported provider source.",
+    "adapter-profiled": "Version 0.2 defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Connected Health facade.",
     "planned-shared": "The concept is shared by multiple sources but has no admitted v0.2 Grove builder.",
     "adapter-specific": "The semantics are source-specific and must not be collapsed into a shared concept.",
     "sensor-ig": "The concept belongs to the Sensor and Waveform contract.",
@@ -24,13 +34,7 @@
       },
       "unit": { "code": "/min", "display": "beats/minute" },
       "effective": "dateTime",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health",
-        "oura",
-        "withings"
-      ]
+      "sources": ["healthkit", "health-connect", "sensorkit", "withings"]
     },
     {
       "key": "body-weight",
@@ -46,7 +50,12 @@
       },
       "unit": { "code": "kg", "display": "kg" },
       "effective": "dateTime",
-      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "withings"
+      ]
     },
     {
       "key": "blood-pressure",
@@ -76,11 +85,16 @@
       },
       "unit": { "code": "Cel", "display": "°C" },
       "effective": "dateTime",
-      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "withings"
+      ]
     },
     {
       "key": "respiratory-rate",
-      "status": "implemented",
+      "status": "profiled-not-admitted",
       "profile": "grove-mobile-respiratory-rate",
       "authoritativeProfiles": [
         "http://hl7.org/fhir/StructureDefinition/resprate"
@@ -92,13 +106,8 @@
       },
       "unit": { "code": "/min", "display": "breaths/minute" },
       "effective": "dateTime",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health",
-        "oura",
-        "withings"
-      ]
+      "sources": ["healthkit", "health-connect"],
+      "reason": "The connected providers expose daily aggregates rather than the point-in-time respiratory-rate semantics required by the shared profile."
     },
     {
       "key": "oxygen-saturation",
@@ -114,13 +123,7 @@
       },
       "unit": { "code": "%", "display": "%" },
       "effective": "dateTime",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health",
-        "oura",
-        "withings"
-      ]
+      "sources": ["healthkit", "health-connect", "withings"]
     },
     {
       "key": "body-height",
@@ -136,12 +139,18 @@
       },
       "unit": { "code": "cm", "display": "cm" },
       "effective": "dateTime",
-      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "withings"
+      ]
     },
     {
       "key": "body-mass-index",
-      "status": "implemented",
-      "profile": "grove-mobile-bmi",
+      "status": "adapter-profiled",
+      "profile": "http://hl7.org/fhir/StructureDefinition/bmi",
+      "adapterProfile": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
       "authoritativeProfiles": ["http://hl7.org/fhir/StructureDefinition/bmi"],
       "code": {
         "system": "http://loinc.org",
@@ -150,7 +159,8 @@
       },
       "unit": { "code": "kg/m2", "display": "kg/m²" },
       "effective": "dateTime",
-      "sources": ["healthkit", "google-health", "withings"]
+      "sources": ["healthkit"],
+      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact v0.2 claim; a one-source shared Mobile wrapper is prohibited."
     },
     {
       "key": "step-count",
@@ -166,7 +176,8 @@
       "sources": [
         "healthkit",
         "health-connect",
-        "google-health",
+        "sensorkit",
+        "google-health-api",
         "oura",
         "withings"
       ]
@@ -176,8 +187,8 @@
       "status": "implemented",
       "profile": "grove-mobile-distance",
       "code": {
-        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
-        "code": "distance-traveled",
+        "system": "http://loinc.org",
+        "code": "103208-5",
         "display": "Distance traveled"
       },
       "unit": { "code": "m", "display": "m" },
@@ -185,7 +196,7 @@
       "sources": [
         "healthkit",
         "health-connect",
-        "google-health",
+        "google-health-api",
         "oura",
         "withings"
       ]
@@ -204,15 +215,15 @@
       "sources": [
         "healthkit",
         "health-connect",
-        "google-health",
+        "google-health-api",
         "oura",
         "withings"
       ]
     },
     {
       "key": "blood-glucose",
-      "status": "implemented",
-      "profile": "grove-mobile-blood-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
       "code": {
         "system": "http://loinc.org",
         "code": "2339-0",
@@ -220,12 +231,13 @@
       },
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
-      "sources": ["health-connect", "google-health"]
+      "sources": ["health-connect"],
+      "reason": "The exact whole-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Connected Health facade fails closed."
     },
     {
       "key": "capillary-blood-glucose",
-      "status": "implemented",
-      "profile": "grove-mobile-capillary-blood-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
       "code": {
         "system": "http://loinc.org",
         "code": "32016-8",
@@ -233,12 +245,13 @@
       },
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
-      "sources": ["health-connect", "google-health"]
+      "sources": ["health-connect"],
+      "reason": "The exact capillary-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Connected Health facade fails closed."
     },
     {
       "key": "serum-plasma-glucose",
-      "status": "implemented",
-      "profile": "grove-mobile-serum-plasma-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
       "code": {
         "system": "http://loinc.org",
         "code": "2345-7",
@@ -246,12 +259,13 @@
       },
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
-      "sources": ["health-connect", "google-health"]
+      "sources": ["health-connect"],
+      "reason": "The exact serum/plasma + specimen contract is Health Connect-owned. The consumed Google Health API shape cannot supply the required specimen evidence, so the Connected Health facade fails closed."
     },
     {
       "key": "interstitial-glucose",
-      "status": "implemented",
-      "profile": "grove-mobile-interstitial-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose",
       "code": {
         "system": "http://loinc.org",
         "code": "99504-3",
@@ -259,7 +273,8 @@
       },
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
-      "sources": ["health-connect", "google-health"]
+      "sources": ["health-connect"],
+      "reason": "The exact interstitial-fluid + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Connected Health facade fails closed."
     },
     {
       "key": "sleep-duration",
@@ -272,17 +287,11 @@
       },
       "unit": { "code": "h", "display": "h" },
       "effective": "Period",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health",
-        "oura",
-        "withings"
-      ]
+      "sources": ["health-connect", "google-health-api", "oura"]
     },
     {
       "key": "sleep-stage",
-      "status": "implemented",
+      "status": "profiled-not-admitted",
       "profile": "grove-mobile-sleep-stage",
       "code": {
         "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
@@ -290,13 +299,48 @@
         "display": "Sleep stage"
       },
       "effective": "Period",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health",
-        "oura",
-        "withings"
-      ]
+      "sources": ["healthkit", "health-connect"],
+      "reason": "The connected-provider inventories expose stage-duration summaries rather than bounded stage intervals, so the facade does not relabel them."
+    },
+    {
+      "key": "google-health-api-heart-rate-recording",
+      "status": "implemented-recording",
+      "provider": "google-health-api",
+      "sourceType": "heart-rate",
+      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+      "outputDiscriminator": "native-recording",
+      "sources": ["google-health-api"]
+    },
+    {
+      "key": "oura-heart-rate-recording",
+      "status": "implemented-recording",
+      "provider": "oura",
+      "sourceType": "heartrate",
+      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+      "outputDiscriminator": "native-recording",
+      "sources": ["oura"]
+    },
+    {
+      "key": "withings-activity-intraday-recording",
+      "status": "implemented-recording",
+      "provider": "withings",
+      "sourceType": "activityIntraday",
+      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+      "outputDiscriminator": "native-recording",
+      "sources": ["withings"]
+    },
+    {
+      "key": "withings-sleep-intraday-recording",
+      "status": "implemented-recording",
+      "provider": "withings",
+      "sourceType": "sleepIntraday",
+      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
+      "outputDiscriminator": "native-recording",
+      "sources": ["withings"]
     },
     {
       "key": "resting-heart-rate",
@@ -304,7 +348,7 @@
       "sources": [
         "healthkit",
         "health-connect",
-        "google-health",
+        "google-health-api",
         "oura",
         "withings"
       ],
@@ -313,7 +357,7 @@
     {
       "key": "heart-rate-variability-sdnn",
       "status": "planned-shared",
-      "sources": ["healthkit", "google-health"],
+      "sources": ["healthkit", "google-health-api"],
       "reason": "SDNN must not be conflated with RMSSD."
     },
     {
@@ -325,7 +369,12 @@
     {
       "key": "body-fat-percentage",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health", "withings"]
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "withings"
+      ]
     },
     {
       "key": "lean-body-mass",
@@ -344,7 +393,7 @@
     },
     {
       "key": "basal-body-temperature",
-      "status": "implemented",
+      "status": "profiled-not-admitted",
       "profile": "grove-mobile-basal-body-temperature",
       "code": {
         "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
@@ -353,7 +402,8 @@
       },
       "unit": { "code": "Cel", "display": "°C" },
       "effective": "dateTime",
-      "sources": ["healthkit", "health-connect"]
+      "sources": ["healthkit", "health-connect"],
+      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement in v0.2."
     },
     {
       "key": "skin-temperature",
@@ -364,23 +414,28 @@
     {
       "key": "basal-energy",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health"]
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
       "key": "total-energy",
       "status": "planned-shared",
-      "sources": ["health-connect", "google-health", "oura", "withings"]
+      "sources": ["health-connect", "google-health-api", "oura", "withings"]
     },
     {
       "key": "flights-or-floors-climbed",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health", "withings"],
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "withings"
+      ],
       "reason": "A precise conversion between flights and floors is not assumed."
     },
     {
       "key": "elevation-gained",
       "status": "planned-shared",
-      "sources": ["health-connect", "google-health", "oura", "withings"]
+      "sources": ["health-connect", "google-health-api", "oura", "withings"]
     },
     {
       "key": "vo2-max",
@@ -388,7 +443,7 @@
       "sources": [
         "healthkit",
         "health-connect",
-        "google-health",
+        "google-health-api",
         "oura",
         "withings"
       ]
@@ -396,49 +451,37 @@
     {
       "key": "walking-speed",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health"]
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
       "key": "running-speed",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health"]
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
       "key": "cycling-cadence",
       "status": "planned-shared",
-      "sources": ["health-connect", "google-health", "withings"]
+      "sources": ["health-connect", "google-health-api", "withings"]
     },
     {
       "key": "step-cadence",
       "status": "planned-shared",
-      "sources": ["health-connect", "google-health"]
+      "sources": ["health-connect", "google-health-api"]
     },
     {
       "key": "power",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health"]
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
       "key": "hydration",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health"]
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
       "key": "nutrition",
       "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health"]
-    },
-    {
-      "key": "sleep-stage",
-      "status": "planned-shared",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health",
-        "oura",
-        "withings"
-      ],
-      "reason": "Stage intervals require a shared stage vocabulary and overlap rules."
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
       "key": "exercise-session",
@@ -446,7 +489,7 @@
       "sources": [
         "healthkit",
         "health-connect",
-        "google-health",
+        "google-health-api",
         "oura",
         "withings"
       ]

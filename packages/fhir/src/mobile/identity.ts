@@ -38,6 +38,30 @@ const containsIsolatedSurrogate = (value: string): boolean => {
   return false
 }
 
+export type CanonicalIdentityValue = string | readonly CanonicalIdentityValue[]
+
+export const canonicalizeBoundedJcsIdentity = (
+  value: CanonicalIdentityValue,
+): Result<string> => {
+  if (typeof value === 'string') {
+    if (containsIsolatedSurrogate(value)) {
+      return err(
+        'invalid-identifier',
+        'Identity strings must contain Unicode scalar values only.',
+      )
+    }
+    return ok(JSON.stringify(value))
+  }
+
+  const elements: string[] = []
+  for (const item of value) {
+    const canonical = canonicalizeBoundedJcsIdentity(item)
+    if (!canonical.ok) return canonical
+    elements.push(canonical.value)
+  }
+  return ok(`[${elements.join(',')}]`)
+}
+
 /**
  * Serializes the exact `[system,value]` identity input required by the IG.
  * JSON.stringify is RFC 8785/JCS-compatible for this bounded string tuple.
@@ -50,8 +74,8 @@ export const canonicalizeEntryIdentifier = (
       'system',
     ])
   }
-  if (input.value.length === 0) {
-    return err('invalid-identifier', 'Identifier.value must not be empty.', [
+  if (input.value.trim() === '') {
+    return err('invalid-identifier', 'Identifier.value must not be blank.', [
       'value',
     ])
   }
@@ -64,7 +88,7 @@ export const canonicalizeEntryIdentifier = (
       'Identifier strings must contain Unicode scalar values only.',
     )
   }
-  return ok(JSON.stringify([input.system, input.value]))
+  return canonicalizeBoundedJcsIdentity([input.system, input.value])
 }
 
 /** Derives the IG-mandated lowercase UUID-v5 Bundle entry fullUrl. */
@@ -98,7 +122,7 @@ export const createEntryIdentity = (
   return ok(
     deepFreeze({
       fullUrl: fullUrl.value,
-      identifier,
+      identifier: { system: identifier.system, value: identifier.value },
       ...(id === undefined ? {} : { id }),
     }) as unknown as IdentifiedEntryIdentityInput,
   )

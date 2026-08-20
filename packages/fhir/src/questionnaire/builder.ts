@@ -6,14 +6,23 @@
 // SPDX-License-Identifier: MIT
 //
 
+import type { z } from 'zod'
+import { groveQuestionnaireProfileCanonicals } from './contract.generated.js'
+import {
+  validateQuestionnaireContract,
+  validateQuestionnaireResponseItemContract,
+} from './contract.js'
 import { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
+import { isR4ResourceType } from './r4-resource-types.js'
+import {
+  questionnaireBuilderInputSchema,
+  questionnaireResponseBuilderInputSchema,
+} from './schemas.js'
 import type {
   GroveQuestionnaire,
   GroveQuestionnaireResponse,
   QuestionnaireInput,
-  QuestionnaireItemInput,
   QuestionnaireResponseInput,
-  QuestionnaireResponseItemInput,
 } from './types.js'
 import {
   issues,
@@ -26,7 +35,6 @@ import {
   type Issue,
   type Result,
 } from '../core/index.js'
-import { groveFhirProfileCanonicals } from '../mobile/measurement-catalog.generated.js'
 
 /* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 canonicals are normative HTTP URIs. */
 
@@ -37,142 +45,34 @@ const COMPLETION_MODE =
   'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode'
 const PARTICIPATION_MODE =
   'http://terminology.hl7.org/CodeSystem/v3-ParticipationMode'
-const ENABLE_WHEN_EXPRESSION =
-  'http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-enableWhenExpression'
-const INITIAL_EXPRESSION =
-  'http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-initialExpression'
-const STYLE_SENSITIVE =
-  'http://hl7.org/fhir/StructureDefinition/rendering-styleSensitive'
-
 const issue = (
   code: Issue['code'],
   path: Issue['path'],
   message: string,
 ): Issue => ({ severity: 'error', code, path, message })
 
+const schemaIssue = (entry: z.core.$ZodIssue): Issue => ({
+  severity: 'error',
+  code: 'schema-invalid',
+  path: entry.path.map((component) =>
+    typeof component === 'symbol' ?
+      (component.description ?? component.toString())
+    : component,
+  ),
+  message: entry.message,
+})
+
+const parseBuilderInput = <T>(schema: z.ZodType, input: unknown): Result<T> => {
+  const parsed = schema.safeParse(input)
+  return parsed.success ?
+      ({ ok: true, value: parsed.data as T, warnings: [] } as const)
+    : issues(parsed.error.issues.map(schemaIssue))
+}
+
 const extensionCount = (
   extensions: ReadonlyArray<{ readonly url: string }> | undefined,
   url: string,
 ) => extensions?.filter((extension) => extension.url === url).length ?? 0
-
-const validateItemContent = (
-  item: QuestionnaireItemInput,
-  seen: Set<string>,
-  path: ReadonlyArray<number | string>,
-): readonly Issue[] => {
-  const failures: Issue[] = []
-  if (seen.has(item.linkId)) {
-    failures.push(
-      issue(
-        'duplicate-identifier',
-        [...path, 'linkId'],
-        `Questionnaire linkId ${item.linkId} is duplicated.`,
-      ),
-    )
-  }
-  seen.add(item.linkId)
-  if (item.type !== 'group' && (item.text?.trim() ?? '') === '') {
-    failures.push(
-      issue(
-        'missing-required',
-        [...path, 'text'],
-        'Every non-group Questionnaire item requires text.',
-      ),
-    )
-  }
-  if (
-    item.repeats === true &&
-    !['attachment', 'choice', 'open-choice'].includes(item.type)
-  ) {
-    failures.push(
-      issue(
-        'invalid-choice',
-        [...path, 'repeats'],
-        'Only choice, open-choice, and attachment questions may repeat.',
-      ),
-    )
-  }
-  if ((item.enableWhen?.length ?? 0) > 1 && item.enableBehavior === undefined) {
-    failures.push(
-      issue(
-        'missing-required',
-        [...path, 'enableBehavior'],
-        'Multiple enableWhen rules require enableBehavior.',
-      ),
-    )
-  }
-  return failures
-}
-
-const validateItemExclusivity = (
-  item: QuestionnaireItemInput,
-  path: ReadonlyArray<number | string>,
-): readonly Issue[] => {
-  const failures: Issue[] = []
-  if (
-    (item.enableWhen?.length ?? 0) > 0 &&
-    extensionCount(item.extension, ENABLE_WHEN_EXPRESSION) > 0
-  ) {
-    failures.push(
-      issue(
-        'invalid-choice',
-        path,
-        'An item cannot combine enableWhen with enableWhenExpression.',
-      ),
-    )
-  }
-  if (
-    (item.initial?.length ?? 0) > 0 &&
-    extensionCount(item.extension, INITIAL_EXPRESSION) > 0
-  ) {
-    failures.push(
-      issue(
-        'invalid-choice',
-        path,
-        'An item cannot combine initial with initialExpression.',
-      ),
-    )
-  }
-  if (
-    (item.answerOption?.length ?? 0) > 0 &&
-    item.answerValueSet !== undefined
-  ) {
-    failures.push(
-      issue(
-        'invalid-choice',
-        path,
-        'An item cannot combine answerOption with answerValueSet.',
-      ),
-    )
-  }
-  if (extensionCount(item.extension, STYLE_SENSITIVE) > 0) {
-    failures.push(
-      issue(
-        'invalid-code',
-        [...path, 'extension'],
-        'Presentation-sensitive questionnaire semantics are not supported.',
-      ),
-    )
-  }
-  return failures
-}
-
-const validateItems = (
-  items: readonly QuestionnaireItemInput[],
-  seen: Set<string>,
-  path: ReadonlyArray<number | string> = ['items'],
-): readonly Issue[] => {
-  const failures: Issue[] = []
-  for (const [index, item] of items.entries()) {
-    const itemPath = [...path, index]
-    failures.push(...validateItemContent(item, seen, itemPath))
-    failures.push(...validateItemExclusivity(item, itemPath))
-    failures.push(
-      ...validateItems(item.item ?? [], seen, [...itemPath, 'item']),
-    )
-  }
-  return failures
-}
 
 const validateQuestionnaireInput = (
   input: QuestionnaireInput,
@@ -211,6 +111,19 @@ const validateQuestionnaireInput = (
       ),
     )
   }
+  if (
+    input.subjectTypes?.some(
+      (entry) => entry.trim() !== '' && !isR4ResourceType(entry),
+    ) === true
+  ) {
+    failures.push(
+      issue(
+        'invalid-code',
+        ['subjectTypes'],
+        'Questionnaire.subjectTypes contains an unknown R4 ResourceType code.',
+      ),
+    )
+  }
   if (extensionCount(input.extensions, VERSION_ALGORITHM) > 0) {
     failures.push(
       issue(
@@ -220,16 +133,7 @@ const validateQuestionnaireInput = (
       ),
     )
   }
-  if (extensionCount(input.extensions, STYLE_SENSITIVE) > 0) {
-    failures.push(
-      issue(
-        'invalid-code',
-        ['extensions'],
-        'Presentation-sensitive questionnaire semantics are not supported.',
-      ),
-    )
-  }
-  failures.push(...validateItems(input.items, new Set()))
+  failures.push(...validateQuestionnaireContract(input.extensions, input.items))
   return failures
 }
 
@@ -237,17 +141,23 @@ const validateQuestionnaireInput = (
 export const buildQuestionnaire = (
   input: QuestionnaireInput,
 ): Result<GroveQuestionnaire> => {
-  const failures = validateQuestionnaireInput(input)
+  const parsedInput = parseBuilderInput<QuestionnaireInput>(
+    questionnaireBuilderInputSchema,
+    input,
+  )
+  if (!parsedInput.ok) return parsedInput
+  const validatedInput = parsedInput.value
+  const failures = validateQuestionnaireInput(validatedInput)
   if (failures.length > 0) return issues(failures)
 
   return parseQuestionnaire({
     resourceType: 'Questionnaire',
-    ...(input.id === undefined ? {} : { id: input.id }),
+    ...(validatedInput.id === undefined ? {} : { id: validatedInput.id }),
     meta: {
-      profile: [groveFhirProfileCanonicals['grove-questionnaire']],
+      profile: [groveQuestionnaireProfileCanonicals['grove-questionnaire']],
     },
     extension: [
-      ...(input.extensions ?? []),
+      ...(validatedInput.extensions ?? []),
       {
         url: VERSION_ALGORITHM,
         valueCoding: {
@@ -256,56 +166,25 @@ export const buildQuestionnaire = (
         },
       },
     ],
-    url: input.url,
-    version: input.version,
-    ...(input.name === undefined ? {} : { name: input.name }),
-    ...(input.title === undefined ? {} : { title: input.title }),
-    status: input.status,
-    ...(input.subjectTypes === undefined ?
+    url: validatedInput.url,
+    version: validatedInput.version,
+    ...(validatedInput.name === undefined ? {} : { name: validatedInput.name }),
+    ...(validatedInput.title === undefined ?
       {}
-    : { subjectType: input.subjectTypes }),
-    ...(input.date === undefined ? {} : { date: input.date }),
-    ...(input.description === undefined ?
+    : { title: validatedInput.title }),
+    status: validatedInput.status,
+    ...(validatedInput.subjectTypes === undefined ?
       {}
-    : { description: input.description }),
-    ...(input.purpose === undefined ? {} : { purpose: input.purpose }),
-    item: input.items,
+    : { subjectType: validatedInput.subjectTypes }),
+    ...(validatedInput.date === undefined ? {} : { date: validatedInput.date }),
+    ...(validatedInput.description === undefined ?
+      {}
+    : { description: validatedInput.description }),
+    ...(validatedInput.purpose === undefined ?
+      {}
+    : { purpose: validatedInput.purpose }),
+    item: validatedInput.items,
   })
-}
-
-const validateResponseText = (
-  items: readonly QuestionnaireResponseItemInput[],
-  path: ReadonlyArray<number | string> = ['items'],
-): readonly Issue[] => {
-  const failures: Issue[] = []
-  for (const [index, item] of items.entries()) {
-    const itemPath = [...path, index]
-    if ((item.answer?.length ?? 0) > 0 && (item.text?.trim() ?? '') === '') {
-      failures.push(
-        issue(
-          'missing-required',
-          [...itemPath, 'text'],
-          'Every answered response item must repeat the question text.',
-        ),
-      )
-    }
-    if (item.item !== undefined) {
-      failures.push(...validateResponseText(item.item, [...itemPath, 'item']))
-    }
-    for (const [answerIndex, answer] of (item.answer ?? []).entries()) {
-      if (answer.item !== undefined) {
-        failures.push(
-          ...validateResponseText(answer.item, [
-            ...itemPath,
-            'answer',
-            answerIndex,
-            'item',
-          ]),
-        )
-      }
-    }
-  }
-  return failures
 }
 
 const validateResponseInput = (
@@ -378,7 +257,9 @@ const validateResponseInput = (
       ),
     )
   }
-  failures.push(...validateResponseText(input.items ?? []))
+  failures.push(
+    ...validateQuestionnaireResponseItemContract(input.items ?? [], ['items']),
+  )
   return failures
 }
 
@@ -386,17 +267,25 @@ const validateResponseInput = (
 export const buildQuestionnaireResponse = (
   input: QuestionnaireResponseInput,
 ): Result<GroveQuestionnaireResponse> => {
-  const failures = validateResponseInput(input)
+  const parsedInput = parseBuilderInput<QuestionnaireResponseInput>(
+    questionnaireResponseBuilderInputSchema,
+    input,
+  )
+  if (!parsedInput.ok) return parsedInput
+  const validatedInput = parsedInput.value
+  const failures = validateResponseInput(validatedInput)
   if (failures.length > 0) return issues(failures)
 
   return parseQuestionnaireResponse({
     resourceType: 'QuestionnaireResponse',
-    ...(input.id === undefined ? {} : { id: input.id }),
+    ...(validatedInput.id === undefined ? {} : { id: validatedInput.id }),
     meta: {
-      profile: [groveFhirProfileCanonicals['grove-questionnaire-response']],
+      profile: [
+        groveQuestionnaireProfileCanonicals['grove-questionnaire-response'],
+      ],
     },
     extension: [
-      ...(input.extensions ?? []),
+      ...(validatedInput.extensions ?? []),
       {
         url: COMPLETION_MODE,
         valueCodeableConcept: {
@@ -404,19 +293,21 @@ export const buildQuestionnaireResponse = (
         },
       },
     ],
-    identifier: input.identifier,
-    questionnaire: input.questionnaire,
-    status: input.status,
-    ...(input.subject === undefined ?
+    identifier: validatedInput.identifier,
+    questionnaire: validatedInput.questionnaire,
+    status: validatedInput.status,
+    ...(validatedInput.subject === undefined ?
       {}
-    : { subject: { reference: input.subject } }),
-    authored: input.authored,
-    ...(input.authorReference === undefined ?
+    : { subject: { reference: validatedInput.subject } }),
+    authored: validatedInput.authored,
+    ...(validatedInput.authorReference === undefined ?
       {}
-    : { author: { reference: input.authorReference } }),
-    ...(input.sourceReference === undefined ?
+    : { author: { reference: validatedInput.authorReference } }),
+    ...(validatedInput.sourceReference === undefined ?
       {}
-    : { source: { reference: input.sourceReference } }),
-    ...(input.items === undefined ? {} : { item: input.items }),
+    : { source: { reference: validatedInput.sourceReference } }),
+    ...(validatedInput.items === undefined ?
+      {}
+    : { item: validatedInput.items }),
   })
 }
