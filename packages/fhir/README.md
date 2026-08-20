@@ -77,6 +77,38 @@ under `catalog/grove-fhir`. `catalog/measurement-capabilities.json` distinguishe
 the 18 constructible shared measurements from reviewed future, adapter-only,
 sensor, and out-of-scope candidates.
 
+## Questionnaires
+
+The `questionnaire` entry point builds strict, versioned R4
+`Questionnaire`/`QuestionnaireResponse` resources and preflights a pair before
+submission:
+
+```typescript
+import {
+  buildQuestionnaire,
+  buildQuestionnaireResponse,
+  preflightQuestionnairePair,
+} from '@schmiedmayerlab/grove-fhir/questionnaire'
+```
+
+The builders own the exact Grove profile declarations, Semantic Versioning
+algorithm extension, and electronic completion-mode extension. Answer values
+are an exactly-one `value[x]` union in TypeScript and in the runtime schema.
+The pair preflight checks the exact `url|version`, global link identity,
+response nesting, answer types, inline options, repeats, response text,
+conditional enablement, and required enabled items for completed or amended
+responses.
+
+Terminology is never fetched. For a coded item backed by `answerValueSet`, the
+caller supplies a normalized resolved concept list through
+`QuestionnairePreflightOptions`; an absent expansion fails closed with an
+`external-validation-required` issue. Completed instruments that depend on a
+FHIRPath enablement expression likewise fail closed so an application can route
+them through its configured expression/conformance engine.
+
+This package does not extract Questionnaire answers into Observations. That is
+a separate, explicitly configured clinical mapping operation.
+
 ## Entry points
 
 Use the root entry point for high-level parsing and validated primitives:

@@ -18,6 +18,7 @@ export {
   parseFhirId,
   parseFhirInstant,
   parsePatientReference,
+  parseSemVer,
   parseUrnUuid,
   type AbsoluteUri,
   type Canonical,
@@ -29,6 +30,7 @@ export {
   type PatientReference,
   type ReadonlyDeep,
   type Result,
+  type SemVer,
   type UrnUuid,
 } from './core/index.js'
 
@@ -71,3 +73,21 @@ export {
   type SourceCodingInput,
   type SpecimenIdentityInput,
 } from './mobile/index.js'
+
+export {
+  buildQuestionnaire,
+  buildQuestionnaireResponse,
+  parseQuestionnaire,
+  parseQuestionnaireResponse,
+  preflightQuestionnairePair,
+  type GroveQuestionnaire,
+  type GroveQuestionnaireResponse,
+  type QuestionnaireInput,
+  type QuestionnaireItemInput,
+  type QuestionnairePair,
+  type QuestionnairePreflightOptions,
+  type QuestionnaireResponseAnswerInput,
+  type QuestionnaireResponseInput,
+  type QuestionnaireResponseItemInput,
+  type ResolvedQuestionnaireValueSetInput,
+} from './questionnaire/index.js'

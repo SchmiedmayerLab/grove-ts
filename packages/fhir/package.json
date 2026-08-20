@@ -19,6 +19,10 @@
       "types": "./dist/mobile/index.d.ts",
       "default": "./dist/mobile/index.js"
     },
+    "./questionnaire": {
+      "types": "./dist/questionnaire/index.d.ts",
+      "default": "./dist/questionnaire/index.js"
+    },
     "./provenance": {
       "types": "./dist/provenance/index.d.ts",
       "default": "./dist/provenance/index.js"

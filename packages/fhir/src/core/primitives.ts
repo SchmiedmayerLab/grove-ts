@@ -17,6 +17,7 @@ export type Canonical = Branded<'Canonical'>
 export type FhirId = Branded<'FhirId'>
 export type FhirInstant = Branded<'FhirInstant'>
 export type PatientReference = Branded<'PatientReference'>
+export type SemVer = Branded<'SemVer'>
 export type UrnUuid = Branded<'UrnUuid'>
 
 const FHIR_ID = /^[A-Za-z0-9\-.]{1,64}$/u
@@ -25,6 +26,52 @@ const INSTANT =
 const UUID =
   '[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 const URN_UUID = new RegExp(`^urn:uuid:${UUID}$`, 'u')
+const DECIMAL_IDENTIFIER = /^\d+$/u
+const SEMVER_IDENTIFIER = /^[\dA-Za-z-]+$/u
+
+const isNumericIdentifier = (value: string): boolean =>
+  DECIMAL_IDENTIFIER.test(value) && (value === '0' || !value.startsWith('0'))
+
+const areValidIdentifiers = (
+  value: string | undefined,
+  numericLeadingZeroAllowed: boolean,
+): boolean =>
+  value === undefined ||
+  (value.length > 0 &&
+    value
+      .split('.')
+      .every(
+        (identifier) =>
+          identifier.length > 0 &&
+          SEMVER_IDENTIFIER.test(identifier) &&
+          (numericLeadingZeroAllowed ||
+            !DECIMAL_IDENTIFIER.test(identifier) ||
+            isNumericIdentifier(identifier)),
+      ))
+
+const isSemVer = (value: string): boolean => {
+  const buildSeparator = value.indexOf('+')
+  if (buildSeparator !== value.lastIndexOf('+')) return false
+  const version = buildSeparator === -1 ? value : value.slice(0, buildSeparator)
+  const build =
+    buildSeparator === -1 ? undefined : value.slice(buildSeparator + 1)
+
+  const prereleaseSeparator = version.indexOf('-')
+  const core =
+    prereleaseSeparator === -1 ? version : version.slice(0, prereleaseSeparator)
+  const prerelease =
+    prereleaseSeparator === -1 ? undefined : (
+      version.slice(prereleaseSeparator + 1)
+    )
+  const coreIdentifiers = core.split('.')
+
+  return (
+    coreIdentifiers.length === 3 &&
+    coreIdentifiers.every(isNumericIdentifier) &&
+    areValidIdentifiers(prerelease, false) &&
+    areValidIdentifiers(build, true)
+  )
+}
 
 const isAbsoluteUri = (value: string): boolean => {
   try {
@@ -112,4 +159,11 @@ export const parseUrnUuid = (value: unknown): Result<UrnUuid> => {
     return err('invalid-uri', 'Expected a lowercase RFC 4122 urn:uuid fullUrl.')
   }
   return ok(value as UrnUuid)
+}
+
+export const parseSemVer = (value: unknown): Result<SemVer> => {
+  if (typeof value !== 'string' || !isSemVer(value)) {
+    return err('invalid-code', 'Expected a Semantic Versioning 2.0.0 version.')
+  }
+  return ok(value as SemVer)
 }

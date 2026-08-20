@@ -10,6 +10,7 @@ export type IssueSeverity = 'error' | 'warning'
 
 export type IssueCode =
   | 'duplicate-identifier'
+  | 'external-validation-required'
   | 'invalid-choice'
   | 'invalid-code'
   | 'invalid-date-time'

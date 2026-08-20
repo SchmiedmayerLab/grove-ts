@@ -13,12 +13,14 @@ export {
   parseFhirId,
   parseFhirInstant,
   parsePatientReference,
+  parseSemVer,
   parseUrnUuid,
   type AbsoluteUri,
   type Canonical,
   type FhirId,
   type FhirInstant,
   type PatientReference,
+  type SemVer,
   type UrnUuid,
 } from './primitives.js'
 export {
