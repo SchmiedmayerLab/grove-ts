@@ -54,11 +54,16 @@ jobs:
           EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
 
-      - name: Checkout the moving Grove FHIR development ref
+      # The pin lives with the package that reads it, so CI and a local run agree.
+      - name: Read the pinned Grove FHIR commit
+        id: grove-fhir
+        run: echo "sha=$(node -p "require('./packages/fhir/grove-fhir.json').sha")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the pinned Grove FHIR commit
         uses: actions/checkout@v7
         with:
           repository: SchmiedmayerLab/grove-fhir
-          ref: feature/fhir-v020-adapters
+          ref: ${{ steps.grove-fhir.outputs.sha }}
           path: .build/grove-fhir
           persist-credentials: false
 
