@@ -69,7 +69,7 @@ if (igStatus?.isDirectory() !== true) {
 }
 
 const catalogs = (await readdir(catalogRoot))
-  .filter((name) => name.endsWith('.json') && name !== 'source-ref.json')
+  .filter((name) => name.endsWith('.json'))
   .sort()
 const upstreamCatalogs = (await readdir(resolve(igRoot, 'catalog')))
   .filter((name) => name.endsWith('.json'))
@@ -90,12 +90,7 @@ await requireByteIdentical(
   'Conformance/corpora/mobile-semantics/corpus.json',
 )
 
-const sourceRef = await readJson(resolve(catalogRoot, 'source-ref.json'))
-if (!structuralOnly && sourceRef.dirty === true) {
-  throw new Error(
-    'Official Validator readiness requires catalogs synchronized from a clean IG commit.',
-  )
-}
+const pin = await readJson(resolve(packageRoot, 'grove-fhir.json'))
 const revision = spawnSync('git', ['-C', igRoot, 'rev-parse', 'HEAD'], {
   encoding: 'utf8',
 })
@@ -103,11 +98,12 @@ if (revision.status !== 0) {
   throw new Error('Cannot resolve the Grove FHIR checkout revision.')
 }
 const resolvedSha = revision.stdout.trim()
-stdout.write(`Grove FHIR ref: ${sourceRef.ref}\n`)
+stdout.write(`Grove FHIR pinned commit: ${pin.sha}\n`)
 stdout.write(`Grove FHIR checkout SHA: ${resolvedSha}\n`)
-if (resolvedSha !== sourceRef.resolvedSha) {
-  stdout.write(
-    `Development snapshot recorded by this branch: ${sourceRef.resolvedSha}\n`,
+// The guide checkout and the catalogs this package generated from must be one commit.
+if (!structuralOnly && resolvedSha !== pin.sha) {
+  throw new Error(
+    `The Grove FHIR checkout is ${resolvedSha}, but this package is pinned to ${pin.sha}.`,
   )
 }
 
