@@ -19,9 +19,9 @@
       "types": "./dist/mobile/index.d.ts",
       "default": "./dist/mobile/index.js"
     },
-    "./connected-health": {
-      "types": "./dist/connected-health/index.d.ts",
-      "default": "./dist/connected-health/index.js"
+    "./providers": {
+      "types": "./dist/providers/index.d.ts",
+      "default": "./dist/providers/index.js"
     },
     "./questionnaire": {
       "types": "./dist/questionnaire/index.d.ts",

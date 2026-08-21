@@ -9,8 +9,8 @@
 /* eslint-disable sonarjs/no-clear-text-protocols -- FHIR fixes these canonical URIs to HTTP. */
 
 import {
-  groveConnectedHealthPackageCanonicals,
-  groveConnectedHealthProfileCanonicals,
+  groveProviderPackageCanonicals,
+  groveProviderProfileCanonicals,
 } from './contract.generated.js'
 import { groveFhirExchangeIdentity } from '../mobile/measurement-catalog.generated.js'
 
@@ -22,7 +22,7 @@ type GroveSystems = Readonly<{
 }>
 
 export const SYSTEMS: GroveSystems = {
-  groveRecordingMethod: `${groveConnectedHealthPackageCanonicals.mobile}/CodeSystem/grove-recording-method`,
+  groveRecordingMethod: `${groveProviderPackageCanonicals.mobile}/CodeSystem/grove-recording-method`,
   isoLifecycle: 'http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle',
   observationCategory:
     'http://terminology.hl7.org/CodeSystem/observation-category',
@@ -34,38 +34,38 @@ type GroveProfiles = Readonly<{
   mobileBundle: string
   recordingDevice: string
   applicationDevice: string
-  connectedHealthObservation: string
+  providerObservation: string
   sensorRecordingDocument: string
-  connectedHealthRecordingDocument: string
-  connectedHealthConversionProvenance: string
+  providerRecordingDocument: string
+  providerConversionProvenance: string
 }>
 
 export const PROFILES: GroveProfiles = {
   mobileBundle:
-    groveConnectedHealthProfileCanonicals['grove-mobile-exchange-bundle'],
+    groveProviderProfileCanonicals['grove-mobile-exchange-bundle'],
   recordingDevice:
-    groveConnectedHealthProfileCanonicals['grove-recording-device'],
+    groveProviderProfileCanonicals['grove-recording-device'],
   applicationDevice:
-    groveConnectedHealthProfileCanonicals['grove-application-device'],
-  connectedHealthObservation:
-    groveConnectedHealthProfileCanonicals['connected-health-observation'],
+    groveProviderProfileCanonicals['grove-application-device'],
+  providerObservation:
+    groveProviderProfileCanonicals['provider-observation'],
   sensorRecordingDocument:
-    groveConnectedHealthProfileCanonicals['grove-sensor-recording-document'],
-  connectedHealthRecordingDocument:
-    groveConnectedHealthProfileCanonicals[
-      'connected-health-recording-document'
+    groveProviderProfileCanonicals['grove-sensor-recording-document'],
+  providerRecordingDocument:
+    groveProviderProfileCanonicals[
+      'provider-recording-document'
     ],
-  connectedHealthConversionProvenance:
-    groveConnectedHealthProfileCanonicals[
-      'connected-health-conversion-provenance'
+  providerConversionProvenance:
+    groveProviderProfileCanonicals[
+      'provider-conversion-provenance'
     ],
 } as const
 
 type GroveExtensions = Readonly<{
   gatewayDevice: string
   recordingMethod: string
-  connectedHealthProvider: string
-  connectedHealthSourceType: string
+  provider: string
+  providerSourceType: string
   exchangeEntryIdentifier: string
   researchStudy: string
 }>
@@ -73,9 +73,9 @@ type GroveExtensions = Readonly<{
 export const EXTENSIONS: GroveExtensions = {
   gatewayDevice:
     'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
-  recordingMethod: `${groveConnectedHealthPackageCanonicals.mobile}/StructureDefinition/grove-recording-method`,
-  connectedHealthProvider: `${groveConnectedHealthPackageCanonicals['connected-health']}/StructureDefinition/connected-health-provider`,
-  connectedHealthSourceType: `${groveConnectedHealthPackageCanonicals['connected-health']}/StructureDefinition/connected-health-source-type`,
+  recordingMethod: `${groveProviderPackageCanonicals.mobile}/StructureDefinition/grove-recording-method`,
+  provider: `${groveProviderPackageCanonicals['providers']}/StructureDefinition/provider`,
+  providerSourceType: `${groveProviderPackageCanonicals['providers']}/StructureDefinition/provider-source-type`,
   exchangeEntryIdentifier: groveFhirExchangeIdentity.entryIdentifierExtension,
   researchStudy:
     'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',

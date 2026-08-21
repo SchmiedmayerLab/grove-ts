@@ -7,24 +7,24 @@
 //
 
 import { expectTypeOf } from 'expect-type'
-import * as connectedHealth from '../src/connected-health/index.js'
+import * as provider from '../src/providers/index.js'
 import * as root from '../src/index.js'
 import * as mobile from '../src/mobile/index.js'
 import * as provenance from '../src/provenance/index.js'
 
 type HasMeasurementBuilder<T> =
-  'buildConnectedHealthMeasurementBundle' extends keyof T ? true : false
+  'buildProviderMeasurementBundle' extends keyof T ? true : false
 type HasRecordingBuilder<T> =
-  'buildConnectedHealthRecordingBundle' extends keyof T ? true : false
+  'buildProviderRecordingBundle' extends keyof T ? true : false
 type HasInternalPackageGraph<T> =
   'groveFhirPackageGraph' extends keyof T ? true : false
 
 describe('public entry-point boundaries', () => {
   it('keeps provider-specific APIs out of the source-neutral entry points', () => {
-    expect('buildConnectedHealthMeasurementBundle' in root).toBe(false)
-    expect('buildConnectedHealthRecordingBundle' in root).toBe(false)
-    expect('buildConnectedHealthMeasurementBundle' in mobile).toBe(false)
-    expect('buildConnectedHealthRecordingBundle' in mobile).toBe(false)
+    expect('buildProviderMeasurementBundle' in root).toBe(false)
+    expect('buildProviderRecordingBundle' in root).toBe(false)
+    expect('buildProviderMeasurementBundle' in mobile).toBe(false)
+    expect('buildProviderRecordingBundle' in mobile).toBe(false)
     expect(JSON.stringify(mobile.sharedMobileMeasurementCatalog)).not.toMatch(
       /healthkit|health-connect|sensorkit|google-health-api|oura|withings|sourceTokens/u,
     )
@@ -50,19 +50,19 @@ describe('public entry-point boundaries', () => {
     >().toEqualTypeOf<false>()
   })
 
-  it('exposes the closed provider facade only from Connected Health', () => {
-    expect(typeof connectedHealth.buildConnectedHealthMeasurementBundle).toBe(
+  it('exposes the closed provider facade only from Provider', () => {
+    expect(typeof provider.buildProviderMeasurementBundle).toBe(
       'function',
     )
-    expect(typeof connectedHealth.buildConnectedHealthRecordingBundle).toBe(
+    expect(typeof provider.buildProviderRecordingBundle).toBe(
       'function',
     )
 
     expectTypeOf<
-      HasMeasurementBuilder<typeof connectedHealth>
+      HasMeasurementBuilder<typeof provider>
     >().toEqualTypeOf<true>()
     expectTypeOf<
-      HasRecordingBuilder<typeof connectedHealth>
+      HasRecordingBuilder<typeof provider>
     >().toEqualTypeOf<true>()
   })
 
@@ -72,8 +72,8 @@ describe('public entry-point boundaries', () => {
     expect(mobile.groveMobilePackageMetadata.packageId).toBe(
       'org.grovealliance.fhir.mobile',
     )
-    expect(connectedHealth.groveConnectedHealthPackageMetadata.packageId).toBe(
-      'org.grovealliance.fhir.connected-health',
+    expect(provider.groveProviderPackageMetadata.packageId).toBe(
+      'org.grovealliance.fhir.providers',
     )
 
     expectTypeOf(root.groveFhirVersion).toEqualTypeOf<'4.0.1'>()
@@ -85,19 +85,19 @@ describe('public entry-point boundaries', () => {
     expect(Object.isFrozen(mobile.sharedMobileMeasurementCatalog)).toBe(true)
     expect(Object.isFrozen(heartRate)).toBe(true)
     expect(Object.isFrozen(heartRate.code)).toBe(true)
-    expect(Object.isFrozen(connectedHealth.connectedHealthScalarMappings)).toBe(
+    expect(Object.isFrozen(provider.providerScalarMappings)).toBe(
       true,
     )
     expect(
-      connectedHealth.connectedHealthRecordEffectiveRules.oura.daily_activity
+      provider.providerRecordEffectiveRules.oura.daily_activity
         .kind,
     ).toBe('complete-civil-day-period')
     expect(
-      Object.isFrozen(connectedHealth.connectedHealthRecordEffectiveRules),
+      Object.isFrozen(provider.providerRecordEffectiveRules),
     ).toBe(true)
     expect(
       Object.isFrozen(
-        connectedHealth.groveConnectedHealthPackageMetadata.dependencies,
+        provider.groveProviderPackageMetadata.dependencies,
       ),
     ).toBe(true)
     expect(Reflect.set(heartRate.code, 'code', 'mutated-clinical-code')).toBe(

@@ -9,8 +9,8 @@
 import { sha1 } from '@noble/hashes/legacy.js'
 import { z } from 'zod'
 import {
-  connectedHealthAdapterCatalog,
-  connectedHealthRawMappings,
+  providerAdapterCatalog,
+  providerRawMappings,
 } from './contract.generated.js'
 import {
   assemblerAgent,
@@ -22,7 +22,7 @@ import {
   sourceEntityAgent,
 } from './graph.js'
 import {
-  deriveConnectedHealthIdentities,
+  deriveProviderIdentities,
   parseResourceIdentityInput,
 } from './identity.js'
 import { containsReversibleIdentityRepresentation } from './privacy.js'
@@ -37,7 +37,7 @@ import {
 } from './provider.js'
 import type {
   CanonicalBase64,
-  ConnectedHealthRecordingBundleInput,
+  ProviderRecordingBundleInput,
   ConnectedRawProvider,
   ImmutableRecordingUrl,
   MediaType,
@@ -196,14 +196,14 @@ export const parseImmutableRecordingUrl = (
   return ok(value as ImmutableRecordingUrl)
 }
 
-const providerValues = Object.keys(connectedHealthRawMappings) as [
+const providerValues = Object.keys(providerRawMappings) as [
   ConnectedRawProvider,
   ...ConnectedRawProvider[],
 ]
 
 const recordingSourceSchema = z.strictObject({
   adapter: z.strictObject({
-    kind: z.literal('connected-health'),
+    kind: z.literal('providers'),
     provider: z.enum(providerValues),
   }),
   providerAccountIdentifier: identifierInputSchema.extend({
@@ -218,7 +218,7 @@ const recordingAttachmentBase = {
   contentType: z.string().min(1),
   title: nonBlankStringSchema,
   payloadAssertion: z.enum(
-    connectedHealthAdapterCatalog.rawPayloadAdmission.allowedAssertions,
+    providerAdapterCatalog.rawPayloadAdmission.allowedAssertions,
   ),
 } as const
 
@@ -281,7 +281,7 @@ const recordingGraphIdentityIssues = (
 const hasRawMapping = (
   provider: ConnectedRawProvider,
   sourceType: string,
-): boolean => Object.hasOwn(connectedHealthRawMappings[provider], sourceType)
+): boolean => Object.hasOwn(providerRawMappings[provider], sourceType)
 
 const attachmentMetadataStrings = (
   attachment: z.infer<typeof recordingAttachmentSchema>,
@@ -328,10 +328,10 @@ const emittedCallerStrings = (
   input.repositoryIds?.provenance ?? '',
 ]
 
-/** Strict parser for the closed Connected Health mapped-standard facade. */
-export const parseConnectedHealthRecordingBundleInput = (
+/** Strict parser for the closed Provider mapped-standard facade. */
+export const parseProviderRecordingBundleInput = (
   input: unknown,
-): Result<ConnectedHealthRecordingBundleInput> => {
+): Result<ProviderRecordingBundleInput> => {
   const parsed = recordingBundleInputSchema.safeParse(input)
   if (!parsed.success) {
     return issues(parsed.error.issues.map(normalizeZodIssue))
@@ -349,7 +349,7 @@ export const parseConnectedHealthRecordingBundleInput = (
       severity: 'error',
       code: 'unsupported-measurement',
       path: ['source', 'sourceType'],
-      message: `${parsed.data.source.adapter.provider}/${parsed.data.source.sourceType} is not admitted as a Connected Health native recording.`,
+      message: `${parsed.data.source.adapter.provider}/${parsed.data.source.sourceType} is not admitted as a Provider native recording.`,
     })
   }
   const checks: ReadonlyArray<
@@ -432,7 +432,7 @@ export const parseConnectedHealthRecordingBundleInput = (
     } else if (!eventSequence.ok) {
       findings.push(...eventSequence.issues)
     } else {
-      const identity = deriveConnectedHealthIdentities({
+      const identity = deriveProviderIdentities({
         provider: parsed.data.source.adapter.provider,
         providerAccountIdentifier: {
           system: providerAccountSystem.value,
@@ -441,7 +441,7 @@ export const parseConnectedHealthRecordingBundleInput = (
         sourceType: parsed.data.source.sourceType,
         sourceNativeId: parsed.data.source.sourceNativeId,
         outputDiscriminators: [
-          connectedHealthAdapterCatalog.recordingDocument.outputDiscriminator,
+          providerAdapterCatalog.recordingDocument.outputDiscriminator,
         ],
         eventSequence: eventSequence.value,
       })
@@ -451,7 +451,7 @@ export const parseConnectedHealthRecordingBundleInput = (
 
   if (findings.length > 0) return issues(findings)
   return ok(
-    deepFreeze(parsed.data) as unknown as ConnectedHealthRecordingBundleInput,
+    deepFreeze(parsed.data) as unknown as ProviderRecordingBundleInput,
   )
 }
 
@@ -471,15 +471,15 @@ interface RecordingGraphIdentities {
 }
 
 const resolveRecordingGraphIdentities = (
-  input: ConnectedHealthRecordingBundleInput,
+  input: ProviderRecordingBundleInput,
 ): Result<RecordingGraphIdentities> => {
-  const connected = deriveConnectedHealthIdentities({
+  const connected = deriveProviderIdentities({
     provider: input.source.adapter.provider,
     providerAccountIdentifier: input.source.providerAccountIdentifier,
     sourceType: input.source.sourceType,
     sourceNativeId: input.source.sourceNativeId,
     outputDiscriminators: [
-      connectedHealthAdapterCatalog.recordingDocument.outputDiscriminator,
+      providerAdapterCatalog.recordingDocument.outputDiscriminator,
     ],
     eventSequence: input.eventSequence,
   })
@@ -528,11 +528,11 @@ const resolveRecordingGraphIdentities = (
 }
 
 const providerTitle = (provider: ConnectedRawProvider): string =>
-  connectedHealthAdapterCatalog.providers.find((entry) => entry.id === provider)
+  providerAdapterCatalog.providers.find((entry) => entry.id === provider)
     ?.title ?? provider
 
 const attachmentFor = (
-  input: ConnectedHealthRecordingBundleInput['attachment'],
+  input: ProviderRecordingBundleInput['attachment'],
 ) => {
   if (input.kind === 'external') {
     return {
@@ -558,10 +558,10 @@ const attachmentFor = (
  * provider recording. This pure facade performs no fetching, authentication,
  * webhook handling, vendor parsing, or credential management.
  */
-export const buildConnectedHealthRecordingBundle = (
-  input: ConnectedHealthRecordingBundleInput,
+export const buildProviderRecordingBundle = (
+  input: ProviderRecordingBundleInput,
 ): Result<CollectionBundle> => {
-  const parsed = parseConnectedHealthRecordingBundleInput(input)
+  const parsed = parseProviderRecordingBundleInput(input)
   if (!parsed.ok) return parsed
   const validated = parsed.value
   const identities = resolveRecordingGraphIdentities(validated)
@@ -574,16 +574,16 @@ export const buildConnectedHealthRecordingBundle = (
     meta: {
       profile: [
         PROFILES.sensorRecordingDocument,
-        PROFILES.connectedHealthRecordingDocument,
+        PROFILES.providerRecordingDocument,
       ],
     },
     extension: [
       {
-        url: EXTENSIONS.connectedHealthProvider,
+        url: EXTENSIONS.provider,
         valueCode: validated.source.adapter.provider,
       },
       {
-        url: EXTENSIONS.connectedHealthSourceType,
+        url: EXTENSIONS.providerSourceType,
         valueCode: sourceCode,
       },
     ],
@@ -605,7 +605,7 @@ export const buildConnectedHealthRecordingBundle = (
   const provenance = {
     resourceType: 'Provenance' as const,
     ...resourceId(identities.value.provenance),
-    meta: { profile: [PROFILES.connectedHealthConversionProvenance] },
+    meta: { profile: [PROFILES.providerConversionProvenance] },
     target: [{ reference: identities.value.document.fullUrl }],
     recorded: validated.recorded,
     activity: provenanceActivity(),

@@ -47,13 +47,13 @@ describe('source-neutral Mobile contract', () => {
       'org.grovealliance.fhir.mobile',
     )
     expect(Object.isFrozen(groveMobilePackageMetadata)).toBe(true)
-    expect('buildConnectedHealthMeasurementBundle' in mobile).toBe(false)
-    expect('connectedHealthAdapterCatalog' in mobile).toBe(false)
+    expect('buildProviderMeasurementBundle' in mobile).toBe(false)
+    expect('providerAdapterCatalog' in mobile).toBe(false)
     expect('groveFhirProfileCanonicals' in mobile).toBe(false)
     expect('PROFILES' in mobile).toBe(false)
-    expect('connectedHealthAdapterCatalog' in mobileContract).toBe(false)
-    expect('connectedHealthScalarMappings' in mobileContract).toBe(false)
-    expect('groveConnectedHealthPackageMetadata' in mobileContract).toBe(false)
+    expect('providerAdapterCatalog' in mobileContract).toBe(false)
+    expect('providerScalarMappings' in mobileContract).toBe(false)
+    expect('groveProviderPackageMetadata' in mobileContract).toBe(false)
   })
   it('contains only evidenced shared measurements', () => {
     const entries = Object.values(sharedMobileMeasurementCatalog)

@@ -10,21 +10,21 @@ import assert from 'node:assert/strict'
 import { stdout } from 'node:process'
 
 const packageName = '@schmiedmayerlab/grove-fhir'
-const [root, mobile, connectedHealth, provenance, questionnaire, r4] =
+const [root, mobile, provider, provenance, questionnaire, r4] =
   await Promise.all([
     import(packageName),
     import(`${packageName}/mobile`),
-    import(`${packageName}/connected-health`),
+    import(`${packageName}/providers`),
     import(`${packageName}/provenance`),
     import(`${packageName}/questionnaire`),
     import(`${packageName}/r4`),
   ])
 
 const providerExports = [
-  'buildConnectedHealthMeasurementBundle',
-  'buildConnectedHealthRecordingBundle',
-  'connectedHealthRawMappings',
-  'connectedHealthScalarMappings',
+  'buildProviderMeasurementBundle',
+  'buildProviderRecordingBundle',
+  'providerRawMappings',
+  'providerScalarMappings',
 ]
 const internalGraphExports = [
   'groveFhirPackageCanonicals',
@@ -51,9 +51,9 @@ for (const name of providerExports) {
     `${name} leaked through the source-neutral Provenance entry point`,
   )
   assert.equal(
-    name in connectedHealth,
+    name in provider,
     true,
-    `${name} is missing from the Connected Health entry point`,
+    `${name} is missing from the Provider entry point`,
   )
 }
 
@@ -61,7 +61,7 @@ for (const name of internalGraphExports) {
   for (const [label, entryPoint] of [
     ['root', root],
     ['Mobile', mobile],
-    ['Connected Health', connectedHealth],
+    ['Provider', provider],
     ['Provenance', provenance],
     ['Questionnaire', questionnaire],
   ]) {
@@ -81,8 +81,8 @@ assert.equal(
   'org.grovealliance.fhir.mobile',
 )
 assert.equal(
-  connectedHealth.groveConnectedHealthPackageMetadata.packageId,
-  'org.grovealliance.fhir.connected-health',
+  provider.groveProviderPackageMetadata.packageId,
+  'org.grovealliance.fhir.providers',
 )
 assert.equal(
   questionnaire.groveQuestionnairePackageMetadata.packageId,

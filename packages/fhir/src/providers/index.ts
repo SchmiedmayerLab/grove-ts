@@ -6,41 +6,41 @@
 // SPDX-License-Identifier: MIT
 //
 
-export { buildConnectedHealthMeasurementBundle } from './builder.js'
+export { buildProviderMeasurementBundle } from './builder.js'
 export {
-  connectedHealthAdapterCatalog,
-  connectedHealthRawMappings,
-  connectedHealthRecordEffectiveRules,
-  connectedHealthScalarMappings,
-  groveConnectedHealthPackageMetadata,
+  providerAdapterCatalog,
+  providerRawMappings,
+  providerRecordEffectiveRules,
+  providerScalarMappings,
+  groveProviderPackageMetadata,
   groveFhirContractVersion,
   groveFhirVersion,
-  type ConnectedHealthRawMappings,
-  type ConnectedHealthRecordEffectiveRules,
-  type ConnectedHealthScalarMappings,
+  type ProviderRawMappings,
+  type ProviderRecordEffectiveRules,
+  type ProviderScalarMappings,
 } from './contract.generated.js'
 export {
-  parseConnectedHealthMeasurementBundleInput,
+  parseProviderMeasurementBundleInput,
   parseNormalizedProviderRecord,
 } from './provider.js'
 export {
-  buildConnectedHealthRecordingBundle,
+  buildProviderRecordingBundle,
   encodeRecordingBytes,
   parseCanonicalBase64,
-  parseConnectedHealthRecordingBundleInput,
+  parseProviderRecordingBundleInput,
   parseImmutableRecordingUrl,
   parseMediaType,
   parseSha1Base64,
 } from './recording.js'
 export type {
   CanonicalBase64,
-  ConnectedHealthAdapter,
-  ConnectedHealthMeasurementBundleInput,
-  ConnectedHealthRecordingAttachmentInput,
-  ConnectedHealthRecordingBundleInput,
-  ConnectedHealthRecordingSource,
-  ConnectedHealthRecordingSourceRecord,
-  ConnectedHealthSourceRecord,
+  ProviderAdapter,
+  ProviderMeasurementBundleInput,
+  ProviderRecordingAttachmentInput,
+  ProviderRecordingBundleInput,
+  ProviderRecordingSource,
+  ProviderRecordingSourceRecord,
+  ProviderSourceRecord,
   ConnectedProvider,
   ConnectedProviderMeasurements,
   ConnectedProviderRecord,

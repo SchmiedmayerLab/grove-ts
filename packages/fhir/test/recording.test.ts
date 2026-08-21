@@ -10,18 +10,18 @@ import { readFileSync } from 'node:fs'
 import { expectTypeOf } from 'expect-type'
 import { assert, property, uint8Array } from 'fast-check'
 import {
-  buildConnectedHealthRecordingBundle,
-  connectedHealthRawMappings,
+  buildProviderRecordingBundle,
+  providerRawMappings,
   encodeRecordingBytes,
   parseCanonicalBase64,
-  parseConnectedHealthRecordingBundleInput,
+  parseProviderRecordingBundleInput,
   parseImmutableRecordingUrl,
   parseMediaType,
   parseSha1Base64,
   type ApplicationDeviceInput,
-  type ConnectedHealthRecordingBundleInput,
+  type ProviderRecordingBundleInput,
   type ConnectedRawProvider,
-} from '../src/connected-health/index.js'
+} from '../src/providers/index.js'
 import {
   parseAbsoluteUri,
   parseFhirId,
@@ -54,10 +54,10 @@ const converter: ApplicationDeviceInput = {
 const rawInput = (
   provider: ConnectedRawProvider,
   sourceType: string,
-): ConnectedHealthRecordingBundleInput =>
+): ProviderRecordingBundleInput =>
   ({
     source: {
-      adapter: { kind: 'connected-health', provider },
+      adapter: { kind: 'providers', provider },
       providerAccountIdentifier: {
         system: uri('https://provider.example.org/accounts'),
         value: 'account-pseudonym-001',
@@ -85,14 +85,14 @@ const rawInput = (
     eventSequence: unwrap(parsePositiveInteger(1)),
     documentDate: instant('2026-08-20T17:00:01Z'),
     recorded: instant('2026-08-20T17:00:02Z'),
-  }) as ConnectedHealthRecordingBundleInput
+  }) as ProviderRecordingBundleInput
 
-const recordingSources = Object.entries(connectedHealthRawMappings).flatMap(
+const recordingSources = Object.entries(providerRawMappings).flatMap(
   ([provider, sources]) =>
     Object.keys(sources).map((sourceType) => [provider, sourceType] as const),
 )
 
-describe('Connected Health native recording graph', () => {
+describe('Provider native recording graph', () => {
   it.each([
     'google-health-heart-rate-recording.json',
     'oura-heart-rate-recording.json',
@@ -103,10 +103,10 @@ describe('Connected Health native recording graph', () => {
       readFileSync(new URL(`../fixtures/normalized/${name}`, import.meta.url), {
         encoding: 'utf8',
       }),
-    ) as Pick<ConnectedHealthRecordingBundleInput, 'attachment' | 'source'>
+    ) as Pick<ProviderRecordingBundleInput, 'attachment' | 'source'>
     const graph = rawInput('google-health-api', 'heart-rate')
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...graph,
         ...fixture,
       }).ok,
@@ -116,7 +116,7 @@ describe('Connected Health native recording graph', () => {
   it.each(recordingSources)(
     'admits the exact catalogued %s/%s raw source',
     (provider, sourceType) => {
-      const result = buildConnectedHealthRecordingBundle(
+      const result = buildProviderRecordingBundle(
         rawInput(provider as ConnectedRawProvider, sourceType),
       )
       expect(result.ok).toBe(true)
@@ -131,21 +131,21 @@ describe('Connected Health native recording graph', () => {
       if (document?.resourceType !== 'DocumentReference') return
       expect(document.meta?.profile).toEqual([
         'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
-        'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+        'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
       ])
       expect(document.extension).toEqual([
         {
-          url: 'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-provider',
+          url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider',
           valueCode: provider,
         },
         {
-          url: 'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-source-type',
+          url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
           valueCode: `${provider}/${sourceType}`,
         },
       ])
       expect(document.identifier?.map(({ system }) => system)).toEqual([
-        'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id',
-        'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id',
+        'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
+        'https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id',
       ])
       expect(document.id).toBeUndefined()
     },
@@ -153,7 +153,7 @@ describe('Connected Health native recording graph', () => {
 
   it('emits exact embedded bytes, computed SHA-1 integrity, and a complete audit graph', () => {
     const input = rawInput('google-health-api', 'heart-rate')
-    const result = buildConnectedHealthRecordingBundle(input)
+    const result = buildProviderRecordingBundle(input)
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
@@ -182,12 +182,12 @@ describe('Connected Health native recording graph', () => {
     expect(provenance?.resourceType).toBe('Provenance')
     if (provenance?.resourceType !== 'Provenance') return
     expect(provenance.meta?.profile).toEqual([
-      'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance',
+      'https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance',
     ])
     expect(provenance.target).toEqual([{ reference: documentEntry.fullUrl }])
     expect(provenance.entity).toHaveLength(1)
     expect(provenance.entity?.[0]?.what.identifier?.system).toBe(
-      'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id',
+      'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
     )
     const serialized = JSON.stringify(result.value)
     expect(serialized).not.toContain(input.source.sourceNativeId)
@@ -200,7 +200,7 @@ describe('Connected Health native recording graph', () => {
 
   it('matches the frozen raw source/output identity vectors', () => {
     const input = rawInput('google-health-api', 'heart-rate')
-    const result = buildConnectedHealthRecordingBundle({
+    const result = buildProviderRecordingBundle({
       ...input,
       source: {
         ...input.source,
@@ -222,13 +222,13 @@ describe('Connected Health native recording graph', () => {
     }
     expect(document.identifier?.map(({ value }) => value)).toEqual([
       'v1:e9174b24826045a9d8bfb85888baea27526e626b5049f7c8d0cb6a1479c965d5',
-      'v1:277b888059d003e8c0fe6b6d131b09a703bf6bc56f9be37fb8bb97582cf98e7a',
+      'v1:10c47e3d537ef755b3f76ebe3dc00626316cc2cbbb58be62e428f6ac53daab54',
     ])
   })
 
   it('supports an immutable external attachment without copying or fetching it', () => {
     const input = rawInput('oura', 'heartrate')
-    const result = buildConnectedHealthRecordingBundle({
+    const result = buildProviderRecordingBundle({
       ...input,
       attachment: {
         kind: 'external',
@@ -264,7 +264,7 @@ describe('Connected Health native recording graph', () => {
 
   it('retains repository-assigned ids while keeping digest identities out of Resource.id', () => {
     const input = rawInput('withings', 'activityIntraday')
-    const result = buildConnectedHealthRecordingBundle({
+    const result = buildProviderRecordingBundle({
       ...input,
       repositoryIds: {
         bundle: unwrap(parseFhirId('bundle-42')),
@@ -289,20 +289,20 @@ describe('Connected Health native recording graph', () => {
     ['withings', 'getmeas:11'],
   ] as const)('fails closed for non-raw %s/%s sources', (provider, source) => {
     expect(
-      buildConnectedHealthRecordingBundle(rawInput(provider, source)).ok,
+      buildProviderRecordingBundle(rawInput(provider, source)).ok,
     ).toBe(false)
   })
 
   it('rejects unknown provider fields rather than silently stripping them', () => {
     const input = rawInput('google-health-api', 'heart-rate')
     expect(
-      parseConnectedHealthRecordingBundleInput({
+      parseProviderRecordingBundleInput({
         ...input,
         source: { ...input.source, vendorPayload: { bpm: 64 } },
       }).ok,
     ).toBe(false)
     expect(
-      parseConnectedHealthRecordingBundleInput({
+      parseProviderRecordingBundleInput({
         ...input,
         attachment: { ...input.attachment, bearerToken: 'secret' },
       }).ok,
@@ -332,7 +332,7 @@ describe('Connected Health native recording graph', () => {
       { ...attachmentWithoutAssertion, payloadAssertion: 'unreviewed' },
     ]) {
       expect(
-        parseConnectedHealthRecordingBundleInput({
+        parseProviderRecordingBundleInput({
           ...input,
           attachment,
         }).ok,
@@ -347,10 +347,10 @@ describe('Connected Health native recording graph', () => {
   ])('rejects %s', (_name, change) => {
     const input = rawInput('google-health-api', 'heart-rate')
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         attachment: { ...input.attachment, ...change },
-      } as ConnectedHealthRecordingBundleInput).ok,
+      } as ProviderRecordingBundleInput).ok,
     ).toBe(false)
   })
 
@@ -367,14 +367,14 @@ describe('Connected Health native recording graph', () => {
       immutabilityAssurance: 'immutable-version-specific',
     } as const
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         attachment: external,
-      } as unknown as ConnectedHealthRecordingBundleInput).ok,
+      } as unknown as ProviderRecordingBundleInput).ok,
     ).toBe(false)
 
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         attachment: {
           ...external,
@@ -382,7 +382,7 @@ describe('Connected Health native recording graph', () => {
           size: 2_147_483_648,
           hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
         },
-      } as unknown as ConnectedHealthRecordingBundleInput).ok,
+      } as unknown as ProviderRecordingBundleInput).ok,
     ).toBe(false)
   })
 
@@ -456,8 +456,8 @@ describe('Connected Health native recording graph', () => {
         }
       }
       expect(
-        buildConnectedHealthRecordingBundle(
-          candidate as ConnectedHealthRecordingBundleInput,
+        buildProviderRecordingBundle(
+          candidate as ProviderRecordingBundleInput,
         ).ok,
       ).toBe(false)
     },
@@ -466,7 +466,7 @@ describe('Connected Health native recording graph', () => {
   it('rejects provider-account pseudonym leakage through emitted metadata', () => {
     const input = rawInput('google-health-api', 'heart-rate')
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         attachment: {
           ...input.attachment,
@@ -484,13 +484,13 @@ describe('Connected Health native recording graph', () => {
       sourceNativeId: emittedHash,
     }
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         source: privateSource,
       }).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         source: privateSource,
         attachment: {
@@ -516,7 +516,7 @@ describe('Connected Health native recording graph', () => {
     const privateValue = 'native record/42'
     const encoded = encodeURIComponent(encodeURIComponent(privateValue))
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         source: { ...input.source, sourceNativeId: privateValue },
         attachment: {
@@ -540,7 +540,7 @@ describe('Connected Health native recording graph', () => {
   it('rejects duplicate business identities in the resource graph', () => {
     const input = rawInput('withings', 'sleepIntraday')
     expect(
-      buildConnectedHealthRecordingBundle({
+      buildProviderRecordingBundle({
         ...input,
         source: { ...input.source, dataOrigin: input.application },
       }).ok,
@@ -552,7 +552,7 @@ describe('Connected Health native recording graph', () => {
     (role) => {
       const input = rawInput('google-health-api', 'heart-rate')
       const invalid = '\ud800'
-      let candidate: ConnectedHealthRecordingBundleInput
+      let candidate: ProviderRecordingBundleInput
       if (role === 'source') {
         candidate = {
           ...input,
@@ -578,15 +578,15 @@ describe('Connected Health native recording graph', () => {
           },
         }
       }
-      expect(parseConnectedHealthRecordingBundleInput(candidate).ok).toBe(false)
-      expect(buildConnectedHealthRecordingBundle(candidate).ok).toBe(false)
+      expect(parseProviderRecordingBundleInput(candidate).ok).toBe(false)
+      expect(buildProviderRecordingBundle(candidate).ok).toBe(false)
     },
   )
 
   it.each([
     [
       'provider account value',
-      (input: ConnectedHealthRecordingBundleInput) => ({
+      (input: ProviderRecordingBundleInput) => ({
         ...input,
         source: {
           ...input.source,
@@ -599,21 +599,21 @@ describe('Connected Health native recording graph', () => {
     ],
     [
       'source native id',
-      (input: ConnectedHealthRecordingBundleInput) => ({
+      (input: ProviderRecordingBundleInput) => ({
         ...input,
         source: { ...input.source, sourceNativeId: '\t' },
       }),
     ],
     [
       'source type',
-      (input: ConnectedHealthRecordingBundleInput) => ({
+      (input: ProviderRecordingBundleInput) => ({
         ...input,
         source: { ...input.source, sourceType: '\n ' },
       }),
     ],
     [
       'converter identifier',
-      (input: ConnectedHealthRecordingBundleInput) => ({
+      (input: ProviderRecordingBundleInput) => ({
         ...input,
         application: {
           ...input.application,
@@ -629,7 +629,7 @@ describe('Connected Health native recording graph', () => {
     ],
     [
       'data-origin identifier',
-      (input: ConnectedHealthRecordingBundleInput) => ({
+      (input: ProviderRecordingBundleInput) => ({
         ...input,
         source: {
           ...input.source,
@@ -648,7 +648,7 @@ describe('Connected Health native recording graph', () => {
     ],
   ] as const)('rejects a whitespace-only %s', (_name, mutate) => {
     expect(
-      parseConnectedHealthRecordingBundleInput(
+      parseProviderRecordingBundleInput(
         mutate(rawInput('google-health-api', 'heart-rate')),
       ).ok,
     ).toBe(false)
@@ -661,7 +661,7 @@ describe('Connected Health native recording graph', () => {
         expect(encoded.ok).toBe(true)
         if (!encoded.ok) return
         expect(
-          parseConnectedHealthRecordingBundleInput({
+          parseProviderRecordingBundleInput({
             ...rawInput('google-health-api', 'heart-rate'),
             attachment: {
               ...rawInput('google-health-api', 'heart-rate').attachment,
@@ -674,7 +674,7 @@ describe('Connected Health native recording graph', () => {
   })
 
   it('exposes a result-typed, closed recording facade', () => {
-    const result = buildConnectedHealthRecordingBundle(
+    const result = buildProviderRecordingBundle(
       rawInput('google-health-api', 'heart-rate'),
     )
     expectTypeOf(result).toExtend<

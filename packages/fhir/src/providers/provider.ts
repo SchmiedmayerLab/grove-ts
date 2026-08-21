@@ -8,16 +8,16 @@
 
 import { z } from 'zod'
 import {
-  connectedHealthRecordEffectiveRules,
-  connectedHealthScalarMappings,
+  providerRecordEffectiveRules,
+  providerScalarMappings,
 } from './contract.generated.js'
 import {
-  deriveConnectedHealthIdentities,
+  deriveProviderIdentities,
   parseResourceIdentityInput,
 } from './identity.js'
 import { containsReversibleIdentityRepresentation } from './privacy.js'
 import type {
-  ConnectedHealthMeasurementBundleInput,
+  ProviderMeasurementBundleInput,
   ConnectedProvider,
   NormalizedProviderRecord,
 } from './types.js'
@@ -136,9 +136,9 @@ const sourceBase = {
 const sourceSchema = z.strictObject({
   ...sourceBase,
   adapter: z.strictObject({
-    kind: z.literal('connected-health'),
+    kind: z.literal('providers'),
     provider: z.enum(
-      Object.keys(connectedHealthScalarMappings) as [
+      Object.keys(providerScalarMappings) as [
         ConnectedProvider,
         ...ConnectedProvider[],
       ],
@@ -277,7 +277,7 @@ const normalizedProviderRecordSchema = z
   .strictObject(normalizedProviderRecordShape)
   .superRefine(refineMeasurements)
 
-const connectedHealthMeasurementBundleInputSchema = z
+const providerMeasurementBundleInputSchema = z
   .strictObject({
     ...normalizedProviderRecordShape,
     subject: z.string().refine((value) => parsePatientReference(value).ok, {
@@ -361,7 +361,7 @@ const normalizedEmittedCallerStrings = (
 ]
 
 const graphEmittedCallerStrings = (
-  input: z.infer<typeof connectedHealthMeasurementBundleInputSchema>,
+  input: z.infer<typeof providerMeasurementBundleInputSchema>,
 ): readonly string[] => [
   ...normalizedEmittedCallerStrings(input),
   input.subject,
@@ -422,11 +422,11 @@ export const normalizeZodIssue = (entry: z.core.$ZodIssue): Issue => ({
   message: entry.message,
 })
 
-const connectedHealthSourceMapping = (
+const providerSourceMapping = (
   provider: ConnectedProvider,
   sourceType: string,
 ): Readonly<Record<string, string>> | undefined => {
-  const providerMappings = connectedHealthScalarMappings[provider] as Record<
+  const providerMappings = providerScalarMappings[provider] as Record<
     string,
     Readonly<Record<string, string>> | undefined
   >
@@ -439,11 +439,11 @@ interface RecordEffectiveRule {
   readonly outputsShareEffective: true
 }
 
-const connectedHealthRecordEffectiveRule = (
+const providerRecordEffectiveRule = (
   provider: ConnectedProvider,
   sourceType: string,
 ): RecordEffectiveRule | undefined => {
-  const providers = connectedHealthRecordEffectiveRules as Readonly<
+  const providers = providerRecordEffectiveRules as Readonly<
     Record<string, Readonly<Record<string, RecordEffectiveRule>> | undefined>
   >
   return providers[provider]?.[sourceType]
@@ -480,7 +480,7 @@ const recordEffectiveIssues = (input: {
   readonly source: z.infer<typeof sourceSchema>
   readonly measurements: ReadonlyArray<z.infer<typeof measurementSchema>>
 }): readonly Issue[] => {
-  const rule = connectedHealthRecordEffectiveRule(
+  const rule = providerRecordEffectiveRule(
     input.source.adapter.provider,
     input.source.sourceType,
   )
@@ -516,12 +516,12 @@ const recordEffectiveIssues = (input: {
   )
 }
 
-export const connectedHealthOutputDiscriminator = (
+export const providerOutputDiscriminator = (
   provider: ConnectedProvider,
   sourceType: string,
   kind: MobileMeasurement['kind'],
 ): string | undefined => {
-  return connectedHealthSourceMapping(provider, sourceType)?.[kind]
+  return providerSourceMapping(provider, sourceType)?.[kind]
 }
 
 const recordMappingIssues = (input: {
@@ -535,7 +535,7 @@ const recordMappingIssues = (input: {
       }
     | undefined
 }): readonly Issue[] => {
-  const mapping = connectedHealthSourceMapping(
+  const mapping = providerSourceMapping(
     input.source.adapter.provider,
     input.source.sourceType,
   )
@@ -594,7 +594,7 @@ const sortMeasurements = <
 >(
   value: Value,
 ): Value => {
-  const mapping = connectedHealthSourceMapping(
+  const mapping = providerSourceMapping(
     value.source.adapter.provider,
     value.source.sourceType,
   )
@@ -636,10 +636,10 @@ export const parseNormalizedProviderRecord = (
 }
 
 /** Strict runtime boundary for the complete deterministic graph input. */
-export const parseConnectedHealthMeasurementBundleInput = (
+export const parseProviderMeasurementBundleInput = (
   input: unknown,
-): Result<ConnectedHealthMeasurementBundleInput> => {
-  const result = connectedHealthMeasurementBundleInputSchema.safeParse(input)
+): Result<ProviderMeasurementBundleInput> => {
+  const result = providerMeasurementBundleInputSchema.safeParse(input)
   if (!result.success) {
     return issues(result.error.issues.map(normalizeZodIssue))
   }
@@ -713,7 +713,7 @@ export const parseConnectedHealthMeasurementBundleInput = (
   const mappingIssues = recordMappingIssues(result.data)
   if (mappingIssues.length > 0) return issues(mappingIssues)
   const outputDiscriminators = result.data.measurements.map(({ kind }) =>
-    connectedHealthOutputDiscriminator(
+    providerOutputDiscriminator(
       result.data.source.adapter.provider,
       result.data.source.sourceType,
       kind,
@@ -726,7 +726,7 @@ export const parseConnectedHealthMeasurementBundleInput = (
         code: 'unsupported-measurement',
         path: ['measurements'],
         message:
-          'Every emitted measurement requires a catalog-owned Connected Health output discriminator.',
+          'Every emitted measurement requires a catalog-owned Provider output discriminator.',
       },
     ])
   }
@@ -736,7 +736,7 @@ export const parseConnectedHealthMeasurementBundleInput = (
   const eventSequence = parsePositiveInteger(result.data.eventSequence)
   if (!providerAccountSystem.ok) return providerAccountSystem
   if (!eventSequence.ok) return eventSequence
-  const identity = deriveConnectedHealthIdentities({
+  const identity = deriveProviderIdentities({
     provider: result.data.source.adapter.provider,
     providerAccountIdentifier: {
       system: providerAccountSystem.value,
@@ -751,6 +751,6 @@ export const parseConnectedHealthMeasurementBundleInput = (
   return ok(
     deepFreeze(
       sortMeasurements(result.data),
-    ) as ConnectedHealthMeasurementBundleInput,
+    ) as ProviderMeasurementBundleInput,
   )
 }

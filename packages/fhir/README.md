@@ -39,10 +39,10 @@ The published JavaScript uses portable ES2022 and Web Platform APIs.
 - Connected source/output/conversion/exchange identifiers and every Bundle full URL are derived internally from the frozen JCS/SHA-256 and UUID-v5 contracts.
 - `Resource.id` is omitted unless the caller supplies a repository-assigned id.
 
-## Connected Health measurements
+## Provider measurements
 
 The Grove Mobile 0.2 catalog defines 13 measurements whose semantics are shared
-by at least two evidenced sources. This Connected Health facade exposes a
+by at least two evidenced sources. This Provider facade exposes a
 closed provider/source-token/measurement union for the 10 scalar measurements
 admitted by the frozen Google Health API, Oura, and Withings inventories. It
 includes point and period quantities plus composite blood pressure. Basal body
@@ -58,11 +58,11 @@ unprofiled fallback builder.
 
 ```typescript
 import {
-  buildConnectedHealthMeasurementBundle,
-  parseConnectedHealthMeasurementBundleInput,
+  buildProviderMeasurementBundle,
+  parseProviderMeasurementBundleInput,
   parseNormalizedProviderRecord,
-  type ConnectedHealthMeasurementBundleInput,
-} from '@schmiedmayerlab/grove-fhir/connected-health'
+  type ProviderMeasurementBundleInput,
+} from '@schmiedmayerlab/grove-fhir/providers'
 
 import { parsePositiveInteger } from '@schmiedmayerlab/grove-fhir'
 ```
@@ -83,8 +83,8 @@ schema rejects unknown fields and raw provider responses.
 This package contains no provider client, authentication, pagination, webhook,
 or fetching behavior.
 
-`parseConnectedHealthMeasurementBundleInput(unknown)` applies the same fail-closed behavior to the
-complete graph input. `buildConnectedHealthMeasurementBundle` also runs that strict parser itself,
+`parseProviderMeasurementBundleInput(unknown)` applies the same fail-closed behavior to the
+complete graph input. `buildProviderMeasurementBundle` also runs that strict parser itself,
 so JavaScript callers cannot bypass the boundary or add fields that would be
 silently ignored. Identity strings are validated without trimming or otherwise
 changing their digest input.
@@ -97,27 +97,27 @@ source offset is never replaced or invented. `canonicalizeMobileEffectiveInstant
 exposes the same `Result`-typed primitive operation; Sensor and ECG
 `SampledData` timing intentionally remains outside this policy.
 
-The public producer is deliberately closed to the Connected Health adapter
+The public producer is deliberately closed to the Provider adapter
 profile. A future HealthKit, Health Connect, or other adapter must add its own
 closed facade and profile claims; callers cannot inject an arbitrary adapter
 canonical into this API.
 
 The four provider-native series that the IG marks `mapped-standard` use the
-separate closed `buildConnectedHealthRecordingBundle` facade:
+separate closed `buildProviderRecordingBundle` facade:
 
 ```typescript
 import {
-  buildConnectedHealthRecordingBundle,
+  buildProviderRecordingBundle,
   encodeRecordingBytes,
   parseMediaType,
-} from '@schmiedmayerlab/grove-fhir/connected-health'
+} from '@schmiedmayerlab/grove-fhir/providers'
 ```
 
 The admitted source tokens are Google Health API `heart-rate`, Oura
 `heartrate`, and Withings `activityIntraday` and `sleepIntraday`. The caller
 passes an explicitly authorized and minimized encoding of bytes already in its
 possession, or an immutable version-specific HTTP(S) URL with required size and
-SHA-1/base64 integrity metadata. The builder emits a Sensor + Connected Health
+SHA-1/base64 integrity metadata. The builder emits a Sensor + Provider
 `DocumentReference`, converter and data-origin application Devices, conversion
 Provenance targeting the document, and the enclosing Mobile collection Bundle.
 It never fetches the URL or parses provider-native content. Embedded attachment
@@ -137,7 +137,7 @@ bytes are intentionally not inspected or sanitized by Grove; their disclosure
 and retention remain an explicit deployment responsibility, not authorization
 granted by the digest or Attachment hash.
 
-The high-level builder accepts a validated `ConnectedHealthMeasurementBundleInput` and returns a
+The high-level builder accepts a validated `ProviderMeasurementBundleInput` and returns a
 `Result<CollectionBundle>`. The collection contains the Observation, converter
 and data-origin application Devices, an optional recording Device, an optional
 distinct gateway application, and conversion Provenance. Every internal edge
@@ -179,7 +179,7 @@ and duplicate literal references fail closed.
 
 The synchronized normative catalog and its resolved development reference live
 under `catalog/grove-fhir`. `catalog/measurement-capabilities.json`
-distinguishes the 10 constructible Connected Health scalar measurements, four
+distinguishes the 10 constructible Provider scalar measurements, four
 constructible native-recording source tokens, three shared profiles not
 admitted by this facade, adapter-profiled BMI/glucose outputs, and reviewed
 future, adapter-only, Sensor, and out-of-scope candidates.
@@ -254,15 +254,15 @@ import {
 } from '@schmiedmayerlab/grove-fhir/mobile'
 ```
 
-Use the Connected Health entry point for the closed Google Health API, Oura,
+Use the Provider entry point for the closed Google Health API, Oura,
 and Withings mapping and graph builders:
 
 ```typescript
 import {
-  buildConnectedHealthMeasurementBundle,
-  buildConnectedHealthRecordingBundle,
-  groveConnectedHealthPackageMetadata,
-} from '@schmiedmayerlab/grove-fhir/connected-health'
+  buildProviderMeasurementBundle,
+  buildProviderRecordingBundle,
+  groveProviderPackageMetadata,
+} from '@schmiedmayerlab/grove-fhir/providers'
 ```
 
 Each generated package-metadata value is bounded to that entry point's
@@ -272,7 +272,7 @@ list, FHIR release, and IG contract version. The root exposes only the shared
 internal adapter package graph.
 
 There is no generic Sensor producer entry point in this release. The admitted
-raw-recording facade owns exact Sensor + Connected Health profile claims and
+raw-recording facade owns exact Sensor + Provider profile claims and
 provider identity, so presenting it as source-neutral would weaken the closed
 adapter contract. A future Sensor producer must expose its own evidenced,
 profile-closed facade.
@@ -316,7 +316,7 @@ npm run conformance:structural -- --ig /path/to/grove-fhir
 ```
 
 `npm run conformance` additionally requires the checksum-pinned official FHIR
-Validator and the Mobile, Sensor dependency, Connected Health, and Questionnaire
+Validator and the Mobile, Sensor dependency, Provider, and Questionnaire
 packages built in that checkout. It validates all 10 admitted Mobile
 measurement graphs, all four admitted native-recording graphs, and the
 Questionnaire/Response pair. Every admitted scalar fixture is generated from

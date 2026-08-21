@@ -13,30 +13,30 @@ export const groveFhirContractVersion = '0.2.0' as const
 
 export const groveFhirVersion = '4.0.1' as const
 
-const groveConnectedHealthPackageMetadataValue = {
+const groveProviderPackageMetadataValue = {
   fhirVersion: '4.0.1',
   version: '0.2.0',
-  packageId: 'org.grovealliance.fhir.connected-health',
-  canonical: 'https://grovealliance.org/fhir/connected-health',
+  packageId: 'org.grovealliance.fhir.providers',
+  canonical: 'https://grovealliance.org/fhir/providers',
   dependencies: [
     'org.grovealliance.fhir.mobile#0.2.0',
     'org.grovealliance.fhir.sensor#0.2.0',
   ],
 } as const
 
-export const groveConnectedHealthPackageMetadata: typeof groveConnectedHealthPackageMetadataValue =
-  deepFreeze(groveConnectedHealthPackageMetadataValue)
+export const groveProviderPackageMetadata: typeof groveProviderPackageMetadataValue =
+  deepFreeze(groveProviderPackageMetadataValue)
 
-const groveConnectedHealthPackageCanonicalsValue = {
+const groveProviderPackageCanonicalsValue = {
   mobile: 'https://grovealliance.org/fhir/mobile',
   sensor: 'https://grovealliance.org/fhir/sensor',
-  'connected-health': 'https://grovealliance.org/fhir/connected-health',
+  providers: 'https://grovealliance.org/fhir/providers',
 } as const
 
-export const groveConnectedHealthPackageCanonicals: typeof groveConnectedHealthPackageCanonicalsValue =
-  deepFreeze(groveConnectedHealthPackageCanonicalsValue)
+export const groveProviderPackageCanonicals: typeof groveProviderPackageCanonicalsValue =
+  deepFreeze(groveProviderPackageCanonicalsValue)
 
-const groveConnectedHealthProfileCanonicalsValue = {
+const groveProviderProfileCanonicalsValue = {
   'grove-mobile-active-energy':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy',
   'grove-mobile-basal-body-temperature':
@@ -71,29 +71,29 @@ const groveConnectedHealthProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
   'grove-sensor-recording-document':
     'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
-  'connected-health-conversion-provenance':
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance',
-  'connected-health-observation':
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation',
-  'connected-health-recording-document':
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+  'provider-conversion-provenance':
+    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance',
+  'provider-observation':
+    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation',
+  'provider-recording-document':
+    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
 } as const
 
-export const groveConnectedHealthProfileCanonicals: typeof groveConnectedHealthProfileCanonicalsValue =
-  deepFreeze(groveConnectedHealthProfileCanonicalsValue)
+export const groveProviderProfileCanonicals: typeof groveProviderProfileCanonicalsValue =
+  deepFreeze(groveProviderProfileCanonicalsValue)
 
-const connectedHealthAdapterCatalogValue = {
+const providerAdapterCatalogValue = {
   schemaVersion: 1,
   fhirVersion: '4.0.1',
   version: '0.2.0',
-  packageId: 'org.grovealliance.fhir.connected-health',
-  canonical: 'https://grovealliance.org/fhir/connected-health',
+  packageId: 'org.grovealliance.fhir.providers',
+  canonical: 'https://grovealliance.org/fhir/providers',
   adapterProfile:
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation',
+    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation',
   sourceTypeExtension: {
-    url: 'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-source-type',
+    url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
     codeSystem:
-      'https://grovealliance.org/fhir/connected-health/CodeSystem/connected-health-source-type',
+      'https://grovealliance.org/fhir/providers/CodeSystem/provider-source-type',
     element:
       'Observation.extension.valueCode or DocumentReference.extension.valueCode',
     cardinality: 'exactly one',
@@ -105,7 +105,7 @@ const connectedHealthAdapterCatalogValue = {
     sourceNeutralProfile:
       'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
     adapterProfile:
-      'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+      'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
     claimMode: 'exactly-source-neutral-plus-adapter',
     outputDiscriminator: 'native-recording',
     encoding: 'caller-supplied exact already-obtained provider bytes',
@@ -122,7 +122,7 @@ const connectedHealthAdapterCatalogValue = {
     notFHIRAuthorization: true,
   },
   conversionProvenanceProfile:
-    'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance',
+    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance',
   statusVocabulary: [
     'supported',
     'mapped-standard',
@@ -208,7 +208,7 @@ const connectedHealthAdapterCatalogValue = {
     },
     sourceRecord: {
       system:
-        'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id',
+        'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
       preimage: [
         'providerCode',
         'providerAccountIdentifier.system',
@@ -219,7 +219,7 @@ const connectedHealthAdapterCatalogValue = {
     },
     output: {
       system:
-        'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id',
+        'https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id',
       preimage: [
         'sourceRecordIdentifier.system',
         'sourceRecordIdentifier.value',
@@ -236,12 +236,12 @@ const connectedHealthAdapterCatalogValue = {
     },
     conversion: {
       system:
-        'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-conversion-id',
+        'https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id',
       preimage: ['sortedSourceRecordIdentifiers', 'positiveEventSequence'],
     },
     exchange: {
       system:
-        'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-exchange-id',
+        'https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id',
       preimage: ['sortedSourceRecordIdentifiers', 'positiveEventSequence'],
     },
     vectors: [
@@ -262,14 +262,14 @@ const connectedHealthAdapterCatalogValue = {
       {
         role: 'output',
         inputs: [
-          'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id',
+          'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
           'v1:c698f75a1901b494c9c5a2107a88708dccbd1d5556fc5c85f364c536164fa383',
           'step-count',
         ],
         canonicalPreimage:
-          '["https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id","v1:c698f75a1901b494c9c5a2107a88708dccbd1d5556fc5c85f364c536164fa383","step-count"]',
+          '["https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id","v1:c698f75a1901b494c9c5a2107a88708dccbd1d5556fc5c85f364c536164fa383","step-count"]',
         identifierValue:
-          'v1:58ec980e4eaa0bd8ca600043db5446c21a13482b064fffbb44469046f1876406',
+          'v1:dedbeb8d57112a208295dbefd0c2c6a6d16d4205265429567d70808eb73f9477',
       },
       {
         role: 'sourceRecord',
@@ -288,14 +288,14 @@ const connectedHealthAdapterCatalogValue = {
       {
         role: 'output',
         inputs: [
-          'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id',
+          'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
           'v1:e9174b24826045a9d8bfb85888baea27526e626b5049f7c8d0cb6a1479c965d5',
           'native-recording',
         ],
         canonicalPreimage:
-          '["https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id","v1:e9174b24826045a9d8bfb85888baea27526e626b5049f7c8d0cb6a1479c965d5","native-recording"]',
+          '["https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id","v1:e9174b24826045a9d8bfb85888baea27526e626b5049f7c8d0cb6a1479c965d5","native-recording"]',
         identifierValue:
-          'v1:277b888059d003e8c0fe6b6d131b09a703bf6bc56f9be37fb8bb97582cf98e7a',
+          'v1:10c47e3d537ef755b3f76ebe3dc00626316cc2cbbb58be62e428f6ac53daab54',
       },
       {
         role: 'sourceRecord',
@@ -569,7 +569,7 @@ const connectedHealthAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
             outputDiscriminator: 'native-recording',
           },
           elements: [
@@ -743,7 +743,7 @@ const connectedHealthAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
             outputDiscriminator: 'native-recording',
           },
           elements: [
@@ -1040,7 +1040,7 @@ const connectedHealthAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
             outputDiscriminator: 'native-recording',
           },
           elements: [
@@ -1090,7 +1090,7 @@ const connectedHealthAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
             outputDiscriminator: 'native-recording',
           },
           elements: [
@@ -1370,10 +1370,10 @@ const connectedHealthAdapterCatalogValue = {
   ],
 } as const
 
-export const connectedHealthAdapterCatalog: typeof connectedHealthAdapterCatalogValue =
-  deepFreeze(connectedHealthAdapterCatalogValue)
+export const providerAdapterCatalog: typeof providerAdapterCatalogValue =
+  deepFreeze(providerAdapterCatalogValue)
 
-const connectedHealthScalarMappingsValue = {
+const providerScalarMappingsValue = {
   'google-health-api': {
     steps: {
       'step-count': 'step-count',
@@ -1438,10 +1438,10 @@ const connectedHealthScalarMappingsValue = {
   },
 } as const
 
-export const connectedHealthScalarMappings: typeof connectedHealthScalarMappingsValue =
-  deepFreeze(connectedHealthScalarMappingsValue)
+export const providerScalarMappings: typeof providerScalarMappingsValue =
+  deepFreeze(providerScalarMappingsValue)
 
-const connectedHealthRecordEffectiveRulesValue = {
+const providerRecordEffectiveRulesValue = {
   oura: {
     daily_activity: {
       kind: 'complete-civil-day-period',
@@ -1468,10 +1468,10 @@ const connectedHealthRecordEffectiveRulesValue = {
   },
 } as const
 
-export const connectedHealthRecordEffectiveRules: typeof connectedHealthRecordEffectiveRulesValue =
-  deepFreeze(connectedHealthRecordEffectiveRulesValue)
+export const providerRecordEffectiveRules: typeof providerRecordEffectiveRulesValue =
+  deepFreeze(providerRecordEffectiveRulesValue)
 
-const connectedHealthRawMappingsValue = {
+const providerRawMappingsValue = {
   'google-health-api': {
     'heart-rate': 'native-recording',
   },
@@ -1484,12 +1484,12 @@ const connectedHealthRawMappingsValue = {
   },
 } as const
 
-export const connectedHealthRawMappings: typeof connectedHealthRawMappingsValue =
-  deepFreeze(connectedHealthRawMappingsValue)
+export const providerRawMappings: typeof providerRawMappingsValue = deepFreeze(
+  providerRawMappingsValue,
+)
 
-export type ConnectedHealthScalarMappings = typeof connectedHealthScalarMappings
+export type ProviderScalarMappings = typeof providerScalarMappings
 
-export type ConnectedHealthRecordEffectiveRules =
-  typeof connectedHealthRecordEffectiveRules
+export type ProviderRecordEffectiveRules = typeof providerRecordEffectiveRules
 
-export type ConnectedHealthRawMappings = typeof connectedHealthRawMappings
+export type ProviderRawMappings = typeof providerRawMappings

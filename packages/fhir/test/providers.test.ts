@@ -8,17 +8,17 @@
 
 import { readFileSync } from 'node:fs'
 import { assert, double, oneof, property } from 'fast-check'
-import { deriveConnectedHealthIdentities } from '../src/connected-health/identity.js'
+import { deriveProviderIdentities } from '../src/providers/identity.js'
 import {
-  buildConnectedHealthMeasurementBundle,
-  connectedHealthRecordEffectiveRules,
-  connectedHealthScalarMappings,
-  parseConnectedHealthMeasurementBundleInput,
+  buildProviderMeasurementBundle,
+  providerRecordEffectiveRules,
+  providerScalarMappings,
+  parseProviderMeasurementBundleInput,
   parseNormalizedProviderRecord,
   type ConnectedProvider,
   type ConnectedProviderRecord,
-  type ConnectedHealthMeasurementBundleInput,
-} from '../src/connected-health/index.js'
+  type ProviderMeasurementBundleInput,
+} from '../src/providers/index.js'
 import type {
   FhirInstant,
   PatientReference,
@@ -93,12 +93,12 @@ const baseInput = (
   provider: ConnectedProvider,
   sourceType: string,
   measurement: MobileMeasurement,
-): ConnectedHealthMeasurementBundleInput =>
+): ProviderMeasurementBundleInput =>
   ({
     subject: patient('Patient/example'),
     measurements: [measurement],
     source: {
-      adapter: { kind: 'connected-health', provider },
+      adapter: { kind: 'providers', provider },
       providerAccountIdentifier: {
         system: uri('https://example.org/deployments/provider-accounts'),
         value: `pseudonym-${provider}-001`,
@@ -119,7 +119,7 @@ const baseInput = (
     eventSequence: positive(1),
     issued: instant('2026-08-20T12:01:00Z'),
     recorded: instant('2026-08-20T12:02:00Z'),
-  }) as ConnectedHealthMeasurementBundleInput
+  }) as ProviderMeasurementBundleInput
 
 const scalarCases = [
   {
@@ -211,17 +211,17 @@ const scalarCases = [
 }>
 
 const resources = (
-  result: ReturnType<typeof buildConnectedHealthMeasurementBundle>,
+  result: ReturnType<typeof buildProviderMeasurementBundle>,
 ) => {
   if (!result.ok) throw new Error(JSON.stringify(result.issues))
   return result.value.entry.map((entry) => entry.resource)
 }
 
-describe('Connected Health R4 graph builder', () => {
+describe('Provider R4 graph builder', () => {
   it.each(scalarCases)(
     'builds the admitted $provider/$sourceType $measurement.kind graph',
     ({ provider, sourceType, measurement }) => {
-      const result = buildConnectedHealthMeasurementBundle(
+      const result = buildProviderMeasurementBundle(
         baseInput(provider, sourceType, measurement),
       )
       expect(result.ok).toBe(true)
@@ -237,16 +237,16 @@ describe('Connected Health R4 graph builder', () => {
       )
       expect(observation?.meta?.profile).toEqual([
         `https://grovealliance.org/fhir/mobile/StructureDefinition/${sharedMobileMeasurementCatalog[measurement.kind].profile}`,
-        'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-observation',
+        'https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation',
       ])
       expect(observation?.extension).toEqual(
         expect.arrayContaining([
           {
-            url: 'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-provider',
+            url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider',
             valueCode: provider,
           },
           {
-            url: 'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-source-type',
+            url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
             valueCode: `${provider}/${sourceType}`,
           },
         ]),
@@ -267,7 +267,7 @@ describe('Connected Health R4 graph builder', () => {
     const examples = new Map<MobileMeasurement['kind'], MobileMeasurement>(
       scalarCases.map(({ measurement }) => [measurement.kind, measurement]),
     )
-    const exhaustiveMappings = connectedHealthScalarMappings as Readonly<
+    const exhaustiveMappings = providerScalarMappings as Readonly<
       Record<
         ConnectedProvider,
         Readonly<Record<string, Readonly<Record<string, string>>>>
@@ -285,7 +285,7 @@ describe('Connected Health R4 graph builder', () => {
           expect(measurement).toBeDefined()
           if (measurement === undefined) continue
           const effectiveRule = (
-            connectedHealthRecordEffectiveRules as Readonly<
+            providerRecordEffectiveRules as Readonly<
               Record<string, Readonly<Record<string, unknown>> | undefined>
             >
           )[provider]?.[sourceType]
@@ -297,7 +297,7 @@ describe('Connected Health R4 graph builder', () => {
               }
             )
           expect(
-            buildConnectedHealthMeasurementBundle(
+            buildProviderMeasurementBundle(
               baseInput(
                 provider as ConnectedProvider,
                 sourceType,
@@ -318,7 +318,7 @@ describe('Connected Health R4 graph builder', () => {
       value: 6_123,
       effective: { kind: 'period', start, end: dailyEnd },
     })
-    const result = buildConnectedHealthMeasurementBundle({
+    const result = buildProviderMeasurementBundle({
       ...dailyActivity,
       measurements: [
         {
@@ -337,7 +337,7 @@ describe('Connected Health R4 graph builder', () => {
           effective: { kind: 'period', start, end: dailyEnd },
         },
       ],
-    } as ConnectedHealthMeasurementBundleInput)
+    } as ProviderMeasurementBundleInput)
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
@@ -382,10 +382,10 @@ describe('Connected Health R4 graph builder', () => {
         },
       } as const
       const input = baseInput('oura', 'daily_activity', candidates[kinds[0]])
-      const result = buildConnectedHealthMeasurementBundle({
+      const result = buildProviderMeasurementBundle({
         ...input,
         measurements: kinds.map((kind) => candidates[kind]),
-      } as unknown as ConnectedHealthMeasurementBundleInput)
+      } as unknown as ProviderMeasurementBundleInput)
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(
@@ -399,14 +399,14 @@ describe('Connected Health R4 graph builder', () => {
   it('rejects recursively encoded identity leakage through scalar metadata', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         source: { ...input.source, sourceNativeId: 'native id/42' },
         application: {
           ...input.application,
           manufacturer: 'encoded-native%2520id%252F42',
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
       parseNormalizedProviderRecord({
@@ -433,7 +433,7 @@ describe('Connected Health R4 graph builder', () => {
       effective: { kind: 'period', start, end: dailyEnd },
     })
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [
           {
@@ -442,10 +442,10 @@ describe('Connected Health R4 graph builder', () => {
             effective: { kind: 'period', start, end },
           },
         ],
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [
           input.measurements[0],
@@ -459,10 +459,10 @@ describe('Connected Health R4 graph builder', () => {
             },
           },
         ],
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle(
+      buildProviderMeasurementBundle(
         baseInput('withings', 'getactivity:steps', {
           kind: 'step-count',
           value: 8_234,
@@ -473,7 +473,7 @@ describe('Connected Health R4 graph builder', () => {
     const daylightSavingStart = instant('2026-11-01T00:00:00-07:00')
     const daylightSavingEnd = instant('2026-11-02T00:00:00-08:00')
     expect(
-      buildConnectedHealthMeasurementBundle(
+      buildProviderMeasurementBundle(
         baseInput('withings', 'getactivity:steps', {
           kind: 'step-count',
           value: 8_234,
@@ -494,19 +494,19 @@ describe('Connected Health R4 graph builder', () => {
       effective: { kind: 'period', start, end: dailyEnd },
     })
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [],
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [input.measurements[0], input.measurements[0]],
-      } as ConnectedHealthMeasurementBundleInput).ok,
+      } as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [
           input.measurements[0],
@@ -516,10 +516,10 @@ describe('Connected Health R4 graph builder', () => {
             effective: { kind: 'date-time', value: dateTime },
           },
         ],
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [
           input.measurements[0],
@@ -529,10 +529,10 @@ describe('Connected Health R4 graph builder', () => {
             effective: { kind: 'period', start, end: dailyEnd },
           },
         ],
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         repositoryIds: {
           observations: {
@@ -546,19 +546,19 @@ describe('Connected Health R4 graph builder', () => {
   it('treats effective values as emitted metadata and rejects native-id leakage', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         source: {
           ...input.source,
           sourceNativeId: '2026-08-20T12:00:00.000Z',
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 
   it('derives exact source/output/conversion/exchange identifiers and never emits the native id', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildConnectedHealthMeasurementBundle(input)
+    const result = buildProviderMeasurementBundle(input)
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
@@ -566,20 +566,20 @@ describe('Connected Health R4 graph builder', () => {
       (resource) => resource.resourceType === 'Observation',
     )
     expect(observation?.identifier?.map(({ system }) => system)).toEqual([
-      'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id',
-      'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id',
+      'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
+      'https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id',
     ])
     for (const identity of observation?.identifier ?? []) {
       expect(identity.value).toMatch(/^v1:[0-9a-f]{64}$/u)
     }
     expect(result.value.identifier?.system).toBe(
-      'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-exchange-id',
+      'https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id',
     )
     const provenanceEntry = result.value.entry.find(
       (entry) => entry.resource.resourceType === 'Provenance',
     )
     expect(provenanceEntry?.extension?.[0]?.valueIdentifier?.system).toBe(
-      'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-conversion-id',
+      'https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id',
     )
     expect(JSON.stringify(result.value)).not.toContain(
       input.source.sourceNativeId,
@@ -589,13 +589,13 @@ describe('Connected Health R4 graph builder', () => {
     )
   })
 
-  it('matches the frozen Connected Health JCS/SHA-256 source and output vectors', () => {
+  it('matches the frozen Provider JCS/SHA-256 source and output vectors', () => {
     const input = baseInput('google-health-api', 'steps', {
       kind: 'step-count',
       value: 123,
       effective: { kind: 'period', start, end },
     })
-    const result = buildConnectedHealthMeasurementBundle({
+    const result = buildProviderMeasurementBundle({
       ...input,
       source: {
         ...input.source,
@@ -606,13 +606,13 @@ describe('Connected Health R4 graph builder', () => {
         },
         sourceNativeId: 'steps-2026-08-20T16:00:00Z',
       },
-    } as ConnectedHealthMeasurementBundleInput)
+    } as ProviderMeasurementBundleInput)
     const observation = resources(result).find(
       (resource) => resource.resourceType === 'Observation',
     )
     expect(observation?.identifier?.map((entry) => entry.value)).toEqual([
       'v1:c698f75a1901b494c9c5a2107a88708dccbd1d5556fc5c85f364c536164fa383',
-      'v1:58ec980e4eaa0bd8ca600043db5446c21a13482b064fffbb44469046f1876406',
+      'v1:dedbeb8d57112a208295dbefd0c2c6a6d16d4205265429567d70808eb73f9477',
     ])
 
     const unicodeInput = baseInput('oura', 'sleep', {
@@ -620,7 +620,7 @@ describe('Connected Health R4 graph builder', () => {
       value: 7,
       effective: { kind: 'period', start, end },
     })
-    const unicodeResult = buildConnectedHealthMeasurementBundle({
+    const unicodeResult = buildProviderMeasurementBundle({
       ...unicodeInput,
       source: {
         ...unicodeInput.source,
@@ -631,7 +631,7 @@ describe('Connected Health R4 graph builder', () => {
         },
         sourceNativeId: 'résumé-\u0001',
       },
-    } as ConnectedHealthMeasurementBundleInput)
+    } as ProviderMeasurementBundleInput)
     const unicodeObservation = resources(unicodeResult).find(
       (resource) => resource.resourceType === 'Observation',
     )
@@ -641,10 +641,10 @@ describe('Connected Health R4 graph builder', () => {
   })
 
   it('changes only event identities when the durable event sequence changes', () => {
-    const first = buildConnectedHealthMeasurementBundle(
+    const first = buildProviderMeasurementBundle(
       baseInput('withings', 'getmeas:11', heartRateMeasurement),
     )
-    const second = buildConnectedHealthMeasurementBundle({
+    const second = buildProviderMeasurementBundle({
       ...baseInput('withings', 'getmeas:11', heartRateMeasurement),
       eventSequence: positive(2),
     })
@@ -663,7 +663,7 @@ describe('Connected Health R4 graph builder', () => {
 
   it('adds a gateway reference only with explicit mediation evidence', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const converterGateway = buildConnectedHealthMeasurementBundle({
+    const converterGateway = buildProviderMeasurementBundle({
       ...input,
       gatewayApplication: {
         kind: 'converter-application',
@@ -690,19 +690,19 @@ describe('Connected Health R4 graph builder', () => {
     ).toBe(converterApplicationEntry?.fullUrl)
 
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         gatewayApplication: {
           kind: 'converter-application',
           roleAssurance: 'conversion-only',
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 
   it('builds a fully attributed graph with distinct gateway and authorized hardware identity', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildConnectedHealthMeasurementBundle({
+    const result = buildProviderMeasurementBundle({
       ...input,
       application: {
         ...input.application,
@@ -743,7 +743,7 @@ describe('Connected Health R4 graph builder', () => {
       researchStudyReferences: [
         unwrap(parseResearchStudyReference('ResearchStudy/study-1')),
       ],
-    } as ConnectedHealthMeasurementBundleInput)
+    } as ProviderMeasurementBundleInput)
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.value.entry).toHaveLength(6)
@@ -762,7 +762,7 @@ describe('Connected Health R4 graph builder', () => {
 
   it('requires an explicit privacy scope for recording-device identity and never accepts a serial number', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildConnectedHealthMeasurementBundle({
+    const result = buildProviderMeasurementBundle({
       ...input,
       source: {
         ...input.source,
@@ -775,7 +775,7 @@ describe('Connected Health R4 graph builder', () => {
           name: 'Connected scale',
         },
       },
-    } as ConnectedHealthMeasurementBundleInput)
+    } as ProviderMeasurementBundleInput)
     expect(result.ok).toBe(true)
     if (!result.ok) return
     const recordingDevice = resources(result).find(
@@ -787,7 +787,7 @@ describe('Connected Health R4 graph builder', () => {
     expect(recordingDevice).not.toHaveProperty('serialNumber')
 
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         source: {
           ...input.source,
@@ -800,14 +800,14 @@ describe('Connected Health R4 graph builder', () => {
             serialNumber: 'SERIAL-123',
           },
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 
   it('rejects arbitrary source codings instead of treating lineage as a clinical code', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         source: {
           ...input.source,
@@ -816,7 +816,7 @@ describe('Connected Health R4 graph builder', () => {
             code: 'broad-summary-record',
           },
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 
@@ -829,13 +829,13 @@ describe('Connected Health R4 graph builder', () => {
       ),
     )
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         researchStudyReferences: [local, absolute],
       }).ok,
     ).toBe(true)
 
-    const duplicate = parseConnectedHealthMeasurementBundleInput({
+    const duplicate = parseProviderMeasurementBundleInput({
       ...input,
       researchStudyReferences: [local, local],
     })
@@ -848,7 +848,7 @@ describe('Connected Health R4 graph builder', () => {
       )
     }
     expect(
-      parseConnectedHealthMeasurementBundleInput({
+      parseProviderMeasurementBundleInput({
         ...input,
         researchStudyReferences: [
           'https://research.example/fhir/ResearchStudy/remote-1?version=2',
@@ -856,7 +856,7 @@ describe('Connected Health R4 graph builder', () => {
       }).ok,
     ).toBe(false)
     expect(
-      parseConnectedHealthMeasurementBundleInput({
+      parseProviderMeasurementBundleInput({
         ...baseInput('withings', 'getmeas:54', {
           kind: 'oxygen-saturation',
           value: 98,
@@ -883,7 +883,7 @@ describe('Connected Health R4 graph builder', () => {
         end: instant('2026-08-20T12:00:00.0002Z'),
       },
     })
-    expect(buildConnectedHealthMeasurementBundle(collapsed).ok).toBe(false)
+    expect(buildProviderMeasurementBundle(collapsed).ok).toBe(false)
 
     const input = baseInput('oura', 'sleep', {
       kind: 'sleep-duration',
@@ -894,7 +894,7 @@ describe('Connected Health R4 graph builder', () => {
         end: instant('2026-08-20T12:00:00.0006Z'),
       },
     })
-    const result = buildConnectedHealthMeasurementBundle(input)
+    const result = buildProviderMeasurementBundle(input)
     expect(result.ok).toBe(true)
     const observation = resources(result).find(
       (resource) => resource.resourceType === 'Observation',
@@ -904,7 +904,7 @@ describe('Connected Health R4 graph builder', () => {
       end: '2026-08-20T12:00:00.001Z',
     })
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         measurements: [
           {
@@ -916,7 +916,7 @@ describe('Connected Health R4 graph builder', () => {
             },
           },
         ],
-      } as ConnectedHealthMeasurementBundleInput).ok,
+      } as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 
@@ -945,7 +945,7 @@ describe('Connected Health R4 graph builder', () => {
         value: instant('2026-08-20T08:30:00.251500001-07:00'),
       },
     })
-    const parsed = parseConnectedHealthMeasurementBundleInput(input)
+    const parsed = parseProviderMeasurementBundleInput(input)
     expect(parsed.ok).toBe(true)
     if (!parsed.ok) return
     expect(parsed.value.measurements[0].effective).toEqual({
@@ -953,7 +953,7 @@ describe('Connected Health R4 graph builder', () => {
       value: '2026-08-20T08:30:00.252-07:00',
     })
 
-    const result = buildConnectedHealthMeasurementBundle(input)
+    const result = buildProviderMeasurementBundle(input)
     const observation = resources(result).find(
       (resource) => resource.resourceType === 'Observation',
     )
@@ -961,7 +961,7 @@ describe('Connected Health R4 graph builder', () => {
   })
 
   it('derives every urn:uuid edge from a complete business identifier', () => {
-    const result = buildConnectedHealthMeasurementBundle(
+    const result = buildProviderMeasurementBundle(
       baseInput('withings', 'getmeas:11', heartRateMeasurement),
     )
     expect(result.ok).toBe(true)
@@ -982,7 +982,7 @@ describe('Connected Health R4 graph builder', () => {
   })
 
   it('constructs one composite Withings blood-pressure panel', () => {
-    const result = buildConnectedHealthMeasurementBundle(
+    const result = buildProviderMeasurementBundle(
       baseInput('withings', 'getmeas:9+10', bloodPressureMeasurement),
     )
     const observation = resources(result).find(
@@ -993,7 +993,7 @@ describe('Connected Health R4 graph builder', () => {
   })
 
   it('uses optional Resource.id values only when supplied by a repository', () => {
-    const result = buildConnectedHealthMeasurementBundle({
+    const result = buildProviderMeasurementBundle({
       ...baseInput('withings', 'getmeas:11', heartRateMeasurement),
       repositoryIds: {
         bundle: unwrap(parseFhirId('bundle-42')),
@@ -1015,7 +1015,7 @@ describe('Connected Health R4 graph builder', () => {
 
   it('omits optional attribution and device fields while preserving repository device ids', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildConnectedHealthMeasurementBundle({
+    const result = buildProviderMeasurementBundle({
       ...input,
       application: {
         identity: {
@@ -1041,7 +1041,7 @@ describe('Connected Health R4 graph builder', () => {
           identityScope: 'deployment-scoped',
         },
       },
-    } as ConnectedHealthMeasurementBundleInput)
+    } as ProviderMeasurementBundleInput)
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
@@ -1051,7 +1051,7 @@ describe('Connected Health R4 graph builder', () => {
     expect(observation?.extension).toEqual(
       expect.arrayContaining([
         {
-          url: 'https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-source-type',
+          url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
           valueCode: 'withings/getmeas:11',
         },
       ]),
@@ -1067,7 +1067,7 @@ describe('Connected Health R4 graph builder', () => {
   it('rejects invalid scalar ranges at the strict runtime boundary', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     expect(
-      parseConnectedHealthMeasurementBundleInput({
+      parseProviderMeasurementBundleInput({
         ...input,
         measurements: [
           {
@@ -1078,13 +1078,13 @@ describe('Connected Health R4 graph builder', () => {
       }).ok,
     ).toBe(false)
     expect(
-      parseConnectedHealthMeasurementBundleInput({
+      parseProviderMeasurementBundleInput({
         ...input,
         measurements: [{ ...heartRateMeasurement, value: 0 }],
       }).ok,
     ).toBe(false)
     expect(
-      parseConnectedHealthMeasurementBundleInput({
+      parseProviderMeasurementBundleInput({
         ...baseInput('google-health-api', 'steps', {
           kind: 'step-count',
           value: 1,
@@ -1100,7 +1100,7 @@ describe('Connected Health R4 graph builder', () => {
       }).ok,
     ).toBe(false)
     expect(
-      parseConnectedHealthMeasurementBundleInput({
+      parseProviderMeasurementBundleInput({
         ...baseInput('withings', 'getmeas:54', {
           kind: 'oxygen-saturation',
           value: 98,
@@ -1122,12 +1122,12 @@ describe('Connected Health R4 graph builder', () => {
     const invalid = {
       ...input,
       source: { ...input.source, sourceNativeId: 'invalid-\ud800' },
-    } as ConnectedHealthMeasurementBundleInput
-    expect(parseConnectedHealthMeasurementBundleInput(invalid).ok).toBe(false)
-    expect(buildConnectedHealthMeasurementBundle(invalid).ok).toBe(false)
+    } as ProviderMeasurementBundleInput
+    expect(parseProviderMeasurementBundleInput(invalid).ok).toBe(false)
+    expect(buildProviderMeasurementBundle(invalid).ok).toBe(false)
   })
 
-  it('fails closed at every direct Connected Health identity primitive boundary', () => {
+  it('fails closed at every direct Provider identity primitive boundary', () => {
     const valid = {
       provider: 'withings',
       providerAccountIdentifier: {
@@ -1140,7 +1140,7 @@ describe('Connected Health R4 graph builder', () => {
       eventSequence: positive(1),
     } as const
     expect(
-      deriveConnectedHealthIdentities({
+      deriveProviderIdentities({
         ...valid,
         providerAccountIdentifier: {
           ...valid.providerAccountIdentifier,
@@ -1149,19 +1149,19 @@ describe('Connected Health R4 graph builder', () => {
       }).ok,
     ).toBe(false)
     expect(
-      deriveConnectedHealthIdentities({
+      deriveProviderIdentities({
         ...valid,
         outputDiscriminators: ['  '],
       }).ok,
     ).toBe(false)
     expect(
-      deriveConnectedHealthIdentities({
+      deriveProviderIdentities({
         ...valid,
         outputDiscriminators: ['heart-rate', 'heart-rate'],
       }).ok,
     ).toBe(false)
     expect(
-      deriveConnectedHealthIdentities({
+      deriveProviderIdentities({
         ...valid,
         eventSequence: 0 as never,
       }).ok,
@@ -1171,7 +1171,7 @@ describe('Connected Health R4 graph builder', () => {
   it.each([
     [
       'source native id',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         application: {
           ...input.application,
@@ -1181,7 +1181,7 @@ describe('Connected Health R4 graph builder', () => {
     ],
     [
       'provider account pseudonym',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         source: {
           ...input.source,
@@ -1196,11 +1196,11 @@ describe('Connected Health R4 graph builder', () => {
     'rejects %s leakage through emitted metadata',
     (_name, mutate) => {
       const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-      const candidate = mutate(input) as ConnectedHealthMeasurementBundleInput
-      expect(parseConnectedHealthMeasurementBundleInput(candidate).ok).toBe(
+      const candidate = mutate(input) as ProviderMeasurementBundleInput
+      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(
         false,
       )
-      expect(buildConnectedHealthMeasurementBundle(candidate).ok).toBe(false)
+      expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
       if (_name === 'provider account pseudonym') {
         expect(
           parseNormalizedProviderRecord({
@@ -1215,7 +1215,7 @@ describe('Connected Health R4 graph builder', () => {
   it.each([
     [
       'provider account value',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         source: {
           ...input.source,
@@ -1228,21 +1228,21 @@ describe('Connected Health R4 graph builder', () => {
     ],
     [
       'source native id',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         source: { ...input.source, sourceNativeId: '\n  ' },
       }),
     ],
     [
       'source type',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         source: { ...input.source, sourceType: '   ' },
       }),
     ],
     [
       'converter identifier',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         application: {
           ...input.application,
@@ -1258,7 +1258,7 @@ describe('Connected Health R4 graph builder', () => {
     ],
     [
       'data-origin identifier',
-      (input: ConnectedHealthMeasurementBundleInput) => ({
+      (input: ProviderMeasurementBundleInput) => ({
         ...input,
         source: {
           ...input.source,
@@ -1277,7 +1277,7 @@ describe('Connected Health R4 graph builder', () => {
     ],
   ] as const)('rejects a whitespace-only %s', (_name, mutate) => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    expect(parseConnectedHealthMeasurementBundleInput(mutate(input)).ok).toBe(
+    expect(parseProviderMeasurementBundleInput(mutate(input)).ok).toBe(
       false,
     )
   })
@@ -1290,7 +1290,7 @@ describe('Connected Health R4 graph builder', () => {
         'https://example.org/identifiers',
         'invalid-\ud800',
       )
-      let candidate: ConnectedHealthMeasurementBundleInput
+      let candidate: ProviderMeasurementBundleInput
       if (role === 'converter') {
         candidate = {
           ...input,
@@ -1318,7 +1318,7 @@ describe('Connected Health R4 graph builder', () => {
               identity: invalidIdentity,
             },
           },
-        } as ConnectedHealthMeasurementBundleInput
+        } as ProviderMeasurementBundleInput
       } else {
         candidate = {
           ...input,
@@ -1329,12 +1329,12 @@ describe('Connected Health R4 graph builder', () => {
               identityScope: 'deployment-scoped',
             },
           },
-        } as ConnectedHealthMeasurementBundleInput
+        } as ProviderMeasurementBundleInput
       }
-      expect(parseConnectedHealthMeasurementBundleInput(candidate).ok).toBe(
+      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(
         false,
       )
-      expect(buildConnectedHealthMeasurementBundle(candidate).ok).toBe(false)
+      expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
     },
   )
 
@@ -1367,7 +1367,7 @@ describe('Connected Health R4 graph builder', () => {
   ] as const)(
     'fails closed for non-scalar or unsupported %s/%s data',
     (provider, sourceType, measurement) => {
-      const result = buildConnectedHealthMeasurementBundle(
+      const result = buildProviderMeasurementBundle(
         baseInput(
           provider,
           sourceType,
@@ -1381,13 +1381,13 @@ describe('Connected Health R4 graph builder', () => {
   it('rejects non-positive event sequences and duplicate graph identities', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         eventSequence: 0,
-      } as ConnectedHealthMeasurementBundleInput).ok,
+      } as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         source: {
           ...input.source,
@@ -1396,7 +1396,7 @@ describe('Connected Health R4 graph builder', () => {
             identity: application.identity,
           },
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 })
@@ -1550,7 +1550,7 @@ describe('Provider-neutral normalization contract', () => {
 
   it('strictly parses the complete graph input and preserves identity strings verbatim', () => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = parseConnectedHealthMeasurementBundleInput({
+    const result = parseProviderMeasurementBundleInput({
       ...input,
       source: {
         ...input.source,
@@ -1567,21 +1567,21 @@ describe('Provider-neutral normalization contract', () => {
     )
 
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         rawVendorResponse: { heart_rate: 64 },
-      } as ConnectedHealthMeasurementBundleInput & {
+      } as ProviderMeasurementBundleInput & {
         rawVendorResponse: unknown
       }).ok,
     ).toBe(false)
     expect(
-      buildConnectedHealthMeasurementBundle({
+      buildProviderMeasurementBundle({
         ...input,
         source: {
           ...input.source,
           rawVendorResponse: { heart_rate: 64 },
         },
-      } as unknown as ConnectedHealthMeasurementBundleInput).ok,
+      } as unknown as ProviderMeasurementBundleInput).ok,
     ).toBe(false)
   })
 
@@ -1616,7 +1616,7 @@ describe('Provider-neutral normalization contract', () => {
     expect(
       parseNormalizedProviderRecord({
         source: {
-          adapter: { kind: 'connected-health', provider: 'oura' },
+          adapter: { kind: 'providers', provider: 'oura' },
           providerAccountIdentifier: {
             system: 'https://example.org/deployments/provider-accounts',
             value: 'pseudonym-oura-001',
@@ -1633,7 +1633,7 @@ describe('Provider-neutral normalization contract', () => {
 
   it('correlates provider, source token, and measurement at compile time', () => {
     const withingsSource = {
-      adapter: { kind: 'connected-health', provider: 'withings' },
+      adapter: { kind: 'providers', provider: 'withings' },
       providerAccountIdentifier: {
         system: uri('https://example.org/deployments/provider-accounts'),
         value: 'pseudonym-withings-001',
@@ -1658,7 +1658,7 @@ describe('Provider-neutral normalization contract', () => {
     type OuraSleep = ConnectedProviderRecord<'oura', 'sleep'>
     const source = {
       ...withingsSource,
-      adapter: { kind: 'connected-health', provider: 'oura' },
+      adapter: { kind: 'providers', provider: 'oura' },
       sourceType: 'sleep',
     } as const
     const invalidMeasurement = {
@@ -1676,15 +1676,15 @@ describe('Provider-neutral normalization contract', () => {
 
   it('generates only catalog-owned scalar source tokens', () => {
     expect(
-      Object.hasOwn(connectedHealthScalarMappings.withings, 'getmeas:9'),
+      Object.hasOwn(providerScalarMappings.withings, 'getmeas:9'),
     ).toBe(false)
-    expect(connectedHealthScalarMappings.withings['getmeas:9+10']).toEqual({
+    expect(providerScalarMappings.withings['getmeas:9+10']).toEqual({
       'blood-pressure': 'blood-pressure-panel',
     })
   })
 })
 
-describe('Connected Health builder properties', () => {
+describe('Provider builder properties', () => {
   it('preserves every finite positive heart-rate value', () => {
     assert(
       property(
@@ -1695,7 +1695,7 @@ describe('Connected Health builder properties', () => {
           noDefaultInfinity: true,
         }),
         (value) => {
-          const result = buildConnectedHealthMeasurementBundle(
+          const result = buildProviderMeasurementBundle(
             baseInput('withings', 'getmeas:11', {
               kind: 'heart-rate',
               value,
@@ -1723,7 +1723,7 @@ describe('Connected Health builder properties', () => {
         ),
         (value) => {
           expect(
-            buildConnectedHealthMeasurementBundle(
+            buildProviderMeasurementBundle(
               baseInput('withings', 'getmeas:54', {
                 kind: 'oxygen-saturation',
                 value,

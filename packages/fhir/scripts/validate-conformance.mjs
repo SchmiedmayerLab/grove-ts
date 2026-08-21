@@ -126,7 +126,7 @@ if (structuralOnly) {
     '--package',
     `mobile=${resolve(igRoot, 'mobile/output/package.tgz')}`,
     '--package',
-    `connected-health=${resolve(igRoot, 'connected-health/output/package.tgz')}`,
+    `providers=${resolve(igRoot, 'providers/output/package.tgz')}`,
     '--package',
     `sensor=${resolve(igRoot, 'sensor/output/package.tgz')}`,
     '--package',

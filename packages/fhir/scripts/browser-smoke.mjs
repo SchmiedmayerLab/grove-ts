@@ -98,8 +98,8 @@ try {
   const result = await page.evaluate(async (base) => {
     const grove = await import(`${base}/grove/index.js`)
     const mobile = await import(`${base}/grove/mobile/index.js`)
-    const connectedHealth = await import(
-      `${base}/grove/connected-health/index.js`
+    const provider = await import(
+      `${base}/grove/providers/index.js`
     )
     const questionnaire = await import(`${base}/grove/questionnaire/index.js`)
     const absolute = mobile.deriveEntryFullUrl({
@@ -107,7 +107,7 @@ try {
       value: 'heart-rate-20260820-001',
     })
     const measurementGraph =
-      connectedHealth.buildConnectedHealthMeasurementBundle({
+      provider.buildProviderMeasurementBundle({
         subject: 'Patient/browser',
         measurements: [
           {
@@ -117,7 +117,7 @@ try {
           },
         ],
         source: {
-          adapter: { kind: 'connected-health', provider: 'withings' },
+          adapter: { kind: 'providers', provider: 'withings' },
           providerAccountIdentifier: {
             system: 'https://example.org/provider-account-pseudonyms',
             value: 'browser-account',
@@ -148,9 +148,9 @@ try {
         issued: '2026-08-20T12:01:00Z',
         recorded: '2026-08-20T12:02:00Z',
       })
-    const recording = connectedHealth.buildConnectedHealthRecordingBundle({
+    const recording = provider.buildProviderRecordingBundle({
       source: {
-        adapter: { kind: 'connected-health', provider: 'google-health-api' },
+        adapter: { kind: 'providers', provider: 'google-health-api' },
         providerAccountIdentifier: {
           system: 'https://example.org/provider-account-pseudonyms',
           value: 'browser-raw-account',
@@ -233,10 +233,10 @@ try {
       measurementGraph: measurementGraph.ok,
       recordingGraph: recording.ok,
       rawSourceCount: Object.values(
-        connectedHealth.connectedHealthRawMappings,
+        provider.providerRawMappings,
       ).reduce((count, mappings) => count + Object.keys(mappings).length, 0),
       scalarMeasurementCount: new Set(
-        Object.values(connectedHealth.connectedHealthScalarMappings).flatMap(
+        Object.values(provider.providerScalarMappings).flatMap(
           (sourceMappings) =>
             Object.values(sourceMappings).flatMap((mapping) =>
               Object.keys(mapping),
@@ -244,11 +244,11 @@ try {
         ),
       ).size,
       providerApiVisibleFromMobile:
-        'buildConnectedHealthMeasurementBundle' in mobile ||
-        'buildConnectedHealthRecordingBundle' in mobile,
+        'buildProviderMeasurementBundle' in mobile ||
+        'buildProviderRecordingBundle' in mobile,
       providerApiVisibleFromRoot:
-        'buildConnectedHealthMeasurementBundle' in grove ||
-        'buildConnectedHealthRecordingBundle' in grove,
+        'buildProviderMeasurementBundle' in grove ||
+        'buildProviderRecordingBundle' in grove,
       internalGraphVisible:
         'groveFhirPackageGraph' in grove ||
         'groveFhirProfileClaims' in grove ||

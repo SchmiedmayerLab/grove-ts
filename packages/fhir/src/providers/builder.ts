@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { groveConnectedHealthProfileCanonicals } from './contract.generated.js'
+import { groveProviderProfileCanonicals } from './contract.generated.js'
 import {
   assemblerAgent,
   coding,
@@ -19,13 +19,13 @@ import {
   resourceId,
   sourceEntityAgent,
 } from './graph.js'
-import { deriveConnectedHealthIdentities } from './identity.js'
+import { deriveProviderIdentities } from './identity.js'
 import { EXTENSIONS, PROFILES, SYSTEMS } from './profiles.js'
 import {
-  connectedHealthOutputDiscriminator,
-  parseConnectedHealthMeasurementBundleInput,
+  providerOutputDiscriminator,
+  parseProviderMeasurementBundleInput,
 } from './provider.js'
-import type { ConnectedHealthMeasurementBundleInput } from './types.js'
+import type { ProviderMeasurementBundleInput } from './types.js'
 import { issues, ok, type Result, type UrnUuid } from '../core/index.js'
 import { createEntryIdentity } from '../mobile/identity.js'
 import { sharedMobileMeasurementCatalog } from '../mobile/measurement-catalog.generated.js'
@@ -47,7 +47,7 @@ const VITAL_SIGNS = new Set([
 ])
 
 type ConnectedMeasurement =
-  ConnectedHealthMeasurementBundleInput['measurements'][number]
+  ProviderMeasurementBundleInput['measurements'][number]
 
 const quantity = (
   value: number,
@@ -85,8 +85,8 @@ const categoryFor = (kind: ConnectedMeasurement['kind']) => {
 const profileFor = (kind: ConnectedMeasurement['kind']): readonly string[] => {
   const definition = sharedMobileMeasurementCatalog[kind]
   return [
-    groveConnectedHealthProfileCanonicals[definition.profile],
-    PROFILES.connectedHealthObservation,
+    groveProviderProfileCanonicals[definition.profile],
+    PROFILES.providerObservation,
   ]
 }
 
@@ -127,7 +127,7 @@ const resultFor = (measurement: ConnectedMeasurement) => {
 }
 
 const makeObservation = (
-  input: ConnectedHealthMeasurementBundleInput,
+  input: ProviderMeasurementBundleInput,
   measurement: ConnectedMeasurement,
   observationIdentity: IdentifiedEntryIdentityInput,
   identities: ResolvedGraphIdentities,
@@ -136,11 +136,11 @@ const makeObservation = (
   const category = categoryFor(measurement.kind)
   const extensions = [
     {
-      url: EXTENSIONS.connectedHealthProvider,
+      url: EXTENSIONS.provider,
       valueCode: input.source.adapter.provider,
     },
     {
-      url: EXTENSIONS.connectedHealthSourceType,
+      url: EXTENSIONS.providerSourceType,
       valueCode: `${input.source.adapter.provider}/${input.source.sourceType}`,
     },
     ...(identities.gatewayReference === undefined ?
@@ -193,13 +193,13 @@ const makeObservation = (
 }
 
 const makeProvenance = (
-  input: ConnectedHealthMeasurementBundleInput,
+  input: ProviderMeasurementBundleInput,
   identities: ResolvedGraphIdentities,
 ) => {
   return {
     resourceType: 'Provenance' as const,
     ...resourceId(identities.provenance),
-    meta: { profile: [PROFILES.connectedHealthConversionProvenance] },
+    meta: { profile: [PROFILES.providerConversionProvenance] },
     target: identities.observations.map(({ fullUrl }) => ({
       reference: fullUrl,
     })),
@@ -231,7 +231,7 @@ type ResolvedGatewayIdentity = Pick<
 >
 
 const resolveGatewayIdentity = (
-  input: ConnectedHealthMeasurementBundleInput['gatewayApplication'],
+  input: ProviderMeasurementBundleInput['gatewayApplication'],
   converter: IdentifiedEntryIdentityInput,
 ): Result<ResolvedGatewayIdentity> => {
   if (input === undefined) return ok({})
@@ -250,10 +250,10 @@ const resolveGatewayIdentity = (
 }
 
 const resolveGraphIdentities = (
-  input: ConnectedHealthMeasurementBundleInput,
+  input: ProviderMeasurementBundleInput,
 ): Result<ResolvedGraphIdentities> => {
   const outputDiscriminators = input.measurements.map(({ kind }) =>
-    connectedHealthOutputDiscriminator(
+    providerOutputDiscriminator(
       input.source.adapter.provider,
       input.source.sourceType,
       kind,
@@ -266,11 +266,11 @@ const resolveGraphIdentities = (
         code: 'unsupported-measurement',
         path: ['measurements'],
         message:
-          'No catalog-owned Connected Health output discriminator exists.',
+          'No catalog-owned Provider output discriminator exists.',
       },
     ])
   }
-  const connected = deriveConnectedHealthIdentities({
+  const connected = deriveProviderIdentities({
     provider: input.source.adapter.provider,
     providerAccountIdentifier: input.source.providerAccountIdentifier,
     sourceType: input.source.sourceType,
@@ -289,7 +289,7 @@ const resolveGraphIdentities = (
           severity: 'error',
           code: 'value-mismatch',
           path: ['measurements'],
-          message: 'Connected Health output identities are incomplete.',
+          message: 'Provider output identities are incomplete.',
         },
       ])
     }
@@ -367,10 +367,10 @@ const resolveGraphIdentities = (
  * the durable event sequence remain caller-owned; malformed inputs return
  * structured issues and no partial graph.
  */
-export const buildConnectedHealthMeasurementBundle = (
-  input: ConnectedHealthMeasurementBundleInput,
+export const buildProviderMeasurementBundle = (
+  input: ProviderMeasurementBundleInput,
 ): Result<CollectionBundle> => {
-  const parsed = parseConnectedHealthMeasurementBundleInput(input)
+  const parsed = parseProviderMeasurementBundleInput(input)
   if (!parsed.ok) return parsed
   const validatedInput = parsed.value
 
@@ -386,7 +386,7 @@ export const buildConnectedHealthMeasurementBundle = (
           severity: 'error',
           code: 'value-mismatch',
           path: ['measurements', index],
-          message: 'Connected Health output identities are incomplete.',
+          message: 'Provider output identities are incomplete.',
         },
       ])
     }

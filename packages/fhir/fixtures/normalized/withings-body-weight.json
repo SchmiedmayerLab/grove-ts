@@ -1,6 +1,6 @@
 {
   "source": {
-    "adapter": { "kind": "connected-health", "provider": "withings" },
+    "adapter": { "kind": "providers", "provider": "withings" },
     "providerAccountIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-withings-001",

@@ -45,9 +45,9 @@ const outputPaths = {
     packageRoot,
     'src/questionnaire/contract.generated.ts',
   ),
-  connectedHealth: resolve(
+  provider: resolve(
     packageRoot,
-    'src/connected-health/contract.generated.ts',
+    'src/providers/contract.generated.ts',
   ),
 }
 
@@ -259,7 +259,7 @@ for (const source of [
   'sensorkit',
   'healthkit',
   'health-connect',
-  'connected-health',
+  'providers',
 ]) {
   if (packages[source] === undefined) {
     throw new Error(`Package graph is missing ${source}.`)
@@ -278,7 +278,7 @@ const packageMetadata = (source) => {
 }
 const mobilePackageMetadata = packageMetadata('mobile')
 const questionnairePackageMetadata = packageMetadata('questionnaire')
-const connectedHealthPackageMetadata = packageMetadata('connected-health')
+const providerPackageMetadata = packageMetadata('providers')
 
 const profiles = {}
 const packageCanonicals = {}
@@ -314,20 +314,20 @@ const questionnaireProfiles = selectEntries(profiles, [
   'grove-questionnaire',
   'grove-questionnaire-response',
 ])
-const connectedHealthProfiles = selectEntries(profiles, [
+const providerProfiles = selectEntries(profiles, [
   ...measurements.map((measurement) => measurement.profile),
   'grove-application-device',
   'grove-mobile-exchange-bundle',
   'grove-recording-device',
   'grove-sensor-recording-document',
-  'connected-health-conversion-provenance',
-  'connected-health-observation',
-  'connected-health-recording-document',
+  'provider-conversion-provenance',
+  'provider-observation',
+  'provider-recording-document',
 ])
-const connectedHealthPackageCanonicals = selectEntries(packageCanonicals, [
+const providerPackageCanonicals = selectEntries(packageCanonicals, [
   'mobile',
   'sensor',
-  'connected-health',
+  'providers',
 ])
 
 if (
@@ -336,7 +336,7 @@ if (
   profileClaims.observationAdapterClaim?.inheritedProfilesAreNotDeclared !==
     true ||
   !profileClaims.observationAdapterClaim?.adapterProfiles?.includes(
-    profiles['connected-health-observation'],
+    profiles['provider-observation'],
   ) ||
   !profileClaims.observationAdapterClaim?.forbiddenExplicitProfiles?.includes(
     profiles['grove-mobile-observation'],
@@ -352,10 +352,10 @@ const expectedHealthConnectGlucoseProfiles = [
   'health-connect-whole-blood-glucose',
 ].map((profile) => profiles[profile])
 const connectedRecordingClaim =
-  profileClaims.connectedHealthRecordingDocumentClaim
+  profileClaims.providerRecordingDocumentClaim
 const connectedProvenanceClaim =
   profileClaims.adapterConversionProvenanceClaims?.find(
-    (claim) => claim.adapter === 'connected-health',
+    (claim) => claim.adapter === 'providers',
   )
 if (
   profileClaims.healthConnectProviderSpecificClaims?.cardinality !== 1 ||
@@ -369,9 +369,9 @@ if (
   connectedRecordingClaim.profiles?.[0] !==
     profiles['grove-sensor-recording-document'] ||
   connectedRecordingClaim.profiles?.[1] !==
-    profiles['connected-health-recording-document'] ||
+    profiles['provider-recording-document'] ||
   connectedProvenanceClaim?.profile !==
-    profiles['connected-health-conversion-provenance']
+    profiles['provider-conversion-provenance']
 ) {
   throw new Error('Adapter-specific profile claims are incomplete.')
 }
@@ -525,63 +525,63 @@ if (
 }
 
 const expectedConnectedProviders = ['google-health-api', 'oura', 'withings']
-const connectedHealthAdapterPath = resolve(
+const providerAdapterPath = resolve(
   catalogRoot,
-  'connected-health-adapter.json',
+  'providers-adapter.json',
 )
-const connectedHealthAdapter = JSON.parse(
-  await readFile(connectedHealthAdapterPath, 'utf8'),
+const providerAdapter = JSON.parse(
+  await readFile(providerAdapterPath, 'utf8'),
 )
 if (
-  connectedHealthAdapter.fhirVersion !== '4.0.1' ||
-  connectedHealthAdapter.version !== packageGraph.version ||
-  connectedHealthAdapter.packageId !==
-    'org.grovealliance.fhir.connected-health' ||
-  connectedHealthAdapter.canonical !== packageCanonicals['connected-health'] ||
-  connectedHealthAdapter.adapterProfile !==
-    profiles['connected-health-observation'] ||
-  connectedHealthAdapter.recordingDocument?.sourceNeutralProfile !==
+  providerAdapter.fhirVersion !== '4.0.1' ||
+  providerAdapter.version !== packageGraph.version ||
+  providerAdapter.packageId !==
+    'org.grovealliance.fhir.providers' ||
+  providerAdapter.canonical !== packageCanonicals['providers'] ||
+  providerAdapter.adapterProfile !==
+    profiles['provider-observation'] ||
+  providerAdapter.recordingDocument?.sourceNeutralProfile !==
     profiles['grove-sensor-recording-document'] ||
-  connectedHealthAdapter.recordingDocument?.adapterProfile !==
-    profiles['connected-health-recording-document'] ||
-  connectedHealthAdapter.recordingDocument?.outputDiscriminator !==
+  providerAdapter.recordingDocument?.adapterProfile !==
+    profiles['provider-recording-document'] ||
+  providerAdapter.recordingDocument?.outputDiscriminator !==
     'native-recording' ||
-  connectedHealthAdapter.rawPayloadAdmission?.allowedAssertions?.join(',') !==
+  providerAdapter.rawPayloadAdmission?.allowedAssertions?.join(',') !==
     rawPayloadAssertions.join(',') ||
-  connectedHealthAdapter.rawPayloadAdmission?.notFHIRAuthorization !== true ||
-  connectedHealthAdapter.conversionProvenanceProfile !==
-    profiles['connected-health-conversion-provenance'] ||
-  connectedHealthAdapter.sourceTypeExtension?.url !==
-    `${packageCanonicals['connected-health']}/StructureDefinition/connected-health-source-type` ||
-  connectedHealthAdapter.sourceTypeExtension?.codeSystem !==
-    `${packageCanonicals['connected-health']}/CodeSystem/connected-health-source-type`
+  providerAdapter.rawPayloadAdmission?.notFHIRAuthorization !== true ||
+  providerAdapter.conversionProvenanceProfile !==
+    profiles['provider-conversion-provenance'] ||
+  providerAdapter.sourceTypeExtension?.url !==
+    `${packageCanonicals['providers']}/StructureDefinition/provider-source-type` ||
+  providerAdapter.sourceTypeExtension?.codeSystem !==
+    `${packageCanonicals['providers']}/CodeSystem/provider-source-type`
 ) {
-  throw new Error('Connected Health adapter catalog metadata is inconsistent.')
+  throw new Error('Provider adapter catalog metadata is inconsistent.')
 }
 
 if (
-  !Array.isArray(connectedHealthAdapter.providers) ||
-  connectedHealthAdapter.providers.map((provider) => provider.id).join(',') !==
+  !Array.isArray(providerAdapter.providers) ||
+  providerAdapter.providers.map((provider) => provider.id).join(',') !==
     expectedConnectedProviders.join(',')
 ) {
   throw new Error(
-    'Connected Health providers must be the exact closed provider set.',
+    'Provider providers must be the exact closed provider set.',
   )
 }
 
-const connectedHealthScalarMappings = {}
-const connectedHealthRawMappings = {}
-const connectedHealthRecordEffectiveRules = {}
+const providerScalarMappings = {}
+const providerRawMappings = {}
+const providerRecordEffectiveRules = {}
 const completeCivilDayEffectiveRule =
   'the source civil day represented as a complete day Period; midpoint substitution is forbidden'
-for (const provider of connectedHealthAdapter.providers) {
+for (const provider of providerAdapter.providers) {
   if (
     provider.sourceTypes?.length !== provider.sourceTypeCount ||
     new Set(provider.sourceTypes.map((entry) => entry.token)).size !==
       provider.sourceTypeCount
   ) {
     throw new Error(
-      `Connected Health ${provider.id} source inventory is incomplete.`,
+      `Provider ${provider.id} source inventory is incomplete.`,
     )
   }
 
@@ -606,7 +606,7 @@ for (const provider of connectedHealthAdapter.providers) {
     for (const measurementId of measurementIds) {
       if (implemented[measurementId] === undefined) {
         throw new Error(
-          `Connected Health ${provider.id}/${sourceType.token} refers to unknown measurement ${measurementId}.`,
+          `Provider ${provider.id}/${sourceType.token} refers to unknown measurement ${measurementId}.`,
         )
       }
     }
@@ -630,7 +630,7 @@ for (const provider of connectedHealthAdapter.providers) {
         )
       ) {
         throw new Error(
-          `Connected Health ${provider.id}/${sourceType.token} mixes complete-civil-day and incompatible effective rules.`,
+          `Provider ${provider.id}/${sourceType.token} mixes complete-civil-day and incompatible effective rules.`,
         )
       }
       recordEffectiveRules[sourceType.token] = {
@@ -651,11 +651,11 @@ for (const provider of connectedHealthAdapter.providers) {
         )
       ) {
         throw new Error(
-          `Connected Health ${provider.id}/${sourceType.token} has an unreviewed raw mapping.`,
+          `Provider ${provider.id}/${sourceType.token} has an unreviewed raw mapping.`,
         )
       }
       rawSourceMappings[sourceType.token] =
-        connectedHealthAdapter.recordingDocument.outputDiscriminator
+        providerAdapter.recordingDocument.outputDiscriminator
     }
   }
   for (const grouped of provider.groupedMappings ?? []) {
@@ -667,13 +667,13 @@ for (const provider of connectedHealthAdapter.providers) {
       grouped.measurementIds.length === 0
     ) {
       throw new Error(
-        `Connected Health ${provider.id} grouped mapping is incomplete.`,
+        `Provider ${provider.id} grouped mapping is incomplete.`,
       )
     }
     for (const measurementId of grouped.measurementIds) {
       if (implemented[measurementId] === undefined) {
         throw new Error(
-          `Connected Health ${provider.id}/${grouped.token} refers to unknown measurement ${measurementId}.`,
+          `Provider ${provider.id}/${grouped.token} refers to unknown measurement ${measurementId}.`,
         )
       }
     }
@@ -688,19 +688,19 @@ for (const provider of connectedHealthAdapter.providers) {
     const discriminators = Object.values(mappings)
     if (new Set(discriminators).size !== discriminators.length) {
       throw new Error(
-        `Connected Health ${provider.id}/${sourceType} output discriminators must be unique.`,
+        `Provider ${provider.id}/${sourceType} output discriminators must be unique.`,
       )
     }
   }
-  connectedHealthScalarMappings[provider.id] = sourceMappings
-  connectedHealthRawMappings[provider.id] = rawSourceMappings
+  providerScalarMappings[provider.id] = sourceMappings
+  providerRawMappings[provider.id] = rawSourceMappings
   if (Object.keys(recordEffectiveRules).length > 0) {
-    connectedHealthRecordEffectiveRules[provider.id] = recordEffectiveRules
+    providerRecordEffectiveRules[provider.id] = recordEffectiveRules
   }
 }
 
 if (
-  JSON.stringify(connectedHealthRecordEffectiveRules) !==
+  JSON.stringify(providerRecordEffectiveRules) !==
   JSON.stringify({
     oura: {
       daily_activity: {
@@ -729,53 +729,53 @@ if (
   })
 ) {
   throw new Error(
-    'Connected Health complete-civil-day record rules changed unexpectedly.',
+    'Provider complete-civil-day record rules changed unexpectedly.',
   )
 }
 
 if (
-  Object.values(connectedHealthRawMappings).flatMap((mapping) =>
+  Object.values(providerRawMappings).flatMap((mapping) =>
     Object.keys(mapping),
   ).length !== 4
 ) {
-  throw new Error('Connected Health must admit exactly four raw source tokens.')
+  throw new Error('Provider must admit exactly four raw source tokens.')
 }
 
-const connectedHealthIdentity = connectedHealthAdapter.identity
+const providerIdentity = providerAdapter.identity
 if (
-  connectedHealthIdentity?.digest !==
+  providerIdentity?.digest !==
     'SHA-256 over the UTF-8 preimage, lowercase hexadecimal, prefixed with v1:' ||
-  connectedHealthIdentity.sourceRecord?.system !==
-    'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id' ||
-  connectedHealthIdentity.output?.system !==
-    'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id' ||
-  connectedHealthIdentity.output?.outputDiscriminatorRule
+  providerIdentity.sourceRecord?.system !==
+    'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id' ||
+  providerIdentity.output?.system !==
+    'https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id' ||
+  providerIdentity.output?.outputDiscriminatorRule
     ?.ordinarySupportedMeasurement !==
     'the exact measurementId string from the supported element mapping' ||
-  connectedHealthIdentity.output?.outputDiscriminatorRule?.groupedMapping !==
+  providerIdentity.output?.outputDiscriminatorRule?.groupedMapping !==
     'the exact outputDiscriminator declared on that groupedMappings row' ||
-  connectedHealthIdentity.output?.outputDiscriminatorRule?.mappedStandardRaw !==
+  providerIdentity.output?.outputDiscriminatorRule?.mappedStandardRaw !==
     'native-recording' ||
-  connectedHealthIdentity.output?.outputDiscriminatorRule?.noFallback !==
+  providerIdentity.output?.outputDiscriminatorRule?.noFallback !==
     true ||
-  connectedHealthIdentity.vectors?.length !== 5 ||
-  connectedHealthIdentity.vectors.filter(
+  providerIdentity.vectors?.length !== 5 ||
+  providerIdentity.vectors.filter(
     (vector) => vector.role === 'sourceRecord',
   ).length !== 3 ||
-  connectedHealthIdentity.vectors.filter((vector) => vector.role === 'output')
+  providerIdentity.vectors.filter((vector) => vector.role === 'output')
     .length !== 2 ||
-  connectedHealthIdentity.conversion?.system !==
-    'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-conversion-id' ||
-  connectedHealthIdentity.exchange?.system !==
-    'https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-exchange-id'
+  providerIdentity.conversion?.system !==
+    'https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id' ||
+  providerIdentity.exchange?.system !==
+    'https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id'
 ) {
   throw new Error(
-    'Connected Health deterministic identity contract is incomplete.',
+    'Provider deterministic identity contract is incomplete.',
   )
 }
 
-const connectedHealthAdmittedMeasurements = new Set(
-  Object.values(connectedHealthScalarMappings).flatMap((sourceMappings) =>
+const providerAdmittedMeasurements = new Set(
+  Object.values(providerScalarMappings).flatMap((sourceMappings) =>
     Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
   ),
 )
@@ -851,13 +851,13 @@ if (
 }
 if (
   !Array.isArray(implementedCapabilities) ||
-  implementedCapabilities.length !== connectedHealthAdmittedMeasurements.size
+  implementedCapabilities.length !== providerAdmittedMeasurements.size
 ) {
   throw new Error(
-    'Capability matrix implemented rows must exactly match the Connected Health facade.',
+    'Capability matrix implemented rows must exactly match the Provider facade.',
   )
 }
-const rawMappingRows = Object.entries(connectedHealthRawMappings).flatMap(
+const rawMappingRows = Object.entries(providerRawMappings).flatMap(
   ([provider, mappings]) =>
     Object.entries(mappings).map(([sourceType, outputDiscriminator]) => ({
       provider,
@@ -876,14 +876,14 @@ if (
           capability.sourceType === mapping.sourceType &&
           capability.outputDiscriminator === mapping.outputDiscriminator &&
           capability.profile ===
-            profiles['connected-health-recording-document'] &&
+            profiles['provider-recording-document'] &&
           capability.sourceNeutralProfile ===
             profiles['grove-sensor-recording-document'],
       ),
   )
 ) {
   throw new Error(
-    'Capability matrix native-recording rows must exactly match the Connected Health catalog.',
+    'Capability matrix native-recording rows must exactly match the Provider catalog.',
   )
 }
 const expectedAdapterProfiledCapabilities = new Map([
@@ -914,7 +914,7 @@ for (const normative of measurements) {
   const capability = capabilities.measurements.find(
     (entry) => entry.key === normative.id,
   )
-  const admitted = connectedHealthAdmittedMeasurements.has(normative.id)
+  const admitted = providerAdmittedMeasurements.has(normative.id)
   if (
     capability === undefined ||
     capability.status !==
@@ -938,7 +938,7 @@ const generated = {
   packageGraph,
   mobilePackageMetadata,
   questionnairePackageMetadata,
-  connectedHealthPackageMetadata,
+  providerPackageMetadata,
   exchangeIdentity,
   profileClaims,
   packageCanonicals,
@@ -946,13 +946,13 @@ const generated = {
   measurements: implemented,
   effectiveCanonicalization,
   effectiveCanonicalizationVectors: semanticEffectiveCanonicalization.vectors,
-  connectedHealthAdapter,
-  connectedHealthScalarMappings,
-  connectedHealthRawMappings,
-  connectedHealthRecordEffectiveRules,
+  providerAdapter,
+  providerScalarMappings,
+  providerRawMappings,
+  providerRecordEffectiveRules,
   questionnaireProfiles,
-  connectedHealthProfiles,
-  connectedHealthPackageCanonicals,
+  providerProfiles,
+  providerPackageCanonicals,
 }
 
 const sharedMobileSemanticCatalog = Object.fromEntries(
@@ -1018,33 +1018,33 @@ ${frozenExport('groveQuestionnairePackageMetadata', questionnairePackageMetadata
 ${frozenExport('groveQuestionnaireProfileCanonicals', questionnaireProfiles)}
 `
 
-const connectedHealthUnformattedOutput = `${header(false)}${versions}
+const providerUnformattedOutput = `${header(false)}${versions}
 
-${frozenExport('groveConnectedHealthPackageMetadata', connectedHealthPackageMetadata)}
+${frozenExport('groveProviderPackageMetadata', providerPackageMetadata)}
 
-${frozenExport('groveConnectedHealthPackageCanonicals', connectedHealthPackageCanonicals)}
+${frozenExport('groveProviderPackageCanonicals', providerPackageCanonicals)}
 
-${frozenExport('groveConnectedHealthProfileCanonicals', connectedHealthProfiles)}
+${frozenExport('groveProviderProfileCanonicals', providerProfiles)}
 
-${frozenExport('connectedHealthAdapterCatalog', connectedHealthAdapter)}
+${frozenExport('providerAdapterCatalog', providerAdapter)}
 
-${frozenExport('connectedHealthScalarMappings', connectedHealthScalarMappings)}
+${frozenExport('providerScalarMappings', providerScalarMappings)}
 
-${frozenExport('connectedHealthRecordEffectiveRules', connectedHealthRecordEffectiveRules)}
+${frozenExport('providerRecordEffectiveRules', providerRecordEffectiveRules)}
 
-${frozenExport('connectedHealthRawMappings', connectedHealthRawMappings)}
+${frozenExport('providerRawMappings', providerRawMappings)}
 
-export type ConnectedHealthScalarMappings = typeof connectedHealthScalarMappings
+export type ProviderScalarMappings = typeof providerScalarMappings
 
-export type ConnectedHealthRecordEffectiveRules = typeof connectedHealthRecordEffectiveRules
+export type ProviderRecordEffectiveRules = typeof providerRecordEffectiveRules
 
-export type ConnectedHealthRawMappings = typeof connectedHealthRawMappings
+export type ProviderRawMappings = typeof providerRawMappings
 `
 
 const unformattedOutputs = {
   mobile: mobileUnformattedOutput,
   questionnaire: questionnaireUnformattedOutput,
-  connectedHealth: connectedHealthUnformattedOutput,
+  provider: providerUnformattedOutput,
 }
 for (const [scope, unformattedOutput] of Object.entries(unformattedOutputs)) {
   const output = await format(unformattedOutput, {

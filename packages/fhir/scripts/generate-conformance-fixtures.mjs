@@ -16,7 +16,7 @@ import { format } from 'prettier'
 // These non-literal imports intentionally resolve only after `npm run build`.
 const distRoot = '../dist'
 const rootApi = await import(`${distRoot}/index.js`)
-const connectedHealthApi = await import(`${distRoot}/connected-health/index.js`)
+const providerApi = await import(`${distRoot}/providers/index.js`)
 const {
   buildQuestionnaire,
   buildQuestionnaireResponse,
@@ -29,14 +29,14 @@ const {
   parseSemVer,
 } = rootApi
 const {
-  buildConnectedHealthRecordingBundle,
-  buildConnectedHealthMeasurementBundle,
-  connectedHealthRawMappings,
-  connectedHealthRecordEffectiveRules,
-  connectedHealthScalarMappings,
+  buildProviderRecordingBundle,
+  buildProviderMeasurementBundle,
+  providerRawMappings,
+  providerRecordEffectiveRules,
+  providerScalarMappings,
   encodeRecordingBytes,
   parseMediaType,
-} = connectedHealthApi
+} = providerApi
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const fixtureRoot = resolve(root, 'fixtures/conformance')
@@ -67,7 +67,7 @@ if (typeof producerVersion !== 'string' || producerVersion.length === 0) {
 
 const conformancePackageSources = [
   'mobile',
-  'connected-health',
+  'providers',
   'sensor',
   'questionnaire',
 ]
@@ -142,7 +142,7 @@ const dataOrigin = {
   name: 'Synthetic connected provider',
 }
 const admittedMeasurementIds = new Set(
-  Object.values(connectedHealthScalarMappings).flatMap((sourceMappings) =>
+  Object.values(providerScalarMappings).flatMap((sourceMappings) =>
     Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
   ),
 )
@@ -151,7 +151,7 @@ const semanticVectors = semanticCorpus.vectors.filter((vector) =>
 )
 if (semanticVectors.length !== admittedMeasurementIds.size) {
   throw new Error(
-    'The semantic corpus must bind every Connected Health scalar measurement exactly once.',
+    'The semantic corpus must bind every Provider scalar measurement exactly once.',
   )
 }
 
@@ -197,7 +197,7 @@ const measurementFromVector = (vector) => {
 const measurements = semanticVectors.map(measurementFromVector)
 
 const providerFor = (measurement, index) => {
-  const providers = Object.entries(connectedHealthScalarMappings)
+  const providers = Object.entries(providerScalarMappings)
   const ordered = [
     ...providers.slice(index % providers.length),
     ...providers.slice(0, index % providers.length),
@@ -205,7 +205,7 @@ const providerFor = (measurement, index) => {
   for (const [provider, sourceMappings] of ordered) {
     for (const [sourceType, mapping] of Object.entries(sourceMappings)) {
       const effectiveRule =
-        connectedHealthRecordEffectiveRules[provider]?.[sourceType]
+        providerRecordEffectiveRules[provider]?.[sourceType]
       if (
         effectiveRule === undefined &&
         Object.hasOwn(mapping, measurement.kind)
@@ -214,18 +214,18 @@ const providerFor = (measurement, index) => {
       }
     }
   }
-  throw new Error(`No Connected Health provider admits ${measurement.kind}.`)
+  throw new Error(`No Provider provider admits ${measurement.kind}.`)
 }
 
-const connectedHealthMeasurementBundle = (measurement, index) => {
+const providerMeasurementBundle = (measurement, index) => {
   const provider = providerFor(measurement, index)
   return unwrap(
-    buildConnectedHealthMeasurementBundle({
+    buildProviderMeasurementBundle({
       subject: unwrap(parsePatientReference('Patient/example')),
       measurements: [measurement],
       source: {
         adapter: {
-          kind: 'connected-health',
+          kind: 'providers',
           provider: provider.provider,
         },
         providerAccountIdentifier: {
@@ -268,11 +268,11 @@ const ouraDailyActivityMeasurements = [
   return { ...measurement, effective: ouraDailyActivityEffective }
 })
 const ouraDailyActivityBundle = unwrap(
-  buildConnectedHealthMeasurementBundle({
+  buildProviderMeasurementBundle({
     subject: unwrap(parsePatientReference('Patient/example')),
     measurements: ouraDailyActivityMeasurements,
     source: {
-      adapter: { kind: 'connected-health', provider: 'oura' },
+      adapter: { kind: 'providers', provider: 'oura' },
       providerAccountIdentifier: {
         system: uri(
           'https://example.org/deployments/provider-account-pseudonyms',
@@ -292,7 +292,7 @@ const ouraDailyActivityBundle = unwrap(
   }),
 )
 
-const recordingSources = Object.entries(connectedHealthRawMappings).flatMap(
+const recordingSources = Object.entries(providerRawMappings).flatMap(
   ([provider, sources]) =>
     Object.keys(sources).map((sourceType) => ({ provider, sourceType })),
 )
@@ -302,9 +302,9 @@ const recordingPath = ({ provider, sourceType }) =>
 
 const recordingBundle = ({ provider, sourceType }, index) =>
   unwrap(
-    buildConnectedHealthRecordingBundle({
+    buildProviderRecordingBundle({
       source: {
-        adapter: { kind: 'connected-health', provider },
+        adapter: { kind: 'providers', provider },
         providerAccountIdentifier: {
           system: uri(
             'https://example.org/deployments/provider-account-pseudonyms',
@@ -412,11 +412,11 @@ const questionnaireResponse = unwrap(
 const resources = new Map(
   measurements.map((measurement, index) => [
     `resources/mobile-${measurement.kind}.json`,
-    connectedHealthMeasurementBundle(measurement, index),
+    providerMeasurementBundle(measurement, index),
   ]),
 )
 const ouraDailyActivityPath =
-  'resources/connected-health-oura-daily-activity.json'
+  'resources/provider-oura-daily-activity.json'
 resources.set(ouraDailyActivityPath, ouraDailyActivityBundle)
 for (const [index, source] of recordingSources.entries()) {
   resources.set(recordingPath(source), recordingBundle(source, index))

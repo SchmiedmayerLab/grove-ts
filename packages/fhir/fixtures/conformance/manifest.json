@@ -9,8 +9,8 @@
       "version": "0.2.0"
     },
     {
-      "alias": "connected-health",
-      "packageId": "org.grovealliance.fhir.connected-health",
+      "alias": "providers",
+      "packageId": "org.grovealliance.fhir.providers",
       "version": "0.2.0"
     },
     {
@@ -86,7 +86,7 @@
       ]
     },
     {
-      "path": "resources/connected-health-oura-daily-activity.json",
+      "path": "resources/provider-oura-daily-activity.json",
       "requiredProfiles": [
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
       ]

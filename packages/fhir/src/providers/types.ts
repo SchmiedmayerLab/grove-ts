@@ -7,8 +7,8 @@
 //
 
 import type {
-  ConnectedHealthRawMappings,
-  ConnectedHealthScalarMappings,
+  ProviderRawMappings,
+  ProviderScalarMappings,
 } from './contract.generated.js'
 import type {
   FhirId,
@@ -27,14 +27,14 @@ import type {
   RecordingMethod,
 } from '../mobile/types.js'
 
-type ScalarMappings = ConnectedHealthScalarMappings
+type ScalarMappings = ProviderScalarMappings
 
 /** Explicit assertion that this account key is a deployment-owned pseudonym. */
 export interface ProviderAccountPseudonymInput extends CompleteIdentifierInput {
   readonly assurance: 'deployment-scoped-pseudonym'
 }
 
-/** Exact closed provider codes defined by the Connected Health IG. */
+/** Exact closed provider codes defined by the Provider IG. */
 export type ConnectedProvider = keyof ScalarMappings
 
 /** Exact source tokens that contain at least one admitted scalar mapping. */
@@ -47,10 +47,10 @@ export type SupportedConnectedProviderMeasurementKind<
     ConnectedSourceType<Provider>,
 > = keyof ScalarMappings[Provider][SourceType] & SharedMobileMeasurementKind
 
-export interface ConnectedHealthAdapter<
+export interface ProviderAdapter<
   Provider extends ConnectedProvider = ConnectedProvider,
 > {
-  readonly kind: 'connected-health'
+  readonly kind: 'providers'
   readonly provider: Provider
 }
 
@@ -64,11 +64,11 @@ interface NormalizedSourceRecordBase {
  * FHIR output. The account identifier must be deployment-scoped and
  * pseudonymous; an email, vendor account id, or access credential is invalid.
  */
-export interface ConnectedHealthSourceRecord<
+export interface ProviderSourceRecord<
   Provider extends ConnectedProvider,
   SourceType extends ConnectedSourceType<Provider>,
 > extends NormalizedSourceRecordBase {
-  readonly adapter: ConnectedHealthAdapter<Provider>
+  readonly adapter: ProviderAdapter<Provider>
   readonly providerAccountIdentifier: ProviderAccountPseudonymInput
   readonly sourceType: SourceType
   readonly sourceNativeId: string
@@ -108,7 +108,7 @@ export interface ConnectedProviderRecord<
 > {
   /** Non-empty unique subset of catalog-admitted outputs for one source record. */
   readonly measurements: ConnectedProviderMeasurements<Provider, SourceType>
-  readonly source: ConnectedHealthSourceRecord<Provider, SourceType>
+  readonly source: ProviderSourceRecord<Provider, SourceType>
 }
 
 type ConnectedProviderRecordFor<Provider extends ConnectedProvider> = {
@@ -124,12 +124,12 @@ export type NormalizedProviderRecord = {
 
 export type NormalizedSourceRecord = NormalizedProviderRecord['source']
 
-type RawMappings = ConnectedHealthRawMappings
+type RawMappings = ProviderRawMappings
 
 /** Providers with at least one source admitted as a native Sensor recording. */
 export type ConnectedRawProvider = keyof RawMappings
 
-/** Exact provider source tokens admitted by the Connected Health raw contract. */
+/** Exact provider source tokens admitted by the Provider raw contract. */
 export type ConnectedRawSourceType<Provider extends ConnectedRawProvider> =
   keyof RawMappings[Provider] & string
 
@@ -155,11 +155,11 @@ export type ImmutableRecordingUrl = string & {
   readonly [recordingInputBrand]: 'ImmutableRecordingUrl'
 }
 
-export interface ConnectedHealthRecordingSourceRecord<
+export interface ProviderRecordingSourceRecord<
   Provider extends ConnectedRawProvider,
   SourceType extends ConnectedRawSourceType<Provider>,
 > {
-  readonly adapter: ConnectedHealthAdapter<Provider>
+  readonly adapter: ProviderAdapter<Provider>
   readonly providerAccountIdentifier: ProviderAccountPseudonymInput
   readonly sourceType: SourceType
   /** Digest input only. It is never copied into emitted FHIR metadata. */
@@ -176,7 +176,7 @@ interface RecordingAttachmentBaseInput {
 }
 
 export type RawPayloadAdmissionAssertion =
-  (typeof import('./contract.generated.js').connectedHealthAdapterCatalog)['rawPayloadAdmission']['allowedAssertions'][number]
+  (typeof import('./contract.generated.js').providerAdapterCatalog)['rawPayloadAdmission']['allowedAssertions'][number]
 
 export interface EmbeddedRecordingAttachmentInput extends RecordingAttachmentBaseInput {
   readonly kind: 'embedded'
@@ -192,14 +192,14 @@ export interface ExternalRecordingAttachmentInput extends RecordingAttachmentBas
   readonly immutabilityAssurance: 'immutable-version-specific'
 }
 
-export type ConnectedHealthRecordingAttachmentInput =
+export type ProviderRecordingAttachmentInput =
   EmbeddedRecordingAttachmentInput | ExternalRecordingAttachmentInput
 
-export type ConnectedHealthRecordingSource = {
+export type ProviderRecordingSource = {
   readonly [Provider in ConnectedRawProvider]: {
     readonly [
       SourceType in ConnectedRawSourceType<Provider>
-    ]: ConnectedHealthRecordingSourceRecord<Provider, SourceType>
+    ]: ProviderRecordingSourceRecord<Provider, SourceType>
   }[ConnectedRawSourceType<Provider>]
 }[ConnectedRawProvider]
 
@@ -209,10 +209,10 @@ export interface RecordingRepositoryAssignedResourceIds {
   readonly provenance?: FhirId
 }
 
-/** Closed input for one mapped-standard Connected Health native recording. */
-export interface ConnectedHealthRecordingBundleInput {
-  readonly source: ConnectedHealthRecordingSource
-  readonly attachment: ConnectedHealthRecordingAttachmentInput
+/** Closed input for one mapped-standard Provider native recording. */
+export interface ProviderRecordingBundleInput {
+  readonly source: ProviderRecordingSource
+  readonly attachment: ProviderRecordingAttachmentInput
   readonly subject: PatientReference
   readonly application: ApplicationDeviceInput
   /** Durable caller-owned sequence for a new conversion/exchange event. */
@@ -230,7 +230,7 @@ export interface MeasurementRepositoryAssignedResourceIds {
   readonly provenance?: FhirId
 }
 
-interface ConnectedHealthMeasurementGraphInput {
+interface ProviderMeasurementGraphInput {
   readonly subject: PatientReference
   readonly application: ApplicationDeviceInput
   readonly gatewayApplication?: GatewayApplicationInput
@@ -242,5 +242,5 @@ interface ConnectedHealthMeasurementGraphInput {
   readonly researchStudyReferences?: readonly ResearchStudyReference[]
 }
 
-export type ConnectedHealthMeasurementBundleInput = NormalizedProviderRecord &
-  ConnectedHealthMeasurementGraphInput
+export type ProviderMeasurementBundleInput = NormalizedProviderRecord &
+  ProviderMeasurementGraphInput

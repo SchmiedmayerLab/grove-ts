@@ -8,7 +8,7 @@
 
 import { sha256 } from '@noble/hashes/sha2.js'
 import { bytesToHex } from '@noble/hashes/utils.js'
-import { connectedHealthAdapterCatalog } from './contract.generated.js'
+import { providerAdapterCatalog } from './contract.generated.js'
 import type { ConnectedProvider } from './types.js'
 import {
   deepFreeze,
@@ -42,9 +42,9 @@ const connectedDigest = (preimage: CanonicalIdentityValue): Result<string> => {
 const connectedIdentitySystem = (
   role: 'conversion' | 'exchange' | 'output' | 'sourceRecord',
 ): AbsoluteUri =>
-  connectedHealthAdapterCatalog.identity[role].system as AbsoluteUri
+  providerAdapterCatalog.identity[role].system as AbsoluteUri
 
-export interface ConnectedHealthIdentityInput {
+export interface ProviderIdentityInput {
   readonly provider: ConnectedProvider
   readonly providerAccountIdentifier: CompleteIdentifierInput
   readonly sourceType: string
@@ -54,7 +54,7 @@ export interface ConnectedHealthIdentityInput {
   readonly eventSequence: PositiveInteger
 }
 
-export interface ConnectedHealthIdentities {
+export interface ProviderIdentities {
   readonly sourceRecord: CompleteIdentifierInput
   readonly outputs: readonly [
     CompleteIdentifierInput,
@@ -64,10 +64,10 @@ export interface ConnectedHealthIdentities {
   readonly exchange: CompleteIdentifierInput
 }
 
-/** Internal closed-facade derivation of every Connected Health business id. */
-export const deriveConnectedHealthIdentities = (
-  input: ConnectedHealthIdentityInput,
-): Result<ConnectedHealthIdentities> => {
+/** Internal closed-facade derivation of every Provider business id. */
+export const deriveProviderIdentities = (
+  input: ProviderIdentityInput,
+): Result<ProviderIdentities> => {
   if (!parseAbsoluteUri(input.providerAccountIdentifier.system).ok) {
     return err(
       'invalid-uri',
@@ -85,7 +85,7 @@ export const deriveConnectedHealthIdentities = (
   ) {
     return err(
       'invalid-identifier',
-      'Connected Health identity inputs must not be empty.',
+      'Provider identity inputs must not be empty.',
     )
   }
   if (
@@ -94,7 +94,7 @@ export const deriveConnectedHealthIdentities = (
   ) {
     return err(
       'duplicate-identifier',
-      'Connected Health output discriminators must be unique.',
+      'Provider output discriminators must be unique.',
       ['outputDiscriminators'],
     )
   }
@@ -147,7 +147,7 @@ export const deriveConnectedHealthIdentities = (
         system: connectedIdentitySystem('exchange'),
         value: eventValue.value,
       },
-    }) as unknown as ConnectedHealthIdentities,
+    }) as unknown as ProviderIdentities,
   )
 }
 

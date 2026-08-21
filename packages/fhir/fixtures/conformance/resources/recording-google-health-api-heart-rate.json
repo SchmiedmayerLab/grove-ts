@@ -6,8 +6,8 @@
     ]
   },
   "identifier": {
-    "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-exchange-id",
-    "value": "v1:dedd61fe990f210fbfb12034a866daf3344a879d3392b49db2841a97a9561f6f"
+    "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id",
+    "value": "v1:0e5ecd6333368d090edbeebd05b51de4a9dcd82e7096521da09ede972f7c019d"
   },
   "type": "collection",
   "timestamp": "2026-08-20T12:02:00Z",
@@ -17,38 +17,38 @@
         {
           "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
           "valueIdentifier": {
-            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id",
-            "value": "v1:89047ed7cffd10005f3cb895f46cc6084ac886f569358b7f20ceafd6823835c1"
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:52658920a8d077e16067c4512016264f69bca9806866780992d50c78a37a903c"
           }
         }
       ],
-      "fullUrl": "urn:uuid:db20d7be-6882-5f2a-9b99-b33cfe8f45b1",
+      "fullUrl": "urn:uuid:07c78c5e-ae4c-527a-a6b1-a7094f5689df",
       "resource": {
         "resourceType": "DocumentReference",
         "meta": {
           "profile": [
             "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
-            "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document"
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document"
           ]
         },
         "extension": [
           {
-            "url": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-provider",
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider",
             "valueCode": "google-health-api"
           },
           {
-            "url": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-source-type",
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type",
             "valueCode": "google-health-api/heart-rate"
           }
         ],
         "identifier": [
           {
-            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id",
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
             "value": "v1:5c474a31fdcb908902c7083bd177d67fae28aa86cdb078a294dd4716898b1337"
           },
           {
-            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-output-id",
-            "value": "v1:89047ed7cffd10005f3cb895f46cc6084ac886f569358b7f20ceafd6823835c1"
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:52658920a8d077e16067c4512016264f69bca9806866780992d50c78a37a903c"
           }
         ],
         "status": "current",
@@ -156,21 +156,21 @@
         {
           "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
           "valueIdentifier": {
-            "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-conversion-id",
-            "value": "v1:dedd61fe990f210fbfb12034a866daf3344a879d3392b49db2841a97a9561f6f"
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id",
+            "value": "v1:0e5ecd6333368d090edbeebd05b51de4a9dcd82e7096521da09ede972f7c019d"
           }
         }
       ],
-      "fullUrl": "urn:uuid:a7efa223-69e5-5488-8f27-15f75090ab9b",
+      "fullUrl": "urn:uuid:ab623795-d1eb-593a-8a38-9701012b0c1c",
       "resource": {
         "resourceType": "Provenance",
         "meta": {
           "profile": [
-            "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-conversion-provenance"
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance"
           ]
         },
         "target": [
-          { "reference": "urn:uuid:db20d7be-6882-5f2a-9b99-b33cfe8f45b1" }
+          { "reference": "urn:uuid:07c78c5e-ae4c-527a-a6b1-a7094f5689df" }
         ],
         "recorded": "2026-08-20T12:02:00Z",
         "activity": {
@@ -205,7 +205,7 @@
             "role": "source",
             "what": {
               "identifier": {
-                "system": "https://grovealliance.org/fhir/connected-health/NamingSystem/connected-health-source-record-id",
+                "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
                 "value": "v1:5c474a31fdcb908902c7083bd177d67fae28aa86cdb078a294dd4716898b1337"
               }
             },

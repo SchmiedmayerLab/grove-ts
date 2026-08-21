@@ -1,6 +1,6 @@
 {
   "source": {
-    "adapter": { "kind": "connected-health", "provider": "oura" },
+    "adapter": { "kind": "providers", "provider": "oura" },
     "providerAccountIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-oura-001",

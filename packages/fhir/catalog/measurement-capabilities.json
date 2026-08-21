@@ -11,9 +11,9 @@
   },
   "statuses": {
     "implemented": "A closed public builder emits resources conforming to the listed v0.2 profile.",
-    "implemented-recording": "The closed native-recording builder emits the exact Sensor + Connected Health DocumentReference graph for this catalogued provider source token.",
+    "implemented-recording": "The closed native-recording builder emits the exact Sensor + Provider DocumentReference graph for this catalogued provider source token.",
     "profiled-not-admitted": "The shared profile exists, but this adapter facade has no supported provider source.",
-    "adapter-profiled": "Version 0.2 defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Connected Health facade.",
+    "adapter-profiled": "Version 0.2 defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Provider facade.",
     "planned-shared": "The concept is shared by multiple sources but has no admitted v0.2 Grove builder.",
     "adapter-specific": "The semantics are source-specific and must not be collapsed into a shared concept.",
     "sensor-ig": "The concept belongs to the Sensor and Waveform contract.",
@@ -232,7 +232,7 @@
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
       "sources": ["health-connect"],
-      "reason": "The exact whole-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Connected Health facade fails closed."
+      "reason": "The exact whole-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
     },
     {
       "key": "capillary-blood-glucose",
@@ -246,7 +246,7 @@
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
       "sources": ["health-connect"],
-      "reason": "The exact capillary-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Connected Health facade fails closed."
+      "reason": "The exact capillary-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
     },
     {
       "key": "serum-plasma-glucose",
@@ -260,7 +260,7 @@
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
       "sources": ["health-connect"],
-      "reason": "The exact serum/plasma + specimen contract is Health Connect-owned. The consumed Google Health API shape cannot supply the required specimen evidence, so the Connected Health facade fails closed."
+      "reason": "The exact serum/plasma + specimen contract is Health Connect-owned. The consumed Google Health API shape cannot supply the required specimen evidence, so the Provider facade fails closed."
     },
     {
       "key": "interstitial-glucose",
@@ -274,7 +274,7 @@
       "unit": { "code": "mg/dL", "display": "mg/dL" },
       "effective": "dateTime",
       "sources": ["health-connect"],
-      "reason": "The exact interstitial-fluid + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Connected Health facade fails closed."
+      "reason": "The exact interstitial-fluid + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
     },
     {
       "key": "sleep-duration",
@@ -307,7 +307,7 @@
       "status": "implemented-recording",
       "provider": "google-health-api",
       "sourceType": "heart-rate",
-      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
       "outputDiscriminator": "native-recording",
       "sources": ["google-health-api"]
@@ -317,7 +317,7 @@
       "status": "implemented-recording",
       "provider": "oura",
       "sourceType": "heartrate",
-      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
       "outputDiscriminator": "native-recording",
       "sources": ["oura"]
@@ -327,7 +327,7 @@
       "status": "implemented-recording",
       "provider": "withings",
       "sourceType": "activityIntraday",
-      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
       "outputDiscriminator": "native-recording",
       "sources": ["withings"]
@@ -337,7 +337,7 @@
       "status": "implemented-recording",
       "provider": "withings",
       "sourceType": "sleepIntraday",
-      "profile": "https://grovealliance.org/fhir/connected-health/StructureDefinition/connected-health-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
       "outputDiscriminator": "native-recording",
       "sources": ["withings"]
