@@ -20,7 +20,7 @@ const groveMobilePackageMetadataValue = {
   version: '0.2.0',
   packageId: 'org.grovealliance.fhir.mobile',
   canonical: 'https://grovealliance.org/fhir/mobile',
-  dependencies: [],
+  dependencies: ['hl7.terminology.r4#7.3.0', 'hl7.fhir.uv.extensions.r4#5.3.0'],
 } as const
 
 export const groveMobilePackageMetadata: typeof groveMobilePackageMetadataValue =
@@ -28,6 +28,8 @@ export const groveMobilePackageMetadata: typeof groveMobilePackageMetadataValue 
 
 const groveFhirExchangeIdentityValue = {
   schemaVersion: 1,
+  version: '0.2.0',
+  fhirVersion: '4.0.1',
   profile:
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
   entryIdentifierExtension:

@@ -18,7 +18,7 @@ const groveQuestionnairePackageMetadataValue = {
   version: '0.2.0',
   packageId: 'org.grovealliance.fhir.questionnaire',
   canonical: 'https://grovealliance.org/fhir/questionnaire',
-  dependencies: ['hl7.fhir.uv.sdc#4.0.0'],
+  dependencies: ['hl7.fhir.uv.sdc#4.0.0', 'hl7.fhir.uv.extensions.r4#5.3.0'],
 } as const
 
 export const groveQuestionnairePackageMetadata: typeof groveQuestionnairePackageMetadataValue =
