@@ -145,7 +145,7 @@ jobs:
       - name: Build only the required IG packages
         if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
         working-directory: .build/grove-fhir
-        run: ./Scripts/build-guides.sh mobile sensor questionnaire connected-health
+        run: ./Scripts/build-guides.sh mobile sensor questionnaire providers
 
       - name: Run official FHIR R4 Validator conformance
         if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
