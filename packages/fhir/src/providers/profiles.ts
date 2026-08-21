@@ -41,24 +41,16 @@ type GroveProfiles = Readonly<{
 }>
 
 export const PROFILES: GroveProfiles = {
-  mobileBundle:
-    groveProviderProfileCanonicals['grove-mobile-exchange-bundle'],
-  recordingDevice:
-    groveProviderProfileCanonicals['grove-recording-device'],
-  applicationDevice:
-    groveProviderProfileCanonicals['grove-application-device'],
-  providerObservation:
-    groveProviderProfileCanonicals['provider-observation'],
+  mobileBundle: groveProviderProfileCanonicals['grove-mobile-exchange-bundle'],
+  recordingDevice: groveProviderProfileCanonicals['grove-recording-device'],
+  applicationDevice: groveProviderProfileCanonicals['grove-application-device'],
+  providerObservation: groveProviderProfileCanonicals['provider-observation'],
   sensorRecordingDocument:
     groveProviderProfileCanonicals['grove-sensor-recording-document'],
   providerRecordingDocument:
-    groveProviderProfileCanonicals[
-      'provider-recording-document'
-    ],
+    groveProviderProfileCanonicals['provider-recording-document'],
   providerConversionProvenance:
-    groveProviderProfileCanonicals[
-      'provider-conversion-provenance'
-    ],
+    groveProviderProfileCanonicals['provider-conversion-provenance'],
 } as const
 
 type GroveExtensions = Readonly<{
@@ -74,8 +66,8 @@ export const EXTENSIONS: GroveExtensions = {
   gatewayDevice:
     'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
   recordingMethod: `${groveProviderPackageCanonicals.mobile}/StructureDefinition/grove-recording-method`,
-  provider: `${groveProviderPackageCanonicals['providers']}/StructureDefinition/provider`,
-  providerSourceType: `${groveProviderPackageCanonicals['providers']}/StructureDefinition/provider-source-type`,
+  provider: `${groveProviderPackageCanonicals.providers}/StructureDefinition/provider`,
+  providerSourceType: `${groveProviderPackageCanonicals.providers}/StructureDefinition/provider-source-type`,
   exchangeEntryIdentifier: groveFhirExchangeIdentity.entryIdentifierExtension,
   researchStudy:
     'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',

@@ -265,8 +265,7 @@ const resolveGraphIdentities = (
         severity: 'error',
         code: 'unsupported-measurement',
         path: ['measurements'],
-        message:
-          'No catalog-owned Provider output discriminator exists.',
+        message: 'No catalog-owned Provider output discriminator exists.',
       },
     ])
   }

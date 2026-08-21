@@ -45,10 +45,7 @@ const outputPaths = {
     packageRoot,
     'src/questionnaire/contract.generated.ts',
   ),
-  provider: resolve(
-    packageRoot,
-    'src/providers/contract.generated.ts',
-  ),
+  provider: resolve(packageRoot, 'src/providers/contract.generated.ts'),
 }
 
 const catalog = JSON.parse(await readFile(inputPath, 'utf8'))
@@ -351,8 +348,7 @@ const expectedHealthConnectGlucoseProfiles = [
   'health-connect-serum-plasma-glucose',
   'health-connect-whole-blood-glucose',
 ].map((profile) => profiles[profile])
-const connectedRecordingClaim =
-  profileClaims.providerRecordingDocumentClaim
+const connectedRecordingClaim = profileClaims.providerRecordingDocumentClaim
 const connectedProvenanceClaim =
   profileClaims.adapterConversionProvenanceClaims?.find(
     (claim) => claim.adapter === 'providers',
@@ -525,21 +521,14 @@ if (
 }
 
 const expectedConnectedProviders = ['google-health-api', 'oura', 'withings']
-const providerAdapterPath = resolve(
-  catalogRoot,
-  'providers-adapter.json',
-)
-const providerAdapter = JSON.parse(
-  await readFile(providerAdapterPath, 'utf8'),
-)
+const providerAdapterPath = resolve(catalogRoot, 'providers-adapter.json')
+const providerAdapter = JSON.parse(await readFile(providerAdapterPath, 'utf8'))
 if (
   providerAdapter.fhirVersion !== '4.0.1' ||
   providerAdapter.version !== packageGraph.version ||
-  providerAdapter.packageId !==
-    'org.grovealliance.fhir.providers' ||
+  providerAdapter.packageId !== 'org.grovealliance.fhir.providers' ||
   providerAdapter.canonical !== packageCanonicals['providers'] ||
-  providerAdapter.adapterProfile !==
-    profiles['provider-observation'] ||
+  providerAdapter.adapterProfile !== profiles['provider-observation'] ||
   providerAdapter.recordingDocument?.sourceNeutralProfile !==
     profiles['grove-sensor-recording-document'] ||
   providerAdapter.recordingDocument?.adapterProfile !==
@@ -564,9 +553,7 @@ if (
   providerAdapter.providers.map((provider) => provider.id).join(',') !==
     expectedConnectedProviders.join(',')
 ) {
-  throw new Error(
-    'Provider providers must be the exact closed provider set.',
-  )
+  throw new Error('Provider providers must be the exact closed provider set.')
 }
 
 const providerScalarMappings = {}
@@ -580,9 +567,7 @@ for (const provider of providerAdapter.providers) {
     new Set(provider.sourceTypes.map((entry) => entry.token)).size !==
       provider.sourceTypeCount
   ) {
-    throw new Error(
-      `Provider ${provider.id} source inventory is incomplete.`,
-    )
+    throw new Error(`Provider ${provider.id} source inventory is incomplete.`)
   }
 
   const sourceMappings = {}
@@ -666,9 +651,7 @@ for (const provider of providerAdapter.providers) {
       !Array.isArray(grouped.measurementIds) ||
       grouped.measurementIds.length === 0
     ) {
-      throw new Error(
-        `Provider ${provider.id} grouped mapping is incomplete.`,
-      )
+      throw new Error(`Provider ${provider.id} grouped mapping is incomplete.`)
     }
     for (const measurementId of grouped.measurementIds) {
       if (implemented[measurementId] === undefined) {
@@ -734,9 +717,8 @@ if (
 }
 
 if (
-  Object.values(providerRawMappings).flatMap((mapping) =>
-    Object.keys(mapping),
-  ).length !== 4
+  Object.values(providerRawMappings).flatMap((mapping) => Object.keys(mapping))
+    .length !== 4
 ) {
   throw new Error('Provider must admit exactly four raw source tokens.')
 }
@@ -756,12 +738,10 @@ if (
     'the exact outputDiscriminator declared on that groupedMappings row' ||
   providerIdentity.output?.outputDiscriminatorRule?.mappedStandardRaw !==
     'native-recording' ||
-  providerIdentity.output?.outputDiscriminatorRule?.noFallback !==
-    true ||
+  providerIdentity.output?.outputDiscriminatorRule?.noFallback !== true ||
   providerIdentity.vectors?.length !== 5 ||
-  providerIdentity.vectors.filter(
-    (vector) => vector.role === 'sourceRecord',
-  ).length !== 3 ||
+  providerIdentity.vectors.filter((vector) => vector.role === 'sourceRecord')
+    .length !== 3 ||
   providerIdentity.vectors.filter((vector) => vector.role === 'output')
     .length !== 2 ||
   providerIdentity.conversion?.system !==
@@ -769,9 +749,7 @@ if (
   providerIdentity.exchange?.system !==
     'https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id'
 ) {
-  throw new Error(
-    'Provider deterministic identity contract is incomplete.',
-  )
+  throw new Error('Provider deterministic identity contract is incomplete.')
 }
 
 const providerAdmittedMeasurements = new Set(
@@ -875,8 +853,7 @@ if (
           capability.provider === mapping.provider &&
           capability.sourceType === mapping.sourceType &&
           capability.outputDiscriminator === mapping.outputDiscriminator &&
-          capability.profile ===
-            profiles['provider-recording-document'] &&
+          capability.profile === profiles['provider-recording-document'] &&
           capability.sourceNeutralProfile ===
             profiles['grove-sensor-recording-document'],
       ),

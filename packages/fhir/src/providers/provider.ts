@@ -749,8 +749,6 @@ export const parseProviderMeasurementBundleInput = (
   })
   if (!identity.ok) return identity
   return ok(
-    deepFreeze(
-      sortMeasurements(result.data),
-    ) as ProviderMeasurementBundleInput,
+    deepFreeze(sortMeasurements(result.data)) as ProviderMeasurementBundleInput,
   )
 }

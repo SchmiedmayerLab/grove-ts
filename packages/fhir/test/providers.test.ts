@@ -8,17 +8,6 @@
 
 import { readFileSync } from 'node:fs'
 import { assert, double, oneof, property } from 'fast-check'
-import { deriveProviderIdentities } from '../src/providers/identity.js'
-import {
-  buildProviderMeasurementBundle,
-  providerRecordEffectiveRules,
-  providerScalarMappings,
-  parseProviderMeasurementBundleInput,
-  parseNormalizedProviderRecord,
-  type ConnectedProvider,
-  type ConnectedProviderRecord,
-  type ProviderMeasurementBundleInput,
-} from '../src/providers/index.js'
 import type {
   FhirInstant,
   PatientReference,
@@ -44,6 +33,17 @@ import {
   type ApplicationDeviceInput,
   type MobileMeasurement,
 } from '../src/mobile/index.js'
+import { deriveProviderIdentities } from '../src/providers/identity.js'
+import {
+  buildProviderMeasurementBundle,
+  providerRecordEffectiveRules,
+  providerScalarMappings,
+  parseProviderMeasurementBundleInput,
+  parseNormalizedProviderRecord,
+  type ConnectedProvider,
+  type ConnectedProviderRecord,
+  type ProviderMeasurementBundleInput,
+} from '../src/providers/index.js'
 
 const unwrap = <T>(result: Result<T>): T => {
   if (!result.ok) {
@@ -1197,9 +1197,7 @@ describe('Provider R4 graph builder', () => {
     (_name, mutate) => {
       const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
       const candidate = mutate(input) as ProviderMeasurementBundleInput
-      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(
-        false,
-      )
+      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(false)
       expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
       if (_name === 'provider account pseudonym') {
         expect(
@@ -1277,9 +1275,7 @@ describe('Provider R4 graph builder', () => {
     ],
   ] as const)('rejects a whitespace-only %s', (_name, mutate) => {
     const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    expect(parseProviderMeasurementBundleInput(mutate(input)).ok).toBe(
-      false,
-    )
+    expect(parseProviderMeasurementBundleInput(mutate(input)).ok).toBe(false)
   })
 
   it.each(['converter', 'gateway', 'data-origin', 'recording-device'] as const)(
@@ -1331,9 +1327,7 @@ describe('Provider R4 graph builder', () => {
           },
         } as ProviderMeasurementBundleInput
       }
-      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(
-        false,
-      )
+      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(false)
       expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
     },
   )
@@ -1675,9 +1669,9 @@ describe('Provider-neutral normalization contract', () => {
   })
 
   it('generates only catalog-owned scalar source tokens', () => {
-    expect(
-      Object.hasOwn(providerScalarMappings.withings, 'getmeas:9'),
-    ).toBe(false)
+    expect(Object.hasOwn(providerScalarMappings.withings, 'getmeas:9')).toBe(
+      false,
+    )
     expect(providerScalarMappings.withings['getmeas:9+10']).toEqual({
       'blood-pressure': 'blood-pressure-panel',
     })

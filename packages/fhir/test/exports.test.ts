@@ -7,10 +7,10 @@
 //
 
 import { expectTypeOf } from 'expect-type'
-import * as provider from '../src/providers/index.js'
 import * as root from '../src/index.js'
 import * as mobile from '../src/mobile/index.js'
 import * as provenance from '../src/provenance/index.js'
+import * as provider from '../src/providers/index.js'
 
 type HasMeasurementBuilder<T> =
   'buildProviderMeasurementBundle' extends keyof T ? true : false
@@ -51,19 +51,11 @@ describe('public entry-point boundaries', () => {
   })
 
   it('exposes the closed provider facade only from Provider', () => {
-    expect(typeof provider.buildProviderMeasurementBundle).toBe(
-      'function',
-    )
-    expect(typeof provider.buildProviderRecordingBundle).toBe(
-      'function',
-    )
+    expect(typeof provider.buildProviderMeasurementBundle).toBe('function')
+    expect(typeof provider.buildProviderRecordingBundle).toBe('function')
 
-    expectTypeOf<
-      HasMeasurementBuilder<typeof provider>
-    >().toEqualTypeOf<true>()
-    expectTypeOf<
-      HasRecordingBuilder<typeof provider>
-    >().toEqualTypeOf<true>()
+    expectTypeOf<HasMeasurementBuilder<typeof provider>>().toEqualTypeOf<true>()
+    expectTypeOf<HasRecordingBuilder<typeof provider>>().toEqualTypeOf<true>()
   })
 
   it('exposes bounded generated version and package metadata', () => {
@@ -85,20 +77,13 @@ describe('public entry-point boundaries', () => {
     expect(Object.isFrozen(mobile.sharedMobileMeasurementCatalog)).toBe(true)
     expect(Object.isFrozen(heartRate)).toBe(true)
     expect(Object.isFrozen(heartRate.code)).toBe(true)
-    expect(Object.isFrozen(provider.providerScalarMappings)).toBe(
-      true,
+    expect(Object.isFrozen(provider.providerScalarMappings)).toBe(true)
+    expect(provider.providerRecordEffectiveRules.oura.daily_activity.kind).toBe(
+      'complete-civil-day-period',
     )
+    expect(Object.isFrozen(provider.providerRecordEffectiveRules)).toBe(true)
     expect(
-      provider.providerRecordEffectiveRules.oura.daily_activity
-        .kind,
-    ).toBe('complete-civil-day-period')
-    expect(
-      Object.isFrozen(provider.providerRecordEffectiveRules),
-    ).toBe(true)
-    expect(
-      Object.isFrozen(
-        provider.groveProviderPackageMetadata.dependencies,
-      ),
+      Object.isFrozen(provider.groveProviderPackageMetadata.dependencies),
     ).toBe(true)
     expect(Reflect.set(heartRate.code, 'code', 'mutated-clinical-code')).toBe(
       false,

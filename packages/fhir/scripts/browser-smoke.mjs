@@ -98,56 +98,53 @@ try {
   const result = await page.evaluate(async (base) => {
     const grove = await import(`${base}/grove/index.js`)
     const mobile = await import(`${base}/grove/mobile/index.js`)
-    const provider = await import(
-      `${base}/grove/providers/index.js`
-    )
+    const provider = await import(`${base}/grove/providers/index.js`)
     const questionnaire = await import(`${base}/grove/questionnaire/index.js`)
     const absolute = mobile.deriveEntryFullUrl({
       system: 'https://study.example.org/fhir/identifiers/mobile-observation',
       value: 'heart-rate-20260820-001',
     })
-    const measurementGraph =
-      provider.buildProviderMeasurementBundle({
-        subject: 'Patient/browser',
-        measurements: [
-          {
-            kind: 'heart-rate',
-            value: 64,
-            effective: { kind: 'date-time', value: '2026-08-20T12:00:00Z' },
-          },
-        ],
-        source: {
-          adapter: { kind: 'providers', provider: 'withings' },
-          providerAccountIdentifier: {
-            system: 'https://example.org/provider-account-pseudonyms',
-            value: 'browser-account',
-            assurance: 'deployment-scoped-pseudonym',
-          },
-          sourceType: 'getmeas:11',
-          sourceNativeId: 'browser-heart-rate',
-          dataOrigin: {
-            identity: {
-              identifier: {
-                system: 'https://example.org/data-origins',
-                value: 'withings',
-              },
-            },
-            name: 'Withings',
-          },
+    const measurementGraph = provider.buildProviderMeasurementBundle({
+      subject: 'Patient/browser',
+      measurements: [
+        {
+          kind: 'heart-rate',
+          value: 64,
+          effective: { kind: 'date-time', value: '2026-08-20T12:00:00Z' },
         },
-        application: {
+      ],
+      source: {
+        adapter: { kind: 'providers', provider: 'withings' },
+        providerAccountIdentifier: {
+          system: 'https://example.org/provider-account-pseudonyms',
+          value: 'browser-account',
+          assurance: 'deployment-scoped-pseudonym',
+        },
+        sourceType: 'getmeas:11',
+        sourceNativeId: 'browser-heart-rate',
+        dataOrigin: {
           identity: {
             identifier: {
-              system: 'https://example.org/applications',
-              value: 'browser-converter',
+              system: 'https://example.org/data-origins',
+              value: 'withings',
             },
           },
-          name: 'Browser converter',
+          name: 'Withings',
         },
-        eventSequence: 1,
-        issued: '2026-08-20T12:01:00Z',
-        recorded: '2026-08-20T12:02:00Z',
-      })
+      },
+      application: {
+        identity: {
+          identifier: {
+            system: 'https://example.org/applications',
+            value: 'browser-converter',
+          },
+        },
+        name: 'Browser converter',
+      },
+      eventSequence: 1,
+      issued: '2026-08-20T12:01:00Z',
+      recorded: '2026-08-20T12:02:00Z',
+    })
     const recording = provider.buildProviderRecordingBundle({
       source: {
         adapter: { kind: 'providers', provider: 'google-health-api' },
@@ -232,9 +229,10 @@ try {
         .length,
       measurementGraph: measurementGraph.ok,
       recordingGraph: recording.ok,
-      rawSourceCount: Object.values(
-        provider.providerRawMappings,
-      ).reduce((count, mappings) => count + Object.keys(mappings).length, 0),
+      rawSourceCount: Object.values(provider.providerRawMappings).reduce(
+        (count, mappings) => count + Object.keys(mappings).length,
+        0,
+      ),
       scalarMeasurementCount: new Set(
         Object.values(provider.providerScalarMappings).flatMap(
           (sourceMappings) =>

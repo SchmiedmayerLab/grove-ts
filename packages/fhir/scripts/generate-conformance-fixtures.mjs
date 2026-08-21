@@ -204,8 +204,7 @@ const providerFor = (measurement, index) => {
   ]
   for (const [provider, sourceMappings] of ordered) {
     for (const [sourceType, mapping] of Object.entries(sourceMappings)) {
-      const effectiveRule =
-        providerRecordEffectiveRules[provider]?.[sourceType]
+      const effectiveRule = providerRecordEffectiveRules[provider]?.[sourceType]
       if (
         effectiveRule === undefined &&
         Object.hasOwn(mapping, measurement.kind)
@@ -415,8 +414,7 @@ const resources = new Map(
     providerMeasurementBundle(measurement, index),
   ]),
 )
-const ouraDailyActivityPath =
-  'resources/provider-oura-daily-activity.json'
+const ouraDailyActivityPath = 'resources/provider-oura-daily-activity.json'
 resources.set(ouraDailyActivityPath, ouraDailyActivityBundle)
 for (const [index, source] of recordingSources.entries()) {
   resources.set(recordingPath(source), recordingBundle(source, index))

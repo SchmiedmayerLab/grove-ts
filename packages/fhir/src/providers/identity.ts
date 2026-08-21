@@ -41,8 +41,7 @@ const connectedDigest = (preimage: CanonicalIdentityValue): Result<string> => {
 
 const connectedIdentitySystem = (
   role: 'conversion' | 'exchange' | 'output' | 'sourceRecord',
-): AbsoluteUri =>
-  providerAdapterCatalog.identity[role].system as AbsoluteUri
+): AbsoluteUri => providerAdapterCatalog.identity[role].system as AbsoluteUri
 
 export interface ProviderIdentityInput {
   readonly provider: ConnectedProvider

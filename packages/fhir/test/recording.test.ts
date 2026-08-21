@@ -10,6 +10,15 @@ import { readFileSync } from 'node:fs'
 import { expectTypeOf } from 'expect-type'
 import { assert, property, uint8Array } from 'fast-check'
 import {
+  parseAbsoluteUri,
+  parseFhirId,
+  parseFhirInstant,
+  parsePatientReference,
+  parsePositiveInteger,
+  type FhirInstant,
+  type Result,
+} from '../src/index.js'
+import {
   buildProviderRecordingBundle,
   providerRawMappings,
   encodeRecordingBytes,
@@ -22,15 +31,6 @@ import {
   type ProviderRecordingBundleInput,
   type ConnectedRawProvider,
 } from '../src/providers/index.js'
-import {
-  parseAbsoluteUri,
-  parseFhirId,
-  parseFhirInstant,
-  parsePatientReference,
-  parsePositiveInteger,
-  type FhirInstant,
-  type Result,
-} from '../src/index.js'
 
 const unwrap = <T>(result: Result<T>): T => {
   if (!result.ok) {
@@ -288,9 +288,9 @@ describe('Provider native recording graph', () => {
     ['oura', 'sleep'],
     ['withings', 'getmeas:11'],
   ] as const)('fails closed for non-raw %s/%s sources', (provider, source) => {
-    expect(
-      buildProviderRecordingBundle(rawInput(provider, source)).ok,
-    ).toBe(false)
+    expect(buildProviderRecordingBundle(rawInput(provider, source)).ok).toBe(
+      false,
+    )
   })
 
   it('rejects unknown provider fields rather than silently stripping them', () => {
@@ -456,9 +456,8 @@ describe('Provider native recording graph', () => {
         }
       }
       expect(
-        buildProviderRecordingBundle(
-          candidate as ProviderRecordingBundleInput,
-        ).ok,
+        buildProviderRecordingBundle(candidate as ProviderRecordingBundleInput)
+          .ok,
       ).toBe(false)
     },
   )

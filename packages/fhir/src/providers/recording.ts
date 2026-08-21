@@ -450,9 +450,7 @@ export const parseProviderRecordingBundleInput = (
   }
 
   if (findings.length > 0) return issues(findings)
-  return ok(
-    deepFreeze(parsed.data) as unknown as ProviderRecordingBundleInput,
-  )
+  return ok(deepFreeze(parsed.data) as unknown as ProviderRecordingBundleInput)
 }
 
 interface RecordingGraphIdentities {
@@ -531,9 +529,7 @@ const providerTitle = (provider: ConnectedRawProvider): string =>
   providerAdapterCatalog.providers.find((entry) => entry.id === provider)
     ?.title ?? provider
 
-const attachmentFor = (
-  input: ProviderRecordingBundleInput['attachment'],
-) => {
+const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
   if (input.kind === 'external') {
     return {
       contentType: input.contentType,
