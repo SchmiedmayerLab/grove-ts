@@ -2070,11 +2070,14 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Resting Heart Rate',
     description:
-      'A windowed estimate of the heart rate while at rest, normalized to UCUM beats per minute over the exact estimation window. It is semantically distinct from the shared point heart-rate measurement and is implemented by the phase-2 aggregate design.',
+      'A windowed estimate of the heart rate while at rest, normalized to UCUM beats per minute over the exact estimation window. It is semantically distinct from the shared point heart-rate measurement and is implemented by the phase-2 aggregate design. LOINC 40443-4 is deliberately not used: it denotes a heart rate measured at rest, which R4 classifies as a vital sign, whereas this result is a derived daily estimate that must not be surfaced as a measured vital sign.',
     code: {
-      system: 'http://loinc.org',
-      code: '40443-4',
-      display: 'Heart rate --resting',
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'resting-heart-rate',
+      display: 'Resting heart rate',
+      definition:
+        'The estimated heart rate at rest across the exact Observation effective Period.',
     },
     valueKind: 'quantity',
     quantity: {

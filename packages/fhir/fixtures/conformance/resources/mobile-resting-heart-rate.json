@@ -72,7 +72,12 @@
           }
         ],
         "code": {
-          "coding": [{ "system": "http://loinc.org", "code": "40443-4" }]
+          "coding": [
+            {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+              "code": "resting-heart-rate"
+            }
+          ]
         },
         "subject": { "reference": "Patient/example" },
         "effectivePeriod": {
@@ -85,6 +90,16 @@
           "unit": "beats/minute",
           "system": "http://unitsofmeasure.org",
           "code": "/min"
+        },
+        "method": {
+          "coding": [
+            {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-aggregation-method",
+              "code": "daily-mean",
+              "display": "Daily mean"
+            }
+          ],
+          "text": "Daily mean"
         }
       }
     },

@@ -6,7 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { groveProviderProfileCanonicals } from './contract.generated.js'
+import {
+  groveProviderProfileCanonicals,
+  providerAdapterCatalog,
+} from './contract.generated.js'
 import {
   assemblerAgent,
   coding,
@@ -88,6 +91,55 @@ const profileFor = (kind: ConnectedMeasurement['kind']): readonly string[] => {
     groveProviderProfileCanonicals[definition.profile],
     PROFILES.providerObservation,
   ]
+}
+
+// A measurement with a methodChoice states its aggregation per adapter source element,
+// because the same shared meaning is a daily mean for one provider and a session
+// statistic for another.
+const declaredAggregationMethods = new Map<string, string>()
+for (const provider of providerAdapterCatalog.providers) {
+  for (const sourceType of provider.sourceTypes) {
+    for (const element of sourceType.elements) {
+      if (!('aggregationMethod' in element)) {
+        continue
+      }
+      for (const [kind, method] of Object.entries(element.aggregationMethod)) {
+        declaredAggregationMethods.set(
+          `${provider.id}|${sourceType.token}|${kind}`,
+          method,
+        )
+      }
+    }
+  }
+}
+
+const methodFor = (
+  input: ProviderMeasurementBundleInput,
+  kind: ConnectedMeasurement['kind'],
+) => {
+  const definition = sharedMobileMeasurementCatalog[kind]
+  if ('method' in definition) {
+    return {
+      method: concept(
+        SYSTEMS.groveAggregationMethod,
+        definition.method.code,
+        definition.method.display,
+      ),
+    }
+  }
+  if (!('methodChoice' in definition)) {
+    return {}
+  }
+  const { provider } = input.source.adapter
+  const declared = declaredAggregationMethods.get(
+    `${provider}|${input.source.sourceType}|${kind}`,
+  )
+  if (declared === undefined) {
+    throw new Error(
+      `${provider}/${input.source.sourceType} does not declare which aggregation ${kind} carries.`,
+    )
+  }
+  return { method: concept(SYSTEMS.groveAggregationMethod, declared) }
 }
 
 const effectiveFor = (measurement: ConnectedMeasurement) =>
@@ -201,6 +253,7 @@ const makeObservation = (
     ...effectiveFor(measurement),
     issued: input.issued,
     ...resultFor(measurement),
+    ...methodFor(input, measurement.kind),
     ...(input.source.recordingDevice === undefined ?
       {}
     : { device: { reference: identities.recordingDevice?.fullUrl } }),

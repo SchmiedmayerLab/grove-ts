@@ -15,6 +15,7 @@ import {
 import { groveFhirExchangeIdentity } from '../mobile/measurement-catalog.generated.js'
 
 type GroveSystems = Readonly<{
+  groveAggregationMethod: string
   groveRecordingMethod: string
   isoLifecycle: string
   observationCategory: string
@@ -22,6 +23,7 @@ type GroveSystems = Readonly<{
 }>
 
 export const SYSTEMS: GroveSystems = {
+  groveAggregationMethod: `${groveProviderPackageCanonicals.mobile}/CodeSystem/grove-aggregation-method`,
   groveRecordingMethod: `${groveProviderPackageCanonicals.mobile}/CodeSystem/grove-recording-method`,
   isoLifecycle: 'http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle',
   observationCategory:

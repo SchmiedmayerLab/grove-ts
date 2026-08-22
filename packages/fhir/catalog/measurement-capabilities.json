@@ -1245,9 +1245,9 @@
       "status": "implemented",
       "profile": "grove-mobile-resting-heart-rate",
       "code": {
-        "system": "http://loinc.org",
-        "code": "40443-4",
-        "display": "Heart rate --resting"
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "resting-heart-rate",
+        "display": "Resting heart rate"
       },
       "unit": {
         "code": "/min",

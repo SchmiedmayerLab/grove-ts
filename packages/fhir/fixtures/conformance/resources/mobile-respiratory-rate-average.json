@@ -85,6 +85,14 @@
           "unit": "breaths/minute",
           "system": "http://unitsofmeasure.org",
           "code": "/min"
+        },
+        "method": {
+          "coding": [
+            {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-aggregation-method",
+              "code": "session-mean"
+            }
+          ]
         }
       }
     },

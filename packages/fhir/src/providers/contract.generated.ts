@@ -864,6 +864,9 @@ const providerAdapterCatalogValue = {
               path: 'dailyRespiratoryRate.breathsPerMinute',
               status: 'supported',
               measurementIds: ['respiratory-rate-average'],
+              aggregationMethod: {
+                'respiratory-rate-average': 'daily-mean',
+              },
             },
           ],
         },
@@ -1052,6 +1055,9 @@ const providerAdapterCatalogValue = {
               path: 'lowest_heart_rate',
               status: 'supported',
               measurementIds: ['sleep-heart-rate'],
+              aggregationMethod: {
+                'sleep-heart-rate': 'session-minimum',
+              },
             },
             {
               path: 'average_hrv',
@@ -1062,6 +1068,9 @@ const providerAdapterCatalogValue = {
               path: 'average_breath',
               status: 'supported',
               measurementIds: ['respiratory-rate-average'],
+              aggregationMethod: {
+                'respiratory-rate-average': 'session-mean',
+              },
             },
           ],
         },
@@ -1388,6 +1397,9 @@ const providerAdapterCatalogValue = {
                 'sleep-heart-rate',
                 'sleeping-heart-rate-average',
               ],
+              aggregationMethod: {
+                'sleep-heart-rate': 'session-mean',
+              },
             },
           ],
         },
@@ -1399,6 +1411,9 @@ const providerAdapterCatalogValue = {
               path: 'data.rr_average',
               status: 'supported',
               measurementIds: ['respiratory-rate-average'],
+              aggregationMethod: {
+                'respiratory-rate-average': 'session-mean',
+              },
             },
           ],
         },
@@ -4131,7 +4146,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Walking Heart Rate Average',
       description:
-        'The average heart rate during walking activity over a daily window, normalized to UCUM beats per minute. HealKit-only evidence today; the phase-2 aggregate design implements the windowing.',
+        'The average heart rate during walking activity over a daily window, normalized to UCUM beats per minute. HealthKit-only evidence today; the phase-2 aggregate design implements the windowing.',
       code: {
         system:
           'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement',
