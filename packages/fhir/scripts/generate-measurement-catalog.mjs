@@ -354,10 +354,10 @@ const connectedProvenanceClaim =
     (claim) => claim.adapter === 'providers',
   )
 if (
-  profileClaims.healthConnectProviderSpecificClaims?.cardinality !== 1 ||
+  profileClaims.healthConnectPlatformExclusiveClaims?.cardinality !== 1 ||
   expectedHealthConnectGlucoseProfiles.some(
     (profile) =>
-      !profileClaims.healthConnectProviderSpecificClaims.profiles.includes(
+      !profileClaims.healthConnectPlatformExclusiveClaims.profiles.includes(
         profile,
       ),
   ) ||

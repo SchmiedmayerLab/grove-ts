@@ -126,7 +126,8 @@ const providerAdapterCatalogValue = {
   statusVocabulary: [
     'supported',
     'mapped-standard',
-    'provider-specific',
+    'platform-exclusive',
+    'unmodeled',
     'deferred',
     'intentionally-unsupported',
   ],
@@ -135,8 +136,10 @@ const providerAdapterCatalogValue = {
       'Version 0.2.0 defines an exact conversion to every shared profile listed for the source element.',
     'mapped-standard':
       'Version 0.2.0 admits only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
-    'provider-specific':
-      'The source element is inventoried but has no shared Mobile semantic profile in version 0.2.0.',
+    'platform-exclusive':
+      'Version 0.2.0 defines the listed provider-scoped structured profile because no exact shared profile exists.',
+    unmodeled:
+      'The source element is inventoried, but no shared or provider-scoped profile models it in version 0.2.0 and no output is admitted.',
     deferred:
       'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant version 0.2.0 output.',
     'intentionally-unsupported':
@@ -375,11 +378,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'body-fat',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'bodyFat.percentage',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'No shared Mobile body-fat profile exists in version 0.2.0.',
             },
@@ -400,11 +403,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'vo2-max',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'vo2Max.vo2Max',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'No shared Mobile VO2 max profile exists in version 0.2.0.',
             },
@@ -424,28 +427,28 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'heart-rate-variability',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'heartRateVariability.rootMeanSquareOfSuccessiveDifferencesMilliseconds',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'RMSSD is distinct from SDNN and no shared Mobile HRV profile exists in version 0.2.0.',
             },
             {
               path: 'heartRateVariability.standardDeviationMilliseconds',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason: 'No shared Mobile HRV profile exists in version 0.2.0.',
             },
           ],
         },
         {
           token: 'daily-resting-heart-rate',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'dailyRestingHeartRate.beatsPerMinute',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Resting heart rate is a daily aggregate with semantics distinct from the shared point heart-rate profile.',
             },
@@ -490,11 +493,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'floors',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'floors.count',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'No shared Mobile floors-climbed profile exists in version 0.2.0.',
             },
@@ -502,11 +505,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'basal-energy-burned',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'basalEnergyBurned.kcal',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Basal energy is not active energy and has no shared Mobile profile in version 0.2.0.',
             },
@@ -525,25 +528,25 @@ const providerAdapterCatalogValue = {
             },
             {
               path: 'sleep.summary.stagesSummary[type=DEEP].minutes',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'sleep.summary.stagesSummary[type=REM].minutes',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'sleep.summary.stagesSummary[type=LIGHT].minutes',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'sleep.summary.stagesSummary[type=AWAKE].minutes',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
@@ -551,11 +554,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'exercise',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'exercise.interval',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Workout duration has no shared Mobile profile in version 0.2.0.',
             },
@@ -634,37 +637,37 @@ const providerAdapterCatalogValue = {
             },
             {
               path: 'deep_sleep_duration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'rem_sleep_duration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'light_sleep_duration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'awake_time',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
             {
               path: 'lowest_heart_rate',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A sleep-session minimum is not a point heart-rate measurement.',
             },
             {
               path: 'average_hrv',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason: 'No shared Mobile HRV profile exists in version 0.2.0.',
             },
             {
@@ -689,11 +692,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'workout',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'start_datetime/end_datetime',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Workout duration has no shared Mobile profile in version 0.2.0.',
             },
@@ -701,11 +704,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'vO2_max',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'vo2_max',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'No shared Mobile VO2 max profile exists in version 0.2.0.',
             },
@@ -713,11 +716,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'daily_cardiovascular_age',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'vascular_age',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A provider-computed cardiovascular age is not a physiological measurement shared across sources.',
             },
@@ -725,11 +728,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'daily_readiness',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'score',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A provider-computed readiness score is not a physiological measurement shared across sources.',
             },
@@ -803,11 +806,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:6',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'No shared Mobile body-fat profile exists in version 0.2.0.',
             },
@@ -884,11 +887,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:123',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'No shared Mobile VO2 max profile exists in version 0.2.0.',
             },
@@ -896,11 +899,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:155',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A provider-computed cardiovascular age is not a physiological measurement shared across sources.',
             },
@@ -950,11 +953,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getsummary:deepsleepduration',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'data.deepsleepduration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
@@ -962,11 +965,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getsummary:remsleepduration',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'data.remsleepduration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
@@ -974,11 +977,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getsummary:lightsleepduration',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'data.lightsleepduration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
@@ -986,11 +989,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getsummary:wakeupduration',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'data.wakeupduration',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A stage-duration summary has no stage interval and is not a shared sleep-stage Observation.',
             },
@@ -998,11 +1001,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getsummary:hr_average',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'data.hr_average',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'A sleep-session average is not a point heart-rate measurement.',
             },
@@ -1022,11 +1025,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getworkouts:interval',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'startdate/enddate',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Workout duration has no shared Mobile profile in version 0.2.0.',
             },
@@ -1128,11 +1131,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:5',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Fat-free mass has no shared Mobile profile in version 0.2.0.',
             },
@@ -1140,22 +1143,22 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:8',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason: 'Fat mass has no shared Mobile profile in version 0.2.0.',
             },
           ],
         },
         {
           token: 'getmeas:73',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Skin temperature is not relabeled as core or generic body temperature.',
             },
@@ -1163,11 +1166,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:76',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Muscle mass has no shared Mobile profile in version 0.2.0.',
             },
@@ -1175,11 +1178,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:77',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Hydration has no shared Mobile profile in version 0.2.0.',
             },
@@ -1187,11 +1190,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:88',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Bone mass has no shared Mobile profile in version 0.2.0.',
             },
@@ -1199,11 +1202,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:91',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Pulse-wave velocity has no shared Mobile profile in version 0.2.0.',
             },
@@ -1283,11 +1286,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:167',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Nerve health score has no shared Mobile profile in version 0.2.0.',
             },
@@ -1295,11 +1298,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:168',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Extracellular water has no shared Mobile profile in version 0.2.0.',
             },
@@ -1307,11 +1310,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:169',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Intracellular water has no shared Mobile profile in version 0.2.0.',
             },
@@ -1319,11 +1322,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:170',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Visceral fat has no shared Mobile profile in version 0.2.0.',
             },
@@ -1331,11 +1334,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:174',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Segmental fat mass has no shared Mobile profile in version 0.2.0.',
             },
@@ -1343,11 +1346,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:175',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Segmental muscle mass has no shared Mobile profile in version 0.2.0.',
             },
@@ -1355,11 +1358,11 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:196',
-          status: 'provider-specific',
+          status: 'unmodeled',
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'provider-specific',
+              status: 'unmodeled',
               reason:
                 'Electrodermal activity has no shared Mobile scalar profile in version 0.2.0.',
             },
