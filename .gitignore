@@ -66,3 +66,6 @@ eslint_report.json
 
 # OS
 Thumbs.db
+
+# Grove FHIR catalogs, fetched at the pinned commit rather than vendored.
+.grove-fhir/
