@@ -75,7 +75,7 @@ for (const name of internalGraphExports) {
 
 assert.equal(typeof mobile.canonicalizeMobileEffectiveInstant, 'function')
 assert.equal(root.groveFhirVersion, '4.0.1')
-assert.equal(root.groveFhirContractVersion, '0.2.0')
+assert.equal(root.groveFhirContractVersion, '0.3.0')
 assert.equal(
   mobile.groveMobilePackageMetadata.packageId,
   'org.grovealliance.fhir.mobile',

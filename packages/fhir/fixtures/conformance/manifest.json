@@ -6,22 +6,22 @@
     {
       "alias": "mobile",
       "packageId": "org.grovealliance.fhir.mobile",
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "alias": "providers",
       "packageId": "org.grovealliance.fhir.providers",
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "alias": "sensor",
       "packageId": "org.grovealliance.fhir.sensor",
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "alias": "questionnaire",
       "packageId": "org.grovealliance.fhir.questionnaire",
-      "version": "0.2.0"
+      "version": "0.3.0"
     }
   ],
   "resources": [

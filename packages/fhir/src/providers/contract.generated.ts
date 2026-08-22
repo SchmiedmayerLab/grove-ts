@@ -11,18 +11,18 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.2.0' as const
+export const groveFhirContractVersion = '0.3.0' as const
 
 export const groveFhirVersion = '4.0.1' as const
 
 const groveProviderPackageMetadataValue = {
   fhirVersion: '4.0.1',
-  version: '0.2.0',
+  version: '0.3.0',
   packageId: 'org.grovealliance.fhir.providers',
   canonical: 'https://grovealliance.org/fhir/providers',
   dependencies: [
-    'org.grovealliance.fhir.mobile#0.2.0',
-    'org.grovealliance.fhir.sensor#0.2.0',
+    'org.grovealliance.fhir.mobile#0.3.0',
+    'org.grovealliance.fhir.sensor#0.3.0',
   ],
 } as const
 
@@ -441,7 +441,7 @@ export const groveProviderProfileCanonicals: typeof groveProviderProfileCanonica
 const providerAdapterCatalogValue = {
   schemaVersion: 1,
   fhirVersion: '4.0.1',
-  version: '0.2.0',
+  version: '0.3.0',
   packageId: 'org.grovealliance.fhir.providers',
   canonical: 'https://grovealliance.org/fhir/providers',
   adapterProfile:
@@ -489,24 +489,24 @@ const providerAdapterCatalogValue = {
   ],
   statusDefinitions: {
     supported:
-      'Version 0.2.0 defines an exact conversion to every shared profile listed for the source element.',
+      'Version 0.3.0 defines an exact conversion to every shared profile listed for the source element.',
     'mapped-standard':
-      'Version 0.2.0 admits only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
+      'Version 0.3.0 admits only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
     'platform-exclusive':
-      'Version 0.2.0 defines the listed provider-scoped structured profile because no exact shared profile exists.',
+      'Version 0.3.0 defines the listed provider-scoped structured profile because no exact shared profile exists.',
     unmodeled:
-      'The source element is inventoried, but no shared or provider-scoped profile models it in version 0.2.0 and no output is admitted.',
+      'The source element is inventoried, but no shared or provider-scoped profile models it in version 0.3.0 and no output is admitted.',
     deferred:
-      'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant version 0.2.0 output.',
+      'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant version 0.3.0 output.',
     'intentionally-unsupported':
-      'Version 0.2.0 deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
+      'Version 0.3.0 deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
   },
   sourceEvidence: {
     accessed: '2026-08-20',
     scope:
       'Exact provider data-type tokens and consumed fields frozen in providers[].sourceTypes; conversion operates only on already-obtained payloads and defines no provider fetching.',
     tokenBinding:
-      'Each providers[].sourceTypes[].token and elements[].path is part of the exact v0.2.0 consumed source surface.',
+      'Each providers[].sourceTypes[].token and elements[].path is part of the exact v0.3.0 consumed source surface.',
     providers: [
       {
         id: 'google-health-api',
@@ -1056,7 +1056,7 @@ const providerAdapterCatalogValue = {
             {
               path: 'average_hrv',
               status: 'unmodeled',
-              reason: 'No shared Mobile HRV profile exists in version 0.2.0.',
+              reason: 'No shared Mobile HRV profile exists in version 0.3.0.',
             },
             {
               path: 'average_breath',
@@ -1605,7 +1605,7 @@ const providerAdapterCatalogValue = {
               path: 'measure.value*10^unit',
               status: 'intentionally-unsupported',
               reason:
-                'A QRS interval requires an ECG-specific interpretation contract not present in version 0.2.0.',
+                'A QRS interval requires an ECG-specific interpretation contract not present in version 0.3.0.',
             },
           ],
         },
@@ -1617,7 +1617,7 @@ const providerAdapterCatalogValue = {
               path: 'measure.value*10^unit',
               status: 'intentionally-unsupported',
               reason:
-                'A PR interval requires an ECG-specific interpretation contract not present in version 0.2.0.',
+                'A PR interval requires an ECG-specific interpretation contract not present in version 0.3.0.',
             },
           ],
         },
@@ -1629,7 +1629,7 @@ const providerAdapterCatalogValue = {
               path: 'measure.value*10^unit',
               status: 'intentionally-unsupported',
               reason:
-                'A QT interval requires an ECG-specific interpretation contract not present in version 0.2.0.',
+                'A QT interval requires an ECG-specific interpretation contract not present in version 0.3.0.',
             },
           ],
         },
@@ -1641,7 +1641,7 @@ const providerAdapterCatalogValue = {
               path: 'measure.value*10^unit',
               status: 'intentionally-unsupported',
               reason:
-                'A corrected QT interval requires an ECG-specific interpretation contract not present in version 0.2.0.',
+                'A corrected QT interval requires an ECG-specific interpretation contract not present in version 0.3.0.',
             },
           ],
         },

@@ -42,7 +42,7 @@ const instant = (value: string): FhirInstant => unwrap(parseFhirInstant(value))
 describe('source-neutral Mobile contract', () => {
   it('exports only source-neutral data, types, identity, and time contracts', () => {
     expect(groveFhirVersion).toBe('4.0.1')
-    expect(groveFhirContractVersion).toBe('0.2.0')
+    expect(groveFhirContractVersion).toBe('0.3.0')
     expect(groveMobilePackageMetadata.packageId).toBe(
       'org.grovealliance.fhir.mobile',
     )

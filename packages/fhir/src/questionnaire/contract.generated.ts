@@ -9,13 +9,13 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.2.0' as const
+export const groveFhirContractVersion = '0.3.0' as const
 
 export const groveFhirVersion = '4.0.1' as const
 
 const groveQuestionnairePackageMetadataValue = {
   fhirVersion: '4.0.1',
-  version: '0.2.0',
+  version: '0.3.0',
   packageId: 'org.grovealliance.fhir.questionnaire',
   canonical: 'https://grovealliance.org/fhir/questionnaire',
   dependencies: ['hl7.fhir.uv.sdc#4.0.0', 'hl7.fhir.uv.extensions.r4#5.3.0'],

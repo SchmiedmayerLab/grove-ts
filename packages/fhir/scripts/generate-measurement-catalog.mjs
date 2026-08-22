@@ -897,6 +897,11 @@ const adapterProfiledCapabilities = capabilities.measurements?.filter(
 )
 const capabilityKeys = capabilities.measurements?.map((entry) => entry.key)
 const capabilityStatuses = new Set(Object.keys(capabilities.statuses ?? {}))
+if (capabilities.igVersion !== catalog.version) {
+  throw new Error(
+    `Capability matrix declares IG version ${String(capabilities.igVersion)} against catalog ${String(catalog.version)}.`,
+  )
+}
 if (
   !Array.isArray(capabilityKeys) ||
   new Set(capabilityKeys).size !== capabilityKeys.length ||

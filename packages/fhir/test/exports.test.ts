@@ -62,7 +62,7 @@ describe('public entry-point boundaries', () => {
 
   it('exposes bounded generated version and package metadata', () => {
     expect(root.groveFhirVersion).toBe('4.0.1')
-    expect(root.groveFhirContractVersion).toBe('0.2.0')
+    expect(root.groveFhirContractVersion).toBe('0.3.0')
     expect(mobile.groveMobilePackageMetadata.packageId).toBe(
       'org.grovealliance.fhir.mobile',
     )
@@ -71,7 +71,7 @@ describe('public entry-point boundaries', () => {
     )
 
     expectTypeOf(root.groveFhirVersion).toEqualTypeOf<'4.0.1'>()
-    expectTypeOf(root.groveFhirContractVersion).toEqualTypeOf<'0.2.0'>()
+    expectTypeOf(root.groveFhirContractVersion).toEqualTypeOf<'0.3.0'>()
   })
 
   it('exposes owner-exclusive measurements only from the Provider contract', () => {

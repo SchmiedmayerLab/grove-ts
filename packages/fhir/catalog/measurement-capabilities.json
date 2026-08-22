@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "igVersion": "0.2.0",
+  "igVersion": "0.3.0",
   "canonicalBase": "https://grovealliance.org/fhir",
   "recordConversion": {
     "input": "One connected-provider source record with a non-empty unique subset of the catalog-admitted outputs actually present.",

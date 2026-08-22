@@ -11,13 +11,13 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.2.0' as const
+export const groveFhirContractVersion = '0.3.0' as const
 
 export const groveFhirVersion = '4.0.1' as const
 
 const groveMobilePackageMetadataValue = {
   fhirVersion: '4.0.1',
-  version: '0.2.0',
+  version: '0.3.0',
   packageId: 'org.grovealliance.fhir.mobile',
   canonical: 'https://grovealliance.org/fhir/mobile',
   dependencies: ['hl7.terminology.r4#7.3.0', 'hl7.fhir.uv.extensions.r4#5.3.0'],
@@ -28,7 +28,7 @@ export const groveMobilePackageMetadata: typeof groveMobilePackageMetadataValue 
 
 const groveFhirExchangeIdentityValue = {
   schemaVersion: 1,
-  version: '0.2.0',
+  version: '0.3.0',
   fhirVersion: '4.0.1',
   profile:
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
@@ -1767,7 +1767,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Menstruation Flow',
     description:
-      'The observed menstrual flow classification, with the exact platform value retained as a secondary coding. The HealthKit iOS 18 vaginal-bleeding replacement uses the identical case set.',
+      "The observed menstrual flow classification, with the exact platform value retained as a secondary coding. The HealthKit iOS 18 vaginal-bleeding replacement uses the identical case set. HealthKit's mandatory cycle-start metadata is carried as an optional coded component so no source information is dropped.",
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
@@ -1811,6 +1811,35 @@ const sharedMobileMeasurementCatalogValue = {
       },
     ],
     effective: 'dateTime',
+    components: [
+      {
+        id: 'cycleStart',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+        code: 'menstrual-cycle-start',
+        display: 'Menstrual cycle start',
+        definition:
+          'Whether the flow observation marks the first day of a menstrual cycle, as the source states it.',
+        cardinality: '0..1',
+        valueSet:
+          'https://grovealliance.org/fhir/mobile/ValueSet/grove-menstrual-cycle-start',
+        resultCodes: [
+          {
+            code: 'cycle-start',
+            display: 'Cycle start',
+            definition:
+              'The observation marks the first day of a menstrual cycle.',
+          },
+          {
+            code: 'not-cycle-start',
+            display: 'Not cycle start',
+            definition:
+              'The observation does not mark the first day of a menstrual cycle.',
+          },
+        ],
+        title: 'Menstrual Cycle Start',
+      },
+    ],
   },
   'mindfulness-session': {
     id: 'mindfulness-session',

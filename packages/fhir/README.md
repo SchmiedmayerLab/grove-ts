@@ -11,9 +11,9 @@ SPDX-License-Identifier: MIT
 # Grove FHIR for TypeScript
 
 `@schmiedmayerlab/grove-fhir` provides strict FHIR R4 contracts and Grove resource builders for TypeScript applications.
-Version 0.2 is a deliberate, source-incompatible replacement for the former R4B resource-class API.
+The 0.2 line was a deliberate, source-incompatible replacement for the former R4B resource-class API.
 
-Here, `0.2.0` is the Grove FHIR contract/IG version exposed by generated
+Here, `0.3.0` is the Grove FHIR contract/IG version exposed by generated
 metadata. The monorepo keeps its established `0.0.0` source placeholders until
 the lockstep release workflow injects the selected npm release version.
 
