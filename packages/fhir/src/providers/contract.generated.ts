@@ -1726,7 +1726,7 @@ const providerAdapterCatalogValue = {
               path: 'measure.value*10^unit',
               status: 'intentionally-unsupported',
               reason:
-                'The consumed v0.2 source shape (measure.value*10^unit) does not recover which body segment a value belongs to, and v0.2 has no body-segment site model; emitting a segment mass under whole-body fat-mass or muscle-mass semantics would be wrong, so conversion is refused rather than mislabeled.',
+                'The consumed source shape (measure.value*10^unit) does not recover which body segment a value belongs to, and the shared model has no body-segment site; emitting a segment mass under whole-body fat-mass or muscle-mass semantics would be wrong, so conversion is refused rather than mislabeled.',
             },
           ],
         },
@@ -1738,7 +1738,7 @@ const providerAdapterCatalogValue = {
               path: 'measure.value*10^unit',
               status: 'intentionally-unsupported',
               reason:
-                'The consumed v0.2 source shape (measure.value*10^unit) does not recover which body segment a value belongs to, and v0.2 has no body-segment site model; emitting a segment mass under whole-body fat-mass or muscle-mass semantics would be wrong, so conversion is refused rather than mislabeled.',
+                'The consumed source shape (measure.value*10^unit) does not recover which body segment a value belongs to, and the shared model has no body-segment site; emitting a segment mass under whole-body fat-mass or muscle-mass semantics would be wrong, so conversion is refused rather than mislabeled.',
             },
           ],
         },
