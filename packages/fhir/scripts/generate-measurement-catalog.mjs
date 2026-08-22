@@ -937,6 +937,7 @@ const sharedMobileSemanticCatalog = Object.fromEntries(
     const semantic = { ...definition }
     delete semantic.coverage
     delete semantic.coverageDetails
+    delete semantic.generation
     return [id, semantic]
   }),
 )

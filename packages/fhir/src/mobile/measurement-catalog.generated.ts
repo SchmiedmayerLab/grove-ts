@@ -102,15 +102,24 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'active-energy',
     profile: 'grove-mobile-active-energy',
     standardProfile: null,
+    title: 'Grove Mobile Active Energy',
+    description:
+      'Activity-related energy expenditure, excluding basal energy, during an exact effective Period and normalized to UCUM kilocalories.',
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'active-energy-burned',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'kcal',
       unit: 'kcal',
+      dimension: {
+        g: 1,
+        m: 2,
+        s: -2,
+      },
     },
     effective: 'Period',
   },
@@ -118,15 +127,22 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'basal-body-temperature',
     profile: 'grove-mobile-basal-body-temperature',
     standardProfile: null,
+    title: 'Grove Mobile Basal Body Temperature',
+    description:
+      'A source-neutral basal body temperature recorded at physiologic rest and normalized to UCUM degrees Celsius. It is not the general body-temperature vital sign.',
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'basal-body-temperature',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'Cel',
       unit: 'Cel',
+      dimension: {
+        K: 1,
+      },
     },
     effective: 'dateTime',
   },
@@ -134,10 +150,14 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'blood-pressure',
     profile: 'grove-mobile-blood-pressure',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/bp',
+    title: 'Grove Mobile Blood Pressure',
+    description:
+      'A source-neutral mobile blood-pressure panel that is required to conform to the authoritative FHIR R4 Blood Pressure profile. Systolic and diastolic components are normalized to UCUM millimetres of mercury.',
     code: {
       system: 'http://loinc.org',
       code: '85354-9',
     },
+    valueKind: 'components',
     components: [
       {
         id: 'systolic',
@@ -147,6 +167,11 @@ const sharedMobileMeasurementCatalogValue = {
           system: 'http://unitsofmeasure.org',
           code: 'mm[Hg]',
           unit: 'mmHg',
+          dimension: {
+            g: 1,
+            m: -1,
+            s: -2,
+          },
         },
       },
       {
@@ -157,6 +182,11 @@ const sharedMobileMeasurementCatalogValue = {
           system: 'http://unitsofmeasure.org',
           code: 'mm[Hg]',
           unit: 'mmHg',
+          dimension: {
+            g: 1,
+            m: -1,
+            s: -2,
+          },
         },
       },
     ],
@@ -167,14 +197,21 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'body-height',
     profile: 'grove-mobile-body-height',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/bodyheight',
+    title: 'Grove Mobile Body Height',
+    description:
+      'A source-neutral mobile body height that is required to conform to the authoritative FHIR R4 Body Height profile. Values are normalized to UCUM centimetres.',
     code: {
       system: 'http://loinc.org',
       code: '8302-2',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'cm',
       unit: 'cm',
+      dimension: {
+        m: 1,
+      },
     },
     effective: 'dateTime',
   },
@@ -182,14 +219,21 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'body-temperature',
     profile: 'grove-mobile-body-temperature',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/bodytemp',
+    title: 'Grove Mobile Body Temperature',
+    description:
+      'A source-neutral mobile body temperature that is required to conform to the authoritative FHIR R4 Body Temperature profile. Values are normalized to UCUM degrees Celsius.',
     code: {
       system: 'http://loinc.org',
       code: '8310-5',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'Cel',
       unit: 'Cel',
+      dimension: {
+        K: 1,
+      },
     },
     effective: 'dateTime',
   },
@@ -197,14 +241,21 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'body-weight',
     profile: 'grove-mobile-body-weight',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/bodyweight',
+    title: 'Grove Mobile Body Weight',
+    description:
+      'A source-neutral mobile body weight that is required to conform to the authoritative FHIR R4 Body Weight profile. Values are normalized to UCUM kilograms.',
     code: {
       system: 'http://loinc.org',
       code: '29463-7',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'kg',
       unit: 'kg',
+      dimension: {
+        g: 1,
+      },
     },
     effective: 'dateTime',
   },
@@ -212,14 +263,21 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'distance',
     profile: 'grove-mobile-distance',
     standardProfile: null,
+    title: 'Grove Mobile Distance',
+    description:
+      'Distance traveled during an exact effective Period, normalized to UCUM metres.',
     code: {
       system: 'http://loinc.org',
       code: '103208-5',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'm',
       unit: 'm',
+      dimension: {
+        m: 1,
+      },
     },
     effective: 'Period',
   },
@@ -227,14 +285,21 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'heart-rate',
     profile: 'grove-mobile-heart-rate',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/heartrate',
+    title: 'Grove Mobile Heart Rate',
+    description:
+      'A source-neutral mobile heart rate that is required to conform to the authoritative FHIR R4 Heart Rate profile and adds Grove exchange identity and provenance context. Values are normalized to UCUM beats per minute.',
     code: {
       system: 'http://loinc.org',
       code: '8867-4',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '/min',
       unit: 'beats/minute',
+      dimension: {
+        s: -1,
+      },
     },
     effective: 'dateTime',
   },
@@ -242,14 +307,19 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'oxygen-saturation',
     profile: 'grove-mobile-oxygen-saturation',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/oxygensat',
+    title: 'Grove Mobile Oxygen Saturation',
+    description:
+      'A source-neutral mobile oxygen saturation that is required to conform to the authoritative FHIR R4 Oxygen Saturation profile. Values are normalized to UCUM percent.',
     code: {
       system: 'http://loinc.org',
       code: '2708-6',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '%',
       unit: '%',
+      dimension: {},
     },
     effective: 'dateTime',
   },
@@ -257,14 +327,21 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'respiratory-rate',
     profile: 'grove-mobile-respiratory-rate',
     standardProfile: 'http://hl7.org/fhir/StructureDefinition/resprate',
+    title: 'Grove Mobile Respiratory Rate',
+    description:
+      'A source-neutral mobile respiratory rate that is required to conform to the authoritative FHIR R4 Respiratory Rate profile. Values are normalized to breaths per minute.',
     code: {
       system: 'http://loinc.org',
       code: '9279-1',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '/min',
       unit: 'breaths/minute',
+      dimension: {
+        s: -1,
+      },
     },
     effective: 'dateTime',
   },
@@ -272,26 +349,38 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'sleep-duration',
     profile: 'grove-mobile-sleep-duration',
     standardProfile: null,
+    title: 'Grove Mobile Sleep Duration',
+    description:
+      'Total duration classified as sleep during an exact effective Period, using LOINC Sleep duration and normalized to UCUM hours. This summary does not encode sleep stages.',
     code: {
       system: 'http://loinc.org',
       code: '93832-4',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: 'h',
       unit: 'h',
+      dimension: {
+        s: 1,
+      },
     },
     effective: 'Period',
+    hasMember: ['sleep-stage'],
   },
   'sleep-stage': {
     id: 'sleep-stage',
     profile: 'grove-mobile-sleep-stage',
     standardProfile: null,
+    title: 'Grove Mobile Sleep Stage',
+    description:
+      'A source-neutral sleep-stage classification for one exact interval. A session summary links its ordered, non-overlapping stage Observations through hasMember.',
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'sleep-stage',
     },
+    valueKind: 'codeableConcept',
     quantity: null,
     valueSet:
       'https://grovealliance.org/fhir/mobile/ValueSet/grove-sleep-stage',
@@ -313,17 +402,28 @@ const sharedMobileMeasurementCatalogValue = {
     id: 'step-count',
     profile: 'grove-mobile-step-count',
     standardProfile: null,
+    title: 'Grove Mobile Step Count',
+    description:
+      'The number of steps recorded during an exact effective Period.',
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'step-count-total',
     },
+    valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
       code: '{steps}',
       unit: 'steps',
+      dimension: {},
+      unitMustSupport: true,
     },
     effective: 'Period',
+    obeys: [
+      'grove-step-count-result-1',
+      'grove-step-count-period-1',
+      'grove-step-count-value-1',
+    ],
   },
 } as const
 
