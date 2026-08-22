@@ -171,9 +171,14 @@ export interface ProviderRecordingSourceRecord<
 interface RecordingAttachmentBaseInput {
   readonly contentType: MediaType
   readonly title: string
+  /** Registered payload format the recording bytes conform to. */
+  readonly format: ProviderRecordingFormat
   /** Required deployment assertion for opaque content Grove cannot inspect. */
   readonly payloadAssertion: RawPayloadAdmissionAssertion
 }
+
+export type ProviderRecordingFormat =
+  import('./contract.generated.js').ProviderRecordingFormat
 
 export type RawPayloadAdmissionAssertion =
   (typeof import('./contract.generated.js').providerAdapterCatalog)['rawPayloadAdmission']['allowedAssertions'][number]

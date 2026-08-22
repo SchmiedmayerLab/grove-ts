@@ -9,11 +9,14 @@
 import { sha1 } from '@noble/hashes/legacy.js'
 import { z } from 'zod'
 import {
+  groveRecordingFormatRegistry,
   providerAdapterCatalog,
   providerRawMappings,
+  type ProviderRecordingFormat,
 } from './contract.generated.js'
 import {
   assemblerAgent,
+  coding,
   identifiedEntry,
   identifier,
   makeApplicationDevice,
@@ -217,6 +220,12 @@ const recordingSourceSchema = z.strictObject({
 const recordingAttachmentBase = {
   contentType: z.string().min(1),
   title: nonBlankStringSchema,
+  format: z.enum(
+    Object.keys(groveRecordingFormatRegistry.formats) as [
+      ProviderRecordingFormat,
+      ...ProviderRecordingFormat[],
+    ],
+  ),
   payloadAssertion: z.enum(
     providerAdapterCatalog.rawPayloadAdmission.allowedAssertions,
   ),
@@ -391,6 +400,17 @@ export const parseProviderRecordingBundleInput = (
         ...check.issues.map((finding) => ({ ...finding, path: [...path] })),
       )
     }
+  }
+
+  const declaredFormat =
+    groveRecordingFormatRegistry.formats[parsed.data.attachment.format]
+  if (parsed.data.attachment.contentType !== declaredFormat.contentType) {
+    findings.push({
+      severity: 'error',
+      code: 'value-mismatch',
+      path: ['attachment', 'contentType'],
+      message: `Recording contentType must be ${declaredFormat.contentType} for the declared ${parsed.data.attachment.format} registry format.`,
+    })
   }
 
   const emittedStrings = emittedCallerStrings(parsed.data)
@@ -594,7 +614,17 @@ export const buildProviderRecordingBundle = (
     subject: { reference: validated.subject },
     date: validated.documentDate,
     author: [{ reference: identities.value.application.fullUrl }],
-    content: [{ attachment: attachmentFor(validated.attachment) }],
+    content: [
+      {
+        attachment: attachmentFor(validated.attachment),
+        format: coding(
+          groveRecordingFormatRegistry.codeSystem,
+          validated.attachment.format,
+          groveRecordingFormatRegistry.formats[validated.attachment.format]
+            .title,
+        ),
+      },
+    ],
   }
   const application = makeApplicationDevice(validated.application)
   const dataOrigin = makeApplicationDevice(validated.source.dataOrigin)

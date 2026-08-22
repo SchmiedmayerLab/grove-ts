@@ -4946,7 +4946,57 @@ export const providerRawMappings: typeof providerRawMappingsValue = deepFreeze(
   providerRawMappingsValue,
 )
 
+const groveRecordingFormatRegistryValue = {
+  codeSystem:
+    'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
+  valueSet:
+    'https://grovealliance.org/fhir/sensor/ValueSet/grove-recording-format',
+  formats: {
+    'grove-csv-1': {
+      title: 'Grove CSV 1',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'fhir-json-1': {
+      title: 'FHIR JSON Array 1',
+      contentType: 'application/json',
+      status: 'active',
+    },
+    'native-json-1': {
+      title: 'Native JSON 1',
+      contentType: 'application/json',
+      status: 'active',
+    },
+    'provider-json-1': {
+      title: 'Provider JSON 1',
+      contentType: 'application/json',
+      status: 'active',
+    },
+    'grove-ppg-1': {
+      title: 'Grove PPG Binary 1',
+      contentType: 'application/octet-stream',
+      status: 'active',
+    },
+    'grove-batch-archive-1': {
+      title: 'Grove Batch Archive 1',
+      contentType: 'application/octet-stream',
+      status: 'active',
+    },
+    'fhir-resource-1': {
+      title: 'FHIR Resource 1',
+      contentType: 'application/fhir+json',
+      status: 'active',
+    },
+  },
+} as const
+
+export const groveRecordingFormatRegistry: typeof groveRecordingFormatRegistryValue =
+  deepFreeze(groveRecordingFormatRegistryValue)
+
 export type AdapterMeasurementCatalog = typeof adapterMeasurementCatalog
+
+export type ProviderRecordingFormat =
+  keyof typeof groveRecordingFormatRegistry.formats
 
 export type ProviderScalarMappings = typeof providerScalarMappings
 

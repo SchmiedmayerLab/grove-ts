@@ -1,6 +1,9 @@
 {
   "source": {
-    "adapter": { "kind": "providers", "provider": "google-health-api" },
+    "adapter": {
+      "kind": "providers",
+      "provider": "google-health-api"
+    },
     "providerAccountIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-google-001",
@@ -20,9 +23,10 @@
   },
   "attachment": {
     "kind": "embedded",
-    "contentType": "application/octet-stream",
+    "contentType": "application/json",
     "title": "Authorized minimized Google heart-rate recording",
+    "format": "provider-json-1",
     "payloadAssertion": "caller-authorized-opaque-payload",
-    "dataBase64": "AQID"
+    "dataBase64": "eyJzeW50aGV0aWMiOnRydWV9"
   }
 }

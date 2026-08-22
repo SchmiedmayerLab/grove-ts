@@ -75,8 +75,9 @@ const rawInput = (
     },
     attachment: {
       kind: 'embedded',
-      contentType: unwrap(parseMediaType('application/octet-stream')),
+      contentType: unwrap(parseMediaType('application/json')),
       title: 'Authorized minimized provider recording',
+      format: 'provider-json-1',
       payloadAssertion: 'caller-authorized-opaque-payload',
       dataBase64: unwrap(encodeRecordingBytes(Uint8Array.of(1, 2, 3))),
     },
@@ -168,11 +169,17 @@ describe('Provider native recording graph', () => {
     expect(documentEntry.resource.content).toEqual([
       {
         attachment: {
-          contentType: 'application/octet-stream',
+          contentType: 'application/json',
           data: 'AQID',
           size: 3,
           hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
           title: 'Authorized minimized provider recording',
+        },
+        format: {
+          system:
+            'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
+          code: 'provider-json-1',
+          display: 'Provider JSON 1',
         },
       },
     ])
@@ -234,6 +241,7 @@ describe('Provider native recording graph', () => {
         kind: 'external',
         contentType: unwrap(parseMediaType('application/json')),
         title: 'Authorized minimized Oura recording',
+        format: 'provider-json-1',
         payloadAssertion: 'verified-sanitized-input',
         url: unwrap(
           parseImmutableRecordingUrl(
@@ -360,6 +368,7 @@ describe('Provider native recording graph', () => {
       kind: 'external',
       contentType: 'application/json',
       title: 'Authorized recording',
+      format: 'provider-json-1',
       payloadAssertion: 'caller-authorized-opaque-payload',
       url: 'ftp://objects.example.org/recording',
       size: 0,
@@ -437,6 +446,7 @@ describe('Provider native recording graph', () => {
             kind: 'external',
             contentType: unwrap(parseMediaType('application/json')),
             title: 'Authorized recording',
+            format: 'provider-json-1',
             payloadAssertion: 'caller-authorized-opaque-payload',
             url: `https://objects.example.org/${nativeId}`,
             size: unwrap(parsePositiveInteger(3)),
@@ -496,6 +506,7 @@ describe('Provider native recording graph', () => {
           kind: 'external',
           contentType: unwrap(parseMediaType('application/json')),
           title: 'Authorized recording',
+          format: 'provider-json-1',
           payloadAssertion: 'verified-sanitized-input',
           url: unwrap(
             parseImmutableRecordingUrl(
@@ -522,6 +533,7 @@ describe('Provider native recording graph', () => {
           kind: 'external',
           contentType: unwrap(parseMediaType('application/json')),
           title: 'Authorized recording',
+          format: 'provider-json-1',
           payloadAssertion: 'verified-sanitized-input',
           url: unwrap(
             parseImmutableRecordingUrl(

@@ -9,6 +9,7 @@
 export { buildProviderMeasurementBundle } from './builder.js'
 export {
   adapterMeasurementCatalog,
+  groveRecordingFormatRegistry,
   providerAdapterCatalog,
   providerRawMappings,
   providerRecordEffectiveRules,
@@ -57,6 +58,7 @@ export type {
   NormalizedProviderRecord,
   NormalizedSourceRecord,
   ProviderAccountPseudonymInput,
+  ProviderRecordingFormat,
   RawPayloadAdmissionAssertion,
   RecordingRepositoryAssignedResourceIds,
   Sha1Base64,

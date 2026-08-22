@@ -34,6 +34,7 @@ const healthConnectIdentityPath = resolve(
 )
 const healthKitAdapterPath = resolve(catalogRoot, 'healthkit-adapter.json')
 const sensorKitAdapterPath = resolve(catalogRoot, 'sensorkit-adapter.json')
+const formatRegistryPath = resolve(catalogRoot, 'format-registry.json')
 const sourceRefPath = resolve(packageRoot, 'grove-fhir.json')
 const semanticCorpusPath = resolve(
   packageRoot,
@@ -71,6 +72,7 @@ const healthKitAdapter = JSON.parse(
 const sensorKitAdapter = JSON.parse(
   await readFile(sensorKitAdapterPath, 'utf8'),
 )
+const formatRegistry = JSON.parse(await readFile(formatRegistryPath, 'utf8'))
 const sourceRef = JSON.parse(await readFile(sourceRefPath, 'utf8'))
 const semanticCorpus = JSON.parse(await readFile(semanticCorpusPath, 'utf8'))
 const capabilities = JSON.parse(await readFile(capabilityPath, 'utf8'))
@@ -792,6 +794,41 @@ if (
   throw new Error('Provider deterministic identity contract is incomplete.')
 }
 
+if (
+  formatRegistry.fhirVersion !== '4.0.1' ||
+  formatRegistry.version !== packageGraph.version ||
+  typeof formatRegistry.codeSystem !== 'string' ||
+  typeof formatRegistry.valueSet !== 'string' ||
+  Object.keys(formatRegistry.formats ?? {}).length === 0
+) {
+  throw new Error('Recording format registry is incomplete.')
+}
+// The registry's payload specifications stay in the IG; the TypeScript contract
+// carries only what emission and admission need.
+const recordingFormatRegistry = {
+  codeSystem: formatRegistry.codeSystem,
+  valueSet: formatRegistry.valueSet,
+  formats: Object.fromEntries(
+    Object.entries(formatRegistry.formats).map(([code, entry]) => {
+      if (
+        typeof entry.title !== 'string' ||
+        typeof entry.contentType !== 'string' ||
+        entry.status !== 'active'
+      ) {
+        throw new Error(`Recording format ${code} is incomplete.`)
+      }
+      return [
+        code,
+        {
+          title: entry.title,
+          contentType: entry.contentType,
+          status: entry.status,
+        },
+      ]
+    }),
+  ),
+}
+
 const providerAdmittedMeasurements = new Set(
   Object.values(providerScalarMappings).flatMap((sourceMappings) =>
     Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
@@ -1013,6 +1050,7 @@ const generated = {
   providerProfiles,
   providerPackageCanonicals,
   adapterMeasurementCatalog,
+  recordingFormatRegistry,
 }
 
 for (const value of Object.values(generated)) {
@@ -1087,7 +1125,12 @@ ${frozenExport('providerRecordEffectiveRules', providerRecordEffectiveRules)}
 
 ${frozenExport('providerRawMappings', providerRawMappings)}
 
+${frozenExport('groveRecordingFormatRegistry', recordingFormatRegistry)}
+
 export type AdapterMeasurementCatalog = typeof adapterMeasurementCatalog
+
+export type ProviderRecordingFormat =
+  keyof typeof groveRecordingFormatRegistry.formats
 
 export type ProviderScalarMappings = typeof providerScalarMappings
 

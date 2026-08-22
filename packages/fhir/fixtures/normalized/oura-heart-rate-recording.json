@@ -1,6 +1,9 @@
 {
   "source": {
-    "adapter": { "kind": "providers", "provider": "oura" },
+    "adapter": {
+      "kind": "providers",
+      "provider": "oura"
+    },
     "providerAccountIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-oura-001",
@@ -20,9 +23,10 @@
   },
   "attachment": {
     "kind": "embedded",
-    "contentType": "application/octet-stream",
+    "contentType": "application/json",
     "title": "Sanitized Oura heart-rate recording",
+    "format": "provider-json-1",
     "payloadAssertion": "verified-sanitized-input",
-    "dataBase64": "AQID"
+    "dataBase64": "eyJzeW50aGV0aWMiOnRydWV9"
   }
 }
