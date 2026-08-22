@@ -167,8 +167,9 @@ try {
       },
       attachment: {
         kind: 'embedded',
-        contentType: 'application/octet-stream',
+        contentType: 'application/json',
         title: 'Authorized minimized provider recording',
+        format: 'provider-json-1',
         payloadAssertion: 'caller-authorized-opaque-payload',
         dataBase64: 'AQID',
       },
@@ -259,11 +260,11 @@ try {
   if (
     result.fullUrl !== 'urn:uuid:cd27941b-2a75-5f7a-bd25-71e9480eac24' ||
     result.hasNodeProcess ||
-    result.measurementCount !== 13 ||
+    result.measurementCount !== 84 ||
     result.measurementGraph !== true ||
     result.recordingGraph !== true ||
     result.rawSourceCount !== 4 ||
-    result.scalarMeasurementCount !== 10 ||
+    result.scalarMeasurementCount !== 36 ||
     result.providerApiVisibleFromMobile ||
     result.providerApiVisibleFromRoot ||
     result.internalGraphVisible ||
