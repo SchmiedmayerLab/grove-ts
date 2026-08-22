@@ -121,8 +121,23 @@ const resultFor = (measurement: ConnectedMeasurement) => {
 
   const definition = sharedMobileMeasurementCatalog[measurement.kind]
 
+  if (typeof measurement.value === 'string') {
+    const { resultCodeSystem } = definition as {
+      readonly resultCodeSystem: string
+    }
+    return {
+      valueCodeableConcept: concept(resultCodeSystem, measurement.value),
+    }
+  }
+  const { quantity: unit } = definition as {
+    readonly quantity: {
+      readonly system: string
+      readonly code: string
+      readonly unit?: string
+    }
+  }
   return {
-    valueQuantity: quantity(measurement.value, definition.quantity),
+    valueQuantity: quantity(measurement.value, unit),
   }
 }
 

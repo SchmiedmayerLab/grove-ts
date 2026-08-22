@@ -17,45 +17,80 @@
     "planned-shared": "The concept is shared by multiple sources but has no admitted v0.2 Grove builder.",
     "adapter-specific": "The semantics are source-specific and must not be collapsed into a shared concept.",
     "sensor-ig": "The concept belongs to the Sensor and Waveform contract.",
-    "not-in-scope": "The source exposes the record, but it is not a mobile measurement admitted by this package."
+    "not-in-scope": "The source exposes the record, but it is not a mobile measurement admitted by this package.",
+    "platform-exclusive": "The measurement is owned by a single platform adapter and its adapter-exclusive profile; it is outside the shared Mobile facade and this Provider facade."
   },
   "measurements": [
     {
-      "key": "heart-rate",
+      "key": "active-energy",
       "status": "implemented",
-      "profile": "grove-mobile-heart-rate",
-      "authoritativeProfiles": [
-        "http://hl7.org/fhir/StructureDefinition/heartrate"
-      ],
+      "profile": "grove-mobile-active-energy",
       "code": {
-        "system": "http://loinc.org",
-        "code": "8867-4",
-        "display": "Heart rate"
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "active-energy-burned",
+        "display": "Active energy burned"
       },
-      "unit": { "code": "/min", "display": "beats/minute" },
-      "effective": "dateTime",
-      "sources": ["healthkit", "health-connect", "sensorkit", "withings"]
-    },
-    {
-      "key": "body-weight",
-      "status": "implemented",
-      "profile": "grove-mobile-body-weight",
-      "authoritativeProfiles": [
-        "http://hl7.org/fhir/StructureDefinition/bodyweight"
-      ],
-      "code": {
-        "system": "http://loinc.org",
-        "code": "29463-7",
-        "display": "Body weight"
+      "unit": {
+        "code": "kcal",
+        "display": "kcal"
       },
-      "unit": { "code": "kg", "display": "kg" },
-      "effective": "dateTime",
+      "effective": "Period",
       "sources": [
         "healthkit",
         "health-connect",
         "google-health-api",
+        "oura",
         "withings"
       ]
+    },
+    {
+      "key": "basal-body-temperature",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-basal-body-temperature",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "basal-body-temperature",
+        "display": "Basal body temperature"
+      },
+      "unit": {
+        "code": "Cel",
+        "display": "°C"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement in v0.2."
+    },
+    {
+      "key": "basal-energy",
+      "status": "implemented",
+      "profile": "grove-mobile-basal-energy",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "basal-energy-burned",
+        "display": "Basal energy burned"
+      },
+      "unit": {
+        "code": "kcal",
+        "display": "kcal"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "google-health-api"]
+    },
+    {
+      "key": "blood-glucose-unspecified-specimen",
+      "status": "implemented",
+      "profile": "grove-mobile-blood-glucose-unspecified-specimen",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2339-0",
+        "display": "Glucose [Mass/volume] in Blood"
+      },
+      "unit": {
+        "code": "mg/dL",
+        "display": "mg/dL"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "google-health-api"]
     },
     {
       "key": "blood-pressure",
@@ -67,23 +102,26 @@
         "code": "85354-9",
         "display": "Blood pressure panel"
       },
-      "unit": { "code": "mm[Hg]", "display": "mmHg" },
+      "unit": {
+        "code": "mm[Hg]",
+        "display": "mmHg"
+      },
       "effective": "dateTime",
       "sources": ["healthkit", "health-connect", "withings"]
     },
     {
-      "key": "body-temperature",
+      "key": "body-fat-percentage",
       "status": "implemented",
-      "profile": "grove-mobile-body-temperature",
-      "authoritativeProfiles": [
-        "http://hl7.org/fhir/StructureDefinition/bodytemp"
-      ],
+      "profile": "grove-mobile-body-fat-percentage",
       "code": {
         "system": "http://loinc.org",
-        "code": "8310-5",
-        "display": "Body temperature"
+        "code": "41982-0",
+        "display": "Percentage of body fat Measured"
       },
-      "unit": { "code": "Cel", "display": "°C" },
+      "unit": {
+        "code": "%",
+        "display": "%"
+      },
       "effective": "dateTime",
       "sources": [
         "healthkit",
@@ -91,39 +129,6 @@
         "google-health-api",
         "withings"
       ]
-    },
-    {
-      "key": "respiratory-rate",
-      "status": "profiled-not-admitted",
-      "profile": "grove-mobile-respiratory-rate",
-      "authoritativeProfiles": [
-        "http://hl7.org/fhir/StructureDefinition/resprate"
-      ],
-      "code": {
-        "system": "http://loinc.org",
-        "code": "9279-1",
-        "display": "Respiratory rate"
-      },
-      "unit": { "code": "/min", "display": "breaths/minute" },
-      "effective": "dateTime",
-      "sources": ["healthkit", "health-connect"],
-      "reason": "The connected providers expose daily aggregates rather than the point-in-time respiratory-rate semantics required by the shared profile."
-    },
-    {
-      "key": "oxygen-saturation",
-      "status": "implemented",
-      "profile": "grove-mobile-oxygen-saturation",
-      "authoritativeProfiles": [
-        "http://hl7.org/fhir/StructureDefinition/oxygensat"
-      ],
-      "code": {
-        "system": "http://loinc.org",
-        "code": "2708-6",
-        "display": "Oxygen saturation"
-      },
-      "unit": { "code": "%", "display": "%" },
-      "effective": "dateTime",
-      "sources": ["healthkit", "health-connect", "withings"]
     },
     {
       "key": "body-height",
@@ -137,7 +142,10 @@
         "code": "8302-2",
         "display": "Body height"
       },
-      "unit": { "code": "cm", "display": "cm" },
+      "unit": {
+        "code": "cm",
+        "display": "cm"
+      },
       "effective": "dateTime",
       "sources": [
         "healthkit",
@@ -147,40 +155,776 @@
       ]
     },
     {
-      "key": "body-mass-index",
-      "status": "adapter-profiled",
-      "profile": "http://hl7.org/fhir/StructureDefinition/bmi",
-      "adapterProfile": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
-      "authoritativeProfiles": ["http://hl7.org/fhir/StructureDefinition/bmi"],
+      "key": "body-temperature",
+      "status": "implemented",
+      "profile": "grove-mobile-body-temperature",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/bodytemp"
+      ],
       "code": {
         "system": "http://loinc.org",
-        "code": "39156-5",
-        "display": "Body mass index"
+        "code": "8310-5",
+        "display": "Body temperature"
       },
-      "unit": { "code": "kg/m2", "display": "kg/m²" },
+      "unit": {
+        "code": "Cel",
+        "display": "°C"
+      },
       "effective": "dateTime",
-      "sources": ["healthkit"],
-      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact v0.2 claim; a one-source shared Mobile wrapper is prohibited."
-    },
-    {
-      "key": "step-count",
-      "status": "implemented",
-      "profile": "grove-mobile-step-count",
-      "code": {
-        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
-        "code": "step-count-total",
-        "display": "Step count total"
-      },
-      "unit": { "code": "{steps}", "display": "steps" },
-      "effective": "Period",
       "sources": [
         "healthkit",
         "health-connect",
-        "sensorkit",
         "google-health-api",
-        "oura",
         "withings"
       ]
+    },
+    {
+      "key": "body-water-mass",
+      "status": "implemented",
+      "profile": "grove-mobile-body-water-mass",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "101683-1",
+        "display": "Body water mass"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "sources": ["health-connect", "withings"]
+    },
+    {
+      "key": "body-weight",
+      "status": "implemented",
+      "profile": "grove-mobile-body-weight",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/bodyweight"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "29463-7",
+        "display": "Body weight"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "withings"
+      ]
+    },
+    {
+      "key": "bone-mass",
+      "status": "implemented",
+      "profile": "grove-mobile-bone-mass",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "101685-6",
+        "display": "Body bone mass"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "sources": ["health-connect", "withings"]
+    },
+    {
+      "key": "cervical-mucus-quality",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-cervical-mucus-quality",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "cervical-mucus-quality",
+        "display": "Cervical mucus quality"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "cycling-cadence",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-cycling-cadence",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "cycling-cadence",
+        "display": "Cycling cadence"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "revolutions/minute"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "deep-sleep-duration",
+      "status": "implemented",
+      "profile": "grove-mobile-deep-sleep-duration",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "93831-6",
+        "display": "Deep sleep duration"
+      },
+      "unit": {
+        "code": "min",
+        "display": "min"
+      },
+      "effective": "Period",
+      "sources": ["google-health-api", "oura", "withings"]
+    },
+    {
+      "key": "dietary-biotin",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-biotin",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-biotin",
+        "display": "Dietary biotin"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-caffeine",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-caffeine",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-caffeine",
+        "display": "Dietary caffeine"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-calcium",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-calcium",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-calcium",
+        "display": "Dietary calcium"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-carbohydrates",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-carbohydrates",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "9060-5",
+        "display": "Carbohydrate intake Measured"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-chloride",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-chloride",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-chloride",
+        "display": "Dietary chloride"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-cholesterol",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-cholesterol",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-cholesterol",
+        "display": "Dietary cholesterol"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-chromium",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-chromium",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-chromium",
+        "display": "Dietary chromium"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-copper",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-copper",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-copper",
+        "display": "Dietary copper"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-energy",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-energy",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "9052-2",
+        "display": "Calorie intake total"
+      },
+      "unit": {
+        "code": "kcal",
+        "display": "kcal"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-fat-monounsaturated",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-fat-monounsaturated",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-fat-monounsaturated",
+        "display": "Dietary monounsaturated fat"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-fat-polyunsaturated",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-fat-polyunsaturated",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-fat-polyunsaturated",
+        "display": "Dietary polyunsaturated fat"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-fat-saturated",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-fat-saturated",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-fat-saturated",
+        "display": "Dietary saturated fat"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-fat-total",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-fat-total",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "9067-0",
+        "display": "Fat intake Measured"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-fiber",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-fiber",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-fiber",
+        "display": "Dietary fiber"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-folate",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-folate",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-folate",
+        "display": "Dietary folate"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-iodine",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-iodine",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-iodine",
+        "display": "Dietary iodine"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-iron",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-iron",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-iron",
+        "display": "Dietary iron"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-magnesium",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-magnesium",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-magnesium",
+        "display": "Dietary magnesium"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-manganese",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-manganese",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-manganese",
+        "display": "Dietary manganese"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-molybdenum",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-molybdenum",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-molybdenum",
+        "display": "Dietary molybdenum"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-niacin",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-niacin",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-niacin",
+        "display": "Dietary niacin"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-pantothenic-acid",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-pantothenic-acid",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-pantothenic-acid",
+        "display": "Dietary pantothenic acid"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-phosphorus",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-phosphorus",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-phosphorus",
+        "display": "Dietary phosphorus"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-potassium",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-potassium",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-potassium",
+        "display": "Dietary potassium"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-protein",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-protein",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "9080-3",
+        "display": "Protein intake Measured"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-riboflavin",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-riboflavin",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-riboflavin",
+        "display": "Dietary riboflavin"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-selenium",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-selenium",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-selenium",
+        "display": "Dietary selenium"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-sodium",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-sodium",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-sodium",
+        "display": "Dietary sodium"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-sugar",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-sugar",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-sugar",
+        "display": "Dietary sugar"
+      },
+      "unit": {
+        "code": "g",
+        "display": "g"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-thiamin",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-thiamin",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-thiamin",
+        "display": "Dietary thiamin"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-a",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-a",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-a",
+        "display": "Dietary vitamin A"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-b12",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-b12",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-b12",
+        "display": "Dietary vitamin B12"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-b6",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-b6",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-b6",
+        "display": "Dietary vitamin B6"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-c",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-c",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-c",
+        "display": "Dietary vitamin C"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-d",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-d",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-d",
+        "display": "Dietary vitamin D"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-e",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-e",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-e",
+        "display": "Dietary vitamin E"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-vitamin-k",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-vitamin-k",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-vitamin-k",
+        "display": "Dietary vitamin K"
+      },
+      "unit": {
+        "code": "ug",
+        "display": "ug"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "dietary-zinc",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-dietary-zinc",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "dietary-zinc",
+        "display": "Dietary zinc"
+      },
+      "unit": {
+        "code": "mg",
+        "display": "mg"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
     },
     {
       "key": "distance",
@@ -191,7 +935,10 @@
         "code": "103208-5",
         "display": "Distance traveled"
       },
-      "unit": { "code": "m", "display": "m" },
+      "unit": {
+        "code": "m",
+        "display": "m"
+      },
       "effective": "Period",
       "sources": [
         "healthkit",
@@ -202,79 +949,357 @@
       ]
     },
     {
-      "key": "active-energy",
+      "key": "electrodermal-activity",
       "status": "implemented",
-      "profile": "grove-mobile-active-energy",
+      "profile": "grove-mobile-electrodermal-activity",
       "code": {
         "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
-        "code": "active-energy-burned",
-        "display": "Active energy burned"
+        "code": "electrodermal-activity",
+        "display": "Electrodermal activity"
       },
-      "unit": { "code": "kcal", "display": "kcal" },
+      "unit": {
+        "code": "uS",
+        "display": "uS"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "withings"]
+    },
+    {
+      "key": "flights-climbed",
+      "status": "implemented",
+      "profile": "grove-mobile-flights-climbed",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "100304-5",
+        "display": "Flights climbed [#] Reporting Period"
+      },
+      "unit": {
+        "code": "{flights}",
+        "display": "flights"
+      },
       "effective": "Period",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health-api",
-        "oura",
-        "withings"
-      ]
+      "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
-      "key": "blood-glucose",
-      "status": "adapter-profiled",
-      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+      "key": "fluid-intake",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-fluid-intake",
       "code": {
         "system": "http://loinc.org",
-        "code": "2339-0",
-        "display": "Glucose in blood"
+        "code": "8985-4",
+        "display": "Fluid intake Measured"
       },
-      "unit": { "code": "mg/dL", "display": "mg/dL" },
-      "effective": "dateTime",
-      "sources": ["health-connect"],
-      "reason": "The exact whole-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
+      "unit": {
+        "code": "mL",
+        "display": "mL"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
     },
     {
-      "key": "capillary-blood-glucose",
-      "status": "adapter-profiled",
-      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
+      "key": "heart-rate",
+      "status": "implemented",
+      "profile": "grove-mobile-heart-rate",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/heartrate"
+      ],
       "code": {
         "system": "http://loinc.org",
-        "code": "32016-8",
-        "display": "Glucose in capillary blood"
+        "code": "8867-4",
+        "display": "Heart rate"
       },
-      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "unit": {
+        "code": "/min",
+        "display": "beats/minute"
+      },
       "effective": "dateTime",
-      "sources": ["health-connect"],
-      "reason": "The exact capillary-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
+      "sources": ["healthkit", "health-connect", "sensorkit", "withings"]
     },
     {
-      "key": "serum-plasma-glucose",
-      "status": "adapter-profiled",
-      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
+      "key": "heart-rate-variability-rmssd",
+      "status": "implemented",
+      "profile": "grove-mobile-heart-rate-variability-rmssd",
       "code": {
-        "system": "http://loinc.org",
-        "code": "2345-7",
-        "display": "Glucose in serum or plasma"
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "heart-rate-variability-rmssd",
+        "display": "Heart rate variability RMSSD"
       },
-      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "unit": {
+        "code": "ms",
+        "display": "ms"
+      },
       "effective": "dateTime",
-      "sources": ["health-connect"],
-      "reason": "The exact serum/plasma + specimen contract is Health Connect-owned. The consumed Google Health API shape cannot supply the required specimen evidence, so the Provider facade fails closed."
+      "sources": ["health-connect", "google-health-api"]
     },
     {
-      "key": "interstitial-glucose",
-      "status": "adapter-profiled",
-      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose",
+      "key": "heart-rate-variability-sdnn",
+      "status": "implemented",
+      "profile": "grove-mobile-heart-rate-variability-sdnn",
       "code": {
         "system": "http://loinc.org",
-        "code": "99504-3",
-        "display": "Glucose in interstitial fluid"
+        "code": "112429-6",
+        "display": "Heart rate variability SDNN [Time]"
       },
-      "unit": { "code": "mg/dL", "display": "mg/dL" },
+      "unit": {
+        "code": "ms",
+        "display": "ms"
+      },
       "effective": "dateTime",
-      "sources": ["health-connect"],
-      "reason": "The exact interstitial-fluid + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
+      "sources": ["healthkit", "google-health-api"]
+    },
+    {
+      "key": "intermenstrual-bleeding",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-intermenstrual-bleeding",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "intermenstrual-bleeding",
+        "display": "Intermenstrual bleeding"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "lean-body-mass",
+      "status": "implemented",
+      "profile": "grove-mobile-lean-body-mass",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "91557-9",
+        "display": "Lean body weight"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "withings"]
+    },
+    {
+      "key": "light-sleep-duration",
+      "status": "implemented",
+      "profile": "grove-mobile-light-sleep-duration",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "93830-8",
+        "display": "Light sleep duration"
+      },
+      "unit": {
+        "code": "min",
+        "display": "min"
+      },
+      "effective": "Period",
+      "sources": ["google-health-api", "oura", "withings"]
+    },
+    {
+      "key": "menstruation-flow",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-menstruation-flow",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "menstruation-flow",
+        "display": "Menstruation flow"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "mindfulness-session",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-mindfulness-session",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "mindfulness-session-duration",
+        "display": "Mindfulness session duration"
+      },
+      "unit": {
+        "code": "min",
+        "display": "min"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "ovulation-test-result",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-ovulation-test-result",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "ovulation-test-result",
+        "display": "Ovulation test result"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "oxygen-saturation",
+      "status": "implemented",
+      "profile": "grove-mobile-oxygen-saturation",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/oxygensat"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2708-6",
+        "display": "Oxygen saturation"
+      },
+      "unit": {
+        "code": "%",
+        "display": "%"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "withings"]
+    },
+    {
+      "key": "oxygen-saturation-daily-average",
+      "status": "implemented",
+      "profile": "grove-mobile-oxygen-saturation-daily-average",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "103209-3",
+        "display": "Mean oxygen saturation"
+      },
+      "unit": {
+        "code": "%",
+        "display": "%"
+      },
+      "effective": "Period",
+      "sources": ["google-health-api", "oura"]
+    },
+    {
+      "key": "power",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-power",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "power",
+        "display": "Power"
+      },
+      "unit": {
+        "code": "W",
+        "display": "W"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "rem-sleep-duration",
+      "status": "implemented",
+      "profile": "grove-mobile-rem-sleep-duration",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "93829-0",
+        "display": "REM sleep duration"
+      },
+      "unit": {
+        "code": "min",
+        "display": "min"
+      },
+      "effective": "Period",
+      "sources": ["google-health-api", "oura", "withings"]
+    },
+    {
+      "key": "respiratory-rate",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-respiratory-rate",
+      "authoritativeProfiles": [
+        "http://hl7.org/fhir/StructureDefinition/resprate"
+      ],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "9279-1",
+        "display": "Respiratory rate"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "breaths/minute"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "The connected providers expose daily aggregates rather than the point-in-time respiratory-rate semantics required by the shared profile."
+    },
+    {
+      "key": "respiratory-rate-average",
+      "status": "implemented",
+      "profile": "grove-mobile-respiratory-rate-average",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "103217-6",
+        "display": "Mean respiratory rate"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "breaths/minute"
+      },
+      "effective": "Period",
+      "sources": ["google-health-api", "oura", "withings"]
+    },
+    {
+      "key": "resting-heart-rate",
+      "status": "implemented",
+      "profile": "grove-mobile-resting-heart-rate",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "40443-4",
+        "display": "Heart rate --resting"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "beats/minute"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect", "google-health-api"]
+    },
+    {
+      "key": "sexual-activity",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-sexual-activity",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "sexual-activity",
+        "display": "Sexual activity"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "skin-temperature",
+      "status": "implemented",
+      "profile": "grove-mobile-skin-temperature",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "61008-9",
+        "display": "Body surface temperature"
+      },
+      "unit": {
+        "code": "Cel",
+        "display": "Cel"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect", "withings"]
+    },
+    {
+      "key": "sleep-awake-duration",
+      "status": "implemented",
+      "profile": "grove-mobile-sleep-awake-duration",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "93828-2",
+        "display": "Nighttime awakening duration"
+      },
+      "unit": {
+        "code": "min",
+        "display": "min"
+      },
+      "effective": "Period",
+      "sources": ["google-health-api", "oura", "withings"]
     },
     {
       "key": "sleep-duration",
@@ -285,9 +1310,28 @@
         "code": "93832-4",
         "display": "Sleep duration"
       },
-      "unit": { "code": "h", "display": "h" },
+      "unit": {
+        "code": "h",
+        "display": "h"
+      },
       "effective": "Period",
       "sources": ["health-connect", "google-health-api", "oura"]
+    },
+    {
+      "key": "sleep-heart-rate",
+      "status": "implemented",
+      "profile": "grove-mobile-sleep-heart-rate",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "sleep-heart-rate",
+        "display": "Sleep heart rate"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "beats/minute"
+      },
+      "effective": "Period",
+      "sources": ["oura", "withings"]
     },
     {
       "key": "sleep-stage",
@@ -301,6 +1345,203 @@
       "effective": "Period",
       "sources": ["healthkit", "health-connect"],
       "reason": "The connected-provider inventories expose stage-duration summaries rather than bounded stage intervals, so the facade does not relabel them."
+    },
+    {
+      "key": "speed",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-speed",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "speed",
+        "display": "Speed"
+      },
+      "unit": {
+        "code": "m/s",
+        "display": "m/s"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "step-count",
+      "status": "implemented",
+      "profile": "grove-mobile-step-count",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "step-count-total",
+        "display": "Step count total"
+      },
+      "unit": {
+        "code": "{steps}",
+        "display": "steps"
+      },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "sensorkit",
+        "google-health-api",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "vo2-max",
+      "status": "implemented",
+      "profile": "grove-mobile-vo2-max",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "vo2-max",
+        "display": "VO2 max"
+      },
+      "unit": {
+        "code": "mL/kg/min",
+        "display": "mL/kg/min"
+      },
+      "effective": "dateTime",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "wheelchair-push-count",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-wheelchair-push-count",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "96502-0",
+        "display": "Number of wheelchair pushes per time period"
+      },
+      "unit": {
+        "code": "{pushes}",
+        "display": "pushes"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "workout",
+      "status": "implemented",
+      "profile": "grove-mobile-workout",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "workout",
+        "display": "Workout session"
+      },
+      "effective": "Period",
+      "sources": [
+        "healthkit",
+        "health-connect",
+        "google-health-api",
+        "oura",
+        "withings"
+      ]
+    },
+    {
+      "key": "workout-segment",
+      "status": "profiled-not-admitted",
+      "profile": "grove-mobile-workout-segment",
+      "code": {
+        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+        "code": "workout-segment",
+        "display": "Workout segment"
+      },
+      "effective": "Period",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "No connected provider exposes a semantically exact source for this shared measurement, so the Provider facade does not admit it."
+    },
+    {
+      "key": "body-mass-index",
+      "status": "adapter-profiled",
+      "profile": "http://hl7.org/fhir/StructureDefinition/bmi",
+      "adapterProfile": "https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation",
+      "authoritativeProfiles": ["http://hl7.org/fhir/StructureDefinition/bmi"],
+      "code": {
+        "system": "http://loinc.org",
+        "code": "39156-5",
+        "display": "Body mass index"
+      },
+      "unit": {
+        "code": "kg/m2",
+        "display": "kg/m²"
+      },
+      "effective": "dateTime",
+      "sources": ["healthkit"],
+      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact v0.2 claim; a one-source shared Mobile wrapper is prohibited."
+    },
+    {
+      "key": "blood-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2339-0",
+        "display": "Glucose in blood"
+      },
+      "unit": {
+        "code": "mg/dL",
+        "display": "mg/dL"
+      },
+      "effective": "dateTime",
+      "sources": ["health-connect"],
+      "reason": "The exact whole-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
+    },
+    {
+      "key": "capillary-blood-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "32016-8",
+        "display": "Glucose in capillary blood"
+      },
+      "unit": {
+        "code": "mg/dL",
+        "display": "mg/dL"
+      },
+      "effective": "dateTime",
+      "sources": ["health-connect"],
+      "reason": "The exact capillary-blood + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
+    },
+    {
+      "key": "serum-plasma-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "2345-7",
+        "display": "Glucose in serum or plasma"
+      },
+      "unit": {
+        "code": "mg/dL",
+        "display": "mg/dL"
+      },
+      "effective": "dateTime",
+      "sources": ["health-connect"],
+      "reason": "The exact serum/plasma + specimen contract is Health Connect-owned. The consumed Google Health API shape cannot supply the required specimen evidence, so the Provider facade fails closed."
+    },
+    {
+      "key": "interstitial-glucose",
+      "status": "adapter-profiled",
+      "profile": "https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "99504-3",
+        "display": "Glucose in interstitial fluid"
+      },
+      "unit": {
+        "code": "mg/dL",
+        "display": "mg/dL"
+      },
+      "effective": "dateTime",
+      "sources": ["health-connect"],
+      "reason": "The exact interstitial-fluid + specimen contract is Health Connect-owned. The consumed Google Health API shape has no specimen evidence, so the Provider facade fails closed."
     },
     {
       "key": "google-health-api-heart-rate-recording",
@@ -343,133 +1584,7 @@
       "sources": ["withings"]
     },
     {
-      "key": "resting-heart-rate",
-      "status": "planned-shared",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health-api",
-        "oura",
-        "withings"
-      ],
-      "reason": "Requires a reviewed context-of-use contract distinct from instantaneous heart rate."
-    },
-    {
-      "key": "heart-rate-variability-sdnn",
-      "status": "planned-shared",
-      "sources": ["healthkit", "google-health-api"],
-      "reason": "SDNN must not be conflated with RMSSD."
-    },
-    {
-      "key": "heart-rate-variability-rmssd",
-      "status": "planned-shared",
-      "sources": ["health-connect", "oura", "withings"],
-      "reason": "RMSSD must not be conflated with SDNN."
-    },
-    {
-      "key": "body-fat-percentage",
-      "status": "planned-shared",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health-api",
-        "withings"
-      ]
-    },
-    {
-      "key": "lean-body-mass",
-      "status": "planned-shared",
-      "sources": ["healthkit", "health-connect"]
-    },
-    {
-      "key": "bone-mass",
-      "status": "planned-shared",
-      "sources": ["health-connect", "withings"]
-    },
-    {
-      "key": "waist-circumference",
-      "status": "planned-shared",
-      "sources": ["healthkit", "withings"]
-    },
-    {
-      "key": "basal-body-temperature",
-      "status": "profiled-not-admitted",
-      "profile": "grove-mobile-basal-body-temperature",
-      "code": {
-        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
-        "code": "basal-body-temperature",
-        "display": "Basal body temperature"
-      },
-      "unit": { "code": "Cel", "display": "°C" },
-      "effective": "dateTime",
-      "sources": ["healthkit", "health-connect"],
-      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement in v0.2."
-    },
-    {
-      "key": "skin-temperature",
-      "status": "planned-shared",
-      "sources": ["health-connect", "oura", "withings"],
-      "reason": "Skin temperature is not body temperature."
-    },
-    {
-      "key": "basal-energy",
-      "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health-api"]
-    },
-    {
-      "key": "total-energy",
-      "status": "planned-shared",
-      "sources": ["health-connect", "google-health-api", "oura", "withings"]
-    },
-    {
-      "key": "flights-or-floors-climbed",
-      "status": "planned-shared",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health-api",
-        "withings"
-      ],
-      "reason": "A precise conversion between flights and floors is not assumed."
-    },
-    {
-      "key": "elevation-gained",
-      "status": "planned-shared",
-      "sources": ["health-connect", "google-health-api", "oura", "withings"]
-    },
-    {
-      "key": "vo2-max",
-      "status": "planned-shared",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health-api",
-        "oura",
-        "withings"
-      ]
-    },
-    {
-      "key": "walking-speed",
-      "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health-api"]
-    },
-    {
       "key": "running-speed",
-      "status": "planned-shared",
-      "sources": ["healthkit", "health-connect", "google-health-api"]
-    },
-    {
-      "key": "cycling-cadence",
-      "status": "planned-shared",
-      "sources": ["health-connect", "google-health-api", "withings"]
-    },
-    {
-      "key": "step-cadence",
-      "status": "planned-shared",
-      "sources": ["health-connect", "google-health-api"]
-    },
-    {
-      "key": "power",
       "status": "planned-shared",
       "sources": ["healthkit", "health-connect", "google-health-api"]
     },
@@ -484,28 +1599,7 @@
       "sources": ["healthkit", "health-connect", "google-health-api"]
     },
     {
-      "key": "exercise-session",
-      "status": "planned-shared",
-      "sources": [
-        "healthkit",
-        "health-connect",
-        "google-health-api",
-        "oura",
-        "withings"
-      ]
-    },
-    {
-      "key": "mindfulness-session",
-      "status": "planned-shared",
-      "sources": ["healthkit", "health-connect"]
-    },
-    {
       "key": "wheelchair-pushes",
-      "status": "planned-shared",
-      "sources": ["healthkit", "health-connect"]
-    },
-    {
-      "key": "six-minute-walk-distance",
       "status": "planned-shared",
       "sources": ["healthkit", "health-connect"]
     },
@@ -520,18 +1614,6 @@
       "status": "adapter-specific",
       "sources": ["oura"],
       "reason": "Oura-specific computed score."
-    },
-    {
-      "key": "apple-stand-hour",
-      "status": "adapter-specific",
-      "sources": ["healthkit"],
-      "reason": "Apple-specific behavioral classification."
-    },
-    {
-      "key": "apple-exercise-time",
-      "status": "adapter-specific",
-      "sources": ["healthkit"],
-      "reason": "Apple-specific algorithmic classification."
     },
     {
       "key": "electrocardiogram-waveform",
@@ -559,6 +1641,223 @@
       "status": "not-in-scope",
       "sources": ["healthkit", "health-connect"],
       "reason": "These event records are not treated as generic mobile measurements."
+    },
+    {
+      "key": "waist-circumference",
+      "status": "platform-exclusive",
+      "profile": "healthkit-waist-circumference",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8280-0",
+        "display": "Waist Circumference at umbilicus by Tape measure"
+      },
+      "unit": {
+        "code": "cm",
+        "display": "cm"
+      },
+      "effective": "dateTime",
+      "owner": "healthkit",
+      "sources": ["healthkit"]
+    },
+    {
+      "key": "total-energy",
+      "status": "platform-exclusive",
+      "profile": "health-connect-total-energy",
+      "code": {
+        "system": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-measurement",
+        "code": "total-energy-burned",
+        "display": "Total energy burned"
+      },
+      "unit": {
+        "code": "kcal",
+        "display": "kcal"
+      },
+      "effective": "Period",
+      "owner": "health-connect",
+      "sources": ["health-connect"]
+    },
+    {
+      "key": "elevation-gained",
+      "status": "platform-exclusive",
+      "profile": "health-connect-elevation-gained",
+      "code": {
+        "system": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-measurement",
+        "code": "elevation-gained",
+        "display": "Elevation gained"
+      },
+      "unit": {
+        "code": "m",
+        "display": "m"
+      },
+      "effective": "Period",
+      "owner": "health-connect",
+      "sources": ["health-connect"]
+    },
+    {
+      "key": "walking-speed",
+      "status": "platform-exclusive",
+      "profile": "healthkit-walking-speed",
+      "code": {
+        "system": "https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement",
+        "code": "walking-speed",
+        "display": "Walking speed"
+      },
+      "unit": {
+        "code": "m/s",
+        "display": "m/s"
+      },
+      "effective": "dateTime",
+      "owner": "healthkit",
+      "sources": ["healthkit"]
+    },
+    {
+      "key": "step-cadence",
+      "status": "platform-exclusive",
+      "profile": "health-connect-step-cadence",
+      "code": {
+        "system": "https://grovealliance.org/fhir/health-connect/CodeSystem/health-connect-measurement",
+        "code": "step-cadence",
+        "display": "Step cadence"
+      },
+      "unit": {
+        "code": "{steps}/min",
+        "display": "steps/minute"
+      },
+      "effective": "dateTime",
+      "owner": "health-connect",
+      "sources": ["health-connect"]
+    },
+    {
+      "key": "six-minute-walk-test-distance",
+      "status": "platform-exclusive",
+      "profile": "healthkit-six-minute-walk-test-distance",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "64098-7",
+        "display": "Six minute walk test"
+      },
+      "unit": {
+        "code": "m",
+        "display": "m"
+      },
+      "effective": "Period",
+      "owner": "healthkit",
+      "sources": ["healthkit"]
+    },
+    {
+      "key": "apple-stand-hour",
+      "status": "platform-exclusive",
+      "profile": "healthkit-apple-stand-hour",
+      "code": {
+        "system": "https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement",
+        "code": "apple-stand-hour",
+        "display": "Apple stand hour"
+      },
+      "effective": "Period",
+      "owner": "healthkit",
+      "sources": ["healthkit"]
+    },
+    {
+      "key": "apple-exercise-time",
+      "status": "platform-exclusive",
+      "profile": "healthkit-apple-exercise-time",
+      "code": {
+        "system": "https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement",
+        "code": "apple-exercise-time",
+        "display": "Apple exercise time"
+      },
+      "unit": {
+        "code": "min",
+        "display": "min"
+      },
+      "effective": "Period",
+      "owner": "healthkit",
+      "sources": ["healthkit"]
+    },
+    {
+      "key": "body-fat-mass",
+      "status": "platform-exclusive",
+      "profile": "provider-body-fat-mass",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "73708-0",
+        "display": "Body fat [Mass] Calculated"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "owner": "providers",
+      "sources": ["withings"]
+    },
+    {
+      "key": "extracellular-water-mass",
+      "status": "platform-exclusive",
+      "profile": "provider-extracellular-water-mass",
+      "code": {
+        "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
+        "code": "extracellular-water-mass",
+        "display": "Extracellular water mass"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "owner": "providers",
+      "sources": ["withings"]
+    },
+    {
+      "key": "intracellular-water-mass",
+      "status": "platform-exclusive",
+      "profile": "provider-intracellular-water-mass",
+      "code": {
+        "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
+        "code": "intracellular-water-mass",
+        "display": "Intracellular water mass"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "owner": "providers",
+      "sources": ["withings"]
+    },
+    {
+      "key": "muscle-mass",
+      "status": "platform-exclusive",
+      "profile": "provider-muscle-mass",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "73964-9",
+        "display": "Body muscle mass Calculated"
+      },
+      "unit": {
+        "code": "kg",
+        "display": "kg"
+      },
+      "effective": "dateTime",
+      "owner": "providers",
+      "sources": ["withings"]
+    },
+    {
+      "key": "sleeping-heart-rate-average",
+      "status": "platform-exclusive",
+      "profile": "provider-sleeping-heart-rate-average",
+      "code": {
+        "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
+        "code": "sleeping-heart-rate-average",
+        "display": "Sleeping heart rate average"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "beats/minute"
+      },
+      "effective": "Period",
+      "owner": "providers",
+      "sources": ["withings"]
     }
   ]
 }

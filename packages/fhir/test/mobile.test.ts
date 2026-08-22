@@ -54,16 +54,25 @@ describe('source-neutral Mobile contract', () => {
     expect('providerAdapterCatalog' in mobileContract).toBe(false)
     expect('providerScalarMappings' in mobileContract).toBe(false)
     expect('groveProviderPackageMetadata' in mobileContract).toBe(false)
+    expect('adapterMeasurementCatalog' in mobileContract).toBe(false)
   })
   it('contains only evidenced shared measurements', () => {
     const entries = Object.values(sharedMobileMeasurementCatalog)
-    expect(entries).toHaveLength(13)
+    expect(entries).toHaveLength(84)
     expect(sharedMobileMeasurementCatalog).not.toHaveProperty('body-mass-index')
     expect(sharedMobileMeasurementCatalog).not.toHaveProperty('blood-glucose')
+    expect(sharedMobileMeasurementCatalog).not.toHaveProperty(
+      'apple-stand-hour',
+    )
+    expect(sharedMobileMeasurementCatalog).not.toHaveProperty(
+      'sleeping-heart-rate-average',
+    )
 
     for (const definition of entries) {
       expect(definition).not.toHaveProperty('coverage')
       expect(definition).not.toHaveProperty('coverageDetails')
+      expect(definition).not.toHaveProperty('generation')
+      expect(definition).not.toHaveProperty('owner')
     }
     expect(JSON.stringify(sharedMobileMeasurementCatalog)).not.toMatch(
       /healthkit|health-connect|sensorkit|google-health-api|oura|withings|sourceTokens/u,

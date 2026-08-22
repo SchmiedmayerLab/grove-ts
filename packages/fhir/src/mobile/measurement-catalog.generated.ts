@@ -109,6 +109,9 @@ const sharedMobileMeasurementCatalogValue = {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'active-energy-burned',
+      display: 'Active energy burned',
+      definition:
+        'Energy expended through activity, excluding basal energy, during the exact Observation effective Period.',
     },
     valueKind: 'quantity',
     quantity: {
@@ -134,6 +137,9 @@ const sharedMobileMeasurementCatalogValue = {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'basal-body-temperature',
+      display: 'Basal body temperature',
+      definition:
+        'Body temperature recorded at physiologic rest for fertility-awareness or cycle-tracking use; it is distinct from a general body-temperature vital sign.',
     },
     valueKind: 'quantity',
     quantity: {
@@ -142,6 +148,58 @@ const sharedMobileMeasurementCatalogValue = {
       unit: 'Cel',
       dimension: {
         K: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'basal-energy': {
+    id: 'basal-energy',
+    profile: 'grove-mobile-basal-energy',
+    standardProfile: null,
+    title: 'Basal Energy Burned',
+    description:
+      'Resting (basal) energy expenditure accrued during an exact effective Period, normalized to UCUM kilocalories. It is disjoint from active-energy: the two measurements never overlap in meaning and are summed only by consumers.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'basal-energy-burned',
+      display: 'Basal energy burned',
+      definition:
+        'Resting energy expended by basal metabolism, excluding activity energy, during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'kcal',
+      unit: 'kcal',
+      dimension: {
+        g: 1,
+        m: 2,
+        s: -2,
+      },
+    },
+    effective: 'Period',
+  },
+  'blood-glucose-unspecified-specimen': {
+    id: 'blood-glucose-unspecified-specimen',
+    profile: 'grove-mobile-blood-glucose-unspecified-specimen',
+    standardProfile: null,
+    title: 'Blood Glucose (Unspecified Specimen)',
+    description:
+      'A glucose mass concentration whose source supplies no specimen evidence, normalized to UCUM mg/dL. The profile REQUIRES the Observation specimen coding to be ABSENT, keeping it disjoint from the four specimen-specific Health Connect glucose profiles that require an exact SNOMED specimen coding.',
+    code: {
+      system: 'http://loinc.org',
+      code: '2339-0',
+      display: 'Glucose [Mass/volume] in Blood',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg/dL',
+      unit: 'mg/dL',
+      dimension: {
+        g: 1,
+        m: -3,
       },
     },
     effective: 'dateTime',
@@ -193,6 +251,27 @@ const sharedMobileMeasurementCatalogValue = {
     quantity: null,
     effective: 'dateTime',
   },
+  'body-fat-percentage': {
+    id: 'body-fat-percentage',
+    profile: 'grove-mobile-body-fat-percentage',
+    standardProfile: null,
+    title: 'Body Fat Percentage',
+    description:
+      'A source-neutral body fat measurement expressed as a percentage of total body mass and normalized to UCUM percent. The measurement is method-neutral: sources include bioimpedance scales, connected providers, and manual entry, so no measurement method is asserted.',
+    code: {
+      system: 'http://loinc.org',
+      code: '41982-0',
+      display: 'Percentage of body fat Measured',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '%',
+      unit: '%',
+      dimension: {},
+    },
+    effective: 'dateTime',
+  },
   'body-height': {
     id: 'body-height',
     profile: 'grove-mobile-body-height',
@@ -237,6 +316,29 @@ const sharedMobileMeasurementCatalogValue = {
     },
     effective: 'dateTime',
   },
+  'body-water-mass': {
+    id: 'body-water-mass',
+    profile: 'grove-mobile-body-water-mass',
+    standardProfile: null,
+    title: 'Body Water Mass',
+    description:
+      "A source-neutral total body water mass from body-composition analysis, normalized to UCUM kilograms. Despite Withings labeling its measure 'hydration', this is a body-composition mass and is deliberately distinct from dietary water intake.",
+    code: {
+      system: 'http://loinc.org',
+      code: '101683-1',
+      display: 'Body water mass',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'kg',
+      unit: 'kg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
   'body-weight': {
     id: 'body-weight',
     profile: 'grove-mobile-body-weight',
@@ -259,6 +361,1160 @@ const sharedMobileMeasurementCatalogValue = {
     },
     effective: 'dateTime',
   },
+  'bone-mass': {
+    id: 'bone-mass',
+    profile: 'grove-mobile-bone-mass',
+    standardProfile: null,
+    title: 'Bone Mass',
+    description:
+      'A source-neutral total bone mass from body-composition analysis, normalized to UCUM kilograms. It is an impedance-estimated mass and is deliberately distinct from DXA bone mineral density, which it never claims.',
+    code: {
+      system: 'http://loinc.org',
+      code: '101685-6',
+      display: 'Body bone mass',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'kg',
+      unit: 'kg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'cervical-mucus-quality': {
+    id: 'cervical-mucus-quality',
+    profile: 'grove-mobile-cervical-mucus-quality',
+    standardProfile: null,
+    title: 'Cervical Mucus Quality',
+    description:
+      "The observed cervical mucus quality for fertility awareness, with the exact platform value retained as a secondary coding. Health Connect's separate sensation axis rides an optional coded component that HealthKit never emits.",
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'cervical-mucus-quality',
+      display: 'Cervical mucus quality',
+      definition: 'The observed cervical mucus quality at the stated instant.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-cervical-mucus-quality',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-cervical-mucus-quality',
+    allowedValues: [
+      'dry',
+      'sticky',
+      'creamy',
+      'watery',
+      'egg-white',
+      'unusual',
+      'unknown',
+    ],
+    resultCodes: [
+      {
+        code: 'dry',
+        display: 'Dry',
+        definition: 'No cervical mucus observed.',
+      },
+      {
+        code: 'sticky',
+        display: 'Sticky',
+        definition: 'Sticky cervical mucus.',
+      },
+      {
+        code: 'creamy',
+        display: 'Creamy',
+        definition: 'Creamy cervical mucus.',
+      },
+      {
+        code: 'watery',
+        display: 'Watery',
+        definition: 'Watery cervical mucus.',
+      },
+      {
+        code: 'egg-white',
+        display: 'Egg white',
+        definition: 'Stretchy egg-white cervical mucus.',
+      },
+      {
+        code: 'unusual',
+        display: 'Unusual',
+        definition: 'An unusual observation that fits no listed quality.',
+      },
+      {
+        code: 'unknown',
+        display: 'Unknown',
+        definition: 'The quality was recorded without a usable classification.',
+      },
+    ],
+    components: [
+      {
+        id: 'sensation',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+        code: 'cervical-mucus-sensation',
+        cardinality: '0..1',
+        valueSet:
+          'https://grovealliance.org/fhir/mobile/ValueSet/grove-cervical-mucus-sensation',
+        resultCodes: [
+          {
+            code: 'light',
+            display: 'Light',
+            definition: 'A light sensation.',
+          },
+          {
+            code: 'medium',
+            display: 'Medium',
+            definition: 'A medium sensation.',
+          },
+          {
+            code: 'heavy',
+            display: 'Heavy',
+            definition: 'A heavy sensation.',
+          },
+        ],
+        title: 'Cervical Mucus Sensation',
+        display: 'Cervical mucus sensation',
+        definition:
+          'The reported cervical mucus sensation accompanying a quality observation.',
+      },
+    ],
+    effective: 'dateTime',
+  },
+  'cycling-cadence': {
+    id: 'cycling-cadence',
+    profile: 'grove-mobile-cycling-cadence',
+    standardProfile: null,
+    title: 'Cycling Cadence',
+    description:
+      'A source-neutral instantaneous cycling pedaling cadence sample, normalized to UCUM per minute and displayed as crank revolutions per minute. It is distinct from step cadence, whose counted event is a step rather than a crank revolution.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'cycling-cadence',
+      display: 'Cycling cadence',
+      definition:
+        'The rate of crank revolutions the subject pedals at the exact Observation effective instant.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '/min',
+      unit: 'revolutions/minute',
+      dimension: {
+        s: -1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'deep-sleep-duration': {
+    id: 'deep-sleep-duration',
+    profile: 'grove-mobile-deep-sleep-duration',
+    standardProfile: null,
+    title: 'Deep Sleep Duration',
+    description:
+      'Total time classified as deep sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals, distinct from the interval sleep-stage Observation, and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '93831-6',
+      display: 'Deep sleep duration',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'min',
+      unit: 'min',
+      dimension: {
+        s: 1,
+      },
+    },
+    method: {
+      code: 'session-total',
+      display: 'Session total',
+    },
+    effective: 'Period',
+  },
+  'dietary-biotin': {
+    id: 'dietary-biotin',
+    profile: 'grove-mobile-dietary-biotin',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Biotin',
+    description:
+      'Biotin (vitamin B7) consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC B7 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-biotin',
+      display: 'Dietary biotin',
+      definition:
+        'Biotin consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-caffeine': {
+    id: 'dietary-caffeine',
+    profile: 'grove-mobile-dietary-caffeine',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Caffeine',
+    description:
+      'Caffeine consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC caffeine-intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-caffeine',
+      display: 'Dietary caffeine',
+      definition:
+        'Caffeine consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-calcium': {
+    id: 'dietary-calcium',
+    profile: 'grove-mobile-dietary-calcium',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Calcium',
+    description:
+      'Calcium consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the Pt-timed LOINC calcium intake concepts are substance-amount and the mass concepts are 24-hour rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-calcium',
+      display: 'Dietary calcium',
+      definition:
+        'Calcium consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-carbohydrates': {
+    id: 'dietary-carbohydrates',
+    profile: 'grove-mobile-dietary-carbohydrates',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Carbohydrates',
+    description:
+      'Total carbohydrate consumed during an exact effective Period, normalized to UCUM grams.',
+    code: {
+      system: 'http://loinc.org',
+      code: '9060-5',
+      display: 'Carbohydrate intake Measured',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-chloride': {
+    id: 'dietary-chloride',
+    profile: 'grove-mobile-dietary-chloride',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Chloride',
+    description:
+      'Chloride consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC chloride intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-chloride',
+      display: 'Dietary chloride',
+      definition:
+        'Chloride consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-cholesterol': {
+    id: 'dietary-cholesterol',
+    profile: 'grove-mobile-dietary-cholesterol',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Cholesterol',
+    description:
+      'Cholesterol consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC cholesterol-intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-cholesterol',
+      display: 'Dietary cholesterol',
+      definition:
+        'Cholesterol consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-chromium': {
+    id: 'dietary-chromium',
+    profile: 'grove-mobile-dietary-chromium',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Chromium',
+    description:
+      'Chromium consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC chromium intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-chromium',
+      display: 'Dietary chromium',
+      definition:
+        'Chromium consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-copper': {
+    id: 'dietary-copper',
+    profile: 'grove-mobile-dietary-copper',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Copper',
+    description:
+      'Copper consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC copper intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-copper',
+      display: 'Dietary copper',
+      definition:
+        'Copper consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-energy': {
+    id: 'dietary-energy',
+    profile: 'grove-mobile-dietary-energy',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Energy',
+    description:
+      'Energy consumed from food and drink during an exact effective Period, normalized to UCUM kilocalories. Distinct from the active/basal energy-expenditure family; intake and expenditure never share a code.',
+    code: {
+      system: 'http://loinc.org',
+      code: '9052-2',
+      display: 'Calorie intake total',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'kcal',
+      unit: 'kcal',
+      dimension: {
+        g: 1,
+        m: 2,
+        s: -2,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-fat-monounsaturated': {
+    id: 'dietary-fat-monounsaturated',
+    profile: 'grove-mobile-dietary-fat-monounsaturated',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Monounsaturated Fat',
+    description:
+      'Monounsaturated fat consumed during an exact effective Period, normalized to UCUM grams. Grove-coded; only 24-hour LOINC concepts exist.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-fat-monounsaturated',
+      display: 'Dietary monounsaturated fat',
+      definition:
+        'Monounsaturated fat consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-fat-polyunsaturated': {
+    id: 'dietary-fat-polyunsaturated',
+    profile: 'grove-mobile-dietary-fat-polyunsaturated',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Polyunsaturated Fat',
+    description:
+      'Polyunsaturated fat consumed during an exact effective Period, normalized to UCUM grams. Grove-coded; only 24-hour LOINC concepts exist.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-fat-polyunsaturated',
+      display: 'Dietary polyunsaturated fat',
+      definition:
+        'Polyunsaturated fat consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-fat-saturated': {
+    id: 'dietary-fat-saturated',
+    profile: 'grove-mobile-dietary-fat-saturated',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Saturated Fat',
+    description:
+      'Saturated fat consumed during an exact effective Period, normalized to UCUM grams. Grove-coded; both LOINC saturated-fat intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-fat-saturated',
+      display: 'Dietary saturated fat',
+      definition:
+        'Saturated fat consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-fat-total': {
+    id: 'dietary-fat-total',
+    profile: 'grove-mobile-dietary-fat-total',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Fat',
+    description:
+      'Total fat consumed during an exact effective Period, normalized to UCUM grams.',
+    code: {
+      system: 'http://loinc.org',
+      code: '9067-0',
+      display: 'Fat intake Measured',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-fiber': {
+    id: 'dietary-fiber',
+    profile: 'grove-mobile-dietary-fiber',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Fiber',
+    description:
+      'Dietary fiber consumed during an exact effective Period, normalized to UCUM grams. Grove-coded because the only measured LOINC fiber concept is a 24-hour mass-rate, not a per-event mass.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-fiber',
+      display: 'Dietary fiber',
+      definition:
+        'Dietary fiber consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-folate': {
+    id: 'dietary-folate',
+    profile: 'grove-mobile-dietary-folate',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Folate',
+    description:
+      'Total folate (vitamin B9) consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC B9 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-folate',
+      display: 'Dietary folate',
+      definition:
+        'Total folate consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-iodine': {
+    id: 'dietary-iodine',
+    profile: 'grove-mobile-dietary-iodine',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Iodine',
+    description:
+      'Iodine consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC iodine intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-iodine',
+      display: 'Dietary iodine',
+      definition:
+        'Iodine consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-iron': {
+    id: 'dietary-iron',
+    profile: 'grove-mobile-dietary-iron',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Iron',
+    description:
+      'Iron consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC iron intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-iron',
+      display: 'Dietary iron',
+      definition:
+        'Iron consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-magnesium': {
+    id: 'dietary-magnesium',
+    profile: 'grove-mobile-dietary-magnesium',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Magnesium',
+    description:
+      'Magnesium consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC magnesium intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-magnesium',
+      display: 'Dietary magnesium',
+      definition:
+        'Magnesium consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-manganese': {
+    id: 'dietary-manganese',
+    profile: 'grove-mobile-dietary-manganese',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Manganese',
+    description:
+      'Manganese consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC manganese intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-manganese',
+      display: 'Dietary manganese',
+      definition:
+        'Manganese consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-molybdenum': {
+    id: 'dietary-molybdenum',
+    profile: 'grove-mobile-dietary-molybdenum',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Molybdenum',
+    description:
+      'Molybdenum consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC molybdenum intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-molybdenum',
+      display: 'Dietary molybdenum',
+      definition:
+        'Molybdenum consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-niacin': {
+    id: 'dietary-niacin',
+    profile: 'grove-mobile-dietary-niacin',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Niacin',
+    description:
+      'Niacin (vitamin B3) consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC B3 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-niacin',
+      display: 'Dietary niacin',
+      definition:
+        'Niacin consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-pantothenic-acid': {
+    id: 'dietary-pantothenic-acid',
+    profile: 'grove-mobile-dietary-pantothenic-acid',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Pantothenic Acid',
+    description:
+      'Pantothenic acid (vitamin B5) consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC B5 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-pantothenic-acid',
+      display: 'Dietary pantothenic acid',
+      definition:
+        'Pantothenic acid consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-phosphorus': {
+    id: 'dietary-phosphorus',
+    profile: 'grove-mobile-dietary-phosphorus',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Phosphorus',
+    description:
+      'Phosphorus consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC phosphorus intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-phosphorus',
+      display: 'Dietary phosphorus',
+      definition:
+        'Phosphorus consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-potassium': {
+    id: 'dietary-potassium',
+    profile: 'grove-mobile-dietary-potassium',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Potassium',
+    description:
+      'Potassium consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded for the same substance-versus-mass property mismatch as sodium.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-potassium',
+      display: 'Dietary potassium',
+      definition:
+        'Potassium consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-protein': {
+    id: 'dietary-protein',
+    profile: 'grove-mobile-dietary-protein',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Protein',
+    description:
+      'Protein consumed during an exact effective Period, normalized to UCUM grams.',
+    code: {
+      system: 'http://loinc.org',
+      code: '9080-3',
+      display: 'Protein intake Measured',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-riboflavin': {
+    id: 'dietary-riboflavin',
+    profile: 'grove-mobile-dietary-riboflavin',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Riboflavin',
+    description:
+      'Riboflavin (vitamin B2) consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC B2 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-riboflavin',
+      display: 'Dietary riboflavin',
+      definition:
+        'Riboflavin consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-selenium': {
+    id: 'dietary-selenium',
+    profile: 'grove-mobile-dietary-selenium',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Selenium',
+    description:
+      'Selenium consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC selenium intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-selenium',
+      display: 'Dietary selenium',
+      definition:
+        'Selenium consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-sodium': {
+    id: 'dietary-sodium',
+    profile: 'grove-mobile-dietary-sodium',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Sodium',
+    description:
+      'Sodium consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded because the point-timed LOINC sodium-intake concept is substance-amount, not mass.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-sodium',
+      display: 'Dietary sodium',
+      definition:
+        'Sodium consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-sugar': {
+    id: 'dietary-sugar',
+    profile: 'grove-mobile-dietary-sugar',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Sugar',
+    description:
+      'Total sugars consumed during an exact effective Period, normalized to UCUM grams. Grove-coded because LOINC has no active point-timed sugar-intake mass concept.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-sugar',
+      display: 'Dietary sugar',
+      definition:
+        'Total sugars consumed from food and drink during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'g',
+      unit: 'g',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-thiamin': {
+    id: 'dietary-thiamin',
+    profile: 'grove-mobile-dietary-thiamin',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Thiamin',
+    description:
+      'Thiamin (vitamin B1) consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC B1 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-thiamin',
+      display: 'Dietary thiamin',
+      definition:
+        'Thiamin consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-a': {
+    id: 'dietary-vitamin-a',
+    profile: 'grove-mobile-dietary-vitamin-a',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin A',
+    description:
+      'Vitamin A consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the only LOINC vitamin A intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-a',
+      display: 'Dietary vitamin A',
+      definition:
+        'Vitamin A consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-b12': {
+    id: 'dietary-vitamin-b12',
+    profile: 'grove-mobile-dietary-vitamin-b12',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin B12',
+    description:
+      'Vitamin B12 consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC B12 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-b12',
+      display: 'Dietary vitamin B12',
+      definition:
+        'Vitamin B12 consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-b6': {
+    id: 'dietary-vitamin-b6',
+    profile: 'grove-mobile-dietary-vitamin-b6',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin B6',
+    description:
+      'Vitamin B6 consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC B6 intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-b6',
+      display: 'Dietary vitamin B6',
+      definition:
+        'Vitamin B6 consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-c': {
+    id: 'dietary-vitamin-c',
+    profile: 'grove-mobile-dietary-vitamin-c',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin C',
+    description:
+      'Vitamin C consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC vitamin C intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-c',
+      display: 'Dietary vitamin C',
+      definition:
+        'Vitamin C consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-d': {
+    id: 'dietary-vitamin-d',
+    profile: 'grove-mobile-dietary-vitamin-d',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin D',
+    description:
+      'Vitamin D consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC vitamin D intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-d',
+      display: 'Dietary vitamin D',
+      definition:
+        'Vitamin D consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-e': {
+    id: 'dietary-vitamin-e',
+    profile: 'grove-mobile-dietary-vitamin-e',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin E',
+    description:
+      'Vitamin E consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC vitamin E intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-e',
+      display: 'Dietary vitamin E',
+      definition:
+        'Vitamin E consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-vitamin-k': {
+    id: 'dietary-vitamin-k',
+    profile: 'grove-mobile-dietary-vitamin-k',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Vitamin K',
+    description:
+      'Vitamin K consumed during an exact effective Period, normalized to UCUM micrograms. Grove-coded; the LOINC vitamin K intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-vitamin-k',
+      display: 'Dietary vitamin K',
+      definition:
+        'Vitamin K consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ug',
+      unit: 'ug',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'dietary-zinc': {
+    id: 'dietary-zinc',
+    profile: 'grove-mobile-dietary-zinc',
+    standardProfile: null,
+    title: 'Grove Mobile Dietary Zinc',
+    description:
+      'Zinc consumed during an exact effective Period, normalized to UCUM milligrams. Grove-coded; the LOINC zinc intake concepts are 24-hour mass-rates.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'dietary-zinc',
+      display: 'Dietary zinc',
+      definition:
+        'Zinc consumed during the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mg',
+      unit: 'mg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'Period',
+  },
   distance: {
     id: 'distance',
     profile: 'grove-mobile-distance',
@@ -277,6 +1533,79 @@ const sharedMobileMeasurementCatalogValue = {
       unit: 'm',
       dimension: {
         m: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'electrodermal-activity': {
+    id: 'electrodermal-activity',
+    profile: 'grove-mobile-electrodermal-activity',
+    standardProfile: null,
+    title: 'Electrodermal Activity',
+    description:
+      "Skin electrical conductance normalized to UCUM microsiemens. Two sources evidence the raw scalar — HealthKit's electrodermal activity samples and the Withings Body Scan feet measurement (meastype 196) — and the sensor body site is preserved as a body-site coding rather than collapsed.",
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'electrodermal-activity',
+      display: 'Electrodermal activity',
+      definition:
+        'The electrical conductance of the skin at the Observation effective instant.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'uS',
+      unit: 'uS',
+      dimension: {
+        C: 2,
+        g: -1,
+        m: -2,
+        s: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'flights-climbed': {
+    id: 'flights-climbed',
+    profile: 'grove-mobile-flights-climbed',
+    standardProfile: null,
+    title: 'Flights Climbed',
+    description:
+      "The number of flights of stairs (floors) ascended during an exact effective Period. Health Connect's fractional floors are preserved as a decimal count of the same measurand.",
+    code: {
+      system: 'http://loinc.org',
+      code: '100304-5',
+      display: 'Flights climbed [#] Reporting Period',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '{flights}',
+      unit: 'flights',
+      dimension: {},
+    },
+    effective: 'Period',
+  },
+  'fluid-intake': {
+    id: 'fluid-intake',
+    profile: 'grove-mobile-fluid-intake',
+    standardProfile: null,
+    title: 'Grove Mobile Fluid Intake',
+    description:
+      'Water or fluid consumed during an exact effective Period, normalized to UCUM millilitres. Carries HealthKit dietary water and Health Connect hydration under one shared concept; it belongs to the hydration family, not the dietary-nutrient family, hence the id outside the dietary- prefix.',
+    code: {
+      system: 'http://loinc.org',
+      code: '8985-4',
+      display: 'Fluid intake Measured',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mL',
+      unit: 'mL',
+      dimension: {
+        m: 3,
       },
     },
     effective: 'Period',
@@ -303,6 +1632,263 @@ const sharedMobileMeasurementCatalogValue = {
     },
     effective: 'dateTime',
   },
+  'heart-rate-variability-rmssd': {
+    id: 'heart-rate-variability-rmssd',
+    profile: 'grove-mobile-heart-rate-variability-rmssd',
+    standardProfile: null,
+    title: 'Heart Rate Variability RMSSD',
+    description:
+      'The root mean square of successive differences between NN (R-R) intervals, normalized to UCUM milliseconds. RMSSD is never relabeled as SDNN; the two HRV statistics remain separate measurements.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'heart-rate-variability-rmssd',
+      display: 'Heart rate variability RMSSD',
+      definition:
+        'The root mean square of successive differences between adjacent NN intervals at the Observation effective instant.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ms',
+      unit: 'ms',
+      dimension: {
+        s: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'heart-rate-variability-sdnn': {
+    id: 'heart-rate-variability-sdnn',
+    profile: 'grove-mobile-heart-rate-variability-sdnn',
+    standardProfile: null,
+    title: 'Heart Rate Variability SDNN',
+    description:
+      'Standard deviation of NN (normal-to-normal R-R) intervals over the source measurement window, normalized to UCUM milliseconds. SDNN is not interchangeable with RMSSD; the two statistics are distinct measurements and never merge.',
+    code: {
+      system: 'http://loinc.org',
+      code: '112429-6',
+      display: 'Heart rate variability SDNN [Time]',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'ms',
+      unit: 'ms',
+      dimension: {
+        s: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'intermenstrual-bleeding': {
+    id: 'intermenstrual-bleeding',
+    profile: 'grove-mobile-intermenstrual-bleeding',
+    standardProfile: null,
+    title: 'Intermenstrual Bleeding',
+    description:
+      'A logged intermenstrual (spotting) bleeding event; the fixed result states presence.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'intermenstrual-bleeding',
+      display: 'Intermenstrual bleeding',
+      definition: 'An observed bleeding event between menstrual periods.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-intermenstrual-bleeding',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-intermenstrual-bleeding',
+    allowedValues: ['present'],
+    resultCodes: [
+      {
+        code: 'present',
+        display: 'Present',
+        definition: 'Intermenstrual bleeding was observed.',
+      },
+    ],
+    effective: 'dateTime',
+  },
+  'lean-body-mass': {
+    id: 'lean-body-mass',
+    profile: 'grove-mobile-lean-body-mass',
+    standardProfile: null,
+    title: 'Lean Body Mass',
+    description:
+      'A source-neutral lean body mass normalized to UCUM kilograms. Consumer bioimpedance sources report fat-free mass under this label; the lean-body-mass versus fat-free-mass distinction (essential fat) is not recoverable from any source, so Withings fat-free mass joins this measurement with that caveat rather than forming a separate concept.',
+    code: {
+      system: 'http://loinc.org',
+      code: '91557-9',
+      display: 'Lean body weight',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'kg',
+      unit: 'kg',
+      dimension: {
+        g: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'light-sleep-duration': {
+    id: 'light-sleep-duration',
+    profile: 'grove-mobile-light-sleep-duration',
+    standardProfile: null,
+    title: 'Light Sleep Duration',
+    description:
+      'Total time classified as light sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '93830-8',
+      display: 'Light sleep duration',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'min',
+      unit: 'min',
+      dimension: {
+        s: 1,
+      },
+    },
+    method: {
+      code: 'session-total',
+      display: 'Session total',
+    },
+    effective: 'Period',
+  },
+  'menstruation-flow': {
+    id: 'menstruation-flow',
+    profile: 'grove-mobile-menstruation-flow',
+    standardProfile: null,
+    title: 'Menstruation Flow',
+    description:
+      'The observed menstrual flow classification, with the exact platform value retained as a secondary coding. The HealthKit iOS 18 vaginal-bleeding replacement uses the identical case set.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'menstruation-flow',
+      display: 'Menstruation flow',
+      definition:
+        'The observed menstrual flow classification at the stated instant.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-menstruation-flow',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-menstruation-flow',
+    allowedValues: ['unspecified', 'light', 'medium', 'heavy', 'none'],
+    resultCodes: [
+      {
+        code: 'unspecified',
+        display: 'Unspecified',
+        definition: 'Flow was recorded without an amount.',
+      },
+      {
+        code: 'light',
+        display: 'Light',
+        definition: 'Light flow.',
+      },
+      {
+        code: 'medium',
+        display: 'Medium',
+        definition: 'Medium flow.',
+      },
+      {
+        code: 'heavy',
+        display: 'Heavy',
+        definition: 'Heavy flow.',
+      },
+      {
+        code: 'none',
+        display: 'None',
+        definition: 'No flow was observed; recorded only by HealthKit.',
+      },
+    ],
+    effective: 'dateTime',
+  },
+  'mindfulness-session': {
+    id: 'mindfulness-session',
+    profile: 'grove-mobile-mindfulness-session',
+    standardProfile: null,
+    title: 'Mindfulness Session',
+    description:
+      'The duration of one mindfulness session over its exact effective Period, normalized to UCUM minutes. Source session subtype (meditation, breathing, etc.) is adapter context and does not alter the normalized duration.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'mindfulness-session-duration',
+      display: 'Mindfulness session duration',
+      definition:
+        'The duration of a single mindfulness session covering the exact Observation effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'min',
+      unit: 'min',
+      dimension: {
+        s: 1,
+      },
+    },
+    effective: 'Period',
+  },
+  'ovulation-test-result': {
+    id: 'ovulation-test-result',
+    profile: 'grove-mobile-ovulation-test-result',
+    standardProfile: null,
+    title: 'Ovulation Test Result',
+    description:
+      "The result of a home ovulation test, with the exact platform value retained as a secondary coding. HealthKit's estrogen-surge case widens to high-fertility with the source coding preserving the distinction.",
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'ovulation-test-result',
+      display: 'Ovulation test result',
+      definition: 'The classified result of a home ovulation test.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-ovulation-test-result',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-ovulation-test-result',
+    allowedValues: [
+      'negative',
+      'high-fertility',
+      'luteinizing-hormone-surge',
+      'indeterminate',
+    ],
+    resultCodes: [
+      {
+        code: 'negative',
+        display: 'Negative',
+        definition: 'No fertility surge detected.',
+      },
+      {
+        code: 'high-fertility',
+        display: 'High fertility',
+        definition:
+          'An elevated fertility indicator short of a confirmed LH surge.',
+      },
+      {
+        code: 'luteinizing-hormone-surge',
+        display: 'Luteinizing hormone surge',
+        definition: 'A confirmed luteinizing hormone surge.',
+      },
+      {
+        code: 'indeterminate',
+        display: 'Indeterminate',
+        definition: 'The test could not be interpreted.',
+      },
+    ],
+    effective: 'dateTime',
+  },
   'oxygen-saturation': {
     id: 'oxygen-saturation',
     profile: 'grove-mobile-oxygen-saturation',
@@ -322,6 +1908,86 @@ const sharedMobileMeasurementCatalogValue = {
       dimension: {},
     },
     effective: 'dateTime',
+  },
+  'oxygen-saturation-daily-average': {
+    id: 'oxygen-saturation-daily-average',
+    profile: 'grove-mobile-oxygen-saturation-daily-average',
+    standardProfile: null,
+    title: 'Oxygen Saturation Daily Average',
+    description:
+      'The mean oxygen saturation over a civil-date effective Period, normalized to UCUM percent. It is distinct from the point-in-time shared oxygen-saturation measurement and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '103209-3',
+      display: 'Mean oxygen saturation',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '%',
+      unit: '%',
+      dimension: {},
+    },
+    method: {
+      code: 'daily-mean',
+      display: 'Daily mean',
+    },
+    effective: 'Period',
+  },
+  power: {
+    id: 'power',
+    profile: 'grove-mobile-power',
+    standardProfile: null,
+    title: 'Power',
+    description:
+      'A source-neutral instantaneous mechanical power output sample recorded during activity, normalized to UCUM watts. The activity binding (running, cycling) is carried by source context and workout session linkage, not by the code. It is distinct from the cycling functional threshold power estimate, which is a derived capacity value rather than an instantaneous sample.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'power',
+      display: 'Power',
+      definition:
+        'The mechanical power the subject produces at the exact Observation effective instant, recorded during activity.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'W',
+      unit: 'W',
+      dimension: {
+        g: 1,
+        m: 2,
+        s: -3,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'rem-sleep-duration': {
+    id: 'rem-sleep-duration',
+    profile: 'grove-mobile-rem-sleep-duration',
+    standardProfile: null,
+    title: 'REM Sleep Duration',
+    description:
+      'Total time classified as REM sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '93829-0',
+      display: 'REM sleep duration',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'min',
+      unit: 'min',
+      dimension: {
+        s: 1,
+      },
+    },
+    method: {
+      code: 'session-total',
+      display: 'Session total',
+    },
+    effective: 'Period',
   },
   'respiratory-rate': {
     id: 'respiratory-rate',
@@ -344,6 +2010,148 @@ const sharedMobileMeasurementCatalogValue = {
       },
     },
     effective: 'dateTime',
+  },
+  'respiratory-rate-average': {
+    id: 'respiratory-rate-average',
+    profile: 'grove-mobile-respiratory-rate-average',
+    standardProfile: null,
+    title: 'Respiratory Rate Average',
+    description:
+      'The mean respiratory rate over a windowed effective Period, normalized to UCUM breaths per minute; current source windows are a civil date (Google) and a sleep session (Oura, Withings), and the window is carried entirely by the effectivePeriod. It is distinct from the point-in-time shared respiratory-rate measurement and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '103217-6',
+      display: 'Mean respiratory rate',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '/min',
+      unit: 'breaths/minute',
+      dimension: {
+        s: -1,
+      },
+    },
+    methodChoice: ['daily-mean', 'session-mean'],
+    effective: 'Period',
+  },
+  'resting-heart-rate': {
+    id: 'resting-heart-rate',
+    profile: 'grove-mobile-resting-heart-rate',
+    standardProfile: null,
+    title: 'Resting Heart Rate',
+    description:
+      'A windowed estimate of the heart rate while at rest, normalized to UCUM beats per minute over the exact estimation window. It is semantically distinct from the shared point heart-rate measurement and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '40443-4',
+      display: 'Heart rate --resting',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '/min',
+      unit: 'beats/minute',
+      dimension: {
+        s: -1,
+      },
+    },
+    method: {
+      code: 'daily-mean',
+      display: 'Daily mean',
+    },
+    effective: 'Period',
+  },
+  'sexual-activity': {
+    id: 'sexual-activity',
+    profile: 'grove-mobile-sexual-activity',
+    standardProfile: null,
+    title: 'Sexual Activity',
+    description:
+      'A logged sexual-activity event whose result states whether protection was used, with the exact platform value retained where a platform enum exists.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'sexual-activity',
+      display: 'Sexual activity',
+      definition:
+        'A logged sexual-activity event with its protection-used classification.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-sexual-activity',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-sexual-activity',
+    allowedValues: ['protected', 'unprotected', 'unknown'],
+    resultCodes: [
+      {
+        code: 'protected',
+        display: 'Protection used',
+        definition: 'Protection was reported used.',
+      },
+      {
+        code: 'unprotected',
+        display: 'Protection not used',
+        definition: 'Protection was reported not used.',
+      },
+      {
+        code: 'unknown',
+        display: 'Unknown',
+        definition: 'Protection use was not reported.',
+      },
+    ],
+    effective: 'dateTime',
+  },
+  'skin-temperature': {
+    id: 'skin-temperature',
+    profile: 'grove-mobile-skin-temperature',
+    standardProfile: null,
+    title: 'Skin Temperature',
+    description:
+      'A source-neutral skin (body surface) temperature normalized to UCUM degrees Celsius and carrying a body-site coding (wrist for Apple sleeping wrist temperature; the Health Connect measurement location when present). It is deliberately distinct from the core body-temperature vital sign and is never relabeled as it.',
+    code: {
+      system: 'http://loinc.org',
+      code: '61008-9',
+      display: 'Body surface temperature',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'Cel',
+      unit: 'Cel',
+      dimension: {
+        K: 1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'sleep-awake-duration': {
+    id: 'sleep-awake-duration',
+    profile: 'grove-mobile-sleep-awake-duration',
+    standardProfile: null,
+    title: 'Awake Duration During Sleep',
+    description:
+      'Total time awake within one sleep session or civil-day sleep summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is implemented by the phase-2 aggregate design.',
+    code: {
+      system: 'http://loinc.org',
+      code: '93828-2',
+      display: 'Nighttime awakening duration',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'min',
+      unit: 'min',
+      dimension: {
+        s: 1,
+      },
+    },
+    method: {
+      code: 'session-total',
+      display: 'Session total',
+    },
+    effective: 'Period',
   },
   'sleep-duration': {
     id: 'sleep-duration',
@@ -368,6 +2176,33 @@ const sharedMobileMeasurementCatalogValue = {
     effective: 'Period',
     hasMember: ['sleep-stage'],
   },
+  'sleep-heart-rate': {
+    id: 'sleep-heart-rate',
+    profile: 'grove-mobile-sleep-heart-rate',
+    standardProfile: null,
+    title: 'Sleep Heart Rate',
+    description:
+      "A heart-rate statistic computed over one sleep session (Oura reports the session minimum, Withings the session mean), normalized to UCUM beats per minute over the exact session Period. The statistic is carried by the aggregate design's fixed method coding, never collapsed into the shared point heart-rate measurement.",
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'sleep-heart-rate',
+      display: 'Sleep heart rate',
+      definition:
+        'A heart-rate statistic aggregated over the exact sleep-session effective Period.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '/min',
+      unit: 'beats/minute',
+      dimension: {
+        s: -1,
+      },
+    },
+    methodChoice: ['session-mean', 'session-minimum'],
+    effective: 'Period',
+  },
   'sleep-stage': {
     id: 'sleep-stage',
     profile: 'grove-mobile-sleep-stage',
@@ -379,6 +2214,9 @@ const sharedMobileMeasurementCatalogValue = {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'sleep-stage',
+      display: 'Sleep stage',
+      definition:
+        'The classification assigned to an exact interval within a sleep session.',
     },
     valueKind: 'codeableConcept',
     quantity: null,
@@ -398,6 +2236,33 @@ const sharedMobileMeasurementCatalogValue = {
     ],
     effective: 'Period',
   },
+  speed: {
+    id: 'speed',
+    profile: 'grove-mobile-speed',
+    standardProfile: null,
+    title: 'Speed',
+    description:
+      'A source-neutral instantaneous speed sample recorded during activity, normalized to UCUM metres per second. The activity binding (running, cycling, skiing, paddling, rowing) is carried by source context and workout session linkage, not by the code, mirroring the shipped generic distance measurement. It is distinct from walking speed and the stair speeds, whose gait-health bindings are part of those concepts.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'speed',
+      display: 'Speed',
+      definition:
+        "The subject's instantaneous speed of travel at the exact Observation effective instant, recorded during activity.",
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'm/s',
+      unit: 'm/s',
+      dimension: {
+        m: 1,
+        s: -1,
+      },
+    },
+    effective: 'dateTime',
+  },
   'step-count': {
     id: 'step-count',
     profile: 'grove-mobile-step-count',
@@ -409,6 +2274,9 @@ const sharedMobileMeasurementCatalogValue = {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
       code: 'step-count-total',
+      display: 'Step count total',
+      definition:
+        'The total number of steps attributed to the exact Observation effective Period.',
     },
     valueKind: 'quantity',
     quantity: {
@@ -424,6 +2292,392 @@ const sharedMobileMeasurementCatalogValue = {
       'grove-step-count-period-1',
       'grove-step-count-value-1',
     ],
+  },
+  'vo2-max': {
+    id: 'vo2-max',
+    profile: 'grove-mobile-vo2-max',
+    standardProfile: null,
+    title: 'VO2 Max',
+    description:
+      'The maximal oxygen consumption per body mass, normalized to UCUM millilitres per kilogram per minute. Sources deliver estimated or test-derived maxima; the estimation method is adapter context and does not alter the normalized value.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'vo2-max',
+      display: 'VO2 max',
+      definition:
+        'The maximal oxygen consumption per kilogram of body mass, whether measured or estimated, reported at the Observation effective instant.',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: 'mL/kg/min',
+      unit: 'mL/kg/min',
+      dimension: {
+        g: -1,
+        m: 3,
+        s: -1,
+      },
+    },
+    effective: 'dateTime',
+  },
+  'wheelchair-push-count': {
+    id: 'wheelchair-push-count',
+    profile: 'grove-mobile-wheelchair-push-count',
+    standardProfile: null,
+    title: 'Wheelchair Push Count',
+    description:
+      'The number of wheelchair pushes recorded during an exact effective Period, using LOINC Number of wheelchair pushes per time period and normalized to the UCUM annotation {pushes}. It is the wheelchair analogue of step-count and never substitutes for it.',
+    code: {
+      system: 'http://loinc.org',
+      code: '96502-0',
+      display: 'Number of wheelchair pushes per time period',
+    },
+    valueKind: 'quantity',
+    quantity: {
+      system: 'http://unitsofmeasure.org',
+      code: '{pushes}',
+      unit: 'pushes',
+      dimension: {},
+    },
+    effective: 'Period',
+  },
+  workout: {
+    id: 'workout',
+    profile: 'grove-mobile-workout',
+    standardProfile: null,
+    title: 'Workout',
+    description:
+      'One recorded workout session: the shared activity classification as the result, the exact session bounds as the effective Period, and optional per-session statistics as components. The exact platform activity token is retained as a secondary coding; segments and laps are linked child Observations, so no session information is dropped.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'workout',
+      display: 'Workout session',
+      definition:
+        'One recorded workout session over the exact Observation effective Period.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-workout-activity',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-activity',
+    allowedValues: [
+      'running',
+      'walking',
+      'cycling',
+      'hiking',
+      'swimming',
+      'strength-training',
+      'high-intensity-interval-training',
+      'yoga',
+      'pilates',
+      'rowing',
+      'elliptical',
+      'stair-climbing',
+      'dancing',
+      'tennis',
+      'table-tennis',
+      'badminton',
+      'squash',
+      'basketball',
+      'soccer',
+      'american-football',
+      'baseball',
+      'volleyball',
+      'golf',
+      'boxing',
+      'martial-arts',
+      'skiing',
+      'snowboarding',
+      'other',
+    ],
+    components: [
+      {
+        id: 'active-duration',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'active-duration',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 's',
+          unit: 's',
+          dimension: {
+            s: 1,
+          },
+        },
+      },
+      {
+        id: 'distance-sum',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'distance-sum',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 'm',
+          unit: 'm',
+          dimension: {
+            m: 1,
+          },
+        },
+      },
+      {
+        id: 'active-energy-sum',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'active-energy-sum',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 'kcal',
+          unit: 'kcal',
+          dimension: {
+            g: 1,
+            m: 2,
+            s: -2,
+          },
+        },
+      },
+      {
+        id: 'heart-rate-avg',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'heart-rate-avg',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '/min',
+          unit: '/min',
+          dimension: {
+            s: -1,
+          },
+        },
+      },
+      {
+        id: 'heart-rate-max',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'heart-rate-max',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '/min',
+          unit: '/min',
+          dimension: {
+            s: -1,
+          },
+        },
+      },
+      {
+        id: 'heart-rate-min',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'heart-rate-min',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '/min',
+          unit: '/min',
+          dimension: {
+            s: -1,
+          },
+        },
+      },
+      {
+        id: 'step-count-sum',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'step-count-sum',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{steps}',
+          unit: '{steps}',
+          dimension: {},
+        },
+      },
+      {
+        id: 'elevation-gain',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'elevation-gain',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 'm',
+          unit: 'm',
+          dimension: {
+            m: 1,
+          },
+        },
+      },
+      {
+        id: 'flights-climbed-sum',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'flights-climbed-sum',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{flights}',
+          unit: '{flights}',
+          dimension: {},
+        },
+      },
+      {
+        id: 'speed-avg',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'speed-avg',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 'm/s',
+          unit: 'm/s',
+          dimension: {
+            m: 1,
+            s: -1,
+          },
+        },
+      },
+      {
+        id: 'swimming-stroke-count-sum',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'swimming-stroke-count-sum',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{strokes}',
+          unit: '{strokes}',
+          dimension: {},
+        },
+      },
+      {
+        id: 'pool-lap-count',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'pool-lap-count',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{laps}',
+          unit: '{laps}',
+          dimension: {},
+        },
+      },
+    ],
+    hasMember: ['workout-segment'],
+    effective: 'Period',
+  },
+  'workout-segment': {
+    id: 'workout-segment',
+    profile: 'grove-mobile-workout-segment',
+    standardProfile: null,
+    title: 'Workout Segment',
+    description:
+      'One segment, lap, pause, marker, or event within a workout session, linked from the parent workout through hasMember. The value is the segment classification — an activity code or a structural code — with the exact platform token retained; per-segment statistics ride the open component slicing.',
+    code: {
+      system:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
+      code: 'workout-segment',
+      display: 'Workout segment',
+      definition: 'One classified interval or event within a workout session.',
+    },
+    valueKind: 'codeableConcept',
+    quantity: null,
+    valueSet:
+      'https://grovealliance.org/fhir/mobile/ValueSet/grove-workout-segment-type',
+    resultCodeSystem:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-segment-type',
+    allowedValues: [
+      'lap',
+      'pause',
+      'resume',
+      'motion-paused',
+      'motion-resumed',
+      'pause-or-resume-request',
+      'marker',
+      'segment-generic',
+      'rest',
+      'other-workout',
+      'unknown',
+    ],
+    components: [
+      {
+        id: 'repetitions',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'repetitions',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{count}',
+          unit: 'repetitions',
+          dimension: {},
+        },
+      },
+      {
+        id: 'set-weight',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'set-weight',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 'kg',
+          unit: 'kg',
+          dimension: {
+            g: 1,
+          },
+        },
+      },
+      {
+        id: 'set-index',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'set-index',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{count}',
+          unit: 'set index',
+          dimension: {},
+        },
+      },
+      {
+        id: 'rating-of-perceived-exertion',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'rating-of-perceived-exertion',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: '{score}',
+          unit: 'RPE 0-10',
+          dimension: {},
+        },
+      },
+      {
+        id: 'lap-length',
+        system:
+          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-workout-statistic',
+        code: 'lap-length',
+        cardinality: '0..1',
+        quantity: {
+          system: 'http://unitsofmeasure.org',
+          code: 'm',
+          unit: 'm',
+          dimension: {
+            m: 1,
+          },
+        },
+      },
+    ],
+    effective: 'Period',
   },
 } as const
 

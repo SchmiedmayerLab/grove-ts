@@ -28,6 +28,8 @@ describe('public entry-point boundaries', () => {
     expect(JSON.stringify(mobile.sharedMobileMeasurementCatalog)).not.toMatch(
       /healthkit|health-connect|sensorkit|google-health-api|oura|withings|sourceTokens/u,
     )
+    expect('adapterMeasurementCatalog' in root).toBe(false)
+    expect('adapterMeasurementCatalog' in mobile).toBe(false)
     expect('PROFILES' in provenance).toBe(false)
     expect('SYSTEMS' in provenance).toBe(false)
 
@@ -70,6 +72,22 @@ describe('public entry-point boundaries', () => {
 
     expectTypeOf(root.groveFhirVersion).toEqualTypeOf<'4.0.1'>()
     expectTypeOf(root.groveFhirContractVersion).toEqualTypeOf<'0.2.0'>()
+  })
+
+  it('exposes owner-exclusive measurements only from the Provider contract', () => {
+    expect(Object.keys(provider.adapterMeasurementCatalog)).toEqual([
+      'healthkit',
+      'health-connect',
+      'providers',
+    ])
+    const standHour =
+      provider.adapterMeasurementCatalog.healthkit['apple-stand-hour']
+    expect(standHour.owner).toBe('healthkit')
+    expect(standHour.allowedValues).toEqual(['stood', 'idle'])
+    expect(standHour).not.toHaveProperty('coverage')
+    expect(standHour).not.toHaveProperty('generation')
+    expect(Object.isFrozen(provider.adapterMeasurementCatalog)).toBe(true)
+    expect(Object.isFrozen(standHour)).toBe(true)
   })
 
   it('deeply freezes every generated contract read by public builders', () => {

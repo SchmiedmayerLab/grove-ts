@@ -48,6 +48,10 @@ const outputPaths = {
   provider: resolve(packageRoot, 'src/providers/contract.generated.ts'),
 }
 
+const adapterOwners = ['healthkit', 'health-connect', 'sensorkit', 'providers']
+const isMobileOwned = (measurement) =>
+  measurement.owner === undefined || measurement.owner === 'mobile'
+
 const catalog = JSON.parse(await readFile(inputPath, 'utf8'))
 const packageGraph = JSON.parse(await readFile(packageGraphPath, 'utf8'))
 const exchangeIdentity = JSON.parse(
@@ -75,12 +79,13 @@ if (!Array.isArray(measurements) || measurements.length === 0) {
   throw new Error('Measurement catalog must contain measurements.')
 }
 
+const mobileMeasurements = measurements.filter(isMobileOwned)
 if (
   semanticCorpus.schemaVersion !== 1 ||
   semanticCorpus.fhirVersion !== '4.0.1' ||
   semanticCorpus.version !== catalog.version ||
   !Array.isArray(semanticCorpus.vectors) ||
-  semanticCorpus.vectors.length !== measurements.length
+  semanticCorpus.vectors.length !== mobileMeasurements.length
 ) {
   throw new Error(
     'Mobile semantic corpus must contain one R4 vector per shared measurement.',
@@ -89,7 +94,7 @@ if (
 const semanticVectorIds = semanticCorpus.vectors.map((vector) => vector.id)
 if (
   new Set(semanticVectorIds).size !== semanticVectorIds.length ||
-  measurements.some(
+  mobileMeasurements.some(
     (measurement) =>
       !semanticCorpus.vectors.some(
         (vector) =>
@@ -157,20 +162,51 @@ for (const measurement of measurements) {
     }
   }
   if (
-    measurement.quantity === null &&
-    !['blood-pressure', 'sleep-stage'].includes(measurement.id)
+    measurement.owner !== undefined &&
+    !adapterOwners.includes(measurement.owner)
   ) {
     throw new Error(
-      `Normative measurement ${measurement.id} requires a quantity definition.`,
+      `Normative measurement ${measurement.id} declares unknown owner ${String(measurement.owner)}.`,
+    )
+  }
+  if (measurement.valueKind === 'quantity') {
+    if (measurement.quantity === null) {
+      throw new Error(
+        `Normative measurement ${measurement.id} requires a quantity definition.`,
+      )
+    }
+  } else if (measurement.valueKind === 'codeableConcept') {
+    if (
+      measurement.quantity !== null ||
+      typeof measurement.resultCodeSystem !== 'string' ||
+      typeof measurement.valueSet !== 'string' ||
+      !Array.isArray(measurement.allowedValues) ||
+      measurement.allowedValues.length === 0
+    ) {
+      throw new Error(
+        `Normative measurement ${measurement.id} requires a closed coded-result contract.`,
+      )
+    }
+  } else if (
+    measurement.valueKind !== 'components' ||
+    measurement.quantity !== null
+  ) {
+    throw new Error(
+      `Normative measurement ${measurement.id} declares unknown value kind ${String(measurement.valueKind)}.`,
     )
   }
 
   const supportedSources = Object.values(measurement.coverage).filter(
     (status) => status === 'supported',
   )
-  if (supportedSources.length < 2) {
+  if (isMobileOwned(measurement) && supportedSources.length < 2) {
     throw new Error(
       `Shared Mobile measurement ${measurement.id} requires at least two evidenced supported sources.`,
+    )
+  }
+  if (supportedSources.length === 0) {
+    throw new Error(
+      `Normative measurement ${measurement.id} requires at least one evidenced supported source.`,
     )
   }
 }
@@ -739,10 +775,14 @@ if (
   providerIdentity.output?.outputDiscriminatorRule?.mappedStandardRaw !==
     'native-recording' ||
   providerIdentity.output?.outputDiscriminatorRule?.noFallback !== true ||
-  providerIdentity.vectors?.length !== 5 ||
+  providerIdentity.vectors?.length !== 8 ||
   providerIdentity.vectors.filter((vector) => vector.role === 'sourceRecord')
     .length !== 3 ||
   providerIdentity.vectors.filter((vector) => vector.role === 'output')
+    .length !== 2 ||
+  providerIdentity.vectors.filter((vector) => vector.role === 'conversion')
+    .length !== 1 ||
+  providerIdentity.vectors.filter((vector) => vector.role === 'exchange')
     .length !== 2 ||
   providerIdentity.conversion?.system !==
     'https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id' ||
@@ -755,6 +795,13 @@ if (
 const providerAdmittedMeasurements = new Set(
   Object.values(providerScalarMappings).flatMap((sourceMappings) =>
     Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
+  ),
+)
+// The Provider facade emits shared Mobile profiles only; owner-exclusive
+// mappings stay in the contract data but are outside the implemented surface.
+const sharedAdmittedMeasurements = new Set(
+  [...providerAdmittedMeasurements].filter((id) =>
+    isMobileOwned(implemented[id]),
   ),
 )
 for (const row of healthKitAdapter.rows) {
@@ -829,7 +876,7 @@ if (
 }
 if (
   !Array.isArray(implementedCapabilities) ||
-  implementedCapabilities.length !== providerAdmittedMeasurements.size
+  implementedCapabilities.length !== sharedAdmittedMeasurements.size
 ) {
   throw new Error(
     'Capability matrix implemented rows must exactly match the Provider facade.',
@@ -891,7 +938,19 @@ for (const normative of measurements) {
   const capability = capabilities.measurements.find(
     (entry) => entry.key === normative.id,
   )
-  const admitted = providerAdmittedMeasurements.has(normative.id)
+  if (!isMobileOwned(normative)) {
+    if (
+      capability !== undefined &&
+      (capability.status !== 'platform-exclusive' ||
+        capability.profile !== normative.profile)
+    ) {
+      throw new Error(
+        `Owner-exclusive capability ${normative.id} must stay outside the shared facade.`,
+      )
+    }
+    continue
+  }
+  const admitted = sharedAdmittedMeasurements.has(normative.id)
   if (
     capability === undefined ||
     capability.status !==
@@ -905,9 +964,32 @@ for (const normative of measurements) {
     !Array.isArray(capability.sources)
   ) {
     throw new Error(
-      `Implemented capability ${String(capability.key)} does not match the shared IG catalog.`,
+      `Implemented capability ${String(capability?.key ?? normative.id)} does not match the shared IG catalog.`,
     )
   }
+}
+
+const semanticDefinition = (definition) => {
+  const semantic = { ...definition }
+  delete semantic.coverage
+  delete semantic.coverageDetails
+  delete semantic.generation
+  return semantic
+}
+
+const sharedMobileSemanticCatalog = Object.fromEntries(
+  mobileMeasurements.map((measurement) => [
+    measurement.id,
+    semanticDefinition(measurement),
+  ]),
+)
+
+const adapterMeasurementCatalog = {}
+for (const measurement of measurements) {
+  if (isMobileOwned(measurement)) continue
+  adapterMeasurementCatalog[measurement.owner] ??= {}
+  adapterMeasurementCatalog[measurement.owner][measurement.id] =
+    semanticDefinition(measurement)
 }
 
 const generated = {
@@ -930,17 +1012,8 @@ const generated = {
   questionnaireProfiles,
   providerProfiles,
   providerPackageCanonicals,
+  adapterMeasurementCatalog,
 }
-
-const sharedMobileSemanticCatalog = Object.fromEntries(
-  Object.entries(implemented).map(([id, definition]) => {
-    const semantic = { ...definition }
-    delete semantic.coverage
-    delete semantic.coverageDetails
-    delete semantic.generation
-    return [id, semantic]
-  }),
-)
 
 for (const value of Object.values(generated)) {
   if (value === undefined) {
@@ -996,7 +1069,7 @@ ${frozenExport('groveQuestionnairePackageMetadata', questionnairePackageMetadata
 ${frozenExport('groveQuestionnaireProfileCanonicals', questionnaireProfiles)}
 `
 
-const providerUnformattedOutput = `${header(false)}${versions}
+const providerUnformattedOutput = `${header(true)}${versions}
 
 ${frozenExport('groveProviderPackageMetadata', providerPackageMetadata)}
 
@@ -1006,11 +1079,15 @@ ${frozenExport('groveProviderProfileCanonicals', providerProfiles)}
 
 ${frozenExport('providerAdapterCatalog', providerAdapter)}
 
+${frozenExport('adapterMeasurementCatalog', adapterMeasurementCatalog)}
+
 ${frozenExport('providerScalarMappings', providerScalarMappings)}
 
 ${frozenExport('providerRecordEffectiveRules', providerRecordEffectiveRules)}
 
 ${frozenExport('providerRawMappings', providerRawMappings)}
+
+export type AdapterMeasurementCatalog = typeof adapterMeasurementCatalog
 
 export type ProviderScalarMappings = typeof providerScalarMappings
 

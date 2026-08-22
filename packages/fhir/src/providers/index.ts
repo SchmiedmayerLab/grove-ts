@@ -8,6 +8,7 @@
 
 export { buildProviderMeasurementBundle } from './builder.js'
 export {
+  adapterMeasurementCatalog,
   providerAdapterCatalog,
   providerRawMappings,
   providerRecordEffectiveRules,
@@ -15,6 +16,7 @@ export {
   groveProviderPackageMetadata,
   groveFhirContractVersion,
   groveFhirVersion,
+  type AdapterMeasurementCatalog,
   type ProviderRawMappings,
   type ProviderRecordEffectiveRules,
   type ProviderScalarMappings,

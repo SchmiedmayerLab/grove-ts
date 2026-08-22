@@ -35,6 +35,7 @@ import {
 } from '../src/mobile/index.js'
 import { deriveProviderIdentities } from '../src/providers/identity.js'
 import {
+  adapterMeasurementCatalog,
   buildProviderMeasurementBundle,
   providerRecordEffectiveRules,
   providerScalarMappings,
@@ -264,9 +265,33 @@ describe('Provider R4 graph builder', () => {
   )
 
   it('builds every exact provider/source/measurement mapping in the generated catalog', () => {
-    const examples = new Map<MobileMeasurement['kind'], MobileMeasurement>(
-      scalarCases.map(({ measurement }) => [measurement.kind, measurement]),
+    const ownerExclusiveKinds = new Set(
+      Object.values(adapterMeasurementCatalog).flatMap((catalog) =>
+        Object.keys(catalog),
+      ),
     )
+    const exampleMeasurement = (
+      kind: string,
+    ): MobileMeasurement | undefined => {
+      if (!Object.hasOwn(sharedMobileMeasurementCatalog, kind)) return undefined
+      if (kind === 'blood-pressure') return bloodPressureMeasurement
+      if (kind === 'sleep-stage') {
+        return {
+          kind: 'sleep-stage',
+          stage: 'light',
+          effective: { kind: 'period', start, end },
+        }
+      }
+      const definition =
+        sharedMobileMeasurementCatalog[kind as MobileMeasurement['kind']]
+      const effective =
+        definition.effective === 'Period' ?
+          ({ kind: 'period', start, end } as const)
+        : ({ kind: 'date-time', value: dateTime } as const)
+      const value =
+        'allowedValues' in definition ? definition.allowedValues[0] : 72
+      return { kind, value, effective } as MobileMeasurement
+    }
     const exhaustiveMappings = providerScalarMappings as Readonly<
       Record<
         ConnectedProvider,
@@ -279,11 +304,12 @@ describe('Provider R4 graph builder', () => {
     )) {
       for (const [sourceType, mappings] of Object.entries(sourceMappings)) {
         for (const measurementKind of Object.keys(mappings)) {
-          const measurement = examples.get(
-            measurementKind as MobileMeasurement['kind'],
-          )
-          expect(measurement).toBeDefined()
-          if (measurement === undefined) continue
+          const measurement = exampleMeasurement(measurementKind)
+          if (measurement === undefined) {
+            // Owner-exclusive mappings stay contract data outside the facade.
+            expect(ownerExclusiveKinds.has(measurementKind)).toBe(true)
+            continue
+          }
           const effectiveRule = (
             providerRecordEffectiveRules as Readonly<
               Record<string, Readonly<Record<string, unknown>> | undefined>

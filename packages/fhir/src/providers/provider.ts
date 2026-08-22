@@ -34,9 +34,18 @@ import {
   type Issue,
   type Result,
 } from '../core/index.js'
-import { sharedMobileMeasurementCatalog } from '../mobile/measurement-catalog.generated.js'
+import {
+  sharedMobileMeasurementCatalog,
+  type SharedMobileMeasurementKind,
+} from '../mobile/measurement-catalog.generated.js'
 import { canonicalizeMobileEffectiveInstant } from '../mobile/time.js'
-import type { MobileMeasurement } from '../mobile/types.js'
+import type {
+  InstantCodedMeasurementKind,
+  InstantQuantityMeasurementKind,
+  MobileMeasurement,
+  PeriodCodedMeasurementKind,
+  PeriodQuantityMeasurementKind,
+} from '../mobile/types.js'
 
 const primitiveInstantSchemaValue = z
   .string()
@@ -171,23 +180,61 @@ const periodEffectiveSchema = z
     { message: 'A measurement Period must end after it starts.' },
   )
 
+const measurementKindsWhere = <Kind extends SharedMobileMeasurementKind>(
+  valueKind: 'codeableConcept' | 'quantity',
+  effective: 'Period' | 'dateTime',
+  excluded?: SharedMobileMeasurementKind,
+): [Kind, ...Kind[]] =>
+  (
+    Object.keys(sharedMobileMeasurementCatalog) as SharedMobileMeasurementKind[]
+  ).filter((kind) => {
+    const definition = sharedMobileMeasurementCatalog[kind]
+    return (
+      definition.valueKind === valueKind &&
+      definition.effective === effective &&
+      kind !== excluded
+    )
+  }) as [Kind, ...Kind[]]
+
 const instantQuantityMeasurementSchema = z.strictObject({
-  kind: z.enum([
-    'basal-body-temperature',
-    'body-height',
-    'body-temperature',
-    'body-weight',
-    'heart-rate',
-    'oxygen-saturation',
-    'respiratory-rate',
-  ]),
+  kind: z.enum(
+    measurementKindsWhere<InstantQuantityMeasurementKind>(
+      'quantity',
+      'dateTime',
+    ),
+  ),
   value: z.number(),
   effective: instantEffectiveSchema,
 })
 
 const periodQuantityMeasurementSchema = z.strictObject({
-  kind: z.enum(['active-energy', 'distance', 'sleep-duration', 'step-count']),
+  kind: z.enum(
+    measurementKindsWhere<PeriodQuantityMeasurementKind>('quantity', 'Period'),
+  ),
   value: z.number().nonnegative(),
+  effective: periodEffectiveSchema,
+})
+
+const instantCodedMeasurementSchema = z.strictObject({
+  kind: z.enum(
+    measurementKindsWhere<InstantCodedMeasurementKind>(
+      'codeableConcept',
+      'dateTime',
+    ),
+  ),
+  value: nonBlankStringSchema,
+  effective: instantEffectiveSchema,
+})
+
+const periodCodedMeasurementSchema = z.strictObject({
+  kind: z.enum(
+    measurementKindsWhere<PeriodCodedMeasurementKind>(
+      'codeableConcept',
+      'Period',
+      'sleep-stage',
+    ),
+  ),
+  value: nonBlankStringSchema,
   effective: periodEffectiveSchema,
 })
 
@@ -214,6 +261,8 @@ const sleepStageMeasurementSchema = z.strictObject({
 const measurementSchema = z.discriminatedUnion('kind', [
   instantQuantityMeasurementSchema,
   periodQuantityMeasurementSchema,
+  instantCodedMeasurementSchema,
+  periodCodedMeasurementSchema,
   bloodPressureMeasurementSchema,
   sleepStageMeasurementSchema,
 ])
@@ -226,6 +275,7 @@ const refineMeasurement = (
   if (
     measurement.effective.kind === 'date-time' &&
     'value' in measurement &&
+    typeof measurement.value === 'number' &&
     measurement.kind !== 'oxygen-saturation' &&
     measurement.value <= 0
   ) {
@@ -234,6 +284,21 @@ const refineMeasurement = (
       path: [...path, 'value'],
       message: 'An instantaneous measurement value must be greater than zero.',
     })
+  }
+  if ('value' in measurement && typeof measurement.value === 'string') {
+    const definition = sharedMobileMeasurementCatalog[measurement.kind]
+    if (
+      !('allowedValues' in definition) ||
+      !(definition.allowedValues as readonly string[]).includes(
+        measurement.value,
+      )
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: [...path, 'value'],
+        message: `Expected a catalog-allowed coded result for ${measurement.kind}.`,
+      })
+    }
   }
   if (
     measurement.kind === 'oxygen-saturation' &&
