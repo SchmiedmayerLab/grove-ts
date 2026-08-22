@@ -7,7 +7,7 @@
   },
   "identifier": {
     "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id",
-    "value": "v1:a13bf7601a626b1cac638cf95d2f2fc705a101b7539a148dc769759d77c0a3ab"
+    "value": "v1:d2493d90eb032f2564357a8c590381352297782f462d9bee23766d008e410dfe"
   },
   "type": "collection",
   "timestamp": "2026-08-20T12:02:00Z",
@@ -174,11 +174,11 @@
           "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
           "valueIdentifier": {
             "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id",
-            "value": "v1:a13bf7601a626b1cac638cf95d2f2fc705a101b7539a148dc769759d77c0a3ab"
+            "value": "v1:d2493d90eb032f2564357a8c590381352297782f462d9bee23766d008e410dfe"
           }
         }
       ],
-      "fullUrl": "urn:uuid:b5059900-d826-5f5b-9731-94f4590a60e2",
+      "fullUrl": "urn:uuid:8f1c1d96-abaf-5950-ba8f-b161200fcfc5",
       "resource": {
         "resourceType": "Provenance",
         "meta": {

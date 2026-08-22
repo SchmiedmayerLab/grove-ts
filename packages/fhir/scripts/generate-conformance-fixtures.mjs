@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { Buffer } from 'node:buffer'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { argv, stdout } from 'node:process'
@@ -27,6 +28,7 @@ const {
   parsePatientReference,
   parsePositiveInteger,
   parseSemVer,
+  sharedMobileMeasurementCatalog,
 } = rootApi
 const {
   buildProviderRecordingBundle,
@@ -141,17 +143,20 @@ const dataOrigin = {
   ),
   name: 'Synthetic connected provider',
 }
+// Owner-exclusive scalar mappings stay outside the shared facade and the corpus.
 const admittedMeasurementIds = new Set(
-  Object.values(providerScalarMappings).flatMap((sourceMappings) =>
-    Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
-  ),
+  Object.values(providerScalarMappings)
+    .flatMap((sourceMappings) =>
+      Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
+    )
+    .filter((id) => Object.hasOwn(sharedMobileMeasurementCatalog, id)),
 )
 const semanticVectors = semanticCorpus.vectors.filter((vector) =>
   admittedMeasurementIds.has(vector.id),
 )
 if (semanticVectors.length !== admittedMeasurementIds.size) {
   throw new Error(
-    'The semantic corpus must bind every Provider scalar measurement exactly once.',
+    'The semantic corpus must bind every shared Provider scalar measurement exactly once.',
   )
 }
 
@@ -187,6 +192,9 @@ const measurementFromVector = (vector) => {
       diastolic: diastolic.value,
       effective,
     }
+  }
+  if (vector.result.type === 'CodeableConcept') {
+    return { kind: vector.id, value: vector.result.code, effective }
   }
   if (vector.result.type !== 'Quantity') {
     throw new Error(`Unsupported semantic result type: ${vector.id}`)
@@ -317,10 +325,13 @@ const recordingBundle = ({ provider, sourceType }, index) =>
       },
       attachment: {
         kind: 'embedded',
-        contentType: unwrap(parseMediaType('application/octet-stream')),
+        contentType: unwrap(parseMediaType('application/json')),
         title: 'Authorized minimized provider recording',
+        format: 'provider-json-1',
         payloadAssertion: 'caller-authorized-opaque-payload',
-        dataBase64: unwrap(encodeRecordingBytes(Uint8Array.of(1, 2, 3))),
+        dataBase64: unwrap(
+          encodeRecordingBytes(Buffer.from('{"synthetic":true}', 'utf8')),
+        ),
       },
       subject: unwrap(parsePatientReference('Patient/example')),
       application,

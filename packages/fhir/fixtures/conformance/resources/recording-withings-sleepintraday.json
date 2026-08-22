@@ -7,7 +7,7 @@
   },
   "identifier": {
     "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-exchange-id",
-    "value": "v1:8e61f18c765bf06e5a8f831a62057140d698f520cc4bdf12db8c056ebd1c3d83"
+    "value": "v1:820cbf9f455d2c545c1601ed2298f8a97577841e4e9d9778b75ebd84112cb40c"
   },
   "type": "collection",
   "timestamp": "2026-08-20T12:02:00Z",
@@ -61,11 +61,16 @@
         "content": [
           {
             "attachment": {
-              "contentType": "application/octet-stream",
-              "data": "AQID",
-              "size": 3,
-              "hash": "cDeAcZjCKn0rCAc3HXY3eahP388=",
+              "contentType": "application/json",
+              "data": "eyJzeW50aGV0aWMiOnRydWV9",
+              "size": 18,
+              "hash": "SHXPL1bWXRn+jEpR9Aw2zmx15qs=",
               "title": "Authorized minimized provider recording"
+            },
+            "format": {
+              "system": "https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format",
+              "code": "provider-json-1",
+              "display": "Provider JSON 1"
             }
           }
         ]
@@ -157,11 +162,11 @@
           "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
           "valueIdentifier": {
             "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-conversion-id",
-            "value": "v1:8e61f18c765bf06e5a8f831a62057140d698f520cc4bdf12db8c056ebd1c3d83"
+            "value": "v1:820cbf9f455d2c545c1601ed2298f8a97577841e4e9d9778b75ebd84112cb40c"
           }
         }
       ],
-      "fullUrl": "urn:uuid:244a3166-f194-5b2f-9af9-688b9b1f2569",
+      "fullUrl": "urn:uuid:7b253cc0-1a5c-5ba1-a47d-656a0cfda424",
       "resource": {
         "resourceType": "Provenance",
         "meta": {

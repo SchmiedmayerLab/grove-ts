@@ -41,20 +41,27 @@ The published JavaScript uses portable ES2022 and Web Platform APIs.
 
 ## Provider measurements
 
-The Grove Mobile 0.2 catalog defines 13 measurements whose semantics are shared
-by at least two evidenced sources. This Provider facade exposes a
-closed provider/source-token/measurement union for the 10 scalar measurements
-admitted by the frozen Google Health API, Oura, and Withings inventories. It
-includes point and period quantities plus composite blood pressure. Basal body
-temperature, respiratory rate, and sleep stage are shared profiles but are not
-constructible through this provider facade because the consumed Connected
-Health shapes do not meet their timing or result semantics. BMI reuses the
+The Grove Mobile catalog defines 84 measurements whose semantics are shared by
+at least two evidenced sources; `sharedMobileMeasurementCatalog` exposes them
+with their value kind, coded-result vocabulary, method, and member contracts.
+Owner-exclusive measurements (HealthKit, Health Connect, and
+connected-provider platform exclusives) are deliberately absent from the
+shared catalog and are published separately as `adapterMeasurementCatalog`,
+keyed by owning adapter, from the `providers` entry point.
+This Provider facade exposes a closed provider/source-token/measurement union
+for the shared scalar and coded measurements admitted by the frozen Google
+Health API, Oura, and Withings inventories. It includes point and period
+quantities, closed coded results such as workout classification, and composite
+blood pressure. Shared profiles without a semantically exact provider source
+remain profiled but are not constructible through this facade, and
+owner-exclusive scalar mappings stay contract data outside it. BMI reuses the
 standard R4 profile with a HealthKit adapter claim; the four specimen-specific
 glucose profiles belong to Health Connect. Neither is incorrectly presented as
-a shared Mobile profile. Google glucose lacks specimen evidence, daily vital
-summaries are not relabeled as point measurements, and provider stage-duration
-summaries are not relabeled as sleep-stage intervals. There is intentionally no
-unprofiled fallback builder.
+a shared Mobile profile. Google glucose without specimen evidence maps only to
+the specimen-neutral shared profile, daily vital summaries are admitted only
+as their distinct daily-average measurements, and provider stage-duration
+summaries map to the per-stage sleep-duration measurements rather than
+sleep-stage intervals. There is intentionally no unprofiled fallback builder.
 
 ```typescript
 import {
@@ -123,10 +130,13 @@ Provenance targeting the document, and the enclosing Mobile collection Bundle.
 It never fetches the URL or parses provider-native content. Embedded attachment
 size and hash are computed from the exact decoded bytes.
 
-Every attachment requires exactly one of the two catalog-derived producer
-assertions: `caller-authorized-opaque-payload` or
-`verified-sanitized-input`. An absent, ambiguous, or unsupported assertion
-fails closed. The assertion is producer preflight only, is never emitted as
+Every attachment declares exactly one payload format from the closed
+`groveRecordingFormatRegistry` (for provider API responses, `provider-json-1`),
+and its `contentType` must match that registry entry; the format is emitted as
+the `DocumentReference.content.format` coding. Every attachment also requires
+exactly one of the two catalog-derived producer assertions:
+`caller-authorized-opaque-payload` or `verified-sanitized-input`. An absent,
+ambiguous, or unsupported format or assertion fails closed. The assertion is producer preflight only, is never emitted as
 FHIR authorization or consent, and is separate from recording-hardware identity
 authorization.
 
@@ -179,10 +189,11 @@ and duplicate literal references fail closed.
 
 The synchronized normative catalog and its resolved development reference live
 under `catalog/grove-fhir`. `catalog/measurement-capabilities.json`
-distinguishes the 10 constructible Provider scalar measurements, four
-constructible native-recording source tokens, three shared profiles not
-admitted by this facade, adapter-profiled BMI/glucose outputs, and reviewed
-future, adapter-only, Sensor, and out-of-scope candidates.
+distinguishes the 31 constructible Provider scalar and coded measurements,
+four constructible native-recording source tokens, the shared profiles not
+admitted by this facade, adapter-profiled BMI/glucose outputs,
+platform-exclusive adapter measurements, and reviewed future, adapter-only,
+Sensor, and out-of-scope candidates.
 
 ## Questionnaires
 
