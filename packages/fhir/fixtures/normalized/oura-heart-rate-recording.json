@@ -1,0 +1,32 @@
+{
+  "source": {
+    "adapter": {
+      "kind": "providers",
+      "provider": "oura"
+    },
+    "providerAccountIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-oura-001",
+      "assurance": "deployment-scoped-pseudonym"
+    },
+    "sourceType": "heartrate",
+    "sourceNativeId": "synthetic-oura-heart-rate-series-001",
+    "dataOrigin": {
+      "identity": {
+        "identifier": {
+          "system": "https://example.org/data-origins",
+          "value": "oura"
+        }
+      },
+      "name": "Oura"
+    }
+  },
+  "attachment": {
+    "kind": "embedded",
+    "contentType": "application/json",
+    "title": "Sanitized Oura heart-rate recording",
+    "format": "provider-json-1",
+    "payloadAssertion": "verified-sanitized-input",
+    "dataBase64": "eyJzeW50aGV0aWMiOnRydWV9"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": ".tsbuild/strict",
+    "tsBuildInfoFile": ".tsbuild/strict.tsbuildinfo",
+    "declarationMap": true,
+    "isolatedDeclarations": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": [
+    "src/core/**/*.ts",
+    "src/r4/**/*.ts",
+    "src/mobile/**/*.ts",
+    "src/providers/**/*.ts",
+    "src/questionnaire/**/*.ts",
+    "src/provenance/**/*.ts"
+  ],
+  "references": [{ "path": "./tsconfig.legacy.json" }]
+}

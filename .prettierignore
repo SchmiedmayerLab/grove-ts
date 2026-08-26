@@ -17,3 +17,6 @@
 packages/design-system/docs/docs/api
 .parcel-cache
 node_modules
+
+# Throwaway output of the strictness-checking projects.
+**/.tsbuild

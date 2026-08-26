@@ -32,6 +32,7 @@ export const untypedAttachmentSchema = z.lazy(() =>
     url: urlSchema.optional(),
     _url: elementSchema.optional(),
     size: unsignedIntSchema.optional(),
+    _size: elementSchema.optional(),
     hash: base64BinarySchema.optional(),
     _hash: elementSchema.optional(),
     title: stringSchema.optional(),

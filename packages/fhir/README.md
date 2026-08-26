@@ -13,7 +13,8 @@ SPDX-License-Identifier: MIT
 [![Build and Test](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/SchmiedmayerLab/grove-ts/actions/workflows/build-and-test.yml)
 [![codecov](https://codecov.io/gh/SchmiedmayerLab/grove-ts/graph/badge.svg)](https://codecov.io/gh/SchmiedmayerLab/grove-ts)
 
-Type-safe FHIR R4B resource schemas and utilities for TypeScript applications. This package provides comprehensive [Zod](https://zod.dev) schemas for FHIR (Fast Healthcare Interoperability Resources) data validation, making it easy to work with healthcare data in TypeScript applications, including those built on Firebase Functions and Firestore.
+Type-safe FHIR R4B resource schemas and utilities for TypeScript applications, together with the Grove profiles layered over them.
+This package provides comprehensive [Zod](https://zod.dev) schemas for FHIR (Fast Healthcare Interoperability Resources) data validation, making it easy to work with healthcare data in TypeScript applications, including those built on Firebase Functions and Firestore.
 
 This package is part of the [Grove](https://github.com/SchmiedmayerLab/grove-ts) project, bringing standardized healthcare data exchange to TypeScript applications.
 
@@ -26,6 +27,74 @@ Working with FHIR resources in TypeScript can be challenging due to their comple
 - **Framework Agnostic**: Plain TypeScript/Zod schemas that work anywhere, including Firebase Functions and Firestore
 - **Standards Compliance**: Schemas based on FHIR R4B specification
 - **Developer Experience**: Intuitive API with helpful utility methods
+
+## Two Layers
+
+This package exposes two layers over the same data.
+
+The **R4B base layer** is what the package has always been: Zod schemas covering the whole of FHIR R4B, permissive in the way the specification is permissive.
+Unknown fields are stripped rather than rejected, and almost everything is optional, because R4B says almost everything is optional.
+Reach for it when you are reading FHIR from somewhere you do not control, or working with resources Grove has no opinion about.
+
+The **Grove profile layer** constrains those same shapes to what a Grove exchange actually admits.
+Profiles are closed, so an unknown field is an error rather than something silently dropped; choice elements Grove does not use are absent; and fields Grove requires are required.
+Reach for it when you are producing or ingesting Grove data, where a typo in a field name should stop you rather than vanish.
+
+The profile schemas are _derived_ from the base schemas rather than written separately, so each field is declared in exactly one place.
+What the profile layer adds is only the constraints, which is also what makes it readable as a statement of the profile.
+
+### Choosing a name
+
+No name means two things.
+Where a profile needs a name the base layer already uses, the profile takes a `grove` prefix:
+
+```typescript
+import {
+  observationSchema,
+  groveObservationSchema,
+} from '@schmiedmayerlab/grove-fhir'
+
+observationSchema.parse(input) // permissive R4B: unknown fields are stripped
+groveObservationSchema.parse(input) // Grove profile: unknown fields are rejected
+```
+
+### Entry points
+
+The root entry point carries both layers.
+The narrower ones exist for callers who want a single layer, and for the provider surface, which is deliberately not reachable from the root.
+
+| Entry point                                 | Contents                                                                                                 |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `@schmiedmayerlab/grove-fhir`               | The R4B base layer, the profiles, the result channel, the mobile catalog, and the questionnaire builders |
+| `@schmiedmayerlab/grove-fhir/core`          | `Result`, `Issue`, and the branded FHIR primitive parsers                                                |
+| `@schmiedmayerlab/grove-fhir/r4`            | The profiles and their parsers, on their own                                                             |
+| `@schmiedmayerlab/grove-fhir/mobile`        | The shared mobile measurement catalog and entry identity                                                 |
+| `@schmiedmayerlab/grove-fhir/providers`     | Provider adapters, bundle builders, and recording payloads                                               |
+| `@schmiedmayerlab/grove-fhir/questionnaire` | Questionnaire and response builders, parsers, and preflight                                              |
+| `@schmiedmayerlab/grove-fhir/provenance`    | Provenance parsing                                                                                       |
+
+Provider measurements are owned by a specific platform, so `buildProviderMeasurementBundle` and its neighbours are reachable only from `/providers`.
+That boundary is asserted by tests rather than left to convention.
+
+### Failures without exceptions
+
+The profile layer reports failures as values.
+`parseObservation` and its siblings return a `Result`, so a caller handles a malformed resource without a `try` block, and gets every issue at once rather than the first:
+
+```typescript
+import { parseObservation } from '@schmiedmayerlab/grove-fhir'
+
+const result = parseObservation(input)
+if (!result.ok) {
+  for (const issue of result.issues) {
+    console.error(`${issue.path.join('.')}: ${issue.message}`)
+  }
+  return
+}
+// result.value is deeply frozen and typed as an Observation
+```
+
+The base layer keeps Zod's own interface — `parse` throws, `safeParse` does not — exactly as before.
 
 ## Installation
 
@@ -40,6 +109,9 @@ npm install @schmiedmayerlab/grove-fhir
 - **Value Sets**: Pre-defined schemas for FHIR value sets and enumerations
 - **Helper Methods**: Convenient utilities for working with coded concepts and extensions
 - **Full Type Inference**: Get complete TypeScript autocompletion and type checking
+- **Grove Profiles**: Closed schemas for the resources a Grove exchange carries, derived from the R4B schemas above so each field is declared once
+- **Failures as Values**: A `Result` channel that collects every issue instead of throwing on the first
+- **Measurement Catalogs**: The shared mobile measurements and the platform-exclusive provider adapters, generated from the pinned implementation guide
 
 ### Supported FHIR Resources
 

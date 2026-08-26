@@ -1,0 +1,51 @@
+{
+  "source": {
+    "adapter": { "kind": "providers", "provider": "oura" },
+    "providerAccountIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-oura-001",
+      "assurance": "deployment-scoped-pseudonym"
+    },
+    "sourceType": "daily_activity",
+    "sourceNativeId": "synthetic-daily-activity-2026-08-20",
+    "recordingMethod": "automatically-recorded",
+    "dataOrigin": {
+      "identity": {
+        "identifier": {
+          "system": "https://example.org/data-origins",
+          "value": "oura"
+        }
+      },
+      "name": "Oura"
+    }
+  },
+  "measurements": [
+    {
+      "kind": "distance",
+      "value": 6123,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-21T00:00:00Z"
+      }
+    },
+    {
+      "kind": "step-count",
+      "value": 8234,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-21T00:00:00Z"
+      }
+    },
+    {
+      "kind": "active-energy",
+      "value": 430,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-21T00:00:00Z"
+      }
+    }
+  ]
+}

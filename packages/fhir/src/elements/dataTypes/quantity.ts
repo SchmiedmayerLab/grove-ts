@@ -24,6 +24,7 @@ const quantityComparatorSchema = z.enum(['<', '<=', '>=', '>'])
 export const untypedQuantitySchema = z.lazy(() =>
   elementSchema.extend({
     value: decimalSchema.optional(),
+    _value: elementSchema.optional(),
     comparator: quantityComparatorSchema.optional(),
     _comparator: elementSchema.optional(),
     unit: stringSchema.optional(),

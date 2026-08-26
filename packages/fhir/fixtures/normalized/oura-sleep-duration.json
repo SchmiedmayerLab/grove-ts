@@ -1,0 +1,33 @@
+{
+  "source": {
+    "adapter": { "kind": "providers", "provider": "oura" },
+    "providerAccountIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-oura-001",
+      "assurance": "deployment-scoped-pseudonym"
+    },
+    "sourceType": "sleep",
+    "sourceNativeId": "synthetic-sleep-2026-08-19",
+    "recordingMethod": "automatically-recorded",
+    "dataOrigin": {
+      "identity": {
+        "identifier": {
+          "system": "https://example.org/data-origins",
+          "value": "oura"
+        }
+      },
+      "name": "Oura"
+    }
+  },
+  "measurements": [
+    {
+      "kind": "sleep-duration",
+      "value": 7.4,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-19T22:30:00Z",
+        "end": "2026-08-20T06:20:00Z"
+      }
+    }
+  ]
+}
