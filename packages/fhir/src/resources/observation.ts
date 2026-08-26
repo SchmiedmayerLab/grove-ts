@@ -10,6 +10,8 @@ import { type Coding, type Observation } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
 import { FhirDomainResource } from './fhirDomainResource.js'
 import {
+  annotationSchema,
+  backboneElementSchema,
   booleanSchema,
   codeableConceptSchema,
   dateTimeSchema,
@@ -40,6 +42,7 @@ export const untypedObservationSchema = z.lazy(() =>
     basedOn: referenceSchema.array().optional(),
     partOf: referenceSchema.array().optional(),
     status: observationStatusSchema,
+    _status: elementSchema.optional(),
     category: codeableConceptSchema.array().optional(),
     code: codeableConceptSchema,
     subject: referenceSchema.optional(),
@@ -61,6 +64,7 @@ export const untypedObservationSchema = z.lazy(() =>
     valueBoolean: booleanSchema.optional(),
     _valueBoolean: elementSchema.optional(),
     valueInteger: intSchema.optional(),
+    _valueInteger: elementSchema.optional(),
     valueRange: rangeSchema.optional(),
     valueRatio: ratioSchema.optional(),
     valueSampledData: sampledDataSchema.optional(),
@@ -71,7 +75,12 @@ export const untypedObservationSchema = z.lazy(() =>
     valuePeriod: periodSchema.optional(),
     dataAbsentReason: codeableConceptSchema.optional(),
     interpretation: codeableConceptSchema.array().optional(),
-    referenceRange: elementSchema
+    note: annotationSchema.array().optional(),
+    bodySite: codeableConceptSchema.optional(),
+    method: codeableConceptSchema.optional(),
+    specimen: referenceSchema.optional(),
+    device: referenceSchema.optional(),
+    referenceRange: backboneElementSchema
       .extend({
         low: quantitySchema.optional(),
         high: quantitySchema.optional(),
@@ -85,7 +94,7 @@ export const untypedObservationSchema = z.lazy(() =>
       .optional(),
     hasMember: referenceSchema.array().optional(),
     derivedFrom: referenceSchema.array().optional(),
-    component: elementSchema
+    component: backboneElementSchema
       .extend({
         code: codeableConceptSchema,
         valueQuantity: quantitySchema.optional(),
@@ -95,6 +104,7 @@ export const untypedObservationSchema = z.lazy(() =>
         valueBoolean: booleanSchema.optional(),
         _valueBoolean: elementSchema.optional(),
         valueInteger: intSchema.optional(),
+        _valueInteger: elementSchema.optional(),
         valueRange: rangeSchema.optional(),
         valueRatio: ratioSchema.optional(),
         valueSampledData: sampledDataSchema.optional(),
@@ -105,7 +115,7 @@ export const untypedObservationSchema = z.lazy(() =>
         valuePeriod: periodSchema.optional(),
         dataAbsentReason: codeableConceptSchema.optional(),
         interpretation: codeableConceptSchema.array().optional(),
-        referenceRange: elementSchema
+        referenceRange: backboneElementSchema
           .extend({
             low: quantitySchema.optional(),
             high: quantitySchema.optional(),

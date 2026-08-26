@@ -151,3 +151,149 @@ export * from './resources/testScript.js'
 export * from './resources/valueSet.js'
 export * from './resources/verificationResult.js'
 export * from './resources/visionPrescription.js'
+
+// Everything above is the R4B surface this package has always exported, unchanged. What follows is
+// the Grove layer built on top of it: a result channel instead of thrown errors, and the profiles
+// that constrain the R4B shapes above to what a Grove exchange admits.
+//
+// The profile schemas are named `grove*` so that no name means two things: `observationSchema`
+// above is still the permissive R4B schema, and `groveObservationSchema` is the closed profile.
+// Narrower entry points exist for callers who want only one layer — see the package README.
+
+export {
+  collectResults,
+  deepFreeze,
+  err,
+  issues,
+  mapResult,
+  ok,
+  parseAbsoluteUri,
+  parseCanonical,
+  parseFhirId,
+  parseFhirInstant,
+  parsePatientReference,
+  parsePositiveInteger,
+  parseResearchStudyReference,
+  parseSemVer,
+  parseUrnUuid,
+  type AbsoluteUri,
+  type Canonical,
+  type FhirId,
+  type FhirInstant,
+  type Issue,
+  type IssueCode,
+  type ParseIssueSeverity,
+  type PatientReference,
+  type PositiveInteger,
+  type ReadonlyDeep,
+  type ResearchStudyReference,
+  type Result,
+  type SemVer,
+  type UrnUuid,
+} from './core/index.js'
+
+export {
+  groveAttachmentSchema,
+  groveCodeableConceptSchema,
+  groveCodingSchema,
+  groveCollectionBundleSchema,
+  groveDeviceSchema,
+  groveDocumentReferenceSchema,
+  groveExpressionSchema,
+  groveExtensionSchema,
+  groveGraphResourceSchema,
+  groveIdentifierSchema,
+  groveMetaSchema,
+  groveObservationComponentSchema,
+  groveObservationSchema,
+  grovePeriodSchema,
+  grovePrimitiveElementSchema,
+  groveProvenanceSchema,
+  groveQuantitySchema,
+  groveReferenceSchema,
+  groveSampledDataSchema,
+  groveSpecimenSchema,
+  groveSupportedR4ResourceSchema,
+  parseCollectionBundle,
+  parseDevice,
+  parseDocumentReference,
+  parseObservation,
+  parseProvenance,
+  parseSpecimen,
+  parseSupportedR4Resource,
+  // Deep-readonly views of the same `@types/fhir` interfaces the schemas above are declared
+  // against. None of these names existed at the root before, so nothing is shadowed.
+  type Attachment,
+  type CodeableConcept,
+  type Coding,
+  type CollectionBundle,
+  type Device,
+  type DocumentReference,
+  type Extension,
+  type GraphResource,
+  type Identifier,
+  type Observation,
+  type Period,
+  type Provenance,
+  type Quantity,
+  type Questionnaire,
+  type QuestionnaireResponse,
+  type Reference,
+  type SampledData,
+  type Specimen,
+  type SupportedR4Resource,
+} from './r4/index.js'
+
+// The measurement catalog and the questionnaire builders, exactly as the guide's facade exposes
+// them. The provider adapters are deliberately absent: they carry platform-exclusive measurements
+// and belong only to the `./providers` entry point, which `exports.test.ts` holds us to.
+
+export {
+  canonicalizeMobileEffectiveInstant,
+  entryIdentifierName,
+  createEntryIdentity,
+  deriveEntryFullUrl,
+  groveFhirContractVersion,
+  groveFhirExchangeIdentity,
+  groveFhirVersion,
+  mobileEffectiveCanonicalization,
+  mobileEffectiveCanonicalizationVectors,
+  sharedMobileMeasurementCatalog,
+  type ApplicationDeviceInput,
+  type BloodPressureMeasurement,
+  type CompleteIdentifierInput,
+  type GatewayApplicationInput,
+  type IdentifiedEntryIdentityInput,
+  type InstantEffectiveTime,
+  type InstantQuantityMeasurement,
+  type InstantQuantityMeasurementKind,
+  type MobileMeasurement,
+  type PeriodEffectiveTime,
+  type PeriodQuantityMeasurement,
+  type PeriodQuantityMeasurementKind,
+  type RecordingDeviceInput,
+  type RecordingMethod,
+  type ResourceIdentityInput,
+  type SharedMobileMeasurementKind,
+  type SleepStage,
+  type SleepStageMeasurement,
+  type SleepStageSourceCodingInput,
+} from './mobile/index.js'
+
+export {
+  buildQuestionnaire,
+  buildQuestionnaireResponse,
+  parseQuestionnaire,
+  parseQuestionnaireResponse,
+  preflightQuestionnairePair,
+  type GroveQuestionnaire,
+  type GroveQuestionnaireResponse,
+  type QuestionnaireInput,
+  type QuestionnaireItemInput,
+  type QuestionnairePair,
+  type QuestionnairePreflightOptions,
+  type QuestionnaireResponseAnswerInput,
+  type QuestionnaireResponseInput,
+  type QuestionnaireResponseItemInput,
+  type ResolvedQuestionnaireValueSetInput,
+} from './questionnaire/index.js'

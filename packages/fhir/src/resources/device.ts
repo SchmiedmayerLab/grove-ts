@@ -34,6 +34,7 @@ import { deviceNameTypeSchema, deviceStatusSchema } from '../valueSets/index.js'
 const deviceDeviceNameSchema: ZodType<DeviceDeviceName> =
   backboneElementSchema.extend({
     name: stringSchema,
+    _name: elementSchema.optional(),
     type: deviceNameTypeSchema,
     _type: elementSchema.optional(),
   })
@@ -70,7 +71,9 @@ const deviceUdiCarrierSchema: ZodType<DeviceUdiCarrier> =
 const deviceVersionSchema: ZodType<DeviceVersion> =
   backboneElementSchema.extend({
     type: codeableConceptSchema.optional(),
-    component: codeableConceptSchema.optional(),
+    // R4B types Device.version.component as an Identifier. It was bound to CodeableConcept, which
+    // type-checked only because both interfaces have entirely optional members.
+    component: identifierSchema.optional(),
     value: stringSchema,
     _value: elementSchema.optional(),
   })

@@ -1,0 +1,84 @@
+#
+# This source file is part of the Grove open-source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: FHIR Conformance
+
+# The catalogs and conformance corpus belong to the Grove FHIR implementation guide, which is read
+# at the commit `packages/fhir/grove-fhir.json` pins. That is a network read, so it is kept out of
+# `build-and-test.yml`: `npm run validate` has to work from an offline clone.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/fhir-conformance.yml
+      - package-lock.json
+      - packages/configurations/**
+      - packages/fhir/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fhir-conformance.yml
+      - package-lock.json
+      - packages/configurations/**
+      - packages/fhir/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conformance:
+    name: Generated Contracts and Structural Conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The pin lives beside the package that reads it, so a local run and this job agree.
+      - name: Read the pinned Grove FHIR reference
+        id: grove-fhir
+        run: >-
+          echo "ref=$(node -p "require('./packages/fhir/grove-fhir.json').ref")"
+          >> "$GITHUB_OUTPUT"
+      # The validator reads the guide's profiles and scripts, which the fetched catalog subset
+      # does not carry, so the guide itself is checked out at the same reference.
+      - name: Checkout the pinned Grove FHIR guide
+        uses: actions/checkout@v7
+        with:
+          repository: SchmiedmayerLab/grove-fhir
+          ref: ${{ steps.grove-fhir.outputs.ref }}
+          path: .build/grove-fhir
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Set up npm
+        run: npm install --global --ignore-scripts npm@12.0.2
+      - name: Install dependencies
+        run: npm ci
+      - name: Build shared lint configuration
+        run: npm run build --workspace @schmiedmayerlab/grove-configurations
+      # A stale generated catalog is the failure this job exists to catch: the committed contracts
+      # have to match what the pinned guide generates, or the profiles describe something else.
+      - name: Check the generated catalog against the pinned guide
+        run: npm run check:catalog --workspace @schmiedmayerlab/grove-fhir
+      - name: Check the committed conformance fixtures
+        run: npm run check:fixtures --workspace @schmiedmayerlab/grove-fhir
+      - name: Check the Grove layer under the strict compiler options
+        run: npm run typecheck:strict --workspace @schmiedmayerlab/grove-fhir
+      - name: Validate the conformance corpus structurally
+        run: >-
+          npm run conformance:structural --workspace @schmiedmayerlab/grove-fhir --
+          --ig "$GITHUB_WORKSPACE/.build/grove-fhir"

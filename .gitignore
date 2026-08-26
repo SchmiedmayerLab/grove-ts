@@ -48,6 +48,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Throwaway output of the strictness-checking projects; only dist/ is published.
+.tsbuild/
+
+# Grove FHIR
+# The catalogs and the conformance corpus are read from the implementation guide at the commit
+# packages/fhir/grove-fhir.json pins, rather than vendored, so a second copy cannot drift from it.
+.grove-fhir/
+# Where CI checks out the guide itself for the conformance validator.
+.build/
 
 # lint
 eslint_report.json
