@@ -7,75 +7,49 @@
 //
 
 import { readFile, writeFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
 import { argv } from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { URL } from 'node:url'
 
 import { format } from 'prettier'
 
-const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const catalogRoot = resolve(packageRoot, '.grove-fhir/catalog')
-const capabilityPath = resolve(
-  packageRoot,
-  'catalog/measurement-capabilities.json',
-)
-const inputPath = resolve(catalogRoot, 'measurement-catalog.json')
-const packageGraphPath = resolve(catalogRoot, 'package-graph.json')
-const exchangeIdentityPath = resolve(catalogRoot, 'exchange-identity.json')
-const profileClaimsPath = resolve(catalogRoot, 'profile-claims.json')
-const sensorCatalogPath = resolve(catalogRoot, 'sensor-catalog.json')
-const healthConnectAdapterPath = resolve(
-  catalogRoot,
-  'health-connect-adapter.json',
-)
-const healthConnectIdentityPath = resolve(
-  catalogRoot,
-  'health-connect-identity.json',
-)
-const healthKitAdapterPath = resolve(catalogRoot, 'healthkit-adapter.json')
-const sensorKitAdapterPath = resolve(catalogRoot, 'sensorkit-adapter.json')
-const formatRegistryPath = resolve(catalogRoot, 'format-registry.json')
-const sourceRefPath = resolve(packageRoot, 'grove-fhir.json')
-const semanticCorpusPath = resolve(
-  packageRoot,
-  '.grove-fhir/Conformance/corpora/mobile-semantics/corpus.json',
-)
-const outputPaths = {
-  mobile: resolve(packageRoot, 'src/mobile/measurement-catalog.generated.ts'),
-  questionnaire: resolve(
-    packageRoot,
-    'src/questionnaire/contract.generated.ts',
-  ),
-  provider: resolve(packageRoot, 'src/providers/contract.generated.ts'),
-}
+import { loadMeasurementCatalogInputs } from './measurement-catalog-inputs.mjs'
+import { renderMeasurementCatalogSources } from './measurement-catalog-renderer.mjs'
 
-const adapterOwners = ['healthkit', 'health-connect', 'sensorkit', 'providers']
+const {
+  capabilities,
+  catalog,
+  exchangeCorpus,
+  exchangeProtocol,
+  formatRegistry,
+  healthConnectAdapter,
+  healthKitAdapter,
+  outputPaths,
+  packageGraph,
+  profileClaims,
+  providerAdapter,
+  semanticCorpus,
+  sensorCatalog,
+  sensorKitAdapter,
+  sourceRef,
+} = await loadMeasurementCatalogInputs(import.meta.url, argv)
+
+const adapterOwners = [
+  'google-health',
+  'healthkit',
+  'health-connect',
+  'oura',
+  'providers',
+  'sensorkit',
+  'withings',
+]
+const uniqueNonemptyStrings = (values) =>
+  Array.isArray(values) &&
+  values.length > 0 &&
+  values.every((value) => typeof value === 'string' && value.length > 0) &&
+  new Set(values).size === values.length
 const isMobileOwned = (measurement) =>
   measurement.owner === undefined || measurement.owner === 'mobile'
 
-const catalog = JSON.parse(await readFile(inputPath, 'utf8'))
-const packageGraph = JSON.parse(await readFile(packageGraphPath, 'utf8'))
-const exchangeIdentity = JSON.parse(
-  await readFile(exchangeIdentityPath, 'utf8'),
-)
-const profileClaims = JSON.parse(await readFile(profileClaimsPath, 'utf8'))
-const sensorCatalog = JSON.parse(await readFile(sensorCatalogPath, 'utf8'))
-const healthConnectAdapter = JSON.parse(
-  await readFile(healthConnectAdapterPath, 'utf8'),
-)
-const healthConnectIdentity = JSON.parse(
-  await readFile(healthConnectIdentityPath, 'utf8'),
-)
-const healthKitAdapter = JSON.parse(
-  await readFile(healthKitAdapterPath, 'utf8'),
-)
-const sensorKitAdapter = JSON.parse(
-  await readFile(sensorKitAdapterPath, 'utf8'),
-)
-const formatRegistry = JSON.parse(await readFile(formatRegistryPath, 'utf8'))
-const sourceRef = JSON.parse(await readFile(sourceRefPath, 'utf8'))
-const semanticCorpus = JSON.parse(await readFile(semanticCorpusPath, 'utf8'))
-const capabilities = JSON.parse(await readFile(capabilityPath, 'utf8'))
 const measurements = catalog.measurements
 if (!Array.isArray(measurements) || measurements.length === 0) {
   throw new Error('Measurement catalog must contain measurements.')
@@ -148,6 +122,22 @@ if (
 }
 
 const keys = new Set()
+const standardVitalProfiles = new Set(
+  [
+    'bp',
+    'bodyheight',
+    'bodytemp',
+    'bodyweight',
+    'heartrate',
+    'oxygensat',
+    'resprate',
+  ].map((id) => `http://hl7.org/fhir/StructureDefinition/${id}`),
+)
+const vitalSignsCategory = {
+  system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+  code: 'vital-signs',
+  display: 'Vital Signs',
+}
 for (const measurement of measurements) {
   if (typeof measurement.id !== 'string' || keys.has(measurement.id)) {
     throw new Error(
@@ -171,6 +161,28 @@ for (const measurement of measurements) {
       `Normative measurement ${measurement.id} declares unknown owner ${String(measurement.owner)}.`,
     )
   }
+  if (
+    measurement.category !== undefined &&
+    (typeof measurement.category !== 'object' ||
+      measurement.category === null ||
+      ['system', 'code', 'display'].some(
+        (field) =>
+          typeof measurement.category[field] !== 'string' ||
+          measurement.category[field].trim() === '',
+      ))
+  ) {
+    throw new Error(
+      `Normative measurement ${measurement.id} has an incomplete Observation category.`,
+    )
+  }
+  if (
+    standardVitalProfiles.has(measurement.standardProfile) &&
+    JSON.stringify(measurement.category) !== JSON.stringify(vitalSignsCategory)
+  ) {
+    throw new Error(
+      `Standard vital-sign measurement ${measurement.id} must materialize its inherited vital-signs category.`,
+    )
+  }
   if (measurement.valueKind === 'quantity') {
     if (measurement.quantity === null) {
       throw new Error(
@@ -187,6 +199,12 @@ for (const measurement of measurements) {
     ) {
       throw new Error(
         `Normative measurement ${measurement.id} requires a closed coded-result contract.`,
+      )
+    }
+  } else if (measurement.valueKind === 'dateTime') {
+    if (measurement.quantity !== null) {
+      throw new Error(
+        `Date-time measurement ${measurement.id} must not declare a quantity.`,
       )
     }
   } else if (measurement.valueKind === 'grouping') {
@@ -209,12 +227,15 @@ for (const measurement of measurements) {
   const supportedSources = Object.values(measurement.coverage).filter(
     (status) => status === 'supported',
   )
+  const evidencedSources = Object.values(measurement.coverage).filter(
+    (status) => ['platform-exclusive', 'supported'].includes(status),
+  )
   if (isMobileOwned(measurement) && supportedSources.length < 2) {
     throw new Error(
       `Shared Mobile measurement ${measurement.id} requires at least two evidenced supported sources.`,
     )
   }
-  if (supportedSources.length === 0) {
+  if (evidencedSources.length === 0) {
     throw new Error(
       `Normative measurement ${measurement.id} requires at least one evidenced supported source.`,
     )
@@ -271,7 +292,6 @@ if (packageGraph.fhirVersion !== '4.0.1' || catalog.fhirVersion !== '4.0.1') {
 for (const consumedCatalog of [
   sensorCatalog,
   healthConnectAdapter,
-  healthConnectIdentity,
   healthKitAdapter,
   sensorKitAdapter,
 ]) {
@@ -285,18 +305,16 @@ for (const consumedCatalog of [
   }
 }
 
-// A released version is pinned by its tag so the reference stays readable; a bare commit stays
-// valid for pinning work that predates a release.
-const pinnedRef = sourceRef.ref ?? sourceRef.sha
+const pinnedRef = sourceRef.ref
 if (
   sourceRef.repository !== 'https://github.com/SchmiedmayerLab/grove-fhir' ||
   typeof pinnedRef !== 'string' ||
-  !/^(?:[\da-f]{40}|\d+\.\d+\.\d+(?:-[\dA-Za-z]+(?:[.-][\dA-Za-z]+)*)?)$/u.test(
-    pinnedRef,
-  )
+  !/^[\da-f]{40}$/u.test(pinnedRef) ||
+  typeof sourceRef.archiveSha256 !== 'string' ||
+  !/^[\da-f]{64}$/u.test(sourceRef.archiveSha256)
 ) {
   throw new Error(
-    'The IG release these catalogs were read from must be pinned.',
+    'The IG catalogs must be pinned by an immutable commit and exact archive SHA-256.',
   )
 }
 
@@ -365,15 +383,43 @@ const questionnaireProfiles = selectEntries(profiles, [
   'grove-questionnaire',
   'grove-questionnaire-response',
 ])
-const providerProfiles = selectEntries(profiles, [
-  ...measurements.map((measurement) => measurement.profile),
+const mobileProfiles = selectEntries(profiles, [
   'grove-application-device',
+  'grove-host-device',
+  'grove-mobile-conversion-provenance',
   'grove-mobile-exchange-bundle',
+  'grove-mobile-retraction-bundle',
+  'grove-mobile-retraction-provenance',
   'grove-recording-device',
   'grove-sensor-recording-document',
-  'provider-conversion-provenance',
-  'provider-observation',
-  'provider-recording-document',
+])
+const providerObservationProfileIds = providerAdapter.providers.map(
+  ({ id, observationProfile }) => {
+    const profile = Object.entries(profiles).find(
+      ([, canonical]) => canonical === observationProfile,
+    )?.[0]
+    if (profile === undefined) {
+      throw new Error(
+        `Provider ${id} refers to unknown Observation profile ${String(observationProfile)}.`,
+      )
+    }
+    return profile
+  },
+)
+const providerProfiles = selectEntries(profiles, [
+  ...measurements.map((measurement) => measurement.profile),
+  ...providerObservationProfileIds,
+  'grove-application-device',
+  'grove-host-device',
+  'grove-mobile-conversion-provenance',
+  'grove-mobile-exchange-bundle',
+  'grove-mobile-retraction-bundle',
+  'grove-mobile-retraction-provenance',
+  'grove-recording-device',
+  'grove-sensor-recording-document',
+  'providers-conversion-provenance',
+  'providers-observation',
+  'providers-recording-document',
 ])
 const providerPackageCanonicals = selectEntries(packageCanonicals, [
   'mobile',
@@ -386,8 +432,13 @@ if (
   profileClaims.observationAdapterClaim?.cardinality !== 2 ||
   profileClaims.observationAdapterClaim?.inheritedProfilesAreNotDeclared !==
     true ||
-  !profileClaims.observationAdapterClaim?.adapterProfiles?.includes(
-    profiles['provider-observation'],
+  profileClaims.observationAdapterClaim?.adapterProfiles?.includes(
+    profiles['providers-observation'],
+  ) ||
+  !providerAdapter.providers.every(({ observationProfile }) =>
+    profileClaims.observationAdapterClaim?.adapterProfiles?.includes(
+      observationProfile,
+    ),
   ) ||
   !profileClaims.observationAdapterClaim?.forbiddenExplicitProfiles?.includes(
     profiles['grove-mobile-observation'],
@@ -419,9 +470,9 @@ if (
   connectedRecordingClaim.profiles?.[0] !==
     profiles['grove-sensor-recording-document'] ||
   connectedRecordingClaim.profiles?.[1] !==
-    profiles['provider-recording-document'] ||
+    profiles['providers-recording-document'] ||
   connectedProvenanceClaim?.profile !==
-    profiles['provider-conversion-provenance']
+    profiles['providers-conversion-provenance']
 ) {
   throw new Error('Adapter-specific profile claims are incomplete.')
 }
@@ -513,13 +564,23 @@ if (
   throw new Error('Health Connect sleep-stage mapping is incomplete.')
 }
 
+const healthConnectDataOriginApplication =
+  healthConnectAdapter.dataOriginApplication
 if (
-  healthConnectIdentity.composition?.separator !== '|' ||
-  healthConnectIdentity.composition?.versionPrefix !== 'v1' ||
-  healthConnectIdentity.vectors?.length !== 7
+  healthConnectDataOriginApplication?.sourceField !==
+    'Metadata.dataOrigin.packageName' ||
+  healthConnectDataOriginApplication.r4Element !==
+    'Provenance.entity.agent.who' ||
+  healthConnectDataOriginApplication.referenceType !== 'Device' ||
+  healthConnectDataOriginApplication.referenceMode !== 'identifier-only' ||
+  healthConnectDataOriginApplication.identifierSystem !==
+    'https://grovealliance.org/fhir/health-connect/NamingSystem/android-package-name' ||
+  healthConnectDataOriginApplication.literalReferenceAllowed !== false ||
+  healthConnectDataOriginApplication.eventBundleEntryRequired !== false ||
+  healthConnectDataOriginApplication.profileClaimRequired !== false
 ) {
   throw new Error(
-    'Health Connect deterministic identity vectors are incomplete.',
+    'Health Connect DataOrigin application must remain a typed identifier-only logical Device Reference.',
   )
 }
 
@@ -531,6 +592,87 @@ const healthKitDerivedAggregates = healthKitAdapter.derivedAggregates ?? []
 const healthKitStatusVocabulary = new Set(
   Object.keys(healthKitAdapter.statusVocabulary ?? {}),
 )
+const healthKitClinicalRecordAdmission =
+  healthKitAdapter.clinicalRecordAdmission
+const healthKitClinicalFhirRepresentation =
+  healthKitClinicalRecordAdmission?.fhirRepresentation
+const healthKitApplicationDeviceIdentity =
+  healthKitAdapter.applicationDeviceIdentity
+const healthKitBundleIdentifier =
+  healthKitApplicationDeviceIdentity?.bundleIdentifier
+if (
+  typeof healthKitClinicalRecordAdmission !== 'object' ||
+  healthKitClinicalRecordAdmission === null ||
+  Array.isArray(healthKitClinicalRecordAdmission) ||
+  Object.keys(healthKitClinicalRecordAdmission).sort().join(',') !==
+    'admittedFHIRRelease,fhirRepresentation,payloadFormat,profile,rejectedFHIRReleases,rule,sourceFHIRReleaseField' ||
+  healthKitClinicalRecordAdmission.profile !==
+    profiles['healthkit-clinical-record-document'] ||
+  typeof healthKitClinicalRecordAdmission.payloadFormat !== 'string' ||
+  formatRegistry.formats?.[healthKitClinicalRecordAdmission.payloadFormat]
+    ?.status !== 'active' ||
+  formatRegistry.formats[healthKitClinicalRecordAdmission.payloadFormat]
+    .contentType !== 'application/fhir+json' ||
+  typeof healthKitClinicalRecordAdmission.sourceFHIRReleaseField !== 'string' ||
+  healthKitClinicalRecordAdmission.sourceFHIRReleaseField.trim() === '' ||
+  typeof healthKitClinicalRecordAdmission.admittedFHIRRelease !== 'string' ||
+  healthKitClinicalRecordAdmission.admittedFHIRRelease.trim() === '' ||
+  !uniqueNonemptyStrings(
+    healthKitClinicalRecordAdmission.rejectedFHIRReleases,
+  ) ||
+  healthKitClinicalRecordAdmission.rejectedFHIRReleases.includes(
+    healthKitClinicalRecordAdmission.admittedFHIRRelease,
+  ) ||
+  typeof healthKitClinicalRecordAdmission.rule !== 'string' ||
+  healthKitClinicalRecordAdmission.rule.trim() === '' ||
+  typeof healthKitClinicalFhirRepresentation !== 'object' ||
+  healthKitClinicalFhirRepresentation === null ||
+  Array.isArray(healthKitClinicalFhirRepresentation) ||
+  Object.keys(healthKitClinicalFhirRepresentation).sort().join(',') !==
+    'cardinality,extensionUrl,fixedValue,resourceType,valueElement' ||
+  healthKitClinicalFhirRepresentation.resourceType !== 'DocumentReference' ||
+  typeof healthKitClinicalFhirRepresentation.extensionUrl !== 'string' ||
+  !URL.canParse(healthKitClinicalFhirRepresentation.extensionUrl) ||
+  healthKitClinicalFhirRepresentation.valueElement !== 'valueCode' ||
+  healthKitClinicalFhirRepresentation.cardinality?.min !== 1 ||
+  healthKitClinicalFhirRepresentation.cardinality.max !== 1 ||
+  healthKitClinicalFhirRepresentation.fixedValue !==
+    healthKitClinicalRecordAdmission.admittedFHIRRelease
+) {
+  throw new Error(
+    'HealthKit clinical-record FHIR admission must remain complete and closed.',
+  )
+}
+if (
+  typeof healthKitApplicationDeviceIdentity !== 'object' ||
+  healthKitApplicationDeviceIdentity === null ||
+  Array.isArray(healthKitApplicationDeviceIdentity) ||
+  Object.keys(healthKitApplicationDeviceIdentity).sort().join(',') !==
+    'bundleIdentifier,classificationRule,profile,snapshotIdentifierRole' ||
+  healthKitApplicationDeviceIdentity.profile !==
+    profiles['healthkit-application-device'] ||
+  healthKitApplicationDeviceIdentity.snapshotIdentifierRole !==
+    'device-snapshot' ||
+  typeof healthKitApplicationDeviceIdentity.classificationRule !== 'string' ||
+  healthKitApplicationDeviceIdentity.classificationRule.trim() === '' ||
+  typeof healthKitBundleIdentifier !== 'object' ||
+  healthKitBundleIdentifier === null ||
+  Array.isArray(healthKitBundleIdentifier) ||
+  Object.keys(healthKitBundleIdentifier).sort().join(',') !==
+    'cardinality,meaning,system,typeCode,typeSystem' ||
+  healthKitBundleIdentifier.system !==
+    'https://grovealliance.org/fhir/healthkit/NamingSystem/apple-bundle-id' ||
+  healthKitBundleIdentifier.typeSystem !==
+    'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-identifier-type' ||
+  healthKitBundleIdentifier.typeCode !== 'apple-bundle-id' ||
+  healthKitBundleIdentifier.cardinality !== '1..1' ||
+  typeof healthKitBundleIdentifier.meaning !== 'string' ||
+  healthKitBundleIdentifier.meaning.trim() === ''
+) {
+  throw new Error(
+    'HealthKit application Device identity must remain complete and closed.',
+  )
+}
 if (
   !Number.isInteger(healthKitSourceRowCount) ||
   healthKitSourceRowCount <= 0 ||
@@ -575,25 +717,23 @@ if (
 }
 
 const expectedConnectedProviders = ['google-health-api', 'oura', 'withings']
-const providerAdapterPath = resolve(catalogRoot, 'providers-adapter.json')
-const providerAdapter = JSON.parse(await readFile(providerAdapterPath, 'utf8'))
 if (
   providerAdapter.fhirVersion !== '4.0.1' ||
   providerAdapter.version !== packageGraph.version ||
   providerAdapter.packageId !== 'org.grovealliance.fhir.providers' ||
   providerAdapter.canonical !== packageCanonicals['providers'] ||
-  providerAdapter.adapterProfile !== profiles['provider-observation'] ||
+  providerAdapter.adapterProfile !== profiles['providers-observation'] ||
   providerAdapter.recordingDocument?.sourceNeutralProfile !==
     profiles['grove-sensor-recording-document'] ||
   providerAdapter.recordingDocument?.adapterProfile !==
-    profiles['provider-recording-document'] ||
-  providerAdapter.recordingDocument?.outputDiscriminator !==
-    'native-recording' ||
+    profiles['providers-recording-document'] ||
+  providerAdapter.recordingDocument?.outputRole !== 'native-recording' ||
+  providerAdapter.recordingDocument?.outputDiscriminator !== 'single' ||
   providerAdapter.rawPayloadAdmission?.allowedAssertions?.join(',') !==
     rawPayloadAssertions.join(',') ||
   providerAdapter.rawPayloadAdmission?.notFHIRAuthorization !== true ||
   providerAdapter.conversionProvenanceProfile !==
-    profiles['provider-conversion-provenance'] ||
+    profiles['providers-conversion-provenance'] ||
   providerAdapter.sourceTypeExtension?.url !==
     `${packageCanonicals['providers']}/StructureDefinition/provider-source-type` ||
   providerAdapter.sourceTypeExtension?.codeSystem !==
@@ -610,13 +750,143 @@ if (
   throw new Error('Provider providers must be the exact closed provider set.')
 }
 
-const providerScalarMappings = {}
-const providerRawMappings = {}
+const markerResourceTypes = (definition, kind) => {
+  if (
+    kind === 'extension-url' &&
+    definition?.valueElement === 'valueCode' &&
+    Array.isArray(definition.contexts)
+  ) {
+    const resourceTypes = definition.contexts
+    if (
+      resourceTypes.length === 0 ||
+      resourceTypes.some(
+        (resourceType) =>
+          typeof resourceType !== 'string' ||
+          !/^[A-Z][A-Za-z]+$/u.test(resourceType),
+      ) ||
+      new Set(resourceTypes).size !== resourceTypes.length
+    ) {
+      throw new Error(
+        'The extension-url adapter source marker contexts are incomplete.',
+      )
+    }
+    return resourceTypes
+  }
+  if (
+    typeof definition !== 'object' ||
+    definition === null ||
+    Array.isArray(definition) ||
+    definition.cardinality !== 'exactly one' ||
+    typeof definition.r4Element !== 'string'
+  ) {
+    throw new Error(`The ${kind} adapter source marker is incomplete.`)
+  }
+  const terminal =
+    kind === 'coding-system' ? 'code.coding' : 'extension.valueCode'
+  const resourceTypes = definition.r4Element.split(' or ').map((path) => {
+    const match = /^([A-Z][A-Za-z]+)\.(.+)$/u.exec(path)
+    if (match?.[1] === undefined || match[2] !== terminal) {
+      throw new Error(
+        `The ${kind} adapter source marker has an unsupported R4 element path ${path}.`,
+      )
+    }
+    return match[1]
+  })
+  if (
+    resourceTypes.length === 0 ||
+    new Set(resourceTypes).size !== resourceTypes.length
+  ) {
+    throw new Error(`The ${kind} adapter source marker paths are not unique.`)
+  }
+  return resourceTypes
+}
+
+const adapterClaim = (catalogDefinition) => {
+  const adapter = catalogDefinition.identity?.adapterId
+  const claim = profileClaims.adapterConversionProvenanceClaims?.find(
+    (candidate) => candidate.adapter === adapter,
+  )
+  if (
+    typeof adapter !== 'string' ||
+    claim === undefined ||
+    !Array.isArray(claim.targetAdapterProfiles) ||
+    claim.targetAdapterProfiles.length === 0 ||
+    new Set(claim.targetAdapterProfiles).size !==
+      claim.targetAdapterProfiles.length
+  ) {
+    throw new Error('An adapter source marker has no closed profile claim.')
+  }
+  return claim
+}
+
+const extensionMarker = (definition) => {
+  const valueSystem = definition?.codeSystem ?? definition?.valueSystem
+  if (
+    typeof definition?.url !== 'string' ||
+    definition.url.trim() === '' ||
+    typeof valueSystem !== 'string' ||
+    valueSystem.trim() === ''
+  ) {
+    throw new Error('An adapter source extension marker is incomplete.')
+  }
+  return {
+    kind: 'extension-url',
+    url: definition.url,
+    resourceTypes: markerResourceTypes(definition, 'extension-url'),
+  }
+}
+
+const adapterSourceMarkerClaims = [
+  {
+    catalog: healthKitAdapter,
+    markers: [extensionMarker(healthKitAdapter.sourceTypeExtension)],
+  },
+  {
+    catalog: healthConnectAdapter,
+    markers: [extensionMarker(healthConnectAdapter.sourceTypeExtension)],
+  },
+  {
+    catalog: providerAdapter,
+    markers: [
+      extensionMarker(providerAdapter.sourceTypeExtension),
+      extensionMarker(providerAdapter.providerExtension),
+    ],
+  },
+  {
+    catalog: sensorKitAdapter,
+    markers: [extensionMarker(sensorKitAdapter.sourceTypeExtension)],
+  },
+].map(({ catalog: catalogDefinition, markers }) => {
+  const claim = adapterClaim(catalogDefinition)
+  return {
+    adapter: claim.adapter,
+    profiles: claim.targetAdapterProfiles,
+    markers,
+  }
+})
+
+const ownedAdapterProfiles = adapterSourceMarkerClaims.flatMap(
+  ({ profiles: ownedProfiles }) => ownedProfiles,
+)
+if (new Set(ownedAdapterProfiles).size !== ownedAdapterProfiles.length) {
+  throw new Error('Adapter source-marker profile ownership must be disjoint.')
+}
+
+const providerScalarOutputRoles = {}
+const providerScalarOutputDiscriminators = {}
+const providerRawOutputRoles = {}
+const providerRawOutputDiscriminators = {}
 const providerRecordEffectiveRules = {}
 const completeCivilDayEffectiveRule =
   'the source civil day represented as a complete day Period; midpoint substitution is forbidden'
 for (const provider of providerAdapter.providers) {
   if (
+    typeof provider.measurementOwner !== 'string' ||
+    provider.measurementOwner.length === 0 ||
+    typeof provider.observationProfile !== 'string' ||
+    !profileClaims.observationAdapterClaim.adapterProfiles.includes(
+      provider.observationProfile,
+    ) ||
     provider.sourceTypes?.length !== provider.sourceTypeCount ||
     new Set(provider.sourceTypes.map((entry) => entry.token)).size !==
       provider.sourceTypeCount
@@ -625,18 +895,23 @@ for (const provider of providerAdapter.providers) {
   }
 
   const sourceMappings = {}
+  const sourceDiscriminators = {}
   const rawSourceMappings = {}
+  const rawSourceDiscriminators = {}
   const recordEffectiveRules = {}
   for (const sourceType of provider.sourceTypes) {
-    const supportedElements = (sourceType.elements ?? []).filter(
-      (element) => element.status === 'supported',
+    const structuredElements = (sourceType.elements ?? []).filter(
+      (element) =>
+        element.status === 'supported' ||
+        element.status === 'platform-exclusive',
     )
     const measurementIds = [
       ...new Set(
         (sourceType.elements ?? [])
           .filter(
             (element) =>
-              element.status === 'supported' &&
+              (element.status === 'supported' ||
+                element.status === 'platform-exclusive') &&
               element.groupedMapping === undefined,
           )
           .flatMap((element) => element.measurementIds ?? []),
@@ -653,10 +928,13 @@ for (const provider of providerAdapter.providers) {
       sourceMappings[sourceType.token] = Object.fromEntries(
         measurementIds.map((measurementId) => [measurementId, measurementId]),
       )
+      sourceDiscriminators[sourceType.token] = Object.fromEntries(
+        measurementIds.map((measurementId) => [measurementId, 'single']),
+      )
     }
     const effectiveRules = [
       ...new Set(
-        supportedElements
+        structuredElements
           .map((element) => element.effective)
           .filter((rule) => typeof rule === 'string'),
       ),
@@ -664,7 +942,7 @@ for (const provider of providerAdapter.providers) {
     if (effectiveRules.includes(completeCivilDayEffectiveRule)) {
       if (
         effectiveRules.length !== 1 ||
-        supportedElements.some(
+        structuredElements.some(
           (element) => element.effective !== completeCivilDayEffectiveRule,
         )
       ) {
@@ -694,6 +972,8 @@ for (const provider of providerAdapter.providers) {
         )
       }
       rawSourceMappings[sourceType.token] =
+        providerAdapter.recordingDocument.outputRole
+      rawSourceDiscriminators[sourceType.token] =
         providerAdapter.recordingDocument.outputDiscriminator
     }
   }
@@ -701,7 +981,11 @@ for (const provider of providerAdapter.providers) {
     if (
       grouped.status !== 'supported' ||
       typeof grouped.token !== 'string' ||
+      grouped.token.length === 0 ||
+      typeof grouped.outputRole !== 'string' ||
+      grouped.outputRole.length === 0 ||
       typeof grouped.outputDiscriminator !== 'string' ||
+      grouped.outputDiscriminator.length === 0 ||
       !Array.isArray(grouped.measurementIds) ||
       grouped.measurementIds.length === 0
     ) {
@@ -717,20 +1001,53 @@ for (const provider of providerAdapter.providers) {
     sourceMappings[grouped.token] = Object.fromEntries(
       grouped.measurementIds.map((measurementId) => [
         measurementId,
+        grouped.outputRole,
+      ]),
+    )
+    sourceDiscriminators[grouped.token] = Object.fromEntries(
+      grouped.measurementIds.map((measurementId) => [
+        measurementId,
         grouped.outputDiscriminator,
       ]),
     )
   }
   for (const [sourceType, mappings] of Object.entries(sourceMappings)) {
-    const discriminators = Object.values(mappings)
-    if (new Set(discriminators).size !== discriminators.length) {
+    const discriminators = sourceDiscriminators[sourceType]
+    if (
+      discriminators === undefined ||
+      JSON.stringify(Object.keys(discriminators)) !==
+        JSON.stringify(Object.keys(mappings))
+    ) {
       throw new Error(
-        `Provider ${provider.id}/${sourceType} output discriminators must be unique.`,
+        `Provider ${provider.id}/${sourceType} output coordinate keys are inconsistent.`,
       )
     }
+    const coordinates = Object.entries(mappings).map(
+      ([measurementId, outputRole]) =>
+        `${outputRole.length}:${outputRole}${discriminators[measurementId].length}:${discriminators[measurementId]}`,
+    )
+    if (new Set(coordinates).size !== coordinates.length) {
+      throw new Error(
+        `Provider ${provider.id}/${sourceType} output coordinates must be unique.`,
+      )
+    }
+    for (const measurementId of Object.keys(mappings)) {
+      const definition = implemented[measurementId]
+      if (
+        !isMobileOwned(definition) &&
+        (definition?.owner !== provider.measurementOwner ||
+          !['codeableConcept', 'quantity'].includes(definition.valueKind))
+      ) {
+        throw new Error(
+          `Provider ${provider.id}/${sourceType} cannot admit owner-exclusive measurement ${measurementId} outside its exact scalar facade.`,
+        )
+      }
+    }
   }
-  providerScalarMappings[provider.id] = sourceMappings
-  providerRawMappings[provider.id] = rawSourceMappings
+  providerScalarOutputRoles[provider.id] = sourceMappings
+  providerScalarOutputDiscriminators[provider.id] = sourceDiscriminators
+  providerRawOutputRoles[provider.id] = rawSourceMappings
+  providerRawOutputDiscriminators[provider.id] = rawSourceDiscriminators
   if (Object.keys(recordEffectiveRules).length > 0) {
     providerRecordEffectiveRules[provider.id] = recordEffectiveRules
   }
@@ -743,6 +1060,16 @@ if (
       daily_activity: {
         kind: 'complete-civil-day-period',
         measurementIds: ['step-count', 'active-energy', 'distance'],
+        outputsShareEffective: true,
+      },
+      daily_cardiovascular_age: {
+        kind: 'complete-civil-day-period',
+        measurementIds: ['oura-cardiovascular-age'],
+        outputsShareEffective: true,
+      },
+      daily_readiness: {
+        kind: 'complete-civil-day-period',
+        measurementIds: ['oura-readiness-score'],
         outputsShareEffective: true,
       },
     },
@@ -771,40 +1098,81 @@ if (
 }
 
 if (
-  Object.values(providerRawMappings).flatMap((mapping) => Object.keys(mapping))
-    .length !== 4
+  Object.values(providerRawOutputRoles).flatMap((mapping) =>
+    Object.keys(mapping),
+  ).length !== 4
 ) {
   throw new Error('Provider must admit exactly four raw source tokens.')
 }
+if (
+  JSON.stringify(
+    Object.fromEntries(
+      Object.entries(providerRawOutputRoles).map(([provider, mappings]) => [
+        provider,
+        Object.keys(mappings),
+      ]),
+    ),
+  ) !==
+  JSON.stringify(
+    Object.fromEntries(
+      Object.entries(providerRawOutputDiscriminators).map(
+        ([provider, mappings]) => [provider, Object.keys(mappings)],
+      ),
+    ),
+  )
+) {
+  throw new Error(
+    'Provider raw output role/discriminator keys are inconsistent.',
+  )
+}
 
 const providerIdentity = providerAdapter.identity
+const expectedProviderSourceComponents = [
+  'provider-code',
+  'source-type',
+  'provider-scope-system',
+  'provider-scope-value',
+  'native-record-id',
+]
+const expectedProviderOutputComponents = [
+  ...expectedProviderSourceComponents,
+  'output-role',
+  'output-discriminator',
+]
+const expectedProviderArtifactComponents = [
+  ...expectedProviderSourceComponents,
+  'format-code',
+  'part-index',
+]
 if (
-  providerIdentity?.digest !== undefined ||
-  providerIdentity.sourceRecord?.system !==
-    'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id' ||
-  providerIdentity.output?.system !==
-    'https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id' ||
-  providerIdentity.output?.outputDiscriminatorRule
-    ?.ordinarySupportedMeasurement !==
-    'the exact measurementId string from the supported element mapping' ||
-  providerIdentity.output?.outputDiscriminatorRule?.groupedMapping !==
-    'the exact outputDiscriminator declared on that groupedMappings row' ||
-  providerIdentity.output?.outputDiscriminatorRule?.mappedStandardRaw !==
-    'native-recording' ||
-  providerIdentity.output?.outputDiscriminatorRule?.noFallback !== true ||
-  providerIdentity.vectors?.length !== 9 ||
-  providerIdentity.vectors.filter((vector) => vector.role === 'sourceRecord')
-    .length !== 3 ||
-  providerIdentity.vectors.filter((vector) => vector.role === 'output')
-    .length !== 2 ||
-  providerIdentity.vectors.filter((vector) => vector.role === 'contentDerived')
-    .length !== 1 ||
-  providerIdentity.vectors.filter((vector) => vector.role === 'writerRecord')
-    .length !== 1 ||
-  providerIdentity.composition?.separator !== '|' ||
-  // Export-created nodes moved to the deployment's namespace, so this guide owns neither.
-  providerIdentity.conversion !== undefined ||
-  providerIdentity.exchange !== undefined
+  providerIdentity?.contract !== 'catalog/exchange-protocol.json' ||
+  providerIdentity.protocolVersion !== 2 ||
+  providerIdentity.adapterId !== 'providers' ||
+  providerIdentity.sourceRecord?.identityKind !== 'provider-record' ||
+  providerIdentity.sourceRecord?.identifierRole !== 'source-record' ||
+  JSON.stringify(providerIdentity.sourceRecord?.components) !==
+    JSON.stringify(expectedProviderSourceComponents) ||
+  providerIdentity.sourceOutput?.identityKind !== 'provider-output' ||
+  providerIdentity.sourceOutput?.identifierRole !== 'source-output' ||
+  JSON.stringify(providerIdentity.sourceOutput?.components) !==
+    JSON.stringify(expectedProviderOutputComponents) ||
+  providerIdentity.writerRecord?.identityKind !== 'writer-record' ||
+  providerIdentity.writerRecord?.identifierRole !== 'writer-record' ||
+  providerIdentity.sourceArtifact?.identityKind !== 'provider-artifact' ||
+  providerIdentity.sourceArtifact?.identifierRole !== 'source-artifact' ||
+  JSON.stringify(providerIdentity.sourceArtifact?.components) !==
+    JSON.stringify(expectedProviderArtifactComponents) ||
+  providerAdapter.providers.some(
+    ({ identifierScope, providerScopeMode, identifierScopeReason }) =>
+      !['account', 'global'].includes(identifierScope) ||
+      providerScopeMode !==
+        (identifierScope === 'account' ?
+          'deployment-scoped-account-pseudonym'
+        : 'documented-global-key-space') ||
+      typeof identifierScopeReason !== 'string' ||
+      identifierScopeReason.trim() === '',
+  ) ||
+  typeof providerIdentity.resourceIdPolicy !== 'string'
 ) {
   throw new Error('Provider deterministic identity contract is incomplete.')
 }
@@ -814,7 +1182,14 @@ if (
   formatRegistry.version !== packageGraph.version ||
   typeof formatRegistry.codeSystem !== 'string' ||
   typeof formatRegistry.valueSet !== 'string' ||
-  Object.keys(formatRegistry.formats ?? {}).length === 0
+  Object.keys(formatRegistry.formats ?? {}).length === 0 ||
+  Object.hasOwn(formatRegistry.formats ?? {}, 'fhir-resource-array') ||
+  formatRegistry.formats?.['fhir-collection-bundle']?.contentType !==
+    'application/fhir+json' ||
+  formatRegistry.formats?.['fhir-r4-resource']?.contentType !==
+    'application/fhir+json' ||
+  formatRegistry.formats?.['provider-recording']?.contentType !==
+    'application/vnd.grovealliance.provider+json'
 ) {
   throw new Error('Recording format registry is incomplete.')
 }
@@ -823,6 +1198,7 @@ if (
 const recordingFormatRegistry = {
   codeSystem: formatRegistry.codeSystem,
   valueSet: formatRegistry.valueSet,
+  version: formatRegistry.version,
   formats: Object.fromEntries(
     Object.entries(formatRegistry.formats).map(([code, entry]) => {
       if (
@@ -845,12 +1221,10 @@ const recordingFormatRegistry = {
 }
 
 const providerAdmittedMeasurements = new Set(
-  Object.values(providerScalarMappings).flatMap((sourceMappings) =>
+  Object.values(providerScalarOutputRoles).flatMap((sourceMappings) =>
     Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
   ),
 )
-// The Provider facade emits shared Mobile profiles only; owner-exclusive
-// mappings stay in the contract data but are outside the implemented surface.
 const sharedAdmittedMeasurements = new Set(
   [...providerAdmittedMeasurements].filter((id) =>
     isMobileOwned(implemented[id]),
@@ -882,27 +1256,352 @@ for (const row of healthKitAdapter.rows) {
   }
 }
 
+const protocolIdentityKinds = exchangeProtocol.opaqueIdentity?.identityKinds
+const identityKindsByName = new Map(
+  (protocolIdentityKinds ?? []).map((definition) => [
+    definition.kind,
+    definition,
+  ]),
+)
+const protocolIdentifierRoles = new Set(
+  (protocolIdentityKinds ?? []).map(({ identifierRole }) => identifierRole),
+)
+const identityVectors = exchangeProtocol.testVectors?.identities
+const invalidIdentityVectors = exchangeProtocol.testVectors?.invalidIdentities
+const providerCodes = new Set(providerAdapter.providers.map(({ id }) => id))
+const providerIdentityKinds = new Set([
+  'provider-record',
+  'provider-output',
+  'provider-artifact',
+])
+const genericSourceIdentityKinds = new Set([
+  'source-record',
+  'source-output',
+  'source-artifact',
+])
+const sourceOutputVector = identityVectors?.find(
+  ({ id }) => id === 'multi-output-sample',
+)
+const sourceContextVector = identityVectors?.find(
+  ({ id }) => id === 'healthkit-medication-source-context',
+)
+const opaqueIdentityValue =
+  /^v2:[A-Za-z0-9._-]+:[1-9][0-9]*:[A-Za-z0-9_-]{43}$/u
+const retractionTargetRules =
+  exchangeProtocol.lifecycle?.retraction?.targetRoles
+const retractionTargetEntries =
+  (
+    typeof retractionTargetRules === 'object' &&
+    retractionTargetRules !== null &&
+    !Array.isArray(retractionTargetRules)
+  ) ?
+    Object.entries(retractionTargetRules)
+  : []
+const adapterOnlyOutputProfileClaims =
+  exchangeProtocol.lifecycle?.active?.adapterOnlyOutputProfileClaims
+const activeEntryResourcePolicy =
+  exchangeProtocol.lifecycle?.active?.entryResourcePolicy
+const adapterOnlyClaimRows = [
+  profileClaims.healthConnectSpecimenClaim,
+  ...(profileClaims.healthKitPlatformExclusiveResourceClaims ?? []),
+]
+const adapterOnlyClaimTypes = adapterOnlyClaimRows.map(
+  ({ resourceType }) => resourceType,
+)
+const expectedHealthKitSingleProfiles = measurements
+  .filter((measurement) => measurement.owner === 'healthkit')
+  .map((measurement) => profiles[measurement.profile])
+const healthKitSingleProfiles =
+  profileClaims.healthKitSingleProfileObservationClaims?.profiles
+const documentProfileClaimRows = [
+  profileClaims.sensorRecordingDocumentClaim,
+  profileClaims.healthKitRecordingDocumentClaim,
+  profileClaims.healthKitClinicalRecordDocumentClaim,
+  profileClaims.providerRecordingDocumentClaim,
+  profileClaims.sensorKitRecordingDocumentClaim,
+]
+const exactSet = (left, right) =>
+  Array.isArray(left) &&
+  Array.isArray(right) &&
+  left.length === right.length &&
+  new Set(left).size === left.length &&
+  left.every((value) => right.includes(value))
+const activeOutputResourceTypes = [
+  'Observation',
+  'DocumentReference',
+  'Specimen',
+  'VisionPrescription',
+  'MedicationAdministration',
+  'MedicationStatement',
+]
+const activeSupportingResourceTypes = [
+  'Patient',
+  'Device',
+  'ResearchStudy',
+  'ResearchSubject',
+  'PlanDefinition',
+  'QuestionnaireResponse',
+]
+const activeDeviceClaims = profileClaims.activeDeviceClaims
+const activeQuestionnaireResponseClaim =
+  profileClaims.activeQuestionnaireResponseClaim
+const expectedReferencePaths = [
+  ['Observation', 'subject', ['Patient']],
+  ['Observation', 'device', ['Device']],
+  ['Observation', 'specimen', ['Specimen']],
+  ['Observation', 'focus', ['Location']],
+  ['Observation', 'hasMember', ['Observation']],
+  [
+    'Observation',
+    'derivedFrom',
+    ['Observation', 'DocumentReference', 'QuestionnaireResponse'],
+  ],
+  ['DocumentReference', 'subject', ['Patient']],
+  ['Specimen', 'subject', ['Patient']],
+  ['MedicationAdministration', 'subject', ['Patient']],
+  ['MedicationStatement', 'subject', ['Patient']],
+  ['VisionPrescription', 'patient', ['Patient']],
+  ['ResearchSubject', 'individual', ['Patient']],
+  ['ResearchSubject', 'study', ['ResearchStudy']],
+  ['ResearchStudy', 'protocol', ['PlanDefinition']],
+  ['Device', 'parent', ['Device']],
+]
+const expectedExtensionTargets = [
+  [
+    'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
+    ['Device'],
+  ],
+  [
+    'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',
+    ['ResearchStudy'],
+  ],
+]
+const referencePaths = exchangeProtocol.referencePolicy?.paths?.map(
+  ({ resourceType, path, targetTypes }) => [resourceType, path, targetTypes],
+)
+const extensionTargets =
+  exchangeProtocol.referencePolicy?.extensionTargets?.map(
+    ({ url, targetTypes }) => [url, targetTypes],
+  )
+const exchangeRuleDiagnostics = Object.fromEntries(
+  (exchangeCorpus.cases ?? []).map(({ expectedRule }) => [
+    expectedRule?.code,
+    {
+      reason: expectedRule?.reason,
+      severity: expectedRule?.severity,
+    },
+  ]),
+)
+const exchangeRuleRows = exchangeCorpus.cases?.map(
+  ({ expectedRule }) => expectedRule,
+)
 if (
-  exchangeIdentity.profile !== profiles['grove-mobile-exchange-bundle'] ||
-  typeof exchangeIdentity.entryIdentifierExtension !== 'string' ||
-  exchangeIdentity.fullUrlAlgorithm?.name !== 'uuid-v5-composed-identifier-v1'
+  exchangeProtocol.schemaVersion !== 1 ||
+  exchangeProtocol.version !== packageGraph.version ||
+  exchangeProtocol.protocolVersion !== 2 ||
+  exchangeProtocol.releaseVersion !== packageGraph.version ||
+  exchangeProtocol.fhirVersion !== '4.0.1' ||
+  exchangeProtocol.profiles?.activeBundle !==
+    profiles['grove-mobile-exchange-bundle'] ||
+  exchangeProtocol.profiles?.conversionProvenance !==
+    profiles['grove-mobile-conversion-provenance'] ||
+  exchangeProtocol.profiles?.retractionBundle !==
+    profiles['grove-mobile-retraction-bundle'] ||
+  exchangeProtocol.profiles?.retractionProvenance !==
+    profiles['grove-mobile-retraction-provenance'] ||
+  exchangeProtocol.opaqueIdentity?.algorithm !== 'HMAC-SHA-256' ||
+  exchangeProtocol.opaqueIdentity?.keyRequirements?.minimumBytes !== 32 ||
+  exchangeProtocol.opaqueIdentity?.domain !==
+    'org.grovealliance.fhir.identity.v2' ||
+  exchangeProtocol.entryIdentity?.entryNode?.domain !==
+    'org.grovealliance.fhir.entry-node.v2' ||
+  exchangeProtocol.entryIdentity?.fullUrl?.namespace !==
+    '43df4575-bff7-5a57-9a80-2472cd2b0623' ||
+  !uniqueNonemptyStrings(
+    exchangeProtocol.entryIdentity?.resourceIdentifierPriority,
+  ) ||
+  exchangeProtocol.entryIdentity.resourceIdentifierPriority.some(
+    (role) => !protocolIdentifierRoles.has(role),
+  ) ||
+  exchangeProtocol.extensions?.entryNodeKey !==
+    `${packageCanonicals.mobile}/StructureDefinition/grove-exchange-entry-node-key` ||
+  exchangeProtocol.extensions?.retractionTargetRole !==
+    `${packageCanonicals.mobile}/StructureDefinition/grove-retraction-target-role` ||
+  exchangeProtocol.codeSystems?.identifierRole !==
+    `${packageCanonicals.mobile}/CodeSystem/grove-identifier-role` ||
+  exchangeProtocol.codeSystems?.lifecycleEvent !==
+    `${packageCanonicals.mobile}/CodeSystem/grove-lifecycle-event` ||
+  exchangeProtocol.codeSystems?.retractionTargetRole !==
+    `${packageCanonicals.mobile}/CodeSystem/grove-retraction-target-role` ||
+  exchangeProtocol.lifecycle?.retraction?.activityCode !==
+    'source-record-retracted' ||
+  adapterOnlyOutputProfileClaims?.authority !== 'catalog/profile-claims.json' ||
+  !exactSet(
+    adapterOnlyOutputProfileClaims?.resourceTypes,
+    adapterOnlyClaimTypes,
+  ) ||
+  !exactSet(
+    activeEntryResourcePolicy?.outputResourceTypes,
+    activeOutputResourceTypes,
+  ) ||
+  !exactSet(
+    activeEntryResourcePolicy?.supportingResourceTypes,
+    activeSupportingResourceTypes,
+  ) ||
+  activeEntryResourcePolicy?.lifecycleResourceType !== 'Provenance' ||
+  activeEntryResourcePolicy.otherResourceTypesAllowed !== false ||
+  activeEntryResourcePolicy.containedResourcesAllowed !== false ||
+  activeEntryResourcePolicy.supportingResourcesMustBeConnected !== true ||
+  activeEntryResourcePolicy.profileClaimAuthority !==
+    'catalog/profile-claims.json' ||
+  adapterOnlyClaimRows.some(
+    (claim) =>
+      claim?.cardinality !== 1 ||
+      claim.otherProfilesAllowed !== false ||
+      typeof claim.profile !== 'string' ||
+      !uniqueNonemptyStrings(claim.requiredIdentifierRoles),
+  ) ||
+  !exactSet(healthKitSingleProfiles, expectedHealthKitSingleProfiles) ||
+  profileClaims.healthKitSingleProfileObservationClaims?.cardinality !== 1 ||
+  profileClaims.healthKitSingleProfileObservationClaims
+    ?.otherProfilesAllowed !== false ||
+  documentProfileClaimRows.some(
+    (claim) =>
+      typeof claim !== 'object' ||
+      claim === null ||
+      claim.otherProfilesAllowed !== false ||
+      claim.cardinality !== claim.profiles?.length ||
+      !uniqueNonemptyStrings(claim.profiles) ||
+      !uniqueNonemptyStrings(claim.requiredIdentifierRoles),
+  ) ||
+  !Array.isArray(activeDeviceClaims) ||
+  activeDeviceClaims.length !== 4 ||
+  activeDeviceClaims.some(
+    (claim) =>
+      claim?.resourceType !== 'Device' ||
+      claim.cardinality !== 1 ||
+      claim.otherProfilesAllowed !== false ||
+      claim.profiles?.length !== 1 ||
+      !uniqueNonemptyStrings(claim.profiles) ||
+      !uniqueNonemptyStrings(claim.requiredIdentifierRoles),
+  ) ||
+  activeQuestionnaireResponseClaim?.resourceType !== 'QuestionnaireResponse' ||
+  activeQuestionnaireResponseClaim.cardinality !== 1 ||
+  activeQuestionnaireResponseClaim.otherProfilesAllowed !== false ||
+  activeQuestionnaireResponseClaim.profiles?.length !== 1 ||
+  !uniqueNonemptyStrings(activeQuestionnaireResponseClaim.profiles) ||
+  JSON.stringify(referencePaths) !== JSON.stringify(expectedReferencePaths) ||
+  JSON.stringify(extensionTargets) !==
+    JSON.stringify(expectedExtensionTargets) ||
+  typeof exchangeProtocol.referencePolicy?.literalClosure !== 'string' ||
+  typeof exchangeProtocol.referencePolicy?.declaredType !== 'string' ||
+  typeof exchangeProtocol.referencePolicy?.governedShape !== 'string' ||
+  exchangeCorpus.schemaVersion !== 1 ||
+  !Array.isArray(exchangeRuleRows) ||
+  exchangeRuleRows.length !== 31 ||
+  Object.keys(exchangeRuleDiagnostics).length !==
+    new Set(exchangeRuleRows.map(({ code }) => code)).size ||
+  exchangeRuleRows.some(
+    (rule) =>
+      typeof rule?.code !== 'string' ||
+      !rule.code.startsWith('mobile-') ||
+      typeof rule.reason !== 'string' ||
+      rule.reason.length === 0 ||
+      typeof rule.location !== 'string' ||
+      rule.location.length === 0 ||
+      rule.severity !== 'error' ||
+      exchangeRuleDiagnostics[rule.code]?.reason !== rule.reason ||
+      exchangeRuleDiagnostics[rule.code]?.severity !== rule.severity,
+  ) ||
+  typeof exchangeProtocol.recordingDevice?.instanceRule !== 'string' ||
+  typeof exchangeProtocol.recordingDevice?.unknownInstance !== 'string' ||
+  typeof exchangeProtocol.recordingDevice?.snapshots !== 'string' ||
+  typeof exchangeProtocol.recordingDevice?.roles !== 'string' ||
+  !['application', 'host', 'recording-device'].every((role) =>
+    exchangeProtocol.recordingDevice.roles.includes(role),
+  ) ||
+  retractionTargetEntries.length === 0 ||
+  retractionTargetEntries.some(
+    ([role, rule]) =>
+      role.length === 0 ||
+      typeof rule !== 'object' ||
+      rule === null ||
+      !protocolIdentifierRoles.has(rule.identifierRole) ||
+      !uniqueNonemptyStrings(rule.resourceTypes),
+  ) ||
+  !Array.isArray(protocolIdentityKinds) ||
+  protocolIdentityKinds.length === 0 ||
+  identityKindsByName.size !== protocolIdentityKinds.length ||
+  protocolIdentityKinds?.some(
+    ({ kind, identifierRole, components }) =>
+      typeof kind !== 'string' ||
+      kind.length === 0 ||
+      typeof identifierRole !== 'string' ||
+      identifierRole.length === 0 ||
+      !uniqueNonemptyStrings(components),
+  ) ||
+  !Array.isArray(identityVectors) ||
+  identityVectors.length === 0 ||
+  new Set(identityVectors.map(({ id }) => id)).size !==
+    identityVectors.length ||
+  identityVectors.some((vector) => {
+    const definition = identityKindsByName.get(vector.identityKind)
+    return (
+      typeof vector.id !== 'string' ||
+      vector.id.length === 0 ||
+      definition === undefined ||
+      !Array.isArray(vector.components) ||
+      vector.components.length !== definition.components.length ||
+      vector.components.some(
+        (component) => typeof component !== 'string' || component.length === 0,
+      ) ||
+      (providerIdentityKinds.has(vector.identityKind) &&
+        !providerCodes.has(vector.components[0])) ||
+      (genericSourceIdentityKinds.has(vector.identityKind) &&
+        providerCodes.has(vector.components[0])) ||
+      !opaqueIdentityValue.test(vector.value)
+    )
+  }) ||
+  !Array.isArray(invalidIdentityVectors) ||
+  invalidIdentityVectors.length !== 4 ||
+  new Set(invalidIdentityVectors.map(({ id }) => id)).size !==
+    invalidIdentityVectors.length ||
+  invalidIdentityVectors.some((vector) => {
+    const definition = identityKindsByName.get(vector.identityKind)
+    const emptyComponentCount =
+      Array.isArray(vector.components) ?
+        vector.components.filter((component) => component === '').length
+      : 0
+    const providerKindRequired =
+      vector.expectedError === 'provider-kind-required' &&
+      genericSourceIdentityKinds.has(vector.identityKind) &&
+      providerCodes.has(vector.components?.[0])
+    return (
+      typeof vector.id !== 'string' ||
+      vector.id.length === 0 ||
+      definition === undefined ||
+      !Array.isArray(vector.components) ||
+      vector.components.length !== definition.components.length ||
+      vector.components.some((component) => typeof component !== 'string') ||
+      !(
+        (vector.expectedError === 'empty-component' &&
+          emptyComponentCount === 1) ||
+        providerKindRequired
+      )
+    )
+  }) ||
+  new Set(
+    invalidIdentityVectors
+      .filter(({ expectedError }) => expectedError === 'provider-kind-required')
+      .map(({ identityKind }) => identityKind),
+  ).size !== genericSourceIdentityKinds.size ||
+  sourceOutputVector?.identityKind !== 'source-output' ||
+  sourceOutputVector.components?.length !== 7 ||
+  sourceOutputVector.value !==
+    'v2:test-key:1:PQCWz9dZSrJm-KrbhbkckGeowkjhSSwWDRCVuF3VfXw' ||
+  sourceContextVector?.identityKind !== 'source-context'
 ) {
-  throw new Error('Exchange identity catalog is incomplete or inconsistent.')
-}
-
-for (const vector of exchangeIdentity.vectors ?? []) {
-  // A rejection vector states no name and no URN: it exists to record what is refused.
-  if (vector.input === null && vector.fullUrl === null) {
-    continue
-  }
-  if (
-    typeof vector.system !== 'string' ||
-    typeof vector.value !== 'string' ||
-    typeof vector.input !== 'string' ||
-    typeof vector.fullUrl !== 'string'
-  ) {
-    throw new Error('Exchange identity vectors must be complete.')
-  }
+  throw new Error('Exchange protocol catalog is incomplete or inconsistent.')
 }
 
 const implementedCapabilities = capabilities.measurements?.filter(
@@ -937,18 +1636,27 @@ if (
 }
 if (
   !Array.isArray(implementedCapabilities) ||
-  implementedCapabilities.length !== sharedAdmittedMeasurements.size
+  implementedCapabilities.length !== sharedAdmittedMeasurements.size ||
+  [...providerAdmittedMeasurements].some((key) => {
+    const capability = capabilities.measurements.find(
+      (entry) => entry.key === key,
+    )
+    return (
+      capability === undefined ||
+      !['implemented', 'platform-exclusive'].includes(capability.status)
+    )
+  })
 ) {
   throw new Error(
-    'Capability matrix implemented rows must exactly match the Provider facade.',
+    'Capability matrix shared and platform-exclusive rows must exactly match the Provider facade.',
   )
 }
-const rawMappingRows = Object.entries(providerRawMappings).flatMap(
+const rawMappingRows = Object.entries(providerRawOutputRoles).flatMap(
   ([provider, mappings]) =>
-    Object.entries(mappings).map(([sourceType, outputDiscriminator]) => ({
+    Object.entries(mappings).map(([sourceType, outputRole]) => ({
       provider,
       sourceType,
-      outputDiscriminator,
+      outputRole,
     })),
 )
 if (
@@ -960,8 +1668,8 @@ if (
         (capability) =>
           capability.provider === mapping.provider &&
           capability.sourceType === mapping.sourceType &&
-          capability.outputDiscriminator === mapping.outputDiscriminator &&
-          capability.profile === profiles['provider-recording-document'] &&
+          capability.outputRole === mapping.outputRole &&
+          capability.profile === profiles['providers-recording-document'] &&
           capability.sourceNeutralProfile ===
             profiles['grove-sensor-recording-document'],
       ),
@@ -1006,7 +1714,7 @@ for (const normative of measurements) {
         capability.profile !== normative.profile)
     ) {
       throw new Error(
-        `Owner-exclusive capability ${normative.id} must stay outside the shared facade.`,
+        `Owner-exclusive capability ${normative.id} must retain its exact platform-exclusive contract.`,
       )
     }
     continue
@@ -1059,7 +1767,8 @@ const generated = {
   mobilePackageMetadata,
   questionnairePackageMetadata,
   providerPackageMetadata,
-  exchangeIdentity,
+  exchangeProtocol,
+  exchangeRuleDiagnostics,
   profileClaims,
   packageCanonicals,
   profiles,
@@ -1067,13 +1776,20 @@ const generated = {
   effectiveCanonicalization,
   effectiveCanonicalizationVectors: semanticEffectiveCanonicalization.vectors,
   providerAdapter,
-  providerScalarMappings,
-  providerRawMappings,
+  providerScalarOutputDiscriminators,
+  providerScalarOutputRoles,
+  providerRawOutputRoles,
+  providerRawOutputDiscriminators,
   providerRecordEffectiveRules,
   questionnaireProfiles,
+  mobileProfiles,
   providerProfiles,
   providerPackageCanonicals,
   adapterMeasurementCatalog,
+  adapterSourceMarkerClaims,
+  healthKitClinicalRecordAdmission,
+  healthKitApplicationDeviceIdentity,
+  healthConnectDataOriginApplication,
   recordingFormatRegistry,
 }
 
@@ -1083,91 +1799,34 @@ for (const value of Object.values(generated)) {
   }
 }
 
-const frozenExport = (name, value) => {
-  const valueName = `${name}Value`
-  return `const ${valueName} = ${JSON.stringify(value, null, 2)} as const
-
-export const ${name}: typeof ${valueName} = deepFreeze(${valueName})`
-}
-
-const header = (disableClearText) => `//
-// This source file is part of the Grove open-source project
-//
-// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
-//
-// SPDX-License-Identifier: MIT
-//
-// Generated by scripts/generate-measurement-catalog.mjs. Do not edit directly.
-
-${disableClearText ? '/* eslint-disable sonarjs/no-clear-text-protocols */\n' : ''}
-
-import { deepFreeze } from '../core/index.js'
-
-`
-const versions = `export const groveFhirContractVersion = ${JSON.stringify(packageGraph.version)} as const
-
-export const groveFhirVersion = ${JSON.stringify(packageGraph.fhirVersion)} as const
-`
-
-const mobileUnformattedOutput = `${header(true)}${versions}
-
-${frozenExport('groveMobilePackageMetadata', mobilePackageMetadata)}
-
-${frozenExport('groveFhirExchangeIdentity', exchangeIdentity)}
-
-${frozenExport('sharedMobileMeasurementCatalog', sharedMobileSemanticCatalog)}
-
-${frozenExport('mobileEffectiveCanonicalization', effectiveCanonicalization)}
-
-${frozenExport('mobileEffectiveCanonicalizationVectors', semanticEffectiveCanonicalization.vectors)}
-
-export type SharedMobileMeasurementKind = keyof typeof sharedMobileMeasurementCatalog
-`
-
-const questionnaireUnformattedOutput = `${header(false)}${versions}
-
-${frozenExport('groveQuestionnairePackageMetadata', questionnairePackageMetadata)}
-
-${frozenExport('groveQuestionnaireProfileCanonicals', questionnaireProfiles)}
-`
-
-const providerUnformattedOutput = `${header(true)}${versions}
-
-${frozenExport('groveProviderPackageMetadata', providerPackageMetadata)}
-
-${frozenExport('groveProviderPackageCanonicals', providerPackageCanonicals)}
-
-${frozenExport('groveProviderProfileCanonicals', providerProfiles)}
-
-${frozenExport('providerAdapterCatalog', providerAdapter)}
-
-${frozenExport('adapterMeasurementCatalog', adapterMeasurementCatalog)}
-
-${frozenExport('providerScalarMappings', providerScalarMappings)}
-
-${frozenExport('providerRecordEffectiveRules', providerRecordEffectiveRules)}
-
-${frozenExport('providerRawMappings', providerRawMappings)}
-
-${frozenExport('groveRecordingFormatRegistry', recordingFormatRegistry)}
-
-export type AdapterMeasurementCatalog = typeof adapterMeasurementCatalog
-
-export type ProviderRecordingFormat =
-  keyof typeof groveRecordingFormatRegistry.formats
-
-export type ProviderScalarMappings = typeof providerScalarMappings
-
-export type ProviderRecordEffectiveRules = typeof providerRecordEffectiveRules
-
-export type ProviderRawMappings = typeof providerRawMappings
-`
-
-const unformattedOutputs = {
-  mobile: mobileUnformattedOutput,
-  questionnaire: questionnaireUnformattedOutput,
-  provider: providerUnformattedOutput,
-}
+const unformattedOutputs = renderMeasurementCatalogSources({
+  adapterMeasurementCatalog,
+  adapterSourceMarkerClaims,
+  effectiveCanonicalization,
+  effectiveCanonicalizationVectors: semanticEffectiveCanonicalization.vectors,
+  exchangeProtocol,
+  exchangeRuleDiagnostics,
+  healthConnectDataOriginApplication,
+  healthKitApplicationDeviceIdentity,
+  healthKitClinicalRecordAdmission,
+  mobilePackageMetadata,
+  mobileProfiles,
+  packageGraph,
+  profileClaims,
+  providerAdapter,
+  providerScalarOutputDiscriminators,
+  providerPackageCanonicals,
+  providerPackageMetadata,
+  providerProfiles,
+  providerRawOutputRoles,
+  providerRawOutputDiscriminators,
+  providerRecordEffectiveRules,
+  providerScalarOutputRoles,
+  questionnairePackageMetadata,
+  questionnaireProfiles,
+  recordingFormatRegistry,
+  sharedMobileSemanticCatalog,
+})
 for (const [scope, unformattedOutput] of Object.entries(unformattedOutputs)) {
   const output = await format(unformattedOutput, {
     parser: 'typescript',

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "igVersion": "0.5.0",
+  "igVersion": "0.6.0",
   "canonicalBase": "https://grovealliance.org/fhir",
   "recordConversion": {
     "input": "One connected-provider source record with a non-empty unique subset of the catalog-admitted outputs actually present.",
@@ -10,15 +10,15 @@
     "fetchBoundary": "Provider clients, authentication, pagination, webhooks, and raw response models remain outside grove-fhir."
   },
   "statuses": {
-    "implemented": "A closed public builder emits resources conforming to the listed v0.2 profile.",
+    "implemented": "A closed public builder emits resources conforming to the listed v0.6.0 profile.",
     "implemented-recording": "The closed native-recording builder emits the exact Sensor + Provider DocumentReference graph for this catalogued provider source token.",
     "profiled-not-admitted": "The shared profile exists, but this adapter facade has no supported provider source.",
-    "adapter-profiled": "Version 0.2 defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Provider facade.",
-    "planned-shared": "The concept is shared by multiple sources but has no admitted v0.2 Grove builder.",
+    "adapter-profiled": "Version 0.6.0 defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Provider facade.",
+    "planned-shared": "The concept is shared by multiple sources but has no admitted v0.6.0 Grove builder.",
     "adapter-specific": "The semantics are source-specific and must not be collapsed into a shared concept.",
     "sensor-ig": "The concept belongs to the Sensor and Waveform contract.",
     "not-in-scope": "The source exposes the record, but it is not a mobile measurement admitted by this package.",
-    "platform-exclusive": "The measurement is owned by a single platform adapter and its adapter-exclusive profile; it is outside the shared Mobile facade and this Provider facade."
+    "platform-exclusive": "The measurement is owned by one adapter and is emitted only through that adapter's exact Provider facade row and owner-specific semantic profile; it is outside the shared Mobile facade."
   },
   "measurements": [
     {
@@ -58,7 +58,7 @@
       },
       "effective": "dateTime",
       "sources": ["healthkit", "health-connect"],
-      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement in v0.2."
+      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement in v0.6.0."
     },
     {
       "key": "basal-energy",
@@ -1013,7 +1013,7 @@
         "code": "/min",
         "display": "beats/minute"
       },
-      "effective": "dateTime",
+      "effective": "dateTime-or-Period",
       "sources": ["healthkit", "health-connect", "sensorkit", "withings"]
     },
     {
@@ -1242,19 +1242,20 @@
     },
     {
       "key": "resting-heart-rate",
-      "status": "implemented",
+      "status": "profiled-not-admitted",
       "profile": "grove-mobile-resting-heart-rate",
       "code": {
-        "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
-        "code": "resting-heart-rate",
-        "display": "Resting heart rate"
+        "system": "http://loinc.org",
+        "code": "40443-4",
+        "display": "Heart rate --resting"
       },
       "unit": {
         "code": "/min",
         "display": "beats/minute"
       },
-      "effective": "Period",
-      "sources": ["healthkit", "health-connect", "google-health-api"]
+      "effective": "dateTime",
+      "sources": ["healthkit", "health-connect"],
+      "reason": "The connected Provider sources expose a daily aggregate, not this instantaneous resting-heart-rate meaning."
     },
     {
       "key": "sexual-activity",
@@ -1473,7 +1474,7 @@
       },
       "effective": "dateTime",
       "sources": ["healthkit"],
-      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact v0.2 claim; a one-source shared Mobile wrapper is prohibited."
+      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact v0.6.0 claim; a one-source shared Mobile wrapper is prohibited."
     },
     {
       "key": "blood-glucose",
@@ -1548,9 +1549,9 @@
       "status": "implemented-recording",
       "provider": "google-health-api",
       "sourceType": "heart-rate",
-      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
-      "outputDiscriminator": "native-recording",
+      "outputRole": "native-recording",
       "sources": ["google-health-api"]
     },
     {
@@ -1558,9 +1559,9 @@
       "status": "implemented-recording",
       "provider": "oura",
       "sourceType": "heartrate",
-      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
-      "outputDiscriminator": "native-recording",
+      "outputRole": "native-recording",
       "sources": ["oura"]
     },
     {
@@ -1568,9 +1569,9 @@
       "status": "implemented-recording",
       "provider": "withings",
       "sourceType": "activityIntraday",
-      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
-      "outputDiscriminator": "native-recording",
+      "outputRole": "native-recording",
       "sources": ["withings"]
     },
     {
@@ -1578,9 +1579,9 @@
       "status": "implemented-recording",
       "provider": "withings",
       "sourceType": "sleepIntraday",
-      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document",
+      "profile": "https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document",
       "sourceNeutralProfile": "https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document",
-      "outputDiscriminator": "native-recording",
+      "outputRole": "native-recording",
       "sources": ["withings"]
     },
     {
@@ -1777,7 +1778,7 @@
     {
       "key": "body-fat-mass",
       "status": "platform-exclusive",
-      "profile": "provider-body-fat-mass",
+      "profile": "withings-body-fat-mass",
       "code": {
         "system": "http://loinc.org",
         "code": "73708-0",
@@ -1788,13 +1789,13 @@
         "display": "kg"
       },
       "effective": "dateTime",
-      "owner": "providers",
+      "owner": "withings",
       "sources": ["withings"]
     },
     {
       "key": "extracellular-water-mass",
       "status": "platform-exclusive",
-      "profile": "provider-extracellular-water-mass",
+      "profile": "withings-extracellular-water-mass",
       "code": {
         "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
         "code": "extracellular-water-mass",
@@ -1805,13 +1806,13 @@
         "display": "kg"
       },
       "effective": "dateTime",
-      "owner": "providers",
+      "owner": "withings",
       "sources": ["withings"]
     },
     {
       "key": "intracellular-water-mass",
       "status": "platform-exclusive",
-      "profile": "provider-intracellular-water-mass",
+      "profile": "withings-intracellular-water-mass",
       "code": {
         "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
         "code": "intracellular-water-mass",
@@ -1822,13 +1823,13 @@
         "display": "kg"
       },
       "effective": "dateTime",
-      "owner": "providers",
+      "owner": "withings",
       "sources": ["withings"]
     },
     {
       "key": "muscle-mass",
       "status": "platform-exclusive",
-      "profile": "provider-muscle-mass",
+      "profile": "withings-muscle-mass",
       "code": {
         "system": "http://loinc.org",
         "code": "73964-9",
@@ -1839,13 +1840,13 @@
         "display": "kg"
       },
       "effective": "dateTime",
-      "owner": "providers",
+      "owner": "withings",
       "sources": ["withings"]
     },
     {
       "key": "sleeping-heart-rate-average",
       "status": "platform-exclusive",
-      "profile": "provider-sleeping-heart-rate-average",
+      "profile": "withings-sleeping-heart-rate-average",
       "code": {
         "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
         "code": "sleeping-heart-rate-average",
@@ -1856,7 +1857,220 @@
         "display": "beats/minute"
       },
       "effective": "Period",
-      "owner": "providers",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "corrected-qt-interval",
+      "status": "platform-exclusive",
+      "profile": "withings-corrected-qt-interval",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8636-3",
+        "display": "Q-T interval corrected"
+      },
+      "unit": {
+        "code": "ms",
+        "display": "ms"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "oura-cardiovascular-age",
+      "status": "platform-exclusive",
+      "profile": "oura-cardiovascular-age",
+      "code": {
+        "system": "https://grovealliance.org/fhir/oura/CodeSystem/oura-measurement",
+        "code": "oura-cardiovascular-age",
+        "display": "Oura cardiovascular age"
+      },
+      "unit": {
+        "code": "a",
+        "display": "years"
+      },
+      "effective": "Period",
+      "owner": "oura",
+      "sources": ["oura"]
+    },
+    {
+      "key": "oura-readiness-score",
+      "status": "platform-exclusive",
+      "profile": "oura-readiness-score",
+      "code": {
+        "system": "https://grovealliance.org/fhir/oura/CodeSystem/oura-measurement",
+        "code": "oura-readiness-score",
+        "display": "Oura readiness score"
+      },
+      "unit": {
+        "code": "{score}",
+        "display": "score"
+      },
+      "effective": "Period",
+      "owner": "oura",
+      "sources": ["oura"]
+    },
+    {
+      "key": "pr-interval",
+      "status": "platform-exclusive",
+      "profile": "withings-pr-interval",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8625-6",
+        "display": "P-R Interval"
+      },
+      "unit": {
+        "code": "ms",
+        "display": "ms"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "qrs-duration",
+      "status": "platform-exclusive",
+      "profile": "withings-qrs-duration",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8633-0",
+        "display": "QRS duration"
+      },
+      "unit": {
+        "code": "ms",
+        "display": "ms"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "qt-interval",
+      "status": "platform-exclusive",
+      "profile": "withings-qt-interval",
+      "code": {
+        "system": "http://loinc.org",
+        "code": "8634-8",
+        "display": "Q-T interval"
+      },
+      "unit": {
+        "code": "ms",
+        "display": "ms"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "resting-heart-rate-daily-average",
+      "status": "platform-exclusive",
+      "profile": "google-health-daily-resting-heart-rate",
+      "code": {
+        "system": "https://grovealliance.org/fhir/google-health/CodeSystem/google-health-measurement",
+        "code": "resting-heart-rate-daily-average",
+        "display": "Resting heart rate daily average"
+      },
+      "unit": {
+        "code": "/min",
+        "display": "beats/minute"
+      },
+      "effective": "Period",
+      "owner": "google-health",
+      "sources": ["google-health-api"]
+    },
+    {
+      "key": "withings-atrial-fibrillation-notification-ecg",
+      "status": "platform-exclusive",
+      "profile": "withings-atrial-fibrillation-notification-ecg",
+      "code": {
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
+        "code": "withings-atrial-fibrillation-notification-ecg",
+        "display": "Withings atrial fibrillation notification (ECG)"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "withings-atrial-fibrillation-notification-ppg",
+      "status": "platform-exclusive",
+      "profile": "withings-atrial-fibrillation-notification-ppg",
+      "code": {
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
+        "code": "withings-atrial-fibrillation-notification-ppg",
+        "display": "Withings atrial fibrillation notification (PPG)"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "withings-nerve-health-score",
+      "status": "platform-exclusive",
+      "profile": "withings-nerve-health-score",
+      "code": {
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
+        "code": "withings-nerve-health-score",
+        "display": "Withings nerve health score"
+      },
+      "unit": {
+        "code": "{score}",
+        "display": "score"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "withings-pulse-wave-velocity",
+      "status": "platform-exclusive",
+      "profile": "withings-pulse-wave-velocity",
+      "code": {
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
+        "code": "withings-pulse-wave-velocity",
+        "display": "Withings pulse wave velocity"
+      },
+      "unit": {
+        "code": "m/s",
+        "display": "m/s"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "withings-vascular-age",
+      "status": "platform-exclusive",
+      "profile": "withings-vascular-age",
+      "code": {
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
+        "code": "withings-vascular-age",
+        "display": "Withings vascular age"
+      },
+      "unit": {
+        "code": "a",
+        "display": "years"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
+      "sources": ["withings"]
+    },
+    {
+      "key": "withings-visceral-fat-index",
+      "status": "platform-exclusive",
+      "profile": "withings-visceral-fat-index",
+      "code": {
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
+        "code": "withings-visceral-fat-index",
+        "display": "Withings visceral fat index"
+      },
+      "unit": {
+        "code": "{score}",
+        "display": "score"
+      },
+      "effective": "dateTime",
+      "owner": "withings",
       "sources": ["withings"]
     }
   ]

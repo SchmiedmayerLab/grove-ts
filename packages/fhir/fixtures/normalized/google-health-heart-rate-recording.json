@@ -4,20 +4,15 @@
       "kind": "providers",
       "provider": "google-health-api"
     },
-    "providerAccountIdentifier": {
+    "providerScopeIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-google-001",
-      "assurance": "deployment-scoped-pseudonym"
+      "assurance": "deployment-scoped-account-pseudonym"
     },
     "sourceType": "heart-rate",
     "sourceNativeId": "synthetic-google-heart-rate-series-001",
     "dataOrigin": {
-      "identity": {
-        "identifier": {
-          "system": "https://example.org/data-origins",
-          "value": "google-health-api"
-        }
-      },
+      "sourceDeviceToken": "origin-instance-google-001",
       "name": "Google Health API"
     }
   },

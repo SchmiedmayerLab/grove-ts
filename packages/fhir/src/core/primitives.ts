@@ -80,10 +80,14 @@ const isSemVer = (value: string): boolean => {
   )
 }
 
+const ABSOLUTE_URI =
+  /^[A-Za-z][A-Za-z\d+.-]*:(?:[A-Za-z\d._~:/?#[\]@!$&'()*+,;=-]|%[A-Fa-f\d]{2})*$/u
+
 const isAbsoluteUri = (value: string): boolean => {
+  if (!ABSOLUTE_URI.test(value)) return false
   try {
     const parsed = new URL(value)
-    return parsed.protocol.length > 1 && !/\s/u.test(value)
+    return parsed.protocol.length > 1
   } catch {
     return false
   }
@@ -197,7 +201,10 @@ const compareFractions = (left: string, right: string): -1 | 0 | 1 => {
 
 export const parseAbsoluteUri = (value: unknown): Result<AbsoluteUri> => {
   if (typeof value !== 'string' || !isAbsoluteUri(value)) {
-    return err('invalid-uri', 'Expected an absolute URI.')
+    return err(
+      'invalid-uri',
+      'Expected an absolute ASCII RFC 3986 URI with valid percent encoding.',
+    )
   }
   return ok(value as AbsoluteUri)
 }

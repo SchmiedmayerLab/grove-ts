@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
+import type { R4ResourceType } from './r4-resource-types.js'
 import type {
   AbsoluteUri,
   Canonical,
   FhirId,
   FhirInstant,
-  PatientReference,
   SemVer,
 } from '../core/index.js'
 import type {
@@ -153,7 +153,7 @@ export interface QuestionnaireInput {
   readonly name?: string
   readonly title?: string
   readonly status: Questionnaire['status']
-  readonly subjectTypes?: readonly string[]
+  readonly subjectTypes?: readonly R4ResourceType[]
   readonly date?: FhirInstant
   readonly description?: string
   readonly purpose?: string
@@ -166,16 +166,47 @@ export interface QuestionnaireResponseIdentifierInput {
   readonly value: string
 }
 
+type TypedQuestionnaireResponseReference<ResourceType extends R4ResourceType> =
+  | Readonly<{
+      type: ResourceType
+      reference: string
+      identifier?: never
+    }>
+  | Readonly<{
+      type: ResourceType
+      reference?: never
+      identifier: QuestionnaireResponseIdentifierInput
+    }>
+
+/** Any typed literal or identifier-only logical R4 subject Reference. */
+export type QuestionnaireResponseSubjectInput =
+  TypedQuestionnaireResponseReference<R4ResourceType>
+
+export type QuestionnaireResponseAuthorInput =
+  TypedQuestionnaireResponseReference<
+    | 'Device'
+    | 'Organization'
+    | 'Patient'
+    | 'Practitioner'
+    | 'PractitionerRole'
+    | 'RelatedPerson'
+  >
+
+export type QuestionnaireResponseSourceInput =
+  TypedQuestionnaireResponseReference<
+    'Patient' | 'Practitioner' | 'PractitionerRole' | 'RelatedPerson'
+  >
+
 export interface QuestionnaireResponseInput {
   readonly id?: FhirId
   /** Exact `Questionnaire.url|Questionnaire.version` canonical. */
   readonly questionnaire: Canonical
   readonly identifier: QuestionnaireResponseIdentifierInput
   readonly status: QuestionnaireResponse['status']
-  readonly subject?: PatientReference
+  readonly subject?: QuestionnaireResponseSubjectInput
   readonly authored: FhirInstant
-  readonly authorReference?: string
-  readonly sourceReference?: string
+  readonly author?: QuestionnaireResponseAuthorInput
+  readonly source?: QuestionnaireResponseSourceInput
   readonly extensions?: readonly Extension[]
   readonly items?: readonly QuestionnaireResponseItemInput[]
 }

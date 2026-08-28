@@ -6,29 +6,45 @@
     ]
   },
   "identifier": {
-    "system": "urn:grove:provider-graph:org.grovealliance.example",
-    "value": "withings|8|exchange-bundle"
+    "type": {
+      "coding": [
+        {
+          "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+          "code": "event"
+        }
+      ]
+    },
+    "system": "https://grovealliance.org/fhir/testing/identity/event",
+    "value": "e2:33fc1b64-6b4c-4bb8-994a-82a8d72eb5dc:8"
   },
   "type": "collection",
-  "timestamp": "2026-08-20T12:02:00Z",
+  "timestamp": "2026-08-20T12:03:00Z",
   "entry": [
     {
       "extension": [
         {
-          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
           "valueIdentifier": {
-            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
-            "value": "v1:withings|account-withings|getmeas:77|source-body-water-mass"
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "source-output"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/provider-output/fixture-key/1",
+            "value": "v2:fixture-key:1:h9kGKBCHIgGjAcm9EiiOm6sfAbCpmB-GQy1oykjz8wQ"
           }
         }
       ],
-      "fullUrl": "urn:uuid:e6a0b057-eddb-5412-a920-2eab118ef502",
+      "fullUrl": "urn:uuid:b7f5136c-eea4-5438-aa80-2fb29ef82696",
       "resource": {
         "resourceType": "Observation",
         "meta": {
           "profile": [
             "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-water-mass",
-            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation"
+            "https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation"
           ]
         },
         "extension": [
@@ -50,29 +66,42 @@
         ],
         "identifier": [
           {
-            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
-            "value": "v1:withings|account-withings|getmeas:77|source-body-water-mass"
+            "system": "https://grovealliance.org/fhir/testing/identity/provider-record/fixture-key/1",
+            "value": "v2:fixture-key:1:5XQDUzVcIcQNjBpRWfS-I_BT2KpigimyXXwA682S-5s",
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "source-record"
+                }
+              ]
+            }
+          },
+          {
+            "system": "https://grovealliance.org/fhir/testing/identity/provider-output/fixture-key/1",
+            "value": "v2:fixture-key:1:h9kGKBCHIgGjAcm9EiiOm6sfAbCpmB-GQy1oykjz8wQ",
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "source-output"
+                }
+              ]
+            }
           }
         ],
         "status": "final",
-        "category": [
-          {
-            "coding": [
-              {
-                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                "code": "activity",
-                "display": "Activity"
-              }
-            ],
-            "text": "Activity"
-          }
-        ],
         "code": {
           "coding": [{ "system": "http://loinc.org", "code": "101683-1" }]
         },
-        "subject": { "reference": "Patient/example" },
+        "subject": {
+          "type": "Patient",
+          "identifier": {
+            "system": "https://grovealliance.org/fhir/testing/patient-pseudonyms",
+            "value": "patient-example"
+          }
+        },
         "effectiveDateTime": "2026-08-21T07:12:04.000-07:00",
-        "issued": "2026-08-20T12:01:00Z",
         "valueQuantity": {
           "value": 38.2,
           "unit": "kg",
@@ -84,14 +113,22 @@
     {
       "extension": [
         {
-          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
           "valueIdentifier": {
-            "system": "https://grovealliance.org/fhir/testing/data-origins",
-            "value": "connected-provider"
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v2:fixture-key:1:-2zVZ4txzSTB6-XppERPQK6oqqL0SwJTW9J7jOh0EIc"
           }
         }
       ],
-      "fullUrl": "urn:uuid:8ade7702-2fc8-5fc3-b489-25894b62ae2e",
+      "fullUrl": "urn:uuid:a2c48014-937d-5005-bed8-e7ef0b0bacda",
       "resource": {
         "resourceType": "Device",
         "meta": {
@@ -101,8 +138,16 @@
         },
         "identifier": [
           {
-            "system": "https://grovealliance.org/fhir/testing/data-origins",
-            "value": "connected-provider"
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v2:fixture-key:1:-2zVZ4txzSTB6-XppERPQK6oqqL0SwJTW9J7jOh0EIc",
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            }
           }
         ],
         "status": "active",
@@ -117,14 +162,22 @@
     {
       "extension": [
         {
-          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
           "valueIdentifier": {
-            "system": "https://grovealliance.org/fhir/testing/applications",
-            "value": "grove-ts-0.2"
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v2:fixture-key:1:GaBqtWuQqnijksVa1NTG0qeo1smeMumnpwkkQCGTa9M"
           }
         }
       ],
-      "fullUrl": "urn:uuid:e000a26a-c10e-54eb-9573-1f0721d6ade6",
+      "fullUrl": "urn:uuid:aff37b9c-be2f-5c75-8259-05362029c74d",
       "resource": {
         "resourceType": "Device",
         "meta": {
@@ -134,8 +187,16 @@
         },
         "identifier": [
           {
-            "system": "https://grovealliance.org/fhir/testing/applications",
-            "value": "grove-ts-0.2"
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v2:fixture-key:1:GaBqtWuQqnijksVa1NTG0qeo1smeMumnpwkkQCGTa9M",
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            }
           }
         ],
         "status": "active",
@@ -164,24 +225,33 @@
     {
       "extension": [
         {
-          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
           "valueIdentifier": {
-            "system": "urn:grove:provider-graph:org.grovealliance.example",
-            "value": "withings|8|conversion-provenance"
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "entry-node"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/entry-node",
+            "value": "n2:conversion-provenance:0:_YhVUy6nf5scLFK7jX-qoNE217b3rRBucnx8z1tKU30"
           }
         }
       ],
-      "fullUrl": "urn:uuid:e450870a-7a09-513a-ae56-8e4c93b6e867",
+      "fullUrl": "urn:uuid:861a9ac4-08d6-5415-8df7-1d5e9fe82d0b",
       "resource": {
         "resourceType": "Provenance",
         "meta": {
           "profile": [
-            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance"
+            "https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance"
           ]
         },
         "target": [
-          { "reference": "urn:uuid:e6a0b057-eddb-5412-a920-2eab118ef502" }
+          { "reference": "urn:uuid:b7f5136c-eea4-5438-aa80-2fb29ef82696" }
         ],
+        "occurredDateTime": "2026-08-20T12:00:00Z",
         "recorded": "2026-08-20T12:02:00Z",
         "activity": {
           "coding": [
@@ -206,7 +276,7 @@
               "text": "Assembler"
             },
             "who": {
-              "reference": "urn:uuid:e000a26a-c10e-54eb-9573-1f0721d6ade6"
+              "reference": "urn:uuid:aff37b9c-be2f-5c75-8259-05362029c74d"
             }
           }
         ],
@@ -215,8 +285,16 @@
             "role": "source",
             "what": {
               "identifier": {
-                "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
-                "value": "v1:withings|account-withings|getmeas:77|source-body-water-mass"
+                "system": "https://grovealliance.org/fhir/testing/identity/provider-record/fixture-key/1",
+                "value": "v2:fixture-key:1:5XQDUzVcIcQNjBpRWfS-I_BT2KpigimyXXwA682S-5s",
+                "type": {
+                  "coding": [
+                    {
+                      "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                      "code": "source-record"
+                    }
+                  ]
+                }
               }
             },
             "agent": [
@@ -232,7 +310,7 @@
                   "text": "Enterer"
                 },
                 "who": {
-                  "reference": "urn:uuid:8ade7702-2fc8-5fc3-b489-25894b62ae2e"
+                  "reference": "urn:uuid:a2c48014-937d-5005-bed8-e7ef0b0bacda"
                 }
               }
             ]

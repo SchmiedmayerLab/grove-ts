@@ -24,7 +24,7 @@
   },
   "questionnaire": "https://grovealliance.org/fhir/testing/Questionnaire/grove-ts-conformance|1.0.0",
   "status": "completed",
-  "subject": { "reference": "Patient/example" },
+  "subject": { "reference": "Patient/example", "type": "Patient" },
   "authored": "2026-08-20T12:00:00Z",
   "item": [
     {

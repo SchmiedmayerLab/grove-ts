@@ -10,6 +10,7 @@ import type {
   QuestionnaireItem as R4QuestionnaireItem,
   QuestionnaireResponseItem as R4QuestionnaireResponseItem,
   QuestionnaireResponseItemAnswer as R4QuestionnaireResponseItemAnswer,
+  Resource as R4Resource,
 } from 'fhir/r4.js'
 import { z } from 'zod'
 import { isR4ResourceType } from './r4-resource-types.js'
@@ -21,6 +22,7 @@ import {
 } from './temporal.js'
 import type { GroveQuestionnaire, GroveQuestionnaireResponse } from './types.js'
 import { parseFhirInstant } from '../core/index.js'
+import type { FhirJson } from '../r4/json.js'
 import {
   attachmentSchema,
   codingSchema,
@@ -101,6 +103,13 @@ const answerQuantitySchema = quantitySchema.refine(
   'Quantity answer values cannot be empty.',
 )
 
+const containedResourceSchema = z.looseObject({
+  resourceType: z
+    .string()
+    .refine(isR4ResourceType, 'Unknown contained R4 ResourceType code.'),
+  id: z.string().regex(/^[A-Za-z\d\-.]{1,64}$/u),
+}) as unknown as z.ZodType<R4Resource>
+
 const resourceFields = {
   id: z.string().optional(),
   _id: primitiveMetadata,
@@ -109,6 +118,7 @@ const resourceFields = {
   _implicitRules: primitiveMetadata,
   language: z.string().optional(),
   _language: primitiveMetadata,
+  contained: z.array(containedResourceSchema).optional(),
   extension: z.array(extensionSchema).optional(),
   modifierExtension: z.array(extensionSchema).optional(),
 } as const
@@ -223,8 +233,8 @@ const initialSchema = z
 // at every nesting depth, must carry a non-blank linkId. The generated base states the release's
 // own constraint, which admits a blank one, and layering the narrowing on top would take a
 // recursive walk of item.item that is harder to read than the constraint stated inline.
-export const questionnaireItemSchema: z.ZodType<R4QuestionnaireItem> = z.lazy(
-  () =>
+export const questionnaireItemSchema: z.ZodType<FhirJson<R4QuestionnaireItem>> =
+  z.lazy(() =>
     z
       .strictObject({
         id: z.string().optional(),
@@ -310,7 +320,7 @@ export const questionnaireItemSchema: z.ZodType<R4QuestionnaireItem> = z.lazy(
           })
         }
       }),
-)
+  )
 
 const questionnaireSchemaValue = z.strictObject({
   resourceType: z.literal('Questionnaire'),
@@ -353,47 +363,49 @@ const questionnaireSchemaValue = z.strictObject({
 export const questionnaireSchema: z.ZodType<GroveQuestionnaire> =
   questionnaireSchemaValue as z.ZodType<GroveQuestionnaire>
 
-export const questionnaireResponseAnswerSchema: z.ZodType<R4QuestionnaireResponseItemAnswer> =
-  z.lazy(() =>
-    z
-      .strictObject({
-        id: z.string().optional(),
-        extension: z.array(extensionSchema).optional(),
-        modifierExtension: z.array(extensionSchema).optional(),
-        ...answerValueFields,
-        item: z.array(questionnaireResponseItemSchema).optional(),
-      })
-      .superRefine((value, context) =>
-        exactlyOneAnswerChoice(value, answerValueKeys, context),
-      ),
-  )
+export const questionnaireResponseAnswerSchema: z.ZodType<
+  FhirJson<R4QuestionnaireResponseItemAnswer>
+> = z.lazy(() =>
+  z
+    .strictObject({
+      id: z.string().optional(),
+      extension: z.array(extensionSchema).optional(),
+      modifierExtension: z.array(extensionSchema).optional(),
+      ...answerValueFields,
+      item: z.array(questionnaireResponseItemSchema).optional(),
+    })
+    .superRefine((value, context) =>
+      exactlyOneAnswerChoice(value, answerValueKeys, context),
+    ),
+)
 
-export const questionnaireResponseItemSchema: z.ZodType<R4QuestionnaireResponseItem> =
-  z.lazy(() =>
-    z
-      .strictObject({
-        id: z.string().optional(),
-        extension: z.array(extensionSchema).optional(),
-        modifierExtension: z.array(extensionSchema).optional(),
-        linkId: z.string().min(1),
-        _linkId: primitiveMetadata,
-        definition: z.string().optional(),
-        _definition: primitiveMetadata,
-        text: z.string().optional(),
-        _text: primitiveMetadata,
-        answer: z.array(questionnaireResponseAnswerSchema).optional(),
-        item: z.array(questionnaireResponseItemSchema).optional(),
-      })
-      .superRefine((value, context) => {
-        if ((value.answer?.length ?? 0) > 0 && (value.item?.length ?? 0) > 0) {
-          context.addIssue({
-            code: 'custom',
-            message:
-              'A QuestionnaireResponse item cannot contain both answer and item.',
-          })
-        }
-      }),
-  )
+export const questionnaireResponseItemSchema: z.ZodType<
+  FhirJson<R4QuestionnaireResponseItem>
+> = z.lazy(() =>
+  z
+    .strictObject({
+      id: z.string().optional(),
+      extension: z.array(extensionSchema).optional(),
+      modifierExtension: z.array(extensionSchema).optional(),
+      linkId: z.string().min(1),
+      _linkId: primitiveMetadata,
+      definition: z.string().optional(),
+      _definition: primitiveMetadata,
+      text: z.string().optional(),
+      _text: primitiveMetadata,
+      answer: z.array(questionnaireResponseAnswerSchema).optional(),
+      item: z.array(questionnaireResponseItemSchema).optional(),
+    })
+    .superRefine((value, context) => {
+      if ((value.answer?.length ?? 0) > 0 && (value.item?.length ?? 0) > 0) {
+        context.addIssue({
+          code: 'custom',
+          message:
+            'A QuestionnaireResponse item cannot contain both answer and item.',
+        })
+      }
+    }),
+)
 
 const questionnaireResponseSchemaValue = z.strictObject({
   resourceType: z.literal('QuestionnaireResponse'),
@@ -560,12 +572,37 @@ const questionnaireResponseBuilderItemSchema: z.ZodType = z.lazy(() =>
   }),
 )
 
+const questionnaireResponseIdentifierInputSchema = z.strictObject({
+  system: z.string(),
+  value: z.string(),
+})
+
+const builderReferenceSchema = (type: z.ZodType<string>): z.ZodType =>
+  z.union([
+    z.strictObject({
+      type,
+      reference: z.string(),
+    }),
+    z.strictObject({
+      type,
+      identifier: questionnaireResponseIdentifierInputSchema,
+    }),
+  ])
+
+const subjectReferenceInputSchema = builderReferenceSchema(
+  z.string().refine(isR4ResourceType, 'Expected a FHIR R4 ResourceType code.'),
+)
+// The shape boundary admits every R4 type so semantic validation can report
+// the field-specific author/source target rule alongside other input issues.
+const authorReferenceInputSchema = subjectReferenceInputSchema
+const sourceReferenceInputSchema = subjectReferenceInputSchema
+
 /** Strict runtime boundary for the public QuestionnaireResponse builder input. */
 export const questionnaireResponseBuilderInputSchema: z.ZodType =
   z.strictObject({
     id: z.string().optional(),
     questionnaire: z.string(),
-    identifier: z.strictObject({ system: z.string(), value: z.string() }),
+    identifier: questionnaireResponseIdentifierInputSchema,
     status: z.enum([
       'in-progress',
       'completed',
@@ -573,10 +610,10 @@ export const questionnaireResponseBuilderInputSchema: z.ZodType =
       'entered-in-error',
       'stopped',
     ]),
-    subject: z.string().optional(),
+    subject: subjectReferenceInputSchema.optional(),
     authored: z.string(),
-    authorReference: z.string().optional(),
-    sourceReference: z.string().optional(),
+    author: authorReferenceInputSchema.optional(),
+    source: sourceReferenceInputSchema.optional(),
     extensions: z.array(extensionSchema).optional(),
     items: z.array(questionnaireResponseBuilderItemSchema).optional(),
   })

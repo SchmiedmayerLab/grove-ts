@@ -23,10 +23,15 @@ const [root, mobile, provider, provenance, questionnaire, r4] =
 const providerExports = [
   'buildProviderMeasurementBundle',
   'buildProviderRecordingBundle',
-  'providerRawMappings',
-  'providerScalarMappings',
+  'buildProviderRetractionBundle',
+  'healthKitApplicationDeviceIdentity',
+  'providerRawOutputDiscriminators',
+  'providerRawOutputRoles',
+  'providerScalarOutputDiscriminators',
+  'providerScalarOutputRoles',
 ]
 const internalGraphExports = [
+  'deriveConformanceVectorOpaqueIdentifier',
   'groveFhirPackageCanonicals',
   'groveFhirPackageGraph',
   'groveFhirProfileCanonicals',
@@ -75,7 +80,9 @@ for (const name of internalGraphExports) {
 
 assert.equal(typeof mobile.canonicalizeMobileEffectiveInstant, 'function')
 assert.equal(root.groveFhirVersion, '4.0.1')
-assert.equal(root.groveFhirContractVersion, '0.5.0')
+assert.equal(root.groveFhirContractVersion, '0.6.0')
+assert.equal(root.groveExchangeProtocol.protocolVersion, 2)
+assert.equal(root.groveMobileContract.version, '0.6.0')
 assert.equal(
   mobile.groveMobilePackageMetadata.packageId,
   'org.grovealliance.fhir.mobile',
@@ -89,7 +96,12 @@ assert.equal(
   'org.grovealliance.fhir.questionnaire',
 )
 assert.equal(typeof root.parseFhirInstant, 'function')
-assert.equal(typeof r4.parseCollectionBundle, 'function')
+assert.equal(typeof r4.parseR4CollectionBundle, 'function')
+assert.equal(typeof r4.parseGroveMobileExchangeBundle, 'function')
+assert.equal(typeof r4.parseGroveMobileRetractionBundle, 'function')
+assert.equal(typeof provider.parseProviderRetractionInput, 'function')
+assert.equal(typeof provider.providerOutputCoordinates, 'function')
+assert.equal(typeof provider.providerOutputRole, 'function')
 assert.equal(typeof provenance.parseProvenance, 'function')
 assert.equal(typeof questionnaire.buildQuestionnaire, 'function')
 

@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { cloneJsonValue } from './json.js'
 import { err, ok, type Result } from './result.js'
 
 /** The bounds a Quantity may state in place of an exact value. */
@@ -32,10 +33,16 @@ const COMPARATORS: readonly string[] = ['<', '<=', '>=', '>']
  * rather than reduced to a number whose meaning is unknown.
  */
 export const fhirQuantityToValue = (value: unknown): Result<QuantityValue> => {
-  if (typeof value !== 'object' || value === null) {
+  const snapshot = cloneJsonValue(value)
+  if (!snapshot.ok) return snapshot
+  if (
+    typeof snapshot.value !== 'object' ||
+    snapshot.value === null ||
+    Array.isArray(snapshot.value)
+  ) {
     return err('invalid-type', 'Expected a FHIR Quantity.')
   }
-  const quantity = value as {
+  const quantity = snapshot.value as {
     readonly value?: unknown
     readonly unit?: unknown
     readonly code?: unknown

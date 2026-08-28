@@ -7,16 +7,23 @@
 //
 
 import {
+  base64BinarySchema,
   bundleSchema,
+  capabilityStatementSchema,
+  dateSchema,
+  dateTimeSchema,
+  decimalSchema,
   medicationAdministrationSchema,
   medicationStatementSchema,
   observationSchema,
   documentReferenceSchema,
   patientSchema,
   positiveIntSchema,
+  instantSchema,
   resourceSchema,
   unsignedIntSchema,
   visionPrescriptionSchema,
+  xhtmlSchema,
 } from '../src/zod/r4/index.js'
 import {
   bundleSchema as r4bBundle,
@@ -67,10 +74,65 @@ describe('generated Zod schemas', () => {
     ).toThrow()
   })
 
+  it('rejects impossible calendar dates and non-finite decimals', () => {
+    expect(dateSchema.safeParse('2025-02-29').success).toBe(false)
+    expect(dateTimeSchema.safeParse('2026-04-31T12:00:00Z').success).toBe(false)
+    expect(instantSchema.safeParse('2026-02-30T12:00:00Z').success).toBe(false)
+    expect(dateSchema.safeParse('2024-02-29').success).toBe(true)
+    expect(decimalSchema.safeParse(Number.NaN).success).toBe(false)
+    expect(decimalSchema.safeParse(Number.POSITIVE_INFINITY).success).toBe(
+      false,
+    )
+  })
+
+  it('rejects empty string-like primitive values', () => {
+    expect(base64BinarySchema.safeParse('').success).toBe(false)
+    expect(base64BinarySchema.safeParse(' \t\n').success).toBe(false)
+    expect(xhtmlSchema.safeParse('').success).toBe(false)
+  })
+
   it('rejects a missing required element', () => {
     const withoutStatus: Record<string, unknown> = { ...observation }
     delete withoutStatus.status
     expect(() => observationSchema.parse(withoutStatus)).toThrow()
+  })
+
+  it('accepts required primitives represented only by primitive metadata', () => {
+    const absent = {
+      extension: [
+        {
+          // This canonical is fixed by FHIR R4 and is never fetched.
+          url: 'http://hl7.org/fhir/StructureDefinition/data-absent-reason',
+          valueCode: 'unknown',
+        },
+      ],
+    }
+    const withoutStatus: Record<string, unknown> = {
+      ...observation,
+      _status: absent,
+    }
+    delete withoutStatus.status
+    expect(observationSchema.safeParse(withoutStatus).success).toBe(true)
+
+    expect(
+      capabilityStatementSchema.safeParse({
+        resourceType: 'CapabilityStatement',
+        status: 'active',
+        date: '2026-08-27T12:00:00Z',
+        kind: 'instance',
+        fhirVersion: '4.0.1',
+        _format: [absent],
+      }).success,
+    ).toBe(true)
+    expect(
+      capabilityStatementSchema.safeParse({
+        resourceType: 'CapabilityStatement',
+        status: 'active',
+        date: '2026-08-27T12:00:00Z',
+        kind: 'instance',
+        fhirVersion: '4.0.1',
+      }).success,
+    ).toBe(false)
   })
 
   it('rejects the wrong resourceType', () => {
@@ -116,6 +178,27 @@ describe('generated Zod schemas', () => {
     // silently would let a misspelled element pass validation.
     expect(() =>
       observationSchema.parse({ ...observation, statuss: 'final' }),
+    ).toThrow()
+  })
+
+  it('enforces the base Reference presence invariant recursively', () => {
+    expect(() =>
+      observationSchema.parse({ ...observation, subject: {} }),
+    ).toThrow()
+    expect(() =>
+      observationSchema.parse({
+        ...observation,
+        subject: { type: 'Patient' },
+      }),
+    ).toThrow()
+  })
+
+  it('requires a Quantity unit system whenever a unit code is present', () => {
+    expect(() =>
+      observationSchema.parse({
+        ...observation,
+        valueQuantity: { value: 72, code: '/min' },
+      }),
     ).toThrow()
   })
 
@@ -209,14 +292,12 @@ describe('polymorphic resource slots', () => {
     ).toBe(false)
   })
 
-  it('leaves a resource type the release does not publish open', () => {
-    // A type outside the release is the only remaining unmodelled case, and rejecting it would
-    // refuse a bundle over a gap in this package rather than a fault in the data.
+  it('rejects a resource type the pinned release does not publish', () => {
     expect(
       bundleSchema.safeParse(
         bundleCarrying({ resourceType: 'SomethingNotInR4', status: 'draft' }),
       ).success,
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('validates a Bundle nested inside a Bundle', () => {

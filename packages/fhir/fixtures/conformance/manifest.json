@@ -4,24 +4,39 @@
   "producer": { "name": "Grove TypeScript", "version": "0.0.0" },
   "packages": [
     {
+      "alias": "google-health",
+      "packageId": "org.grovealliance.fhir.google-health",
+      "version": "0.6.0"
+    },
+    {
       "alias": "mobile",
       "packageId": "org.grovealliance.fhir.mobile",
-      "version": "0.5.0"
+      "version": "0.6.0"
+    },
+    {
+      "alias": "oura",
+      "packageId": "org.grovealliance.fhir.oura",
+      "version": "0.6.0"
     },
     {
       "alias": "providers",
       "packageId": "org.grovealliance.fhir.providers",
-      "version": "0.5.0"
+      "version": "0.6.0"
     },
     {
       "alias": "sensor",
       "packageId": "org.grovealliance.fhir.sensor",
-      "version": "0.5.0"
+      "version": "0.6.0"
     },
     {
       "alias": "questionnaire",
       "packageId": "org.grovealliance.fhir.questionnaire",
-      "version": "0.5.0"
+      "version": "0.6.0"
+    },
+    {
+      "alias": "withings",
+      "packageId": "org.grovealliance.fhir.withings",
+      "version": "0.6.0"
     }
   ],
   "resources": [
@@ -164,12 +179,6 @@
       ]
     },
     {
-      "path": "resources/mobile-resting-heart-rate.json",
-      "requiredProfiles": [
-        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
-      ]
-    },
-    {
       "path": "resources/mobile-skin-temperature.json",
       "requiredProfiles": [
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
@@ -212,6 +221,114 @@
       ]
     },
     {
+      "path": "resources/provider-google-health-api-resting-heart-rate-daily-average.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-oura-oura-cardiovascular-age.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-oura-oura-readiness-score.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-withings-vascular-age.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-sleeping-heart-rate-average.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-body-fat-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-muscle-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-withings-pulse-wave-velocity.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-withings-atrial-fibrillation-notification-ecg.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-qrs-duration.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-pr-interval.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-qt-interval.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-corrected-qt-interval.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-withings-atrial-fibrillation-notification-ppg.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-withings-nerve-health-score.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-extracellular-water-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-intracellular-water-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-withings-withings-visceral-fat-index.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
       "path": "resources/provider-oura-daily-activity.json",
       "requiredProfiles": [
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
@@ -239,6 +356,30 @@
       "path": "resources/recording-withings-sleepintraday.json",
       "requiredProfiles": [
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-primary-output-retraction.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-source-artifact-retraction.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle"
+      ]
+    },
+    {
+      "path": "mobile-exchange/exchange-bundle.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "mobile-exchange/retraction-bundle.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle"
       ]
     },
     {
@@ -368,11 +509,6 @@
     {
       "id": "respiratory-rate-average",
       "path": "resources/mobile-respiratory-rate-average.json",
-      "resourcePointer": "/entry/0/resource"
-    },
-    {
-      "id": "resting-heart-rate",
-      "path": "resources/mobile-resting-heart-rate.json",
       "resourcePointer": "/entry/0/resource"
     },
     {

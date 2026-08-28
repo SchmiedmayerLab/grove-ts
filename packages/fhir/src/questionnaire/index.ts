@@ -34,9 +34,12 @@ export type {
   QuestionnairePair,
   QuestionnairePreflightOptions,
   QuestionnaireResponseAnswerInput,
+  QuestionnaireResponseAuthorInput,
   QuestionnaireResponseIdentifierInput,
   QuestionnaireResponseInput,
   QuestionnaireResponseItemInput,
+  QuestionnaireResponseSourceInput,
+  QuestionnaireResponseSubjectInput,
   QuestionnaireValueSetConceptInput,
   ResolvedQuestionnaireValueSetInput,
 } from './types.js'

@@ -12,7 +12,8 @@
 
 import { Buffer } from 'node:buffer'
 import { execFile } from 'node:child_process'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { stdout } from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -23,51 +24,70 @@ const run = promisify(execFile)
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const destination = resolve(packageRoot, '.grove-fhir')
 const marker = resolve(destination, '.ref')
+const repository = 'https://github.com/SchmiedmayerLab/grove-fhir'
 
 const pin = JSON.parse(
   await readFile(resolve(packageRoot, 'grove-fhir.json'), 'utf8'),
 )
-// A released version is pinned by its tag so the reference stays readable in a diff; a bare
-// commit stays valid for pinning work that predates a release.
-const ref = pin.ref ?? pin.sha
+const ref = pin.ref
+const archiveSha256 = pin.archiveSha256
 if (
+  pin.repository !== repository ||
   typeof ref !== 'string' ||
-  !/^(?:[\da-f]{40}|\d+\.\d+\.\d+(?:-[\dA-Za-z]+(?:[.-][\dA-Za-z]+)*)?)$/u.test(
-    ref,
-  )
+  !/^[\da-f]{40}$/u.test(ref) ||
+  typeof archiveSha256 !== 'string' ||
+  !/^[\da-f]{64}$/u.test(archiveSha256)
 ) {
   throw new Error(
-    `grove-fhir.json must pin a release tag or a complete commit SHA, got "${ref}"`,
+    'grove-fhir.json must pin the Grove repository by complete commit SHA and exact archiveSha256.',
   )
 }
 
+const markerValue = `${JSON.stringify({ ref, archiveSha256 })}\n`
 const present = await readFile(marker, 'utf8').catch(() => undefined)
 // Every generator and checker depends on this, so repeated runs are the common case.
-if (present !== ref) {
-  const archive = `${pin.repository}/archive/${ref}.tar.gz`
+if (present !== markerValue) {
+  const archive = `${repository}/archive/${ref}.tar.gz`
   const response = await fetch(archive)
   if (!response.ok) {
     throw new Error(`Could not fetch ${archive}: ${response.status}`)
   }
 
-  await rm(destination, { recursive: true, force: true })
-  await mkdir(destination, { recursive: true })
-  const tarball = resolve(destination, 'grove-fhir.tar.gz')
-  await writeFile(tarball, Buffer.from(await response.arrayBuffer()))
+  const bytes = Buffer.from(await response.arrayBuffer())
+  const actualSha256 = createHash('sha256').update(bytes).digest('hex')
+  if (actualSha256 !== archiveSha256) {
+    throw new Error(
+      `Grove FHIR archive digest mismatch.\n  expected ${archiveSha256}\n  actual   ${actualSha256}`,
+    )
+  }
 
-  // The archive root is named for the commit, so strip it and keep only what is read.
-  await run('tar', [
-    '--extract',
-    '--file',
-    tarball,
-    '--directory',
-    destination,
-    '--strip-components',
-    '1',
-    `grove-fhir-${ref}/catalog`,
-    `grove-fhir-${ref}/Conformance/corpora/mobile-semantics`,
-  ])
-  await rm(tarball)
-  await writeFile(marker, ref)
+  const staging = await mkdtemp(resolve(packageRoot, '.grove-fhir-fetch-'))
+  try {
+    const tarball = resolve(staging, 'grove-fhir.tar.gz')
+    await writeFile(tarball, bytes)
+
+    // The archive root is named for the commit, so strip it and keep only what is read.
+    await run('tar', [
+      '--extract',
+      '--file',
+      tarball,
+      '--directory',
+      staging,
+      '--strip-components',
+      '1',
+      '--no-same-owner',
+      '--no-same-permissions',
+      `grove-fhir-${ref}/catalog`,
+      `grove-fhir-${ref}/Conformance/corpora/mobile-semantics`,
+      `grove-fhir-${ref}/Conformance/corpora/mobile-exchange`,
+    ])
+    await rm(tarball)
+    await writeFile(resolve(staging, '.ref'), markerValue)
+    await rm(destination, { recursive: true, force: true })
+    await rename(staging, destination)
+  } catch (error) {
+    await rm(staging, { recursive: true, force: true })
+    throw error
+  }
   stdout.write(`Fetched Grove FHIR catalogs at ${ref}\n`)
 }

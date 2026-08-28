@@ -104,8 +104,42 @@ try {
       system: 'https://study.example.org/fhir/identifiers/mobile-observation',
       value: 'heart-rate-20260820-001',
     })
+    const deploymentIdentity = {
+      opaqueIdentifierSystems: Object.fromEntries(
+        [
+          'source-record',
+          'source-output',
+          'writer-record',
+          'provider-record',
+          'provider-output',
+          'source-artifact',
+          'provider-artifact',
+          'source-context',
+          'recording-device',
+          'device-snapshot',
+        ].map((kind) => [
+          kind,
+          `https://example.org/browser/identity/${kind}/browser-key/1`,
+        ]),
+      ),
+      eventIdentifierSystem: 'https://example.org/browser/identity/event',
+      entryNodeIdentifierSystem:
+        'https://example.org/browser/identity/entry-node',
+      keyId: 'browser-key',
+      keyEpoch: '1',
+      secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
+      producerInstance: '9738c1a2-4258-4ba7-a9f7-e7f56e2996d8',
+    }
+    const providerSubject = {
+      type: 'Patient',
+      identifier: {
+        system: 'https://example.org/browser/patient-pseudonyms',
+        value: 'patient-browser',
+        assurance: 'deployment-scoped-pseudonym',
+      },
+    }
     const measurementGraph = provider.buildProviderMeasurementBundle({
-      subject: 'Patient/browser',
+      subject: providerSubject,
       measurements: [
         {
           kind: 'heart-rate',
@@ -115,55 +149,76 @@ try {
       ],
       source: {
         adapter: { kind: 'providers', provider: 'withings' },
-        providerAccountIdentifier: {
+        providerScopeIdentifier: {
           system: 'https://example.org/provider-account-pseudonyms',
           value: 'browser-account',
-          assurance: 'deployment-scoped-pseudonym',
+          assurance: 'deployment-scoped-account-pseudonym',
         },
         sourceType: 'getmeas:11',
         sourceNativeId: 'browser-heart-rate',
         dataOrigin: {
-          identity: {
-            identifier: {
-              system: 'https://example.org/data-origins',
-              value: 'withings',
-            },
-          },
+          sourceDeviceToken: 'browser-withings-origin',
           name: 'Withings',
         },
       },
       application: {
-        identity: {
-          identifier: {
-            system: 'https://example.org/applications',
-            value: 'browser-converter',
-          },
-        },
+        sourceDeviceToken: 'browser-converter',
         name: 'Browser converter',
       },
-      eventSequence: 1,
-      graphIdentifierSystem:
-        'urn:grove:provider-graph:org.grovealliance.example',
-      issued: '2026-08-20T12:01:00Z',
+      eventSequence: '1',
+      deploymentIdentity,
+      occurred: '2026-08-20T12:00:00Z',
       recorded: '2026-08-20T12:02:00Z',
+      assembled: '2026-08-20T12:03:00Z',
     })
+    const outputCoordinates = provider.providerOutputCoordinates(
+      'withings',
+      'getmeas:11',
+      'heart-rate',
+    )
+    const retraction =
+      outputCoordinates === undefined ?
+        { ok: false }
+      : provider.buildProviderRetractionBundle({
+          source: {
+            provider: 'withings',
+            providerScopeIdentifier: {
+              system: 'https://example.org/provider-account-pseudonyms',
+              value: 'browser-account',
+              assurance: 'deployment-scoped-account-pseudonym',
+            },
+            sourceType: 'getmeas:11',
+            sourceNativeId: 'browser-heart-rate',
+          },
+          targets: [
+            {
+              role: 'primary-output',
+              resourceType: 'Observation',
+              ...outputCoordinates,
+            },
+          ],
+          application: {
+            sourceDeviceToken: 'browser-converter',
+            name: 'Browser converter',
+          },
+          eventSequence: '3',
+          deploymentIdentity,
+          occurred: '2026-08-21T12:00:00Z',
+          recorded: '2026-08-21T12:01:00Z',
+          assembled: '2026-08-21T12:02:00Z',
+        })
     const recording = provider.buildProviderRecordingBundle({
       source: {
         adapter: { kind: 'providers', provider: 'google-health-api' },
-        providerAccountIdentifier: {
+        providerScopeIdentifier: {
           system: 'https://example.org/provider-account-pseudonyms',
           value: 'browser-raw-account',
-          assurance: 'deployment-scoped-pseudonym',
+          assurance: 'deployment-scoped-account-pseudonym',
         },
         sourceType: 'heart-rate',
         sourceNativeId: 'browser-native-recording-42',
         dataOrigin: {
-          identity: {
-            identifier: {
-              system: 'https://example.org/data-origins',
-              value: 'google-health-api',
-            },
-          },
+          sourceDeviceToken: 'browser-google-origin',
           name: 'Google Health API',
         },
       },
@@ -175,21 +230,17 @@ try {
         payloadAssertion: 'caller-authorized-opaque-payload',
         dataBase64: 'AQID',
       },
-      subject: 'Patient/browser',
+      subject: providerSubject,
       application: {
-        identity: {
-          identifier: {
-            system: 'https://example.org/applications',
-            value: 'browser-raw-converter',
-          },
-        },
+        sourceDeviceToken: 'browser-raw-converter',
         name: 'Browser raw converter',
       },
-      eventSequence: 2,
-      graphIdentifierSystem:
-        'urn:grove:provider-graph:org.grovealliance.example',
+      eventSequence: '2',
+      deploymentIdentity,
       documentDate: '2026-08-20T12:01:00Z',
+      occurred: '2026-08-20T12:00:00Z',
       recorded: '2026-08-20T12:02:00Z',
+      assembled: '2026-08-20T12:03:00Z',
     })
     const instrument = questionnaire.buildQuestionnaire({
       url: 'https://example.org/Questionnaire/browser',
@@ -234,12 +285,15 @@ try {
         .length,
       measurementGraph: measurementGraph.ok,
       recordingGraph: recording.ok,
-      rawSourceCount: Object.values(provider.providerRawMappings).reduce(
+      retractionGraph:
+        retraction.ok &&
+        !JSON.stringify(retraction.value).includes('entered-in-error'),
+      rawSourceCount: Object.values(provider.providerRawOutputRoles).reduce(
         (count, mappings) => count + Object.keys(mappings).length,
         0,
       ),
       scalarMeasurementCount: new Set(
-        Object.values(provider.providerScalarMappings).flatMap(
+        Object.values(provider.providerScalarOutputRoles).flatMap(
           (sourceMappings) =>
             Object.values(sourceMappings).flatMap((mapping) =>
               Object.keys(mapping),
@@ -248,10 +302,12 @@ try {
       ).size,
       providerApiVisibleFromMobile:
         'buildProviderMeasurementBundle' in mobile ||
-        'buildProviderRecordingBundle' in mobile,
+        'buildProviderRecordingBundle' in mobile ||
+        'buildProviderRetractionBundle' in mobile,
       providerApiVisibleFromRoot:
         'buildProviderMeasurementBundle' in grove ||
-        'buildProviderRecordingBundle' in grove,
+        'buildProviderRecordingBundle' in grove ||
+        'buildProviderRetractionBundle' in grove,
       internalGraphVisible:
         'groveFhirPackageGraph' in grove ||
         'groveFhirProfileClaims' in grove ||
@@ -262,13 +318,14 @@ try {
   }, origin)
 
   if (
-    result.fullUrl !== 'urn:uuid:72a64652-0bad-517d-8a36-39e3b6adccac' ||
+    result.fullUrl !== 'urn:uuid:9ca77ee5-421b-5f0c-8206-7e9e65485ae5' ||
     result.hasNodeProcess ||
     result.measurementCount !== 84 ||
     result.measurementGraph !== true ||
     result.recordingGraph !== true ||
+    result.retractionGraph !== true ||
     result.rawSourceCount !== 4 ||
-    result.scalarMeasurementCount !== 36 ||
+    result.scalarMeasurementCount !== 48 ||
     result.providerApiVisibleFromMobile ||
     result.providerApiVisibleFromRoot ||
     result.internalGraphVisible ||

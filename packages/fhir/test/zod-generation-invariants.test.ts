@@ -150,7 +150,6 @@ const UNCHECKED_KEYS: Readonly<Record<string, readonly string[]>> = {
     'ppc-5',
     'prr-1',
     'qrs-1',
-    'qty-3',
     'que-0',
     'que-1',
     'que-10',
@@ -169,7 +168,6 @@ const UNCHECKED_KEYS: Readonly<Record<string, readonly string[]>> = {
     'ras-2',
     'rat-1',
     'red-0',
-    'ref-1',
     'rng-2',
     'rqg-1',
     'rsd-0',
@@ -378,7 +376,6 @@ const UNCHECKED_KEYS: Readonly<Record<string, readonly string[]>> = {
     'ppc-5',
     'prr-1',
     'qrs-1',
-    'qty-3',
     'que-0',
     'que-10',
     'que-11',
@@ -396,7 +393,6 @@ const UNCHECKED_KEYS: Readonly<Record<string, readonly string[]>> = {
     'ras-2',
     'rat-1',
     'red-0',
-    'ref-1',
     'rng-2',
     'rqg-1',
     'rsd-0',
@@ -499,7 +495,7 @@ describe.each(RELEASES)('generated %s schemas', (release) => {
   it('rejects properties the release does not define', () => {
     // FHIR JSON is closed; a plain object would strip an unmodelled property silently.
     expect(text).not.toMatch(/z\.object\(/)
-    expect(text).toContain('z.strictObject(')
+    expect(text).toMatch(/\.strictObject\(\{/u)
   })
 
   it('keeps the extensions a primitive may carry', () => {
@@ -545,7 +541,14 @@ describe.each(RELEASES)('generated %s schemas', (release) => {
       UNCHECKED_KEYS[release],
     )
     // Anything implemented must not also be reported as unchecked.
-    for (const implemented of ['ext-1', 'per-1', 'obs-3', 'obs-6']) {
+    for (const implemented of [
+      'ext-1',
+      'per-1',
+      'obs-3',
+      'obs-6',
+      'qty-3',
+      'ref-1',
+    ]) {
       expect(keys.has(implemented)).toBe(false)
     }
   })

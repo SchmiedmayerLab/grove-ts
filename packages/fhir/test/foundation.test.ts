@@ -17,7 +17,7 @@ import {
   ok,
   parseAbsoluteUri,
   parseCanonical,
-  parseCollectionBundle,
+  parseR4CollectionBundle,
   parseDevice,
   parseDocumentReference,
   parseFhirId,
@@ -29,7 +29,7 @@ import {
   parseSpecimen,
   parseSupportedR4Resource,
   parseUrnUuid,
-  type CollectionBundle,
+  type R4CollectionBundle,
   type DocumentReference,
   type Observation,
   type QuantityValue,
@@ -85,6 +85,31 @@ describe('deepFreeze', () => {
     expect(() => deepFreeze(parent)).not.toThrow()
     expect(Object.isFrozen(parent)).toBe(true)
   })
+
+  it('still freezes mutable descendants of an already frozen parent', () => {
+    const child = { value: 1 }
+    const parent = Object.freeze({ child })
+
+    deepFreeze(parent)
+
+    expect(Object.isFrozen(child)).toBe(true)
+  })
+
+  it('does not invoke accessors while traversing properties', () => {
+    let invocationCount = 0
+    const value = Object.defineProperty({}, 'computed', {
+      get: () => {
+        invocationCount += 1
+        return { value: 1 }
+      },
+      enumerable: true,
+    })
+
+    deepFreeze(value)
+
+    expect(invocationCount).toBe(0)
+    expect(Object.isFrozen(value)).toBe(true)
+  })
 })
 
 describe('R4 foundation', () => {
@@ -97,6 +122,63 @@ describe('R4 foundation', () => {
     expect(Object.isFrozen(result.value)).toBe(true)
     expect(Object.isFrozen(result.value.meta)).toBe(true)
     expectTypeOf(result).toExtend<Result<Observation>>()
+  })
+
+  it('isolates parsed resources from later caller mutation', () => {
+    const input = structuredClone(observation) as unknown as {
+      meta: { profile: string[] }
+      valueQuantity: { value: number }
+    }
+    const result = parseObservation(input)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    input.meta.profile.push('https://example.org/changed-after-parse')
+    input.valueQuantity.value = 999
+
+    expect(result.value.meta?.profile).toHaveLength(1)
+    expect(result.value.valueQuantity?.value).toBe(64)
+  })
+
+  const hostileInputs: ReadonlyArray<readonly [string, unknown]> = [
+    ['null', null],
+    ['undefined', undefined],
+    ['bigint', 1n],
+    ['non-finite number', Number.NaN],
+    ['class instance', new Date()],
+    [
+      'throwing getter',
+      Object.defineProperty({}, 'status', {
+        get: () => {
+          throw new Error('must not run')
+        },
+        enumerable: true,
+      }),
+    ],
+    [
+      'hostile proxy',
+      new Proxy(
+        {},
+        {
+          ownKeys: () => {
+            throw new Error('hostile proxy')
+          },
+        },
+      ),
+    ],
+  ]
+  for (const [label, input] of hostileInputs) {
+    it(`reports ${label} parser input without throwing`, () => {
+      expect(() => parseObservation(input)).not.toThrow()
+      expect(parseObservation(input).ok).toBe(false)
+    })
+  }
+
+  it('reports cyclic parser input without throwing', () => {
+    const cyclic: Record<string, unknown> = { ...observation }
+    cyclic.self = cyclic
+    expect(() => parseObservation(cyclic)).not.toThrow()
+    expect(parseObservation(cyclic).ok).toBe(false)
   })
 
   it('rejects unknown fields instead of silently stripping them', () => {
@@ -168,9 +250,9 @@ describe('R4 foundation', () => {
         },
       ],
     }
-    const result = parseCollectionBundle(bundle)
+    const result = parseR4CollectionBundle(bundle)
     expect(result.ok).toBe(true)
-    expectTypeOf(result).toExtend<Result<CollectionBundle>>()
+    expectTypeOf(result).toExtend<Result<R4CollectionBundle>>()
   })
 
   it('parses every bounded graph resource and the supported-resource union', () => {
@@ -251,7 +333,7 @@ describe('Result composition', () => {
       value: 6,
     })
     const failure = err('invalid-type', 'wrong value', ['value'])
-    expect(mapResult(failure, () => 0)).toBe(failure)
+    expect(mapResult(failure, () => 0)).toEqual(failure)
     expect(collectResults([ok(1), ok(2)])).toEqual({
       ok: true,
       value: [1, 2],
@@ -290,6 +372,39 @@ describe('Result composition', () => {
       value: [1, 2],
       warnings: [warning],
     })
+  })
+
+  it('reports malformed JavaScript Result inputs without throwing', () => {
+    const cyclic: Record<string, unknown> = {}
+    cyclic.self = cyclic
+    const hostile = new Proxy(
+      {},
+      {
+        get: () => {
+          throw new Error('hostile result')
+        },
+      },
+    )
+    for (const malformed of [null, undefined, 42, 'invalid', cyclic, hostile]) {
+      const map = () =>
+        mapResult(malformed as Result<number>, (value) => value * 2)
+      const collect = () =>
+        collectResults(malformed as ReadonlyArray<Result<number>>)
+      expect(map).not.toThrow()
+      expect(map().ok).toBe(false)
+      expect(collect).not.toThrow()
+      expect(collect().ok).toBe(false)
+    }
+    const collected = collectResults([
+      ok(1),
+      { ok: false, issues: null } as unknown as Result<number>,
+    ])
+    expect(collected.ok).toBe(false)
+    if (!collected.ok) {
+      expect(collected.issues).toContainEqual(
+        expect.objectContaining({ code: 'invalid-type', path: [1] }),
+      )
+    }
   })
 })
 

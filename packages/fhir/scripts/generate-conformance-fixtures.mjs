@@ -21,26 +21,34 @@ const providerApi = await import(`${distRoot}/providers/index.js`)
 const {
   buildQuestionnaire,
   buildQuestionnaireResponse,
+  groveExchangeProtocol,
   groveFhirContractVersion,
   parseAbsoluteUri,
   parseCanonical,
   parseFhirInstant,
-  parsePatientReference,
-  parsePositiveInteger,
   parseSemVer,
   sharedMobileMeasurementCatalog,
 } = rootApi
 const {
+  adapterMeasurementCatalog,
   buildProviderRecordingBundle,
   buildProviderMeasurementBundle,
-  providerRawMappings,
+  buildProviderRetractionBundle,
+  providerAdapterCatalog,
+  providerRawOutputRoles,
   providerRecordEffectiveRules,
-  providerScalarMappings,
+  providerScalarOutputDiscriminators,
+  providerScalarOutputRoles,
   encodeRecordingBytes,
   parseMediaType,
 } = providerApi
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const localIgIndex = argv.indexOf('--ig')
+const upstreamRoot =
+  localIgIndex === -1 ?
+    resolve(root, '.grove-fhir')
+  : resolve(argv[localIgIndex + 1] ?? '')
 const fixtureRoot = resolve(root, 'fixtures/conformance')
 const resourceRoot = resolve(fixtureRoot, 'resources')
 const check = argv.includes('--check')
@@ -49,18 +57,31 @@ const packageMetadata = JSON.parse(
 )
 const semanticCorpus = JSON.parse(
   await readFile(
-    resolve(
-      root,
-      '.grove-fhir/Conformance/corpora/mobile-semantics/corpus.json',
-    ),
+    resolve(upstreamRoot, 'Conformance/corpora/mobile-semantics/corpus.json'),
     'utf8',
   ),
 )
-const packageGraph = JSON.parse(
-  await readFile(
-    resolve(root, '.grove-fhir/catalog/package-graph.json'),
-    'utf8',
+const mobileExchangeCorpusRoot = resolve(
+  upstreamRoot,
+  'Conformance/corpora/mobile-exchange',
+)
+const sharedMobileExchangeFiles = [
+  'exchange-bundle.json',
+  'retraction-bundle.json',
+  'corpus.json',
+]
+const sharedMobileExchange = new Map(
+  await Promise.all(
+    sharedMobileExchangeFiles.map(async (name) => [
+      `mobile-exchange/${name}`,
+      JSON.parse(
+        await readFile(resolve(mobileExchangeCorpusRoot, name), 'utf8'),
+      ),
+    ]),
   ),
+)
+const packageGraph = JSON.parse(
+  await readFile(resolve(upstreamRoot, 'catalog/package-graph.json'), 'utf8'),
 )
 const producerVersion = packageMetadata.version
 if (typeof producerVersion !== 'string' || producerVersion.length === 0) {
@@ -68,10 +89,13 @@ if (typeof producerVersion !== 'string' || producerVersion.length === 0) {
 }
 
 const conformancePackageSources = [
+  'google-health',
   'mobile',
+  'oura',
   'providers',
   'sensor',
   'questionnaire',
+  'withings',
 ]
 const packageBySource = new Map(
   packageGraph.packages.map((entry) => [entry.source, entry]),
@@ -106,6 +130,10 @@ const exchangeBundleProfile = profileCanonical(
   'mobile',
   'grove-mobile-exchange-bundle',
 )
+const retractionBundleProfile = profileCanonical(
+  'mobile',
+  'grove-mobile-retraction-bundle',
+)
 const questionnaireProfile = profileCanonical(
   'questionnaire',
   'grove-questionnaire',
@@ -124,32 +152,77 @@ const unwrap = (result) => {
 
 const uri = (value) => unwrap(parseAbsoluteUri(value))
 const instant = (value) => unwrap(parseFhirInstant(value))
-const resourceIdentity = (system, value) => ({
-  identifier: { system: uri(system), value },
-})
+const providerSubject = {
+  type: 'Patient',
+  identifier: {
+    system: uri('https://grovealliance.org/fhir/testing/patient-pseudonyms'),
+    value: 'patient-example',
+    assurance: 'deployment-scoped-pseudonym',
+  },
+}
 
 const application = {
-  identity: resourceIdentity(
-    'https://grovealliance.org/fhir/testing/applications',
-    'grove-ts-0.2',
-  ),
+  sourceDeviceToken: 'grove-ts-conformance-producer',
   name: 'Grove TypeScript conformance producer',
   version: producerVersion,
 }
 const dataOrigin = {
-  identity: resourceIdentity(
-    'https://grovealliance.org/fhir/testing/data-origins',
-    'connected-provider',
-  ),
+  sourceDeviceToken: 'synthetic-connected-provider',
   name: 'Synthetic connected provider',
 }
-// Owner-exclusive scalar mappings stay outside the shared facade and the corpus.
+const providerScopeIdentifier = (provider) => {
+  const scope = providerAdapterCatalog.providers.find(
+    ({ id }) => id === provider,
+  )?.identifierScope
+  if (scope === 'account') {
+    return {
+      system: uri(
+        'https://example.org/deployments/provider-account-pseudonyms',
+      ),
+      value: `account-${provider}`,
+      assurance: 'deployment-scoped-account-pseudonym',
+    }
+  }
+  if (scope === 'global' || scope === 'none') {
+    return {
+      system: uri('https://example.org/provider-key-spaces'),
+      value: `${provider}-document-id-global`,
+      assurance: 'documented-global-key-space',
+    }
+  }
+  throw new Error(`Provider ${provider} has no closed identifier scope.`)
+}
+const deploymentIdentity = {
+  opaqueIdentifierSystems: Object.fromEntries(
+    groveExchangeProtocol.opaqueIdentity.identityKinds.map(({ kind }) => [
+      kind,
+      uri(
+        `https://grovealliance.org/fhir/testing/identity/${kind}/fixture-key/1`,
+      ),
+    ]),
+  ),
+  eventIdentifierSystem: uri(
+    'https://grovealliance.org/fhir/testing/identity/event',
+  ),
+  entryNodeIdentifierSystem: uri(
+    'https://grovealliance.org/fhir/testing/identity/entry-node',
+  ),
+  keyId: 'fixture-key',
+  keyEpoch: '1',
+  secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
+  producerInstance: '33fc1b64-6b4c-4bb8-994a-82a8d72eb5dc',
+}
+// The shared semantic corpus covers Mobile semantics; owner-exclusive Provider
+// measurements are generated separately from their exact catalog definitions below.
+const providerAdmittedMeasurementIds = new Set(
+  Object.values(providerScalarOutputRoles).flatMap((sourceMappings) =>
+    Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
+  ),
+)
 const admittedMeasurementIds = new Set(
-  Object.values(providerScalarMappings)
-    .flatMap((sourceMappings) =>
-      Object.values(sourceMappings).flatMap((mapping) => Object.keys(mapping)),
-    )
-    .filter((id) => Object.hasOwn(sharedMobileMeasurementCatalog, id)),
+  [...providerAdmittedMeasurementIds].filter((id) =>
+    Object.hasOwn(sharedMobileMeasurementCatalog, id),
+  ),
 )
 const semanticVectors = semanticCorpus.vectors.filter((vector) =>
   admittedMeasurementIds.has(vector.id),
@@ -203,9 +276,96 @@ const measurementFromVector = (vector) => {
 }
 
 const measurements = semanticVectors.map(measurementFromVector)
+const eventSequenceAt = (zeroBasedOrdinal) => String(zeroBasedOrdinal + 1)
+const measurementEventSequences = measurements.map((_, index) =>
+  eventSequenceAt(index),
+)
+
+const providerRows = new Map(
+  providerAdapterCatalog.providers.map((provider) => [provider.id, provider]),
+)
+const exclusiveMeasurementCases = []
+const includedExclusiveMeasurements = new Set()
+for (const [provider, sourceMappings] of Object.entries(
+  providerScalarOutputRoles,
+)) {
+  const providerRow = providerRows.get(provider)
+  if (
+    providerRow === undefined ||
+    typeof providerRow.measurementOwner !== 'string'
+  ) {
+    throw new Error(`Provider ${provider} has no measurement owner.`)
+  }
+  for (const [sourceType, mapping] of Object.entries(sourceMappings)) {
+    for (const kind of Object.keys(mapping)) {
+      if (
+        Object.hasOwn(sharedMobileMeasurementCatalog, kind) ||
+        includedExclusiveMeasurements.has(kind)
+      ) {
+        continue
+      }
+      const definition =
+        adapterMeasurementCatalog[providerRow.measurementOwner]?.[kind]
+      if (
+        definition === undefined ||
+        definition.owner !== providerRow.measurementOwner
+      ) {
+        throw new Error(
+          `Provider ${provider}/${sourceType} has no exact owner definition for ${kind}.`,
+        )
+      }
+      const recordRule = providerRecordEffectiveRules[provider]?.[sourceType]
+      const effective =
+        recordRule !== undefined || definition.effective === 'Period' ?
+          {
+            kind: 'period',
+            start: instant('2026-08-20T00:00:00-07:00'),
+            end: instant('2026-08-21T00:00:00-07:00'),
+          }
+        : { kind: 'date-time', value: instant('2026-08-20T12:00:00Z') }
+      const value =
+        definition.valueKind === 'quantity' ? definition.quantity?.example
+        : definition.valueKind === 'codeableConcept' ?
+          definition.allowedValues?.[0]
+        : undefined
+      if (typeof value !== 'number' && typeof value !== 'string') {
+        throw new Error(
+          `Provider ${provider}/${sourceType}/${kind} has no scalar example.`,
+        )
+      }
+      exclusiveMeasurementCases.push({
+        provider,
+        sourceType,
+        measurement: { kind, value, effective },
+      })
+      includedExclusiveMeasurements.add(kind)
+    }
+  }
+}
+const admittedExclusiveMeasurementIds = new Set(
+  [...providerAdmittedMeasurementIds].filter(
+    (id) => !Object.hasOwn(sharedMobileMeasurementCatalog, id),
+  ),
+)
+if (
+  exclusiveMeasurementCases.length !== admittedExclusiveMeasurementIds.size ||
+  [...admittedExclusiveMeasurementIds].some(
+    (id) => !includedExclusiveMeasurements.has(id),
+  )
+) {
+  throw new Error(
+    'Every admitted owner-exclusive Provider scalar measurement requires one fixture.',
+  )
+}
+const exclusiveMeasurementEventSequences = exclusiveMeasurementCases.map(
+  (_, index) => eventSequenceAt(measurements.length + index),
+)
+const ouraDailyActivityEventSequence = eventSequenceAt(
+  measurements.length + exclusiveMeasurementCases.length,
+)
 
 const providerFor = (measurement, index) => {
-  const providers = Object.entries(providerScalarMappings)
+  const providers = Object.entries(providerScalarOutputRoles)
   const ordered = [
     ...providers.slice(index % providers.length),
     ...providers.slice(0, index % providers.length),
@@ -228,35 +388,53 @@ const providerMeasurementBundle = (measurement, index) => {
   const provider = providerFor(measurement, index)
   return unwrap(
     buildProviderMeasurementBundle({
-      subject: unwrap(parsePatientReference('Patient/example')),
+      subject: providerSubject,
       measurements: [measurement],
       source: {
         adapter: {
           kind: 'providers',
           provider: provider.provider,
         },
-        providerAccountIdentifier: {
-          system: uri(
-            'https://example.org/deployments/provider-account-pseudonyms',
-          ),
-          value: `account-${provider.provider}`,
-          assurance: 'deployment-scoped-pseudonym',
-        },
+        providerScopeIdentifier: providerScopeIdentifier(provider.provider),
         sourceType: provider.sourceType,
         sourceNativeId: `source-${measurement.kind}`,
         recordingMethod: 'automatically-recorded',
         dataOrigin,
       },
       application,
-      eventSequence: unwrap(parsePositiveInteger(index + 1)),
-      graphIdentifierSystem: uri(
-        'urn:grove:provider-graph:org.grovealliance.example',
-      ),
-      issued: instant('2026-08-20T12:01:00Z'),
+      eventSequence: measurementEventSequences[index],
+      deploymentIdentity,
+      occurred: instant('2026-08-20T12:00:00Z'),
       recorded: instant('2026-08-20T12:02:00Z'),
+      assembled: instant('2026-08-20T12:03:00Z'),
     }),
   )
 }
+
+const exclusiveProviderMeasurementBundle = (
+  { provider, sourceType, measurement },
+  index,
+) =>
+  unwrap(
+    buildProviderMeasurementBundle({
+      subject: providerSubject,
+      measurements: [measurement],
+      source: {
+        adapter: { kind: 'providers', provider },
+        providerScopeIdentifier: providerScopeIdentifier(provider),
+        sourceType,
+        sourceNativeId: `source-${measurement.kind}`,
+        recordingMethod: 'automatically-recorded',
+        dataOrigin,
+      },
+      application,
+      eventSequence: exclusiveMeasurementEventSequences[index],
+      deploymentIdentity,
+      occurred: instant('2026-08-20T12:00:00Z'),
+      recorded: instant('2026-08-20T12:02:00Z'),
+      assembled: instant('2026-08-20T12:03:00Z'),
+    }),
+  )
 
 const measurementByKind = new Map(
   measurements.map((measurement) => [measurement.kind, measurement]),
@@ -279,35 +457,33 @@ const ouraDailyActivityMeasurements = [
 })
 const ouraDailyActivityBundle = unwrap(
   buildProviderMeasurementBundle({
-    subject: unwrap(parsePatientReference('Patient/example')),
+    subject: providerSubject,
     measurements: ouraDailyActivityMeasurements,
     source: {
       adapter: { kind: 'providers', provider: 'oura' },
-      providerAccountIdentifier: {
-        system: uri(
-          'https://example.org/deployments/provider-account-pseudonyms',
-        ),
-        value: 'account-oura-daily-activity',
-        assurance: 'deployment-scoped-pseudonym',
-      },
+      providerScopeIdentifier: providerScopeIdentifier('oura'),
       sourceType: 'daily_activity',
       sourceNativeId: 'source-oura-daily-activity',
       recordingMethod: 'automatically-recorded',
       dataOrigin,
     },
     application,
-    eventSequence: unwrap(parsePositiveInteger(measurements.length + 1)),
-    graphIdentifierSystem: uri(
-      'urn:grove:provider-graph:org.grovealliance.example',
-    ),
-    issued: instant('2026-08-21T07:01:00Z'),
+    eventSequence: ouraDailyActivityEventSequence,
+    deploymentIdentity,
+    occurred: instant('2026-08-21T07:00:00Z'),
     recorded: instant('2026-08-21T07:02:00Z'),
+    assembled: instant('2026-08-21T07:03:00Z'),
   }),
 )
 
-const recordingSources = Object.entries(providerRawMappings).flatMap(
+const recordingSources = Object.entries(providerRawOutputRoles).flatMap(
   ([provider, sources]) =>
     Object.keys(sources).map((sourceType) => ({ provider, sourceType })),
+)
+const recordingEventSequences = recordingSources.map((_, index) =>
+  eventSequenceAt(
+    measurements.length + exclusiveMeasurementCases.length + 1 + index,
+  ),
 )
 
 const recordingPath = ({ provider, sourceType }) =>
@@ -318,13 +494,7 @@ const recordingBundle = ({ provider, sourceType }, index) =>
     buildProviderRecordingBundle({
       source: {
         adapter: { kind: 'providers', provider },
-        providerAccountIdentifier: {
-          system: uri(
-            'https://example.org/deployments/provider-account-pseudonyms',
-          ),
-          value: `account-${provider}`,
-          assurance: 'deployment-scoped-pseudonym',
-        },
+        providerScopeIdentifier: providerScopeIdentifier(provider),
         sourceType,
         sourceNativeId: `raw-source-${provider}-${String(index + 1)}`,
         dataOrigin,
@@ -341,18 +511,125 @@ const recordingBundle = ({ provider, sourceType }, index) =>
           encodeRecordingBytes(Buffer.from('{"synthetic":true}', 'utf8')),
         ),
       },
-      subject: unwrap(parsePatientReference('Patient/example')),
+      subject: providerSubject,
       application,
-      eventSequence: unwrap(
-        parsePositiveInteger(measurements.length + index + 1),
-      ),
-      graphIdentifierSystem: uri(
-        'urn:grove:provider-graph:org.grovealliance.example',
-      ),
+      eventSequence: recordingEventSequences[index],
+      deploymentIdentity,
       documentDate: instant('2026-08-20T12:01:00Z'),
+      occurred: instant('2026-08-20T12:00:00Z'),
       recorded: instant('2026-08-20T12:02:00Z'),
+      assembled: instant('2026-08-20T12:03:00Z'),
     }),
   )
+
+const primaryRetractionMeasurement = measurements[0]
+if (primaryRetractionMeasurement === undefined) {
+  throw new Error(
+    'A primary-output retraction fixture requires one measurement.',
+  )
+}
+const primaryRetractionProvider = providerFor(primaryRetractionMeasurement, 0)
+const primaryRetractionOutputRole =
+  providerScalarOutputRoles[primaryRetractionProvider.provider]?.[
+    primaryRetractionProvider.sourceType
+  ]?.[primaryRetractionMeasurement.kind]
+if (primaryRetractionOutputRole === undefined) {
+  throw new Error('The primary-output retraction role is not catalog-owned.')
+}
+const primaryRetractionOutputDiscriminator =
+  providerScalarOutputDiscriminators[primaryRetractionProvider.provider]?.[
+    primaryRetractionProvider.sourceType
+  ]?.[primaryRetractionMeasurement.kind]
+if (primaryRetractionOutputDiscriminator === undefined) {
+  throw new Error(
+    'The primary-output retraction discriminator is not catalog-owned.',
+  )
+}
+const primaryRetractionEventSequence = eventSequenceAt(
+  measurements.length +
+    exclusiveMeasurementCases.length +
+    1 +
+    recordingSources.length,
+)
+const primaryRetractionBundle = unwrap(
+  buildProviderRetractionBundle({
+    source: {
+      provider: primaryRetractionProvider.provider,
+      providerScopeIdentifier: providerScopeIdentifier(
+        primaryRetractionProvider.provider,
+      ),
+      sourceType: primaryRetractionProvider.sourceType,
+      sourceNativeId: `source-${primaryRetractionMeasurement.kind}`,
+    },
+    targets: [
+      {
+        role: 'primary-output',
+        resourceType: 'Observation',
+        outputRole: primaryRetractionOutputRole,
+        outputDiscriminator: primaryRetractionOutputDiscriminator,
+      },
+      {
+        role: 'device-snapshot',
+        resourceType: 'Device',
+        priorEventSequence: measurementEventSequences[0],
+        deviceRole: 'application',
+        sourceDeviceToken: application.sourceDeviceToken,
+      },
+    ],
+    application,
+    eventSequence: primaryRetractionEventSequence,
+    deploymentIdentity,
+    occurred: instant('2026-08-22T12:00:00Z'),
+    recorded: instant('2026-08-22T12:01:00Z'),
+    assembled: instant('2026-08-22T12:02:00Z'),
+  }),
+)
+
+const artifactRetractionSource = recordingSources[0]
+if (artifactRetractionSource === undefined) {
+  throw new Error(
+    'A source-artifact retraction fixture requires one recording.',
+  )
+}
+const artifactRetractionEventSequence = eventSequenceAt(
+  measurements.length +
+    exclusiveMeasurementCases.length +
+    2 +
+    recordingSources.length,
+)
+const artifactRetractionBundle = unwrap(
+  buildProviderRetractionBundle({
+    source: {
+      provider: artifactRetractionSource.provider,
+      providerScopeIdentifier: providerScopeIdentifier(
+        artifactRetractionSource.provider,
+      ),
+      sourceType: artifactRetractionSource.sourceType,
+      sourceNativeId: `raw-source-${artifactRetractionSource.provider}-1`,
+    },
+    targets: [
+      {
+        role: 'source-artifact',
+        resourceType: 'DocumentReference',
+        formatCode: 'provider-recording',
+        partIndex: '0',
+      },
+      {
+        role: 'device-snapshot',
+        resourceType: 'Device',
+        priorEventSequence: recordingEventSequences[0],
+        deviceRole: 'application',
+        sourceDeviceToken: application.sourceDeviceToken,
+      },
+    ],
+    application,
+    eventSequence: artifactRetractionEventSequence,
+    deploymentIdentity,
+    occurred: instant('2026-08-22T13:00:00Z'),
+    recorded: instant('2026-08-22T13:01:00Z'),
+    assembled: instant('2026-08-22T13:02:00Z'),
+  }),
+)
 
 const questionnaireUrl = uri(
   'https://grovealliance.org/fhir/testing/Questionnaire/grove-ts-conformance',
@@ -408,7 +685,7 @@ const questionnaireResponse = unwrap(
       value: 'grove-ts-conformance-response',
     },
     status: 'completed',
-    subject: unwrap(parsePatientReference('Patient/example')),
+    subject: { type: 'Patient', reference: 'Patient/example' },
     authored: instant('2026-08-20T12:00:00Z'),
     items: [
       {
@@ -436,13 +713,67 @@ const resources = new Map(
     providerMeasurementBundle(measurement, index),
   ]),
 )
+const exclusiveMeasurementPath = ({ provider, measurement }) =>
+  `resources/provider-${provider}-${measurement.kind}.json`
+for (const [index, entry] of exclusiveMeasurementCases.entries()) {
+  resources.set(
+    exclusiveMeasurementPath(entry),
+    exclusiveProviderMeasurementBundle(entry, index),
+  )
+}
 const ouraDailyActivityPath = 'resources/provider-oura-daily-activity.json'
 resources.set(ouraDailyActivityPath, ouraDailyActivityBundle)
 for (const [index, source] of recordingSources.entries()) {
   resources.set(recordingPath(source), recordingBundle(source, index))
 }
+resources.set(
+  'resources/provider-primary-output-retraction.json',
+  primaryRetractionBundle,
+)
+resources.set(
+  'resources/provider-source-artifact-retraction.json',
+  artifactRetractionBundle,
+)
 resources.set('resources/questionnaire.json', questionnaire)
 resources.set('resources/questionnaire-response.json', questionnaireResponse)
+for (const [path, value] of sharedMobileExchange) resources.set(path, value)
+
+const abstractProviderObservationProfile = providerAdapterCatalog.adapterProfile
+for (const [path, value] of resources) {
+  const candidates =
+    value?.resourceType === 'Bundle' ?
+      (value.entry ?? []).map(({ resource }) => resource)
+    : [value]
+  if (
+    candidates.some(
+      (resource) =>
+        resource?.resourceType === 'Observation' &&
+        resource.meta?.profile?.includes(abstractProviderObservationProfile),
+    )
+  ) {
+    throw new Error(
+      `${path} directly claims the abstract ProvidersObservation parent instead of an exact provider envelope.`,
+    )
+  }
+}
+
+const eventIdentifiers = new Map()
+for (const [path, value] of resources) {
+  if (value?.resourceType !== 'Bundle' || value.identifier === undefined)
+    continue
+  const { system, value: identifierValue } = value.identifier
+  if (typeof system !== 'string' || typeof identifierValue !== 'string') {
+    throw new Error(`${path} has an incomplete event identifier.`)
+  }
+  const key = `${system.length}:${system}${identifierValue.length}:${identifierValue}`
+  const prior = eventIdentifiers.get(key)
+  if (prior !== undefined) {
+    throw new Error(
+      `${path} reuses the event identifier already emitted by ${prior}.`,
+    )
+  }
+  eventIdentifiers.set(key, path)
+}
 
 const manifest = {
   schemaVersion: 1,
@@ -454,6 +785,10 @@ const manifest = {
       path: `resources/mobile-${measurement.kind}.json`,
       requiredProfiles: [exchangeBundleProfile],
     })),
+    ...exclusiveMeasurementCases.map((entry) => ({
+      path: exclusiveMeasurementPath(entry),
+      requiredProfiles: [exchangeBundleProfile],
+    })),
     {
       path: ouraDailyActivityPath,
       requiredProfiles: [exchangeBundleProfile],
@@ -462,6 +797,22 @@ const manifest = {
       path: recordingPath(source),
       requiredProfiles: [exchangeBundleProfile],
     })),
+    {
+      path: 'resources/provider-primary-output-retraction.json',
+      requiredProfiles: [retractionBundleProfile],
+    },
+    {
+      path: 'resources/provider-source-artifact-retraction.json',
+      requiredProfiles: [retractionBundleProfile],
+    },
+    {
+      path: 'mobile-exchange/exchange-bundle.json',
+      requiredProfiles: [exchangeBundleProfile],
+    },
+    {
+      path: 'mobile-exchange/retraction-bundle.json',
+      requiredProfiles: [retractionBundleProfile],
+    },
     {
       path: 'resources/questionnaire.json',
       requiredProfiles: [questionnaireProfile],
@@ -497,30 +848,18 @@ for (const relative of [...serialized.keys()]) {
 // Validate what we are about to publish, against the release's own model, before it is written.
 // The official Validator checks these later in CI; catching a malformed emission here names the
 // resource and the element rather than surfacing as a validator report a build later.
-const generated = await import('@schmiedmayerlab/grove-fhir/zod/r4')
-const schemaFor = (resourceType) =>
-  generated[
-    `${resourceType.charAt(0).toLowerCase()}${resourceType.slice(1)}Schema`
-  ]
+const { resourceSchema } = await import('@schmiedmayerlab/grove-fhir/zod/r4')
+const nonResourceArtifacts = new Set(['mobile-exchange/corpus.json'])
 const invalid = []
 for (const [relative, resource] of resources) {
-  const candidates =
-    resource.resourceType === 'Bundle' ?
-      (resource.entry ?? []).map((entry) => entry.resource)
-    : [resource]
-  for (const candidate of candidates) {
-    const schema = schemaFor(candidate.resourceType)
-    if (!schema) continue
-    const result = schema.safeParse(candidate)
-    if (!result.success) {
-      invalid.push(
-        `${relative} (${candidate.resourceType}): ${result.error.issues
-          .map(
-            (issue) => `${issue.path.join('.') || '<root>'} ${issue.message}`,
-          )
-          .join('; ')}`,
-      )
-    }
+  if (nonResourceArtifacts.has(relative)) continue
+  const result = resourceSchema.safeParse(resource)
+  if (!result.success) {
+    invalid.push(
+      `${relative}: ${result.error.issues
+        .map((issue) => `${issue.path.join('.') || '<root>'} ${issue.message}`)
+        .join('; ')}`,
+    )
   }
 }
 if (invalid.length > 0) {
@@ -530,6 +869,7 @@ if (invalid.length > 0) {
 }
 
 await mkdir(resourceRoot, { recursive: true })
+await mkdir(resolve(fixtureRoot, 'mobile-exchange'), { recursive: true })
 for (const [relative, value] of serialized) {
   const path = resolve(fixtureRoot, relative)
   if (check) {

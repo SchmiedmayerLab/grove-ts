@@ -17,16 +17,20 @@ const isObject = (value: unknown): value is Record<PropertyKey, unknown> =>
   typeof value === 'object' && value !== null
 
 export const deepFreeze = <T>(value: T): ReadonlyDeep<T> => {
-  if (!isObject(value) || Object.isFrozen(value)) {
-    return value as ReadonlyDeep<T>
+  const visited = new WeakSet()
+  const visit = (candidate: unknown): void => {
+    if (!isObject(candidate) || visited.has(candidate)) return
+    visited.add(candidate)
+
+    // Read descriptors, not properties: freezing a data structure must not invoke getters.
+    for (const descriptor of Object.values(
+      Object.getOwnPropertyDescriptors(candidate),
+    )) {
+      if ('value' in descriptor) visit(descriptor.value)
+    }
+    if (!Object.isFrozen(candidate)) Object.freeze(candidate)
   }
 
-  // Freeze before descending: the frozen check above is what stops a cycle, so a node that
-  // reaches itself through its own children must already be frozen by the time it is revisited.
-  Object.freeze(value)
-  for (const nested of Object.values(value)) {
-    deepFreeze(nested)
-  }
-
+  visit(value)
   return value as ReadonlyDeep<T>
 }

@@ -14,6 +14,12 @@ import {
   validateQuestionnaireContract,
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
+import {
+  isExactQuestionnaireUrl,
+  isQuestionnaireResponseReference,
+  QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES,
+  QUESTIONNAIRE_RESPONSE_SOURCE_TYPES,
+} from './references.js'
 import { questionnaireResponseSchema, questionnaireSchema } from './schemas.js'
 import type {
   GroveQuestionnaire,
@@ -22,9 +28,12 @@ import type {
   QuestionnaireResponseItemInput,
 } from './types.js'
 import {
+  cloneJsonValue,
   deepFreeze,
+  err,
   issues,
   ok,
+  parseAbsoluteUri,
   parseCanonical,
   parseSemVer,
   type Issue,
@@ -75,6 +84,20 @@ const objectPart = (value: unknown, property: string): unknown =>
     Reflect.get(value, property)
   : undefined
 
+export const isExactQuestionnaireCanonical = (value: unknown): boolean => {
+  if (typeof value !== 'string' || !parseCanonical(value).ok) return false
+  const separator = value.indexOf('|')
+  if (separator <= 0 || separator !== value.lastIndexOf('|')) return false
+  const canonical = value.slice(0, separator)
+  const version = value.slice(separator + 1)
+  return (
+    /^https?:\/\//u.test(canonical) &&
+    !canonical.includes('#') &&
+    parseAbsoluteUri(canonical).ok &&
+    parseSemVer(version).ok
+  )
+}
+
 const normalizeIssue = (entry: z.core.$ZodIssue): Issue => ({
   severity: 'error',
   code: 'schema-invalid',
@@ -89,7 +112,10 @@ const normalizeIssue = (entry: z.core.$ZodIssue): Issue => ({
 const exactProfileIssues = (
   resource: {
     readonly meta?:
-      { readonly profile?: readonly string[] | undefined } | undefined
+      | {
+          readonly profile?: ReadonlyArray<string | null> | undefined
+        }
+      | undefined
   },
   expected: string,
 ): readonly Issue[] =>
@@ -174,6 +200,15 @@ const questionnaireContractIssues = (
     ),
     ...validateElementExtensions(questionnaire),
   ]
+  if (!isExactQuestionnaireUrl(questionnaire.url)) {
+    failures.push(
+      issue(
+        'invalid-uri',
+        ['url'],
+        'Questionnaire.url must be an exact absolute HTTP(S) canonical without a fragment or version delimiter.',
+      ),
+    )
+  }
   if (!parseSemVer(questionnaire.version).ok) {
     failures.push(
       issue(
@@ -221,11 +256,7 @@ const responseContractIssues = (
     ),
     ...validateElementExtensions(response),
   ]
-  if (
-    !parseCanonical(response.questionnaire).ok ||
-    !/^[^|#]+\|[^|#]+$/u.test(response.questionnaire) ||
-    !parseSemVer(response.questionnaire.split('|')[1]).ok
-  ) {
+  if (!isExactQuestionnaireCanonical(response.questionnaire)) {
     failures.push(
       issue(
         'invalid-uri',
@@ -233,6 +264,43 @@ const responseContractIssues = (
         'QuestionnaireResponse.questionnaire must be one exact url|SemVer canonical without fragments.',
       ),
     )
+  }
+  const identifierSystem = objectPart(response.identifier, 'system')
+  const identifierValue = objectPart(response.identifier, 'value')
+  if (
+    !parseAbsoluteUri(identifierSystem).ok ||
+    typeof identifierValue !== 'string' ||
+    identifierValue.trim() === ''
+  ) {
+    failures.push(
+      issue(
+        'invalid-identifier',
+        ['identifier'],
+        'QuestionnaireResponse requires one complete business Identifier.',
+      ),
+    )
+  }
+  for (const [field, reference, allowedTypes] of [
+    ['subject', response.subject, undefined],
+    ['author', response.author, QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES],
+    ['source', response.source, QUESTIONNAIRE_RESPONSE_SOURCE_TYPES],
+  ] as const) {
+    if (
+      reference !== undefined &&
+      !isQuestionnaireResponseReference(
+        reference,
+        allowedTypes,
+        response.contained ?? [],
+      )
+    ) {
+      failures.push(
+        issue(
+          'invalid-reference',
+          [field],
+          `QuestionnaireResponse.${field} requires one typed literal or identifier-only logical Reference to an admitted target type.`,
+        ),
+      )
+    }
   }
   const completionModes = extensionsFor(
     { extension: response.extension ?? [] },
@@ -269,9 +337,18 @@ const responseContractIssues = (
 
 // The schema decides the parsed type; a caller-chosen T would make the cast below a lie.
 const parseWith = <T>(schema: z.ZodType<T>, input: unknown): Result<T> => {
-  const result = schema.safeParse(input)
-  if (!result.success) return issues(result.error.issues.map(normalizeIssue))
-  return ok(deepFreeze(result.data) as T)
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  try {
+    const result = schema.safeParse(snapshot.value)
+    if (!result.success) return issues(result.error.issues.map(normalizeIssue))
+    return ok(deepFreeze(result.data) as T)
+  } catch {
+    return err(
+      'schema-invalid',
+      'Questionnaire JSON validation could not safely inspect the supplied value.',
+    )
+  }
 }
 
 export const parseQuestionnaire = (

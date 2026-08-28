@@ -7,6 +7,7 @@
 //
 
 export { deepFreeze, type ReadonlyDeep } from './freeze.js'
+export { cloneJsonValue, type JsonValue } from './json.js'
 export {
   compareFhirInstants,
   fhirDateTimeToDate,

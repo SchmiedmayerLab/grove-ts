@@ -7,7 +7,7 @@
 //
 
 // Exact codes from the required R4 ResourceType value set (FHIR 4.0.1).
-const R4_RESOURCE_TYPES = new Set<string>([
+const R4_RESOURCE_TYPE_CODES = [
   'Account',
   'ActivityDefinition',
   'AdverseEvent',
@@ -156,7 +156,12 @@ const R4_RESOURCE_TYPES = new Set<string>([
   'ValueSet',
   'VerificationResult',
   'VisionPrescription',
-])
+] as const
+
+/** Exact code union from the required FHIR R4 ResourceType value set. */
+export type R4ResourceType = (typeof R4_RESOURCE_TYPE_CODES)[number]
+
+const R4_RESOURCE_TYPES: ReadonlySet<string> = new Set(R4_RESOURCE_TYPE_CODES)
 
 /** Whether a code belongs to the required FHIR R4 ResourceType value set. */
 export const isR4ResourceType = (value: string): boolean =>

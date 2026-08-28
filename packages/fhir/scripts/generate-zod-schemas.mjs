@@ -20,7 +20,15 @@
  */
 
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -28,6 +36,13 @@ import { spawnSync } from 'node:child_process'
 import { format, resolveConfig } from 'prettier'
 import { Buffer } from 'node:buffer'
 import process, { argv, stdout } from 'node:process'
+import {
+  assertSafeGeneratorInput,
+  fhirTypeAlias,
+  pathSchemaIdentifier,
+  resourceDispatchIdentifiers,
+  structureSchemaIdentifier,
+} from './zod-generator-input.mjs'
 
 const { fetch } = globalThis
 
@@ -104,16 +119,43 @@ const resourceRoots = (structures) =>
 /** Downloads and unpacks a FHIR core package once, then reuses it. */
 export async function fhirPackage({ packageId, version, integrity }) {
   const target = join(CACHE_ROOT, `${packageId}#${version}`)
-  if (existsSync(join(target, 'package'))) {
-    return join(target, 'package')
+  const packageDirectory = join(target, 'package')
+  const archivePath = join(target, 'package.tgz')
+  const markerPath = join(target, '.integrity')
+  const markerValue = `${JSON.stringify({ packageId, version, integrity })}\n`
+  const digestMatches = (bytes) =>
+    integrity === undefined ||
+    createHash('sha512').update(bytes).digest('hex') === integrity
+  const cachedArchive = await readFile(archivePath).catch(() => undefined)
+  const cachedMarker = await readFile(markerPath, 'utf8').catch(() => undefined)
+  const cachedMetadata = await readFile(
+    join(packageDirectory, 'package.json'),
+    'utf8',
+  )
+    .then((value) => JSON.parse(value))
+    .catch(() => undefined)
+  if (
+    cachedArchive !== undefined &&
+    digestMatches(cachedArchive) &&
+    cachedMarker === markerValue &&
+    cachedMetadata?.name === packageId &&
+    cachedMetadata.version === version
+  ) {
+    return packageDirectory
   }
-  await mkdir(target, { recursive: true })
-  const url = `${REGISTRY}/${packageId}/${version}`
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Could not fetch ${url}: ${response.status}`)
+
+  let bytes =
+    cachedArchive !== undefined && digestMatches(cachedArchive) ?
+      cachedArchive
+    : undefined
+  if (bytes === undefined) {
+    const url = `${REGISTRY}/${packageId}/${version}`
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Could not fetch ${url}: ${response.status}`)
+    }
+    bytes = Buffer.from(await response.arrayBuffer())
   }
-  const bytes = Buffer.from(await response.arrayBuffer())
   // A registry tarball is mutable in principle; the digest pins what this generator was built
   // against, so a substituted archive fails the build rather than silently changing the output.
   const digest = createHash('sha512').update(bytes).digest('hex')
@@ -122,19 +164,43 @@ export async function fhirPackage({ packageId, version, integrity }) {
       `${packageId}#${version} does not match its pinned digest.\n  expected ${integrity}\n  actual   ${digest}`,
     )
   }
-  const archive = join(target, 'package.tgz')
-  await writeFile(archive, bytes)
-  const result = spawnSync(
-    'tar',
-    ['xzf', archive, '--no-same-owner', '-C', target],
-    {
-      stdio: 'inherit',
-    },
-  )
-  if (result.status !== 0) {
-    throw new Error(`Could not unpack ${archive}`)
+
+  await mkdir(CACHE_ROOT, { recursive: true })
+  const staging = await mkdtemp(join(CACHE_ROOT, '.package-fetch-'))
+  try {
+    const stagedArchive = join(staging, 'package.tgz')
+    await writeFile(stagedArchive, bytes)
+    const result = spawnSync(
+      'tar',
+      [
+        'xzf',
+        stagedArchive,
+        '--no-same-owner',
+        '--no-same-permissions',
+        '-C',
+        staging,
+      ],
+      { stdio: 'inherit' },
+    )
+    if (result.status !== 0) {
+      throw new Error(`Could not unpack ${packageId}#${version}.`)
+    }
+    const metadata = JSON.parse(
+      await readFile(join(staging, 'package/package.json'), 'utf8'),
+    )
+    if (metadata.name !== packageId || metadata.version !== version) {
+      throw new Error(
+        `FHIR package metadata does not match ${packageId}#${version}.`,
+      )
+    }
+    await writeFile(join(staging, '.integrity'), markerValue)
+    await rm(target, { recursive: true, force: true })
+    await rename(staging, target)
+  } catch (error) {
+    await rm(staging, { recursive: true, force: true })
+    throw error
   }
-  return join(target, 'package')
+  return packageDirectory
 }
 
 /** Every StructureDefinition and ValueSet the release publishes, keyed by name/url. */
@@ -148,8 +214,13 @@ async function loadDefinitions(packageDir) {
     let resource
     try {
       resource = JSON.parse(await readFile(join(packageDir, entry), 'utf8'))
-    } catch {
-      continue
+    } catch (error) {
+      throw new Error(
+        `Could not parse pinned FHIR package resource ${entry}.`,
+        {
+          cause: error,
+        },
+      )
     }
     if (resource.resourceType === 'StructureDefinition') {
       if (resource.derivation === 'constraint') continue
@@ -291,21 +362,12 @@ function childrenOf(elements, path) {
   )
 }
 
-const SCHEMA_NAMES = new Map()
-const schemaName = (name) => {
-  if (!SCHEMA_NAMES.has(name)) {
-    SCHEMA_NAMES.set(
-      name,
-      `${name.charAt(0).toLowerCase()}${name.slice(1)}Schema`,
-    )
-  }
-  return SCHEMA_NAMES.get(name)
-}
+const schemaName = structureSchemaIdentifier
 
 /** The bounds a repeating element states, so a 1..* element cannot be satisfied by `[]`. */
 function arrayBounds(element) {
-  let rendered = '.array()'
-  if (element.min > 0) rendered += `.min(${element.min})`
+  // FHIR JSON arrays are omitted when absent and SHALL never be serialized empty.
+  let rendered = `.array().min(${Math.max(1, element.min)})`
   const max = Number(element.max)
   if (Number.isFinite(max) && max > 1) rendered += `.max(${max})`
   return rendered
@@ -424,8 +486,12 @@ function renderElement(element, context, emit) {
   } else {
     expression = single(types[0].code, types[0])
   }
+  if (isArray && sawPrimitive) expression = `${expression}.nullable()`
   if (isArray) expression = `${expression}${arrayBounds(element)}`
-  if (optional) expression = `${expression}.optional()`
+  // A primitive may exist through its `_shadow` Element alone (for example a
+  // data-absent-reason extension). Object-level refinements enforce min cardinality across the
+  // value and shadow together, so the value property itself must remain optional.
+  if (optional || sawPrimitive) expression = `${expression}.optional()`
   return {
     expression,
     primitiveSibling: sawPrimitive,
@@ -455,7 +521,7 @@ const IMPLEMENTED_CONSTRAINTS = {
     `    (value) => {\n` +
     `      const observation = value as Record<string, unknown>\n` +
     `      const hasValue = Object.keys(observation).some(\n` +
-    `        (key) => key.startsWith('value') && observation[key] !== undefined,\n` +
+    `        (key) => (key.startsWith('value') || key.startsWith('_value')) && observation[key] !== undefined,\n` +
     `      )\n` +
     `      return observation.dataAbsentReason === undefined || !hasValue\n` +
     `    },\n` +
@@ -464,8 +530,8 @@ const IMPLEMENTED_CONSTRAINTS = {
   'obs-3': (schema) =>
     `${schema}.refine(\n` +
     `    (value) => {\n` +
-    `      const range = value as { low?: unknown; high?: unknown; text?: unknown }\n` +
-    `      return range.low !== undefined || range.high !== undefined || range.text !== undefined\n` +
+    `      const range = value as { low?: unknown; high?: unknown; text?: unknown; _text?: unknown }\n` +
+    `      return range.low !== undefined || range.high !== undefined || range.text !== undefined || range._text !== undefined\n` +
     `    },\n` +
     `    { message: 'obs-3: a reference range states a low, a high, or text.' },\n` +
     `  )`,
@@ -474,32 +540,57 @@ const IMPLEMENTED_CONSTRAINTS = {
     `    (value) => {\n` +
     `      const period = value as { start?: string; end?: string }\n` +
     `      if (period.start === undefined || period.end === undefined) return true\n` +
-    `      const start = fhirDateTimeToEpoch(period.start)\n` +
-    `      const end = fhirDateTimeToEpoch(period.end)\n` +
+    `      const ordering = compareFhirDateTimes(period.start, period.end)\n` +
     `      // A malformed endpoint is a malformed date, not an ordering fault; the release says\n` +
     `      // as much with start.hasValue(). Reporting both would name the wrong problem.\n` +
-    `      if (Number.isNaN(start) || Number.isNaN(end)) return true\n` +
-    `      return start <= end\n` +
+    `      if (ordering === undefined) return true\n` +
+    `      return ordering <= 0\n` +
     `    },\n` +
     `    { message: 'Period.start must not be later than Period.end.' },\n` +
     `  )`,
+  'ref-1': (schema) =>
+    `${schema}.refine(\n` +
+    `    (value) => {\n` +
+    `      const reference = value as Record<string, unknown>\n` +
+    `      return ['reference', '_reference', 'identifier', 'display', '_display'].some(\n` +
+    `        (name) => reference[name] !== undefined,\n` +
+    `      )\n` +
+    `    },\n` +
+    `    { message: 'ref-1: a Reference states a literal reference, identifier, or display.' },\n` +
+    `  )`,
+  'qty-3': (schema) =>
+    `${schema}.refine(\n` +
+    `    (value) => {\n` +
+    `      const quantity = value as Record<string, unknown>\n` +
+    `      const hasCode = quantity.code !== undefined || quantity._code !== undefined\n` +
+    `      return !hasCode || quantity.system !== undefined || quantity._system !== undefined\n` +
+    `    },\n` +
+    `    { message: 'qty-3: a coded Quantity requires its unit system.' },\n` +
+    `  )`,
 }
 
-/** At most one property of a choice may be present, which is what `[x]` means. */
+/** At most one choice alternative may be present; a primitive value/shadow pair is one choice. */
 function choiceRefinement(groups) {
   if (groups.length === 0) return ''
   const rendered = groups
     .map(
       (group) =>
-        `{ names: [${group.names.map((name) => JSON.stringify(name)).join(', ')}], required: ${group.required} }`,
+        `{ alternatives: [${group.alternatives
+          .map(
+            (alternative) =>
+              `[${alternative.map((name) => JSON.stringify(name)).join(', ')}]`,
+          )
+          .join(', ')}], required: ${group.required} }`,
     )
     .join(', ')
   return (
     `.refine(\n` +
     `    (value) =>\n` +
     `      [${rendered}].every((group) => {\n` +
-    `        const present = group.names.filter(\n` +
-    `          (name) => (value as Record<string, unknown>)[name] !== undefined,\n` +
+    `        const present = group.alternatives.filter((alternative) =>\n` +
+    `          alternative.some(\n` +
+    `            (name) => (value as Record<string, unknown>)[name] !== undefined,\n` +
+    `          ),\n` +
     `        ).length\n` +
     `        return group.required ? present === 1 : present <= 1\n` +
     `      }),\n` +
@@ -510,6 +601,78 @@ function choiceRefinement(groups) {
     `  )`
   )
 }
+
+/** Positional rules for repeating primitive value and `_shadow` arrays in FHIR JSON. */
+function primitiveArrayRefinement(groups) {
+  if (groups.length === 0) return ''
+  const rendered = groups
+    .map(
+      ({ name, required }) =>
+        `{ name: ${JSON.stringify(name)}, shadow: ${JSON.stringify(`_${name}`)}, required: ${required} }`,
+    )
+    .join(', ')
+  return (
+    `.superRefine((value, context) => {\n` +
+    `    for (const group of [${rendered}]) {\n` +
+    `      const record = value as Record<string, unknown>\n` +
+    `      const values = record[group.name] as unknown[] | undefined\n` +
+    `      const shadows = record[group.shadow] as unknown[] | undefined\n` +
+    `      if (group.required && values === undefined && shadows === undefined) {\n` +
+    `        context.addIssue({ code: 'custom', path: [group.name], message: 'A required repeating primitive needs values or primitive metadata.' })\n` +
+    `        continue\n` +
+    `      }\n` +
+    `      if (values !== undefined && shadows !== undefined && values.length !== shadows.length) {\n` +
+    `        context.addIssue({ code: 'custom', path: [group.shadow], message: 'FHIR primitive value and metadata arrays must have equal length.' })\n` +
+    `        continue\n` +
+    `      }\n` +
+    `      const length = values?.length ?? shadows?.length ?? 0\n` +
+    `      for (let index = 0; index < length; index += 1) {\n` +
+    `        if ((values?.[index] ?? null) === null && (shadows?.[index] ?? null) === null) {\n` +
+    `          context.addIssue({ code: 'custom', path: [group.name, index], message: 'A repeating primitive slot needs a value or primitive metadata.' })\n` +
+    `        }\n` +
+    `      }\n` +
+    `    }\n` +
+    `  })`
+  )
+}
+
+/** Required singular primitives may be represented by their `_shadow` Element alone. */
+function primitiveScalarRefinement(groups) {
+  const required = groups.filter((group) => group.required)
+  if (required.length === 0) return ''
+  const rendered = required
+    .map(
+      ({ name }) =>
+        `{ name: ${JSON.stringify(name)}, shadow: ${JSON.stringify(`_${name}`)} }`,
+    )
+    .join(', ')
+  return (
+    `.superRefine((value, context) => {\n` +
+    `    const record = value as Record<string, unknown>\n` +
+    `    for (const group of [${rendered}]) {\n` +
+    `      if (record[group.name] === undefined && record[group.shadow] === undefined) {\n` +
+    `        context.addIssue({ code: 'custom', path: [group.name], message: 'A required primitive needs a value or primitive metadata.' })\n` +
+    `      }\n` +
+    `    }\n` +
+    `  })`
+  )
+}
+
+const elementContentRefinement = () =>
+  `.refine(\n` +
+  `    (value) => Object.keys(value as object).some((key) => key !== 'id'),\n` +
+  `    { message: 'ele-1: an element must have a value or children beyond id.' },\n` +
+  `  )`
+
+const objectRefinements = ({ choices, primitiveArrays, primitiveScalars }) =>
+  `${choiceRefinement(choices)}${primitiveScalarRefinement(primitiveScalars)}${primitiveArrayRefinement(primitiveArrays)}${elementContentRefinement()}`
+
+const newObjectRefinements = () => ({
+  choices: [],
+  emittedPaths: [],
+  primitiveArrays: [],
+  primitiveScalars: [],
+})
 
 /**
  * The constraints that apply to an object, as the release states applicability.
@@ -589,14 +752,11 @@ function applicableConstraints(elements, path) {
  * involves no type system, and it is what would have caught `id` being dropped from every
  * backbone while every test stayed green.
  */
-function assertEveryElementEmitted(root, elements, rendered) {
-  const missing = []
-  for (const element of childrenOf(elements, root)) {
-    const name = element.path.slice(root.length + 1).replace('[x]', '')
-    if (!new RegExp(`(^|\\s)_?${name}[A-Za-z]*:`, 'm').test(rendered)) {
-      missing.push(element.path)
-    }
-  }
+function assertEveryElementEmitted(root, elements, emittedPaths) {
+  const emitted = new Set(emittedPaths)
+  const missing = childrenOf(elements, root)
+    .map(({ path }) => path)
+    .filter((path) => !emitted.has(path))
   if (missing.length > 0) {
     throw new Error(
       `${root}: the release names elements the generated schema does not emit: ` +
@@ -629,7 +789,10 @@ function renderStructure(structure, context, pending) {
       constrained =
         `${base}.regex(new RegExp(${JSON.stringify(`^[0-9a-zA-Z+/=${XSD_SPACE}]*$`)}), 'Expected a FHIR base64Binary.')` +
         `.refine(\n` +
-        `    (value) => value.replace(/[${XSD_SPACE}]/gu, '').length % 4 === 0,\n` +
+        `    (value) => {\n` +
+        `      const length = value.replace(/[${XSD_SPACE}]/gu, '').length\n` +
+        `      return length > 0 && length % 4 === 0\n` +
+        `    },\n` +
         `    { message: 'Expected a FHIR base64Binary.' },\n` +
         `  )`
     } else if (regex && base === 'z.string()') {
@@ -639,6 +802,12 @@ function renderStructure(structure, context, pending) {
         constrained = `${constrained}.min(${bounds.min})`
       if (bounds.max !== undefined)
         constrained = `${constrained}.max(${bounds.max})`
+    }
+    if (['date', 'dateTime', 'instant'].includes(root)) {
+      constrained = `${constrained}.refine(hasValidFhirCalendarDate, { message: ${JSON.stringify(`Expected a real Gregorian calendar date for FHIR ${root}.`)} })`
+    }
+    if (['canonical', 'uri', 'url', 'xhtml'].includes(root)) {
+      constrained = `${constrained}.min(1)`
     }
     if (regex && base.startsWith('z.number()')) {
       // positiveInt and unsignedInt state their bound as a lexical pattern; testing the string
@@ -658,20 +827,12 @@ function renderStructure(structure, context, pending) {
   // A backbone another element points at by contentReference is hoisted to its own schema:
   // inlining a self-referential one would not terminate.
   const hoisted = new Map()
-  const pathSchemaName = (path) => {
-    const parts = path.split('.')
-    return `${parts[0].charAt(0).toLowerCase()}${parts[0].slice(1)}${parts
-      .slice(1)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join('')}Schema`
-  }
-
   const lines = []
   const emit = {
     require: (name) => pending.add(name),
     reference: (path) => {
-      hoisted.set(path, pathSchemaName(path))
-      return pathSchemaName(path)
+      hoisted.set(path, pathSchemaIdentifier(path))
+      return pathSchemaIdentifier(path)
     },
     primitive: (name) => {
       pending.add(name)
@@ -683,34 +844,39 @@ function renderStructure(structure, context, pending) {
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join('')
       if (context.declaredTypes.has(declared)) {
-        hoisted.set(element.path, pathSchemaName(element.path))
-        return pathSchemaName(element.path)
+        hoisted.set(element.path, pathSchemaIdentifier(element.path))
+        return pathSchemaIdentifier(element.path)
       }
       // Anything the release does not name stays inline: giving it a name would invent a type
       // the specification does not publish. The same emitter is used so a deeper backbone is
       // validated rather than falling back to an open record.
-      const nestedChoices = []
+      const nestedRefinements = newObjectRefinements()
       const nested = renderProperties(
         element.path,
         elements,
         context,
         pending,
         emit,
-        nestedChoices,
+        nestedRefinements,
       )
-      return `z.strictObject({\n${nested}\n  })${choiceRefinement(nestedChoices)}`
+      assertEveryElementEmitted(
+        element.path,
+        elements,
+        nestedRefinements.emittedPaths,
+      )
+      return `z.strictObject({\n${nested}\n  })${objectRefinements(nestedRefinements)}`
     },
   }
 
   recordSkippedConstraints(elements)
-  const rootChoices = []
+  const rootRefinements = newObjectRefinements()
   const body = renderProperties(
     root,
     elements,
     context,
     pending,
     emit,
-    rootChoices,
+    rootRefinements,
   )
   const rootConstraints = applicableConstraints(elements, root)
   // Rendering a backbone can discover further ones, so drain until the set stops growing.
@@ -719,14 +885,14 @@ function renderStructure(structure, context, pending) {
     for (const [path, name] of [...hoisted]) {
       if (emitted.has(path)) continue
       emitted.add(path)
-      const nestedChoices = []
+      const nestedRefinements = newObjectRefinements()
       const nested = renderProperties(
         path,
         elements,
         context,
         pending,
         emit,
-        nestedChoices,
+        nestedRefinements,
       )
       const declared = path
         .split('.')
@@ -734,13 +900,13 @@ function renderStructure(structure, context, pending) {
         .join('')
       const nestedAnnotation =
         context.declaredTypes.has(declared) ?
-          `z.ZodType<Fhir${declared}>`
+          `z.ZodType<FhirJson<${fhirTypeAlias(declared)}>>`
         : 'z.ZodTypeAny'
       if (context.declaredTypes.has(declared)) context.usedTypes.add(declared)
       // A hoisted backbone carries its own choices and its own constraints; applying them only
       // at the resource root would leave the named type weaker than the inline form.
       const nestedConstraints = applicableConstraints(elements, path)
-      let nestedClosing = `  })${choiceRefinement(nestedChoices)}`
+      let nestedClosing = `  })${objectRefinements(nestedRefinements)}`
       for (const key of nestedConstraints) {
         nestedClosing = IMPLEMENTED_CONSTRAINTS[key](nestedClosing)
       }
@@ -748,13 +914,15 @@ function renderStructure(structure, context, pending) {
       lines.push(`  z.strictObject({`)
       lines.push(nested)
       lines.push(`${nestedClosing},`)
-      lines.push(`)`)
+      lines.push(`) as unknown as ${nestedAnnotation}`)
       lines.push('')
-      assertEveryElementEmitted(path, elements, nested)
+      assertEveryElementEmitted(path, elements, nestedRefinements.emittedPaths)
     }
   }
   const annotation =
-    context.declaredTypes.has(root) ? `z.ZodType<Fhir${root}>` : 'z.ZodTypeAny'
+    context.declaredTypes.has(root) ?
+      `z.ZodType<FhirJson<${fhirTypeAlias(root)}>>`
+    : 'z.ZodTypeAny'
   if (context.declaredTypes.has(root)) context.usedTypes.add(root)
   lines.push(`export const ${schemaName(root)}: ${annotation} = z.lazy(() =>`)
   lines.push(`  z.strictObject({`)
@@ -762,14 +930,14 @@ function renderStructure(structure, context, pending) {
     lines.push(`    resourceType: z.literal(${JSON.stringify(root)}),`)
   }
   lines.push(body)
-  let closing = `  })${choiceRefinement(rootChoices)}`
+  let closing = `  })${objectRefinements(rootRefinements)}`
   for (const key of rootConstraints) {
     closing = IMPLEMENTED_CONSTRAINTS[key](closing)
   }
   lines.push(`${closing},`)
-  lines.push(`)`)
+  lines.push(`) as unknown as ${annotation}`)
   const rendered = lines.join('\n') + '\n'
-  assertEveryElementEmitted(root, elements, body)
+  assertEveryElementEmitted(root, elements, rootRefinements.emittedPaths)
   return rendered
 }
 
@@ -785,31 +953,38 @@ function renderProperties(path, elements, context, pending, emit, collector) {
   }
   const rows = []
   const choiceGroups = []
+  const primitiveArrayGroups = []
+  const primitiveScalarGroups = []
   for (const child of childrenOf(elements, path)) {
     const name = child.path.slice(path.length + 1)
     const rendered = renderElement(child, context, localEmit)
     if (!rendered) continue
+    collector?.emittedPaths.push(child.path)
     if (rendered.choice) {
       choiceGroups.push({
-        names: rendered.choice.map((option) => option.name),
+        alternatives: rendered.choice.map((option) => [
+          option.name,
+          ...(option.primitiveSibling ? [`_${option.name}`] : []),
+        ]),
         required: rendered.optional === false,
       })
       for (const option of rendered.choice) {
-        rows.push(`    ${option.name}: ${option.expression}.optional(),`)
+        rows.push(
+          `    ${JSON.stringify(option.name)}: ${option.expression}.optional(),`,
+        )
         if (
           option.primitiveSibling &&
           !(child.representation ?? []).includes('xmlAttr')
         ) {
           pending.add('Element')
           rows.push(
-            `    _${option.name}: z.lazy(() => ${schemaName('Element')}).optional(),`,
+            `    ${JSON.stringify(`_${option.name}`)}: z.lazy(() => ${schemaName('Element')}).optional(),`,
           )
         }
       }
       continue
     }
-    const key = /^[A-Za-z_$][\w$]*$/.test(name) ? name : JSON.stringify(name)
-    rows.push(`    ${key}: ${rendered.expression},`)
+    rows.push(`    ${JSON.stringify(name)}: ${rendered.expression},`)
     if (
       rendered.primitiveSibling &&
       !(child.representation ?? []).includes('xmlAttr')
@@ -817,12 +992,21 @@ function renderProperties(path, elements, context, pending, emit, collector) {
       pending.add('Element')
       const sibling =
         rendered.siblingIsArray ?
-          `z.lazy(() => ${schemaName('Element')}).array()`
+          `z.lazy(() => ${schemaName('Element')}).nullable()${arrayBounds(child)}`
         : `z.lazy(() => ${schemaName('Element')})`
-      rows.push(`    _${name}: ${sibling}.optional(),`)
+      rows.push(`    ${JSON.stringify(`_${name}`)}: ${sibling}.optional(),`)
+      if (rendered.siblingIsArray) {
+        primitiveArrayGroups.push({ name, required: child.min > 0 })
+      } else {
+        primitiveScalarGroups.push({ name, required: child.min > 0 })
+      }
     }
   }
-  if (collector) collector.push(...choiceGroups)
+  if (collector) {
+    collector.choices.push(...choiceGroups)
+    collector.primitiveArrays.push(...primitiveArrayGroups)
+    collector.primitiveScalars.push(...primitiveScalarGroups)
+  }
   return rows.join('\n')
 }
 
@@ -843,26 +1027,26 @@ function specialises(name, ancestor, structures) {
  *
  * `Bundle.entry.resource`, `Bundle.entry.response.outcome` and every `contained` array admit any
  * resource, which is not the same as admitting any object. The slot discriminates on the
- * `resourceType` every resource carries and validates against the schema for that type; only a
- * type this package does not model keeps the open shape, because there is nothing better to
- * check it against.
+ * `resourceType` every resource carries and validates against the schema for that type. An
+ * unknown resource type is not part of the pinned FHIR release and therefore fails closed.
  *
  * Dispatching rather than unioning is what keeps the recursion finite: a resource may carry a
  * Bundle that carries it again, and the members are read at parse time from a table rather than
  * expanded into the type of every slot that admits a resource.
  */
 function renderResourceDispatch(typeCode, members, context) {
-  const table = `modelled${typeCode}s`
+  const { table, inFlight } = resourceDispatchIdentifiers(typeCode)
   const output =
     context.declaredTypes.has(typeCode) ?
-      `Fhir${typeCode}`
+      `FhirJson<${fhirTypeAlias(typeCode)}>`
     : '{ resourceType: string }'
   if (context.declaredTypes.has(typeCode)) context.usedTypes.add(typeCode)
   const annotation = `z.ZodType<${output}>`
-  const inFlight = `dispatching${typeCode}`
   return (
     `const ${table}: Readonly<Record<string, z.ZodType>> = {\n` +
-    members.map((name) => `  ${name}: ${schemaName(name)},`).join('\n') +
+    members
+      .map((name) => `  ${JSON.stringify(name)}: ${schemaName(name)},`)
+      .join('\n') +
     `\n}\n\n` +
     `const ${inFlight} = new WeakSet()\n\n` +
     `export const ${schemaName(typeCode)}: ${annotation} = z\n` +
@@ -878,9 +1062,10 @@ function renderResourceDispatch(typeCode, members, context) {
     `  )\n` +
     `  .superRefine((value, ctx) => {\n` +
     `    const modelled = ${table}[value.resourceType]\n` +
-    `    // A resource type the release defines but this package does not model keeps the open\n` +
-    `    // shape; reporting it as invalid would reject a conformant bundle.\n` +
-    `    if (modelled === undefined) return\n` +
+    `    if (modelled === undefined) {\n` +
+    `      ctx.addIssue({ code: 'custom', path: ['resourceType'], message: 'Resource type is not published by this pinned FHIR release.' })\n` +
+    `      return\n` +
+    `    }\n` +
     `    // JSON cannot describe a resource that contains itself, but an in-memory object can,\n` +
     `    // and re-entering one would recur until the stack ran out.\n` +
     `    if (${inFlight}.has(value)) return\n` +
@@ -908,7 +1093,7 @@ const HEADER = `//
 // GENERATED FILE. Run \`npm run generate:zod\` after changing the generator or the release pin.
 //
 
-/* eslint-disable sonarjs/regex-complexity, sonarjs/concise-regex, sonarjs/single-char-in-character-classes, sonarjs/single-character-alternation */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, sonarjs/no-nested-functions, sonarjs/regex-complexity, sonarjs/concise-regex, sonarjs/single-char-in-character-classes, sonarjs/single-character-alternation */
 
 `
 
@@ -945,6 +1130,12 @@ async function main(argv) {
       (match) => match[1],
     ),
   )
+  assertSafeGeneratorInput({
+    structures,
+    valueSets,
+    codeSystems,
+    declaredTypes,
+  })
   const context = {
     structures,
     valueSets,
@@ -964,7 +1155,11 @@ async function main(argv) {
     if (done.has(name)) continue
     done.add(name)
     const structure = structures.get(name)
-    if (!structure) continue
+    if (!structure) {
+      throw new Error(
+        `The pinned FHIR package does not define required structure ${name}.`,
+      )
+    }
     if (structure.abstract === true && structure.kind === 'resource') continue
     chunks.set(name, renderStructure(structure, context, pending))
   }
@@ -989,7 +1184,21 @@ async function main(argv) {
     .map(([path, keys]) => [path, [...keys].sort()])
     .sort(([a], [b]) => a.localeCompare(b))
   const skippedExport =
-    `\n/**\n * Invariants the release states for these paths that this module does not check.\n *\n` +
+    `\n/** Exact pinned release material and generated closure behind this module. */\n` +
+    `export const STRUCTURAL_SCHEMA_SOURCE = {\n` +
+    `  packageId: ${JSON.stringify(release.packageId)},\n` +
+    `  packageVersion: ${JSON.stringify(release.version)},\n` +
+    `  fhirVersion: ${JSON.stringify(release.fhirVersion)},\n` +
+    `  archiveSha512: ${JSON.stringify(release.integrity)},\n` +
+    `  structureCount: ${String(ordered.length)},\n` +
+    `} as const\n\n` +
+    `/** Structural wire-boundary capabilities and deliberate limits. */\n` +
+    `export const STRUCTURAL_SCHEMA_CAPABILITIES = {\n` +
+    `  fullFhirPath: false,\n` +
+    `  preservesDecimalLexemesAfterJsonParse: false,\n` +
+    `  normativeConformanceValidator: 'official-fhir-validator',\n` +
+    `} as const\n\n` +
+    `/**\n * Invariants the release states for these paths that this module does not check.\n *\n` +
     ` * Structural rules are enforced; a rule expressed only as FHIRPath is not evaluated here.\n` +
     ` * Normative conformance is established by the official FHIR Validator, not by this module.\n */\n` +
     `export const UNCHECKED_CONSTRAINTS: Readonly<Record<string, readonly string[]>> = {\n` +
@@ -1004,10 +1213,11 @@ async function main(argv) {
   const imports = [...context.usedTypes].sort()
   const typeImport =
     imports.length > 0 ?
-      `import type {\n${imports.map((name) => `  ${name} as Fhir${name},`).join('\n')}\n} from 'fhir/${releaseKey}.js'\n`
+      `import type {\n${imports.map((name) => `  ${name} as ${fhirTypeAlias(name)},`).join('\n')}\n} from 'fhir/${releaseKey}.js'\n`
     : ''
   const rendered = `${HEADER}${typeImport}import { z } from 'zod'
-import { fhirDateTimeToEpoch } from '../support.js'
+import type { FhirJson } from '../../r4/json.js'
+import { compareFhirDateTimes, hasValidFhirCalendarDate } from '../support.js'
 
 // Generated from ${release.packageId}#${release.version} (FHIR ${release.fhirVersion}).
 // ${ordered.length} structures: every type the exposed roots reach.

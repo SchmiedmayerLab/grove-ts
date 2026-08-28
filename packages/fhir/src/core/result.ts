@@ -23,12 +23,17 @@ export type IssueCode =
   | 'schema-invalid'
   | 'unsupported-measurement'
   | 'value-mismatch'
+  | `mobile-${string}`
 
 export interface Issue {
   readonly severity: IssueSeverity
   readonly code: IssueCode
   readonly path: ReadonlyArray<string | number>
   readonly message: string
+  /** Exact normative producer-rule reason when this is a Grove protocol diagnostic. */
+  readonly reason?: string
+  /** Stable FHIR-facing producer-rule location, independent of parser internals. */
+  readonly location?: string
 }
 
 export type Result<T> =
@@ -57,25 +62,92 @@ export const issues = <T = never>(entries: readonly Issue[]): Result<T> => ({
   issues: entries,
 })
 
+type InspectedResult<T> =
+  | {
+      readonly ok: true
+      readonly value: T
+      readonly warnings: readonly Issue[]
+    }
+  | { readonly ok: false; readonly issues: readonly Issue[] }
+
+const isIssue = (value: unknown): value is Issue => {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Partial<Issue>
+  return (
+    ['error', 'warning'].includes(String(candidate.severity)) &&
+    typeof candidate.code === 'string' &&
+    Array.isArray(candidate.path) &&
+    candidate.path.every(
+      (component) =>
+        typeof component === 'string' || typeof component === 'number',
+    ) &&
+    typeof candidate.message === 'string' &&
+    (candidate.reason === undefined || typeof candidate.reason === 'string') &&
+    (candidate.location === undefined || typeof candidate.location === 'string')
+  )
+}
+
+const inspectResult = <T>(value: unknown): InspectedResult<T> | undefined => {
+  try {
+    if (typeof value !== 'object' || value === null) return undefined
+    const candidate = value as {
+      readonly ok?: unknown
+      readonly value?: T
+      readonly warnings?: unknown
+      readonly issues?: unknown
+    }
+    if (candidate.ok === true) {
+      const warnings = candidate.warnings ?? []
+      return Array.isArray(warnings) && warnings.every(isIssue) ?
+          { ok: true, value: candidate.value as T, warnings }
+        : undefined
+    }
+    return (
+        candidate.ok === false &&
+          Array.isArray(candidate.issues) &&
+          candidate.issues.every(isIssue)
+      ) ?
+        { ok: false, issues: candidate.issues }
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const invalidResult = <T>(
+  path: ReadonlyArray<string | number> = [],
+): Result<T> =>
+  err('invalid-type', 'Expected a well-formed Grove Result value.', path)
+
 export const mapResult = <T, U>(
   result: Result<T>,
   transform: (value: T) => U,
-): Result<U> =>
-  result.ok ? ok(transform(result.value), result.warnings) : result
+): Result<U> => {
+  const inspected = inspectResult<T>(result)
+  if (inspected === undefined) return invalidResult()
+  return inspected.ok ?
+      ok(transform(inspected.value), inspected.warnings)
+    : inspected
+}
 
 export const collectResults = <T>(
   results: ReadonlyArray<Result<T>>,
 ): Result<readonly T[]> => {
+  if (!Array.isArray(results)) return invalidResult()
   const values: T[] = []
   const failures: Issue[] = []
   const warnings: Issue[] = []
 
-  for (const result of results) {
-    if (result.ok) {
-      values.push(result.value)
-      warnings.push(...(result.warnings ?? []))
+  for (const [index, result] of results.entries()) {
+    const inspected = inspectResult<T>(result)
+    if (inspected === undefined) {
+      const invalid = invalidResult<T>([index])
+      if (!invalid.ok) failures.push(...invalid.issues)
+    } else if (inspected.ok) {
+      values.push(inspected.value)
+      warnings.push(...inspected.warnings)
     } else {
-      failures.push(...result.issues)
+      failures.push(...inspected.issues)
     }
   }
 

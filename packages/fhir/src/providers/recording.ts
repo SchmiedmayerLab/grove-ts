@@ -12,32 +12,47 @@ import {
   groveFhirContractVersion,
   groveRecordingFormatRegistry,
   providerAdapterCatalog,
-  providerRawMappings,
+  providerRawOutputRoles,
   type ProviderRecordingFormat,
 } from './contract.generated.js'
 import {
   assemblerAgent,
   coding,
+  deduplicateIdentifiedEntries,
+  governedSourceIdentifier,
   identifiedEntry,
   identifier,
   makeApplicationDevice,
+  makeHostDevice,
   provenanceActivity,
   resourceId,
   sourceEntityAgent,
 } from './graph.js'
 import {
+  deriveApplicationEntryIdentity,
+  deriveDeviceSnapshotEntryIdentity,
   deriveProviderIdentities,
-  parseResourceIdentityInput,
+  deriveWriterRecordIdentifier,
 } from './identity.js'
-import { containsReversibleIdentityRepresentation } from './privacy.js'
-import { EXTENSIONS, PROFILES } from './profiles.js'
+import {
+  EXTENSIONS,
+  PROFILES,
+  PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
+  PROVIDER_RECORDING_OUTPUT_ROLE,
+} from './profiles.js'
 import {
   applicationDeviceSchema,
+  deploymentIdentitySchema,
   fhirIdSchema,
   identifierInputSchema,
+  governedSourceIdentifierIssues,
+  governedSourceIdentifierSchema,
   nonBlankStringSchema,
   normalizeZodIssue,
   primitiveInstantSchema,
+  providerPatientReferenceSchema,
+  providerScopeIdentifierIssues,
+  providerScopeIdentifierSchema,
 } from './provider.js'
 import type {
   CanonicalBase64,
@@ -48,21 +63,22 @@ import type {
   Sha1Base64,
 } from './types.js'
 import {
+  cloneJsonValue,
   deepFreeze,
   err,
   issues,
   ok,
   parseAbsoluteUri,
   parseFhirInstant,
-  parsePatientReference,
-  parsePositiveInteger,
   type Issue,
-  type PositiveInteger,
   type Result,
 } from '../core/index.js'
 import { createEntryIdentity } from '../mobile/identity.js'
 import type { IdentifiedEntryIdentityInput } from '../mobile/types.js'
-import { parseCollectionBundle, type CollectionBundle } from '../r4/index.js'
+import {
+  parseGroveMobileExchangeBundle,
+  type GroveMobileExchangeBundle,
+} from '../r4/index.js'
 
 const BASE64_ALPHABET =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -160,16 +176,19 @@ export const parseMediaType = (value: unknown): Result<MediaType> => {
   return ok(value as MediaType)
 }
 
-const parseAttachmentSize = (value: unknown): Result<PositiveInteger> => {
-  const parsed = parsePositiveInteger(value)
-  if (!parsed.ok) return parsed
-  if (parsed.value > 2_147_483_647) {
+const parseAttachmentSize = (value: unknown): Result<number> => {
+  if (
+    typeof value !== 'number' ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > 2_147_483_647
+  ) {
     return err(
       'out-of-range',
-      'Attachment.size must fit the FHIR R4 unsignedInt range.',
+      'Attachment.size must be an integer in the FHIR R4 unsignedInt range 0...2147483647.',
     )
   }
-  return parsed
+  return ok(value)
 }
 
 export const parseImmutableRecordingUrl = (
@@ -200,7 +219,7 @@ export const parseImmutableRecordingUrl = (
   return ok(value as ImmutableRecordingUrl)
 }
 
-const providerValues = Object.keys(providerRawMappings) as [
+const providerValues = Object.keys(providerRawOutputRoles) as [
   ConnectedRawProvider,
   ...ConnectedRawProvider[],
 ]
@@ -210,23 +229,28 @@ const recordingSourceSchema = z.strictObject({
     kind: z.literal('providers'),
     provider: z.enum(providerValues),
   }),
-  providerAccountIdentifier: identifierInputSchema.extend({
-    assurance: z.literal('deployment-scoped-pseudonym'),
-  }),
+  providerScopeIdentifier: providerScopeIdentifierSchema,
   sourceType: nonBlankStringSchema,
   sourceNativeId: nonBlankStringSchema,
   dataOrigin: applicationDeviceSchema,
+  writerRecord: z
+    .strictObject({
+      applicationIdentifier: identifierInputSchema,
+      nativeRecordId: nonBlankStringSchema,
+      version: z
+        .string()
+        .regex(/^(?:0|[1-9]\d*)$/u)
+        .optional(),
+    })
+    .optional(),
 })
 
 const recordingAttachmentBase = {
   contentType: z.string().min(1),
-  title: nonBlankStringSchema,
-  format: z.enum(
-    Object.keys(groveRecordingFormatRegistry.formats) as [
-      ProviderRecordingFormat,
-      ...ProviderRecordingFormat[],
-    ],
-  ),
+  title: nonBlankStringSchema.optional(),
+  format: z.literal(
+    'provider-recording',
+  ) satisfies z.ZodType<ProviderRecordingFormat>,
   payloadAssertion: z.enum(
     providerAdapterCatalog.rawPayloadAdmission.allowedAssertions,
   ),
@@ -251,12 +275,15 @@ const recordingAttachmentSchema = z.discriminatedUnion('kind', [
 const recordingBundleInputSchema = z.strictObject({
   source: recordingSourceSchema,
   attachment: recordingAttachmentSchema,
-  subject: z.string(),
+  subject: providerPatientReferenceSchema,
   application: applicationDeviceSchema,
-  eventSequence: z.number(),
-  graphIdentifierSystem: z.string(),
+  eventSequence: z.string().regex(/^[1-9]\d*$/u),
+  deploymentIdentity: deploymentIdentitySchema,
+  nativeIdentifierDisclosure: governedSourceIdentifierSchema.optional(),
   documentDate: primitiveInstantSchema,
+  occurred: primitiveInstantSchema,
   recorded: primitiveInstantSchema,
+  assembled: primitiveInstantSchema,
   repositoryIds: z
     .strictObject({
       bundle: fhirIdSchema.optional(),
@@ -266,90 +293,42 @@ const recordingBundleInputSchema = z.strictObject({
     .optional(),
 })
 
-const recordingGraphIdentityIssues = (
-  input: z.infer<typeof recordingBundleInputSchema>,
-): readonly Issue[] => {
-  const graphIdentityInputs: ReadonlyArray<
-    readonly [
-      Parameters<typeof parseResourceIdentityInput>[0],
-      readonly string[],
-    ]
-  > = [
-    [input.application.identity, ['application', 'identity']],
-    [input.source.dataOrigin.identity, ['source', 'dataOrigin', 'identity']],
-  ]
-  return graphIdentityInputs.flatMap(([identity, path]) => {
-    const parsedIdentity = parseResourceIdentityInput(identity)
-    return parsedIdentity.ok ?
-        []
-      : parsedIdentity.issues.map((entry) => ({
-          ...entry,
-          path: [...path, ...entry.path],
-        }))
-  })
-}
-
 const hasRawMapping = (
   provider: ConnectedRawProvider,
   sourceType: string,
-): boolean => Object.hasOwn(providerRawMappings[provider], sourceType)
-
-const attachmentMetadataStrings = (
-  attachment: z.infer<typeof recordingAttachmentSchema>,
-): readonly string[] => {
-  if (attachment.kind === 'external') {
-    return [
-      attachment.contentType,
-      attachment.title,
-      attachment.hash,
-      attachment.url,
-    ]
-  }
-  const bytes = decodeCanonicalBase64(attachment.dataBase64)
-  return [
-    attachment.contentType,
-    attachment.title,
-    ...(bytes === undefined ? [] : [encodeBase64(sha1(bytes))]),
-  ]
-}
-
-const emittedCallerStrings = (
-  input: z.infer<typeof recordingBundleInputSchema>,
-): readonly string[] => [
-  input.source.adapter.provider,
-  input.source.sourceType,
-  input.subject,
-  input.documentDate,
-  input.recorded,
-  ...attachmentMetadataStrings(input.attachment),
-  input.application.identity.identifier.system,
-  input.application.identity.identifier.value,
-  input.application.identity.id ?? '',
-  input.application.name,
-  input.application.version ?? '',
-  input.application.manufacturer ?? '',
-  input.source.dataOrigin.identity.identifier.system,
-  input.source.dataOrigin.identity.identifier.value,
-  input.source.dataOrigin.identity.id ?? '',
-  input.source.dataOrigin.name,
-  input.source.dataOrigin.version ?? '',
-  input.source.dataOrigin.manufacturer ?? '',
-  input.repositoryIds?.bundle ?? '',
-  input.repositoryIds?.document ?? '',
-  input.repositoryIds?.provenance ?? '',
-]
+): boolean => Object.hasOwn(providerRawOutputRoles[provider], sourceType)
 
 /** Strict parser for the closed Provider mapped-standard facade. */
 export const parseProviderRecordingBundleInput = (
   input: unknown,
 ): Result<ProviderRecordingBundleInput> => {
-  const parsed = recordingBundleInputSchema.safeParse(input)
-  if (!parsed.success) {
-    return issues(parsed.error.issues.map(normalizeZodIssue))
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  let parsed: ReturnType<typeof recordingBundleInputSchema.safeParse>
+  try {
+    parsed = recordingBundleInputSchema.safeParse(snapshot.value)
+  } catch {
+    return err(
+      'schema-invalid',
+      'Provider recording input validation could not safely inspect the supplied value.',
+    )
   }
+  if (!parsed.success) return issues(parsed.error.issues.map(normalizeZodIssue))
 
   const findings: Issue[] = []
-  findings.push(...recordingGraphIdentityIssues(parsed.data))
+  findings.push(
+    ...providerScopeIdentifierIssues(
+      parsed.data.source.adapter.provider,
+      parsed.data.source.providerScopeIdentifier,
+    ),
+  )
+  findings.push(
+    ...governedSourceIdentifierIssues(
+      parsed.data.nativeIdentifierDisclosure,
+      parsed.data.source.sourceNativeId,
+      parsed.data.deploymentIdentity,
+    ),
+  )
   if (
     !hasRawMapping(
       parsed.data.source.adapter.provider,
@@ -366,10 +345,10 @@ export const parseProviderRecordingBundleInput = (
   const checks: ReadonlyArray<
     readonly [Result<unknown>, ReadonlyArray<string | number>]
   > = [
-    [parsePatientReference(parsed.data.subject), ['subject']],
-    [parsePositiveInteger(parsed.data.eventSequence), ['eventSequence']],
     [parseFhirInstant(parsed.data.documentDate), ['documentDate']],
+    [parseFhirInstant(parsed.data.occurred), ['occurred']],
     [parseFhirInstant(parsed.data.recorded), ['recorded']],
+    [parseFhirInstant(parsed.data.assembled), ['assembled']],
     [
       parseMediaType(parsed.data.attachment.contentType),
       ['attachment', 'contentType'],
@@ -415,61 +394,36 @@ export const parseProviderRecordingBundleInput = (
     })
   }
 
-  const emittedStrings = emittedCallerStrings(parsed.data)
-  for (const [privateValue, path, label] of [
-    [
-      parsed.data.source.sourceNativeId,
-      ['source', 'sourceNativeId'],
-      'sourceNativeId',
-    ],
-    [
-      parsed.data.source.providerAccountIdentifier.value,
-      ['source', 'providerAccountIdentifier', 'value'],
-      'providerAccountIdentifier.value',
-    ],
-  ] as const) {
-    if (
-      emittedStrings.some(
-        (value) =>
-          value !== '' &&
-          containsReversibleIdentityRepresentation(value, privateValue),
-      )
-    ) {
-      findings.push({
-        severity: 'error',
-        code: 'invalid-identifier',
-        path,
-        message: `${label} is an identity input only and must not appear in emitted FHIR metadata.`,
-      })
-    }
-  }
-
   if (findings.length === 0) {
-    const providerAccountSystem = parseAbsoluteUri(
-      parsed.data.source.providerAccountIdentifier.system,
+    const providerScopeSystem = parseAbsoluteUri(
+      parsed.data.source.providerScopeIdentifier.system,
     )
-    const eventSequence = parsePositiveInteger(parsed.data.eventSequence)
-    const graphSystem = parseAbsoluteUri(parsed.data.graphIdentifierSystem)
-    if (!graphSystem.ok) {
-      findings.push(...graphSystem.issues)
-    } else if (!providerAccountSystem.ok) {
-      findings.push(...providerAccountSystem.issues)
-    } else if (!eventSequence.ok) {
-      findings.push(...eventSequence.issues)
+    if (!providerScopeSystem.ok) {
+      findings.push(...providerScopeSystem.issues)
     } else {
       const identity = deriveProviderIdentities({
         provider: parsed.data.source.adapter.provider,
-        providerAccountIdentifier: {
-          system: providerAccountSystem.value,
-          value: parsed.data.source.providerAccountIdentifier.value,
+        providerScopeIdentifier: {
+          system: providerScopeSystem.value,
+          value: parsed.data.source.providerScopeIdentifier.value,
+          assurance: parsed.data.source.providerScopeIdentifier.assurance,
         },
         sourceType: parsed.data.source.sourceType,
         sourceNativeId: parsed.data.source.sourceNativeId,
-        outputDiscriminators: [
-          providerAdapterCatalog.recordingDocument.outputDiscriminator,
+        outputs: [
+          {
+            kind: 'provider-output',
+            outputRole: PROVIDER_RECORDING_OUTPUT_ROLE,
+            outputDiscriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
+          },
+          {
+            kind: 'provider-artifact',
+            formatCode: parsed.data.attachment.format,
+            partIndex: '0',
+          },
         ],
-        eventSequence: eventSequence.value,
-        graphIdentifierSystem: graphSystem.value,
+        eventSequence: parsed.data.eventSequence,
+        deployment: parsed.data.deploymentIdentity,
       })
       if (!identity.ok) findings.push(...identity.issues)
     }
@@ -484,14 +438,18 @@ interface RecordingGraphIdentities {
     readonly system: import('../core/index.js').AbsoluteUri
     readonly value: string
   }
-  readonly exchange: {
+  readonly event: {
     readonly system: import('../core/index.js').AbsoluteUri
     readonly value: string
   }
   readonly document: IdentifiedEntryIdentityInput
+  readonly sourceArtifact: import('../mobile/types.js').CompleteIdentifierInput
   readonly provenance: IdentifiedEntryIdentityInput
   readonly application: IdentifiedEntryIdentityInput
+  readonly applicationHost?: IdentifiedEntryIdentityInput
   readonly dataOrigin: IdentifiedEntryIdentityInput
+  readonly dataOriginHost?: IdentifiedEntryIdentityInput
+  readonly writerRecord?: import('../mobile/types.js').CompleteIdentifierInput
 }
 
 const resolveRecordingGraphIdentities = (
@@ -499,63 +457,116 @@ const resolveRecordingGraphIdentities = (
 ): Result<RecordingGraphIdentities> => {
   const connected = deriveProviderIdentities({
     provider: input.source.adapter.provider,
-    providerAccountIdentifier: input.source.providerAccountIdentifier,
+    providerScopeIdentifier: input.source.providerScopeIdentifier,
     sourceType: input.source.sourceType,
     sourceNativeId: input.source.sourceNativeId,
-    outputDiscriminators: [
-      providerAdapterCatalog.recordingDocument.outputDiscriminator,
+    outputs: [
+      {
+        kind: 'provider-output',
+        outputRole: PROVIDER_RECORDING_OUTPUT_ROLE,
+        outputDiscriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
+      },
+      {
+        kind: 'provider-artifact',
+        formatCode: input.attachment.format,
+        partIndex: '0',
+      },
     ],
     eventSequence: input.eventSequence,
-    graphIdentifierSystem: input.graphIdentifierSystem,
+    deployment: input.deploymentIdentity,
   })
   if (!connected.ok) return connected
-  // A recording document is a one-to-one conversion, so its identity is the source record's.
+  const documentIdentifier = connected.value.outputs[0]
+  const sourceArtifact = connected.value.outputs[1]
+  if (documentIdentifier === undefined || sourceArtifact === undefined) {
+    return err(
+      'missing-required',
+      'The recording output and source artifact identities are required.',
+    )
+  }
   const document = createEntryIdentity(
-    connected.value.outputs[0] ?? connected.value.sourceRecord,
+    documentIdentifier,
     input.repositoryIds?.document,
   )
   if (!document.ok) return document
   const provenance = createEntryIdentity(
-    connected.value.conversion,
+    connected.value.provenanceNode,
     input.repositoryIds?.provenance,
   )
   if (!provenance.ok) return provenance
-  const application = createEntryIdentity(
-    input.application.identity.identifier,
-    input.application.identity.id,
+  const application = deriveApplicationEntryIdentity(
+    input.deploymentIdentity,
+    connected.value.event,
+    input.application,
   )
   if (!application.ok) return application
-  const dataOrigin = createEntryIdentity(
-    input.source.dataOrigin.identity.identifier,
-    input.source.dataOrigin.identity.id,
+  const applicationHost =
+    input.application.host === undefined ?
+      undefined
+    : deriveDeviceSnapshotEntryIdentity(
+        input.deploymentIdentity,
+        connected.value.event,
+        input.application.host.sourceDeviceToken,
+        'host',
+        input.application.host.id,
+      )
+  if (applicationHost !== undefined && !applicationHost.ok) {
+    return applicationHost
+  }
+  const dataOrigin = deriveApplicationEntryIdentity(
+    input.deploymentIdentity,
+    connected.value.event,
+    input.source.dataOrigin,
   )
   if (!dataOrigin.ok) return dataOrigin
-
-  const fullUrls = [
-    document.value.fullUrl,
-    provenance.value.fullUrl,
-    application.value.fullUrl,
-    dataOrigin.value.fullUrl,
-  ]
-  if (new Set(fullUrls).size !== fullUrls.length) {
-    return err(
-      'duplicate-identifier',
-      'Every Bundle entry requires a distinct business identifier.',
-    )
+  const dataOriginHost =
+    input.source.dataOrigin.host === undefined ?
+      undefined
+    : deriveDeviceSnapshotEntryIdentity(
+        input.deploymentIdentity,
+        connected.value.event,
+        input.source.dataOrigin.host.sourceDeviceToken,
+        'host',
+        input.source.dataOrigin.host.id,
+      )
+  if (dataOriginHost !== undefined && !dataOriginHost.ok) {
+    return dataOriginHost
   }
+
+  const writerRecord =
+    input.source.writerRecord === undefined ?
+      undefined
+    : deriveWriterRecordIdentifier(
+        input.deploymentIdentity,
+        input.source.writerRecord.applicationIdentifier,
+        input.source.writerRecord.nativeRecordId,
+      )
+  if (writerRecord !== undefined && !writerRecord.ok) return writerRecord
+
   return ok({
     sourceRecord: connected.value.sourceRecord,
-    exchange: connected.value.exchange,
+    event: connected.value.event,
     document: document.value,
+    sourceArtifact,
     provenance: provenance.value,
     application: application.value,
     dataOrigin: dataOrigin.value,
+    ...(applicationHost === undefined ?
+      {}
+    : { applicationHost: applicationHost.value }),
+    ...(dataOriginHost === undefined ?
+      {}
+    : { dataOriginHost: dataOriginHost.value }),
+    ...(writerRecord === undefined ? {} : { writerRecord: writerRecord.value }),
   })
 }
 
+const PROVIDER_TITLES = Object.fromEntries(
+  providerAdapterCatalog.providers.map(({ id, title }) => [id, title]),
+) as Readonly<Record<ConnectedRawProvider, string>>
+
 const providerTitle = (provider: ConnectedRawProvider): string =>
-  providerAdapterCatalog.providers.find((entry) => entry.id === provider)
-    ?.title ?? provider
+  PROVIDER_TITLES[provider]
 
 const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
   if (input.kind === 'external') {
@@ -564,7 +575,7 @@ const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
       url: input.url,
       size: input.size,
       hash: input.hash,
-      title: input.title,
+      ...(input.title === undefined ? {} : { title: input.title }),
     }
   }
   const validatedBytes = decodeBase64(input.dataBase64)
@@ -573,7 +584,7 @@ const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
     data: input.dataBase64,
     size: validatedBytes.length,
     hash: encodeBase64(sha1(validatedBytes)),
-    title: input.title,
+    ...(input.title === undefined ? {} : { title: input.title }),
   }
 }
 
@@ -584,7 +595,7 @@ const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
  */
 export const buildProviderRecordingBundle = (
   input: ProviderRecordingBundleInput,
-): Result<CollectionBundle> => {
+): Result<GroveMobileExchangeBundle> => {
   const parsed = parseProviderRecordingBundleInput(input)
   if (!parsed.ok) return parsed
   const validated = parsed.value
@@ -610,25 +621,37 @@ export const buildProviderRecordingBundle = (
         url: EXTENSIONS.providerSourceType,
         valueCode: sourceCode,
       },
+      ...(validated.source.writerRecord?.version === undefined ?
+        []
+      : [
+          {
+            url: EXTENSIONS.writerRecordVersion,
+            valueString: validated.source.writerRecord.version,
+          },
+        ]),
     ],
-    // A one-to-one conversion identifies the document by its source record, so the entry identity
-    // is that same pair; listing it twice would repeat one identifier on the resource.
     identifier: [
       identifier(identities.value.sourceRecord),
-      ...((
-        identities.value.document.identifier.system ===
-          identities.value.sourceRecord.system &&
-        identities.value.document.identifier.value ===
-          identities.value.sourceRecord.value
-      ) ?
+      identifier(identities.value.document.identifier),
+      identifier(identities.value.sourceArtifact),
+      ...(identities.value.writerRecord === undefined ?
         []
-      : [identifier(identities.value.document.identifier)]),
+      : [identifier(identities.value.writerRecord)]),
+      ...(validated.nativeIdentifierDisclosure === undefined ?
+        []
+      : [governedSourceIdentifier(validated.nativeIdentifierDisclosure)]),
     ],
     status: 'current' as const,
     type: {
       text: `${providerTitle(validated.source.adapter.provider)} ${validated.source.sourceType} archive`,
     },
-    subject: { reference: validated.subject },
+    subject: {
+      type: validated.subject.type,
+      identifier: {
+        system: validated.subject.identifier.system,
+        value: validated.subject.identifier.value,
+      },
+    },
     date: validated.documentDate,
     author: [{ reference: identities.value.application.fullUrl }],
     content: [
@@ -648,13 +671,48 @@ export const buildProviderRecordingBundle = (
       },
     ],
   }
-  const application = makeApplicationDevice(validated.application)
-  const dataOrigin = makeApplicationDevice(validated.source.dataOrigin)
+  const application = makeApplicationDevice({
+    ...validated.application,
+    identity: identities.value.application,
+    ...(identities.value.applicationHost === undefined ?
+      {}
+    : { parentReference: identities.value.applicationHost.fullUrl }),
+  })
+  const applicationHost =
+    (
+      validated.application.host === undefined ||
+      identities.value.applicationHost === undefined
+    ) ?
+      undefined
+    : makeHostDevice({
+        ...validated.application.host,
+        identity: identities.value.applicationHost,
+      })
+  const dataOrigin = makeApplicationDevice({
+    ...validated.source.dataOrigin,
+    identity: identities.value.dataOrigin,
+    ...(identities.value.dataOriginHost === undefined ?
+      {}
+    : { parentReference: identities.value.dataOriginHost.fullUrl }),
+  })
+  const dataOriginHost =
+    (
+      validated.source.dataOrigin.host === undefined ||
+      identities.value.dataOriginHost === undefined
+    ) ?
+      undefined
+    : makeHostDevice({
+        ...validated.source.dataOrigin.host,
+        identity: identities.value.dataOriginHost,
+      })
   const provenance = {
     resourceType: 'Provenance' as const,
     ...resourceId(identities.value.provenance),
-    meta: { profile: [PROFILES.providerConversionProvenance] },
+    meta: {
+      profile: [PROFILES.providerConversionProvenance],
+    },
     target: [{ reference: identities.value.document.fullUrl }],
+    occurredDateTime: validated.occurred,
     recorded: validated.recorded,
     activity: provenanceActivity(),
     agent: [assemblerAgent(identities.value.application.fullUrl)],
@@ -667,20 +725,35 @@ export const buildProviderRecordingBundle = (
     ],
   }
 
-  return parseCollectionBundle({
+  const entries = deduplicateIdentifiedEntries([
+    identifiedEntry(identities.value.document, document),
+    ...((
+      dataOriginHost === undefined ||
+      identities.value.dataOriginHost === undefined
+    ) ?
+      []
+    : [identifiedEntry(identities.value.dataOriginHost, dataOriginHost)]),
+    identifiedEntry(identities.value.dataOrigin, dataOrigin),
+    ...((
+      applicationHost === undefined ||
+      identities.value.applicationHost === undefined
+    ) ?
+      []
+    : [identifiedEntry(identities.value.applicationHost, applicationHost)]),
+    identifiedEntry(identities.value.application, application),
+    identifiedEntry(identities.value.provenance, provenance),
+  ])
+  if (!entries.ok) return entries
+
+  return parseGroveMobileExchangeBundle({
     resourceType: 'Bundle',
     ...(validated.repositoryIds?.bundle === undefined ?
       {}
     : { id: validated.repositoryIds.bundle }),
     meta: { profile: [PROFILES.mobileBundle] },
-    identifier: identifier(identities.value.exchange),
+    identifier: identifier(identities.value.event),
     type: 'collection',
-    timestamp: validated.recorded,
-    entry: [
-      identifiedEntry(identities.value.document, document),
-      identifiedEntry(identities.value.dataOrigin, dataOrigin),
-      identifiedEntry(identities.value.application, application),
-      identifiedEntry(identities.value.provenance, provenance),
-    ],
+    timestamp: validated.assembled,
+    entry: entries.value,
   })
 }

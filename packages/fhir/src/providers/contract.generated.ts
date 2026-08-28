@@ -11,18 +11,20 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.5.0' as const
+export const groveFhirContractVersion = '0.6.0' as const
 
 export const groveFhirVersion = '4.0.1' as const
 
 const groveProviderPackageMetadataValue = {
   fhirVersion: '4.0.1',
-  version: '0.5.0',
+  version: '0.6.0',
   packageId: 'org.grovealliance.fhir.providers',
   canonical: 'https://grovealliance.org/fhir/providers',
   dependencies: [
-    'org.grovealliance.fhir.mobile#0.5.0',
-    'org.grovealliance.fhir.sensor#0.5.0',
+    'hl7.terminology.r4#7.3.0',
+    'hl7.fhir.uv.extensions.r4#5.3.0',
+    'org.grovealliance.fhir.mobile#0.6.0',
+    'org.grovealliance.fhir.sensor#0.6.0',
   ],
 } as const
 
@@ -59,6 +61,8 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-basal-energy',
   'health-connect-basal-metabolic-rate':
     'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-basal-metabolic-rate',
+  'healthkit-biological-sex':
+    'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-biological-sex',
   'healthkit-bladder-incontinence':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bladder-incontinence',
   'healthkit-bleeding-after-pregnancy':
@@ -73,8 +77,8 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-blood-pressure',
   'healthkit-blood-type':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-type',
-  'provider-body-fat-mass':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-body-fat-mass',
+  'withings-body-fat-mass':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-body-fat-mass',
   'grove-mobile-body-fat-percentage':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-body-fat-percentage',
   'grove-mobile-body-height':
@@ -91,10 +95,14 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-cervical-mucus-quality',
   'healthkit-contraceptive-use':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-contraceptive-use',
+  'withings-corrected-qt-interval':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-corrected-qt-interval',
   'grove-mobile-cycling-cadence':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-cycling-cadence',
   'healthkit-cycling-functional-threshold-power':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-cycling-functional-threshold-power',
+  'healthkit-date-of-birth':
+    'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-date-of-birth',
   'grove-mobile-deep-sleep-duration':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-deep-sleep-duration',
   'grove-mobile-dietary-biotin':
@@ -193,8 +201,10 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure-notification',
   'healthkit-environmental-sound-reduction':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-sound-reduction',
-  'provider-extracellular-water-mass':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-extracellular-water-mass',
+  'withings-extracellular-water-mass':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-extracellular-water-mass',
+  'healthkit-fitzpatrick-skin-type':
+    'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-fitzpatrick-skin-type',
   'grove-mobile-flights-climbed':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-flights-climbed',
   'grove-mobile-fluid-intake':
@@ -233,8 +243,8 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-insulin-delivery',
   'grove-mobile-intermenstrual-bleeding':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-intermenstrual-bleeding',
-  'provider-intracellular-water-mass':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-intracellular-water-mass',
+  'withings-intracellular-water-mass':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-intracellular-water-mass',
   'healthkit-irregular-heart-rhythm-notification':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-heart-rhythm-notification',
   'healthkit-irregular-menstrual-cycles':
@@ -255,12 +265,16 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-menstruation-period',
   'grove-mobile-mindfulness-session':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-mindfulness-session',
-  'provider-muscle-mass':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-muscle-mass',
+  'withings-muscle-mass':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-muscle-mass',
   'healthkit-number-of-alcoholic-beverages':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-alcoholic-beverages',
   'healthkit-number-of-times-fallen':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-times-fallen',
+  'oura-cardiovascular-age':
+    'https://grovealliance.org/fhir/oura/StructureDefinition/oura-cardiovascular-age',
+  'oura-readiness-score':
+    'https://grovealliance.org/fhir/oura/StructureDefinition/oura-readiness-score',
   'grove-mobile-ovulation-test-result':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-ovulation-test-result',
   'grove-mobile-oxygen-saturation':
@@ -279,6 +293,8 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-physical-effort',
   'grove-mobile-power':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-power',
+  'withings-pr-interval':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-pr-interval',
   'healthkit-pregnancy-status':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-status',
   'healthkit-pregnancy-test-result':
@@ -287,6 +303,10 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-progesterone-test-result',
   'healthkit-prolonged-menstrual-periods':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-prolonged-menstrual-periods',
+  'withings-qrs-duration':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-qrs-duration',
+  'withings-qt-interval':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-qt-interval',
   'grove-mobile-rem-sleep-duration':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-rem-sleep-duration',
   'grove-mobile-respiratory-rate':
@@ -295,6 +315,8 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-respiratory-rate-average',
   'grove-mobile-resting-heart-rate':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-resting-heart-rate',
+  'google-health-daily-resting-heart-rate':
+    'https://grovealliance.org/fhir/google-health/StructureDefinition/google-health-daily-resting-heart-rate',
   'healthkit-running-ground-contact-time':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-ground-contact-time',
   'healthkit-running-stride-length':
@@ -319,8 +341,8 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-stage',
   'healthkit-sleeping-breathing-disturbances':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleeping-breathing-disturbances',
-  'provider-sleeping-heart-rate-average':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-sleeping-heart-rate-average',
+  'withings-sleeping-heart-rate-average':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-sleeping-heart-rate-average',
   'grove-mobile-speed':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-speed',
   'healthkit-stair-ascent-speed':
@@ -445,39 +467,67 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-wheelchair-push-count',
   'healthkit-wheelchair-use':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-wheelchair-use',
+  'withings-atrial-fibrillation-notification-ecg':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-atrial-fibrillation-notification-ecg',
+  'withings-atrial-fibrillation-notification-ppg':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-atrial-fibrillation-notification-ppg',
+  'withings-nerve-health-score':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-nerve-health-score',
+  'withings-pulse-wave-velocity':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-pulse-wave-velocity',
+  'withings-vascular-age':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-vascular-age',
+  'withings-visceral-fat-index':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-visceral-fat-index',
   'grove-mobile-workout':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-workout',
   'healthkit-workout-effort-score':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-workout-effort-score',
   'grove-mobile-workout-segment':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-workout-segment',
+  'google-health-observation':
+    'https://grovealliance.org/fhir/google-health/StructureDefinition/google-health-observation',
+  'oura-observation':
+    'https://grovealliance.org/fhir/oura/StructureDefinition/oura-observation',
+  'withings-observation':
+    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation',
   'grove-application-device':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
+  'grove-host-device':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device',
+  'grove-mobile-conversion-provenance':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-conversion-provenance',
   'grove-mobile-exchange-bundle':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
+  'grove-mobile-retraction-bundle':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle',
+  'grove-mobile-retraction-provenance':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-provenance',
   'grove-recording-device':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
   'grove-sensor-recording-document':
     'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
-  'provider-conversion-provenance':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance',
-  'provider-observation':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation',
-  'provider-recording-document':
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
+  'providers-conversion-provenance':
+    'https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance',
+  'providers-observation':
+    'https://grovealliance.org/fhir/providers/StructureDefinition/providers-observation',
+  'providers-recording-document':
+    'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
 } as const
 
 export const groveProviderProfileCanonicals: typeof groveProviderProfileCanonicalsValue =
   deepFreeze(groveProviderProfileCanonicalsValue)
 
 const providerAdapterCatalogValue = {
+  $schema:
+    'https://grovealliance.org/fhir/catalog/schemas/catalog-contracts.schema.json',
   schemaVersion: 1,
   fhirVersion: '4.0.1',
-  version: '0.5.0',
+  version: '0.6.0',
   packageId: 'org.grovealliance.fhir.providers',
   canonical: 'https://grovealliance.org/fhir/providers',
   adapterProfile:
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation',
+    'https://grovealliance.org/fhir/providers/StructureDefinition/providers-observation',
   sourceTypeExtension: {
     url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
     codeSystem:
@@ -489,13 +539,22 @@ const providerAdapterCatalogValue = {
       "provider id + '/' + exact source token; the atomic Withings blood-pressure output uses withings/getmeas:9+10",
     rule: 'Every admitted output states the exact catalog dispatch token in its own identifier value.',
   },
+  providerExtension: {
+    url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider',
+    codeSystem: 'https://grovealliance.org/fhir/providers/CodeSystem/provider',
+    r4Element:
+      'Observation.extension.valueCode or DocumentReference.extension.valueCode',
+    cardinality: 'exactly one',
+    rule: 'Every admitted connected-provider output states the exact provider id that owns its catalog row.',
+  },
   recordingDocument: {
     sourceNeutralProfile:
       'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
     adapterProfile:
-      'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
+      'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
     claimMode: 'exactly-source-neutral-plus-adapter',
-    outputDiscriminator: 'native-recording',
+    outputRole: 'native-recording',
+    outputDiscriminator: 'single',
     encoding: 'caller-supplied exact already-obtained provider bytes',
   },
   rawPayloadAdmission: {
@@ -510,7 +569,7 @@ const providerAdapterCatalogValue = {
     notFHIRAuthorization: true,
   },
   conversionProvenanceProfile:
-    'https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance',
+    'https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance',
   statusVocabulary: [
     'supported',
     'mapped-standard',
@@ -521,24 +580,30 @@ const providerAdapterCatalogValue = {
   ],
   statusDefinitions: {
     supported:
-      'Version 0.5.0 defines an exact conversion to every shared profile listed for the source element.',
+      'Version 0.6.0 defines an exact conversion to every semantic profile listed for the source element, whether the profile is shared or provider-owned.',
     'mapped-standard':
-      'Version 0.5.0 admits only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
+      'Version 0.6.0 admits only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
     'platform-exclusive':
-      'Version 0.5.0 defines the listed provider-scoped structured profile because no exact shared profile exists.',
+      'Version 0.6.0 defines the listed provider-scoped structured profile because no exact shared profile exists.',
     unmodeled:
-      'The source element is inventoried, but no shared or provider-scoped profile models it in version 0.5.0 and no output is admitted.',
+      'The source element is inventoried, but no shared or provider-scoped profile models it in version 0.6.0 and no output is admitted.',
     deferred:
-      'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant version 0.5.0 output.',
+      'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant version 0.6.0 output.',
     'intentionally-unsupported':
-      'Version 0.5.0 deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
+      'Version 0.6.0 deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
+  },
+  observationIssued: {
+    cardinality: '0..0',
+    source:
+      'only an exact provider field explicitly declared by its catalog row; no such field is declared in 0.6.0',
+    rule: 'Version 0.6.0 declares no authoritative provider row field for result availability or current-version modification, so every Provider Observation omits Observation.issued. Conversion, retrieval, assembly, and upload times are prohibited substitutes.',
   },
   sourceEvidence: {
     accessed: '2026-08-20',
     scope:
       'Exact provider data-type tokens and consumed fields frozen in providers[].sourceTypes; conversion operates only on already-obtained payloads and defines no provider fetching.',
     tokenBinding:
-      'Each providers[].sourceTypes[].token and elements[].path is part of the exact v0.5.0 consumed source surface.',
+      'Each providers[].sourceTypes[].token and elements[].path is part of the exact v0.6.0 consumed source surface.',
     providers: [
       {
         id: 'google-health-api',
@@ -567,199 +632,77 @@ const providerAdapterCatalogValue = {
     ],
   },
   identity: {
-    composition: {
-      form: 'v1:<component>|<component>...',
-      versionPrefix: 'v1',
-      separator: '|',
-      rule: "Components join with a vertical bar in the order the composition lists them, behind the scheme version. No component may be empty or contain a vertical bar. Every component is the source's own text, unaltered: nothing is hashed, truncated, normalized, or re-encoded.",
-      passThrough:
-        'A provider whose native record key is unique across the whole provider carries that key verbatim, with no scheme version and no components joined to it: the system already says which provider and which key space it belongs to. Composition is used only where the key alone would not identify one record, which is why an account-scoped provider carries its account pseudonym.',
-    },
-    identifierScope: {
-      meaning:
-        "Whether a provider's native record key is unique across the whole provider, or only within one account. A provider scoped to `account` carries its deployment-scoped account pseudonym as a component, so the identifier still stands alone and a receiver deduplicates by comparing system and value with no side channel.",
-      default: 'account',
-      relaxationRule:
-        "A provider moves to `none` only when the vendor documents that its native record key is unique across all accounts. Inference from the shape of an observed value is not sufficient, because the failure it guards against is silently merging two participants' measurements.",
-    },
-    providerAccountIdentifier: {
-      requirement:
-        'A complete deployment-scoped pseudonymous Identifier pair. It must be stable for the provider-account scope needed for deduplication.',
-      prohibitedByDefault: [
-        'vendor email address',
-        'vendor account id',
-        'vendor member id',
-        'OAuth subject or token',
-      ],
-      exception:
-        'A raw vendor account value may be used only when an explicit deployment privacy policy authorizes that disclosure; this package grants no such authorization.',
-      emission:
-        "For a provider scoped to `account`, the pseudonymous value is a component of the source-record identifier. It is a deployment-minted pseudonym, never a vendor-side account key, and it discloses nothing the resource's own subject reference does not already carry.",
-    },
-    sourceNativeId: {
-      requirement:
-        'The exact stable native record or group key supplied by the already-obtained provider payload.',
-      emission:
-        'Carried in the identifier value as the provider supplied it. It is a vendor row key, not participant data.',
-      absent:
-        'A provider source type that supplies no native key uses the contentDerived strategy below.',
-    },
+    contract: 'catalog/exchange-protocol.json',
+    protocolVersion: 2,
+    adapterId: 'providers',
     sourceRecord: {
-      system:
-        'https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id',
-      composition: [
-        'providerCode',
-        'providerAccountPseudonym',
-        'sourceType',
-        'sourceNativeId',
+      identityKind: 'provider-record',
+      identifierRole: 'source-record',
+      components: [
+        'provider-code',
+        'source-type',
+        'provider-scope-system',
+        'provider-scope-value',
+        'native-record-id',
       ],
-      appliesWhen: 'identifierScope is account',
-      passThroughWhen:
-        'identifierScope is none: the value is sourceNativeId verbatim.',
+      scopeRule:
+        "The provider scope is always a complete Identifier pair. Use a deployment-scoped account pseudonym when the native key is account-scoped; use the provider's documented global key-space pair only when global uniqueness is authoritative. Never omit the system or infer scope from an observed key.",
+      absentNativeId:
+        'Assign and persist an opaque import-record key before conversion. It must be stable for exact retries and for revisions the connector can correlate. Never derive it from measured values, times, or serialized content.',
     },
-    contentDerived: {
-      whenApplicable:
-        'A provider source type that supplies no stable native record key.',
-      composition: [
-        'providerCode',
-        'providerAccountPseudonym',
-        'sourceType',
-        'content',
-        'startInstant',
-        'endInstant',
-        'measuredValue',
+    sourceOutput: {
+      identityKind: 'provider-output',
+      identifierRole: 'source-output',
+      components: [
+        'provider-code',
+        'source-type',
+        'provider-scope-system',
+        'provider-scope-value',
+        'native-record-id',
+        'output-role',
+        'output-discriminator',
       ],
-      discriminator: 'content',
-      accountScopeRequired: true,
-      accountScopeReason:
-        'Two participants can record identical values over the same window, so content alone collides across people. The account pseudonym is what keeps them apart and must never be omitted for this strategy.',
-      revisionLimitation:
-        'A corrected value or a corrected time yields a different identifier, so a correction appears as a new Observation rather than a revision. The `content` discriminator makes that visible to a receiver rather than leaving it to be inferred per provider.',
-      rationale:
-        'The alternative of keying on the time window alone would survive a value correction but silently merge two distinct measurements sharing a window. A missed deduplication is recoverable; a false merge is not.',
+      outputRoleRule:
+        'Use the exact measurement id, grouped mapping outputRole, or native-recording outputRole declared by the source row.',
+      outputDiscriminatorRule:
+        "Use the exact catalog outputDiscriminator; it is single for a sole output. A repeated output appends only the catalog's canonical non-value occurrence coordinate. No fallback or content-derived discriminator is permitted.",
     },
     writerRecord: {
-      system:
-        'https://grovealliance.org/fhir/mobile/NamingSystem/grove-writer-record-id',
-      composition: ['providerCode', 'sourceNativeId'],
-      note: 'Carries no account component on any provider, so it can match the identical measurement arriving through HealthKit or Health Connect. A receiver must not assume the match holds: nothing obliges a vendor to use one identifier space across its app and its API.',
+      identityKind: 'writer-record',
+      identifierRole: 'writer-record',
+      components: [
+        'writer-application-system',
+        'writer-application-value',
+        'writer-record-id',
+      ],
+      rule: 'Emit only when the payload supplies a stable writer-application Identifier pair and logical writer record id. Provider code plus native record id is not evidence of cross-channel writer identity.',
     },
-    output: {
-      system:
-        'https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id',
-      composition: ['<the source-record components>', 'outputDiscriminator'],
-      outputDiscriminatorRule: {
-        ordinarySupportedMeasurement:
-          'the exact measurementId string from the supported element mapping',
-        groupedMapping:
-          'the exact outputDiscriminator declared on that groupedMappings row',
-        mappedStandardRaw: 'native-recording',
-        noFallback: true,
-      },
-      cardinality: '0..1',
-      appliesWhen:
-        'Only where one source record yields more than one Observation. A one-to-one conversion carries the source-record identifier alone; a second namespace repeating the same value identifies nothing new.',
-    },
-    deploymentOwnedIdentities: {
-      rule: "The conversion Provenance and the exchange Bundle are created by the export, not read from the provider, so they are identified in the deployment's own namespace. This retires provider-conversion-id and provider-exchange-id.",
-      roles: ['conversion-provenance', 'exchange-bundle'],
-      value: '<providerCode>|<eventSequence>|<role>',
+    sourceArtifact: {
+      identityKind: 'provider-artifact',
+      identifierRole: 'source-artifact',
+      components: [
+        'provider-code',
+        'source-type',
+        'provider-scope-system',
+        'provider-scope-value',
+        'native-record-id',
+        'format-code',
+        'part-index',
+      ],
+      rule: 'A native Recording Document uses its registered format code and zero-based part index in addition to the source-record coordinates.',
     },
     resourceIdPolicy:
-      'Resource.id is optional and repository-assigned; no business identifier is copied into Resource.id.',
-    positiveEventSequence:
-      'A durable positive event sequence written as a non-zero ASCII digit followed by zero or more ASCII digits; no sign, no leading zero, no other characters. A byte-identical retry reuses the sequence; changed content allocates a higher value.',
-    singleConversionRule:
-      "A conversion Provenance has exactly one source-record pair. When a Bundle carries exactly one conversion event, the exchange event is that conversion's emission and reuses its sequence, so the exchange identifier value equals the conversion identifier value byte for byte and only the NamingSystem distinguishes them.",
-    vectors: [
-      {
-        role: 'sourceRecord',
-        scope: 'account',
-        components: ['withings', 'acct-7f3a9c', 'measure', '17348211'],
-        identifierValue: 'v1:withings|acct-7f3a9c|measure|17348211',
-      },
-      {
-        role: 'sourceRecord',
-        scope: 'none',
-        components: ['oura', 'sleep', '8f9a5221-639e-4a85-81cb-4065ef23f979'],
-        identifierValue: 'v1:oura|sleep|8f9a5221-639e-4a85-81cb-4065ef23f979',
-      },
-      {
-        role: 'sourceRecord',
-        scope: 'account',
-        components: [
-          'withings',
-          'acct-7f3a9c',
-          'heart-rate',
-          'hr-2026-08-19-001',
-        ],
-        identifierValue: 'v1:withings|acct-7f3a9c|heart-rate|hr-2026-08-19-001',
-      },
-      {
-        role: 'output',
-        scope: 'account',
-        components: [
-          'withings',
-          'acct-7f3a9c',
-          'measure',
-          '17348211',
-          'body-weight',
-        ],
-        identifierValue: 'v1:withings|acct-7f3a9c|measure|17348211|body-weight',
-      },
-      {
-        role: 'output',
-        scope: 'account',
-        components: [
-          'withings',
-          'acct-7f3a9c',
-          'heart-rate',
-          'hr-2026-08-19-001',
-          'native-recording',
-        ],
-        identifierValue:
-          'v1:withings|acct-7f3a9c|heart-rate|hr-2026-08-19-001|native-recording',
-      },
-      {
-        role: 'contentDerived',
-        scope: 'account',
-        components: [
-          'google-health-api',
-          'acct-7f3a9c',
-          'steps',
-          'content',
-          '2026-08-19T00:00:00Z',
-          '2026-08-20T00:00:00Z',
-          '8412',
-        ],
-        identifierValue:
-          'v1:google-health-api|acct-7f3a9c|steps|content|2026-08-19T00:00:00Z|2026-08-20T00:00:00Z|8412',
-      },
-      {
-        role: 'writerRecord',
-        components: ['withings', '17348211'],
-        identifierValue: 'v1:withings|17348211',
-        note: "Identical to the value the same measurement carries when it arrives through HealthKit or Health Connect, where the writer slot is the application's own bundle or package name.",
-      },
-      {
-        role: 'deploymentOwnedExchangeBundle',
-        components: ['withings', '1', 'exchange-bundle'],
-        identifierValue: 'withings|1|exchange-bundle',
-        note: "Minted in the deployment's namespace, so it carries no scheme-version prefix from this guide.",
-      },
-      {
-        role: 'rejectedSeparatorInComponent',
-        components: ['withings', 'acct-7f3a9c', 'measure', '173|48211'],
-        identifierValue: null,
-        note: 'A native key containing a vertical bar is rejected, never escaped.',
-      },
-    ],
+      'Resource.id is optional and repository-assigned. Source, output, writer, and artifact business identifiers are never copied into Resource.id.',
   },
   providers: [
     {
       id: 'google-health-api',
       title: 'Google Health API',
+      measurementOwner: 'google-health',
+      observationProfile:
+        'https://grovealliance.org/fhir/google-health/StructureDefinition/google-health-observation',
       sourceTypeCount: 18,
+      providerScopeMode: 'deployment-scoped-account-pseudonym',
       sourceTypes: [
         {
           token: 'steps',
@@ -885,7 +828,7 @@ const providerAdapterCatalogValue = {
             {
               path: 'dailyRestingHeartRate.beatsPerMinute',
               status: 'supported',
-              measurementIds: ['resting-heart-rate'],
+              measurementIds: ['resting-heart-rate-daily-average'],
             },
           ],
         },
@@ -1001,8 +944,9 @@ const providerAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
-            outputDiscriminator: 'native-recording',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+            outputRole: 'native-recording',
+            outputDiscriminator: 'single',
           },
           elements: [
             {
@@ -1018,11 +962,14 @@ const providerAdapterCatalogValue = {
       ],
       identifierScope: 'account',
       identifierScopeReason:
-        'The dataPoint segment of the record name is documented as unique only within a user and a dataType, and may be client-provided, so two accounts can hold the same key. Most Google data types carry no record key at all and use the contentDerived strategy.',
+        'The dataPoint segment of the record name is documented as unique only within a user and a dataType, and may be client-provided, so two accounts can hold the same key. When a source row has no durable native key, assign and persist the opaque import-record key required by identity.sourceRecord.absentNativeId before conversion; content-derived identity is prohibited.',
     },
     {
       id: 'oura',
       title: 'Oura',
+      measurementOwner: 'oura',
+      observationProfile:
+        'https://grovealliance.org/fhir/oura/StructureDefinition/oura-observation',
       sourceTypeCount: 8,
       sourceTypes: [
         {
@@ -1146,25 +1093,40 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'daily_cardiovascular_age',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/oura/StructureDefinition/oura-cardiovascular-age',
+          ],
           elements: [
             {
               path: 'vascular_age',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['oura-cardiovascular-age'],
+              unitConversion: 'provider integer years to UCUM a',
+              effective:
+                'the source civil day represented as a complete day Period; midpoint substitution is forbidden',
               reason:
-                "Although two providers report it, each value is the output of an undisclosed proprietary algorithm over different inputs (Withings pulse-wave velocity versus Oura PPG features), so the numbers are not comparable and no shared physiological definition exists; normalizing them under one code would fabricate clinical comparability, and the diagnostic-adjacent 'age' framing makes a shared measurement unsafe. Both provider catalog rows already record this refusal.",
+                "Version 0.6.0 carries the Oura cardiovascular-age figure as the provider-scoped oura-cardiovascular-age profile, on an age scale in UCUM years over the civil-day Period. The profile names the vendor in its code and description, so the figure cannot be mistaken for a chronological age, for a clinical vascular assessment, or for Withings' vascular age, which stays a separate measurement because the two are undisclosed algorithms over different inputs. No comparability between vendors and no diagnosis is asserted.",
             },
           ],
         },
         {
           token: 'daily_readiness',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/oura/StructureDefinition/oura-readiness-score',
+          ],
           elements: [
             {
               path: 'score',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['oura-readiness-score'],
+              unitConversion:
+                'unitless provider value to the dimensionless UCUM {score} annotation',
+              effective:
+                'the source civil day represented as a complete day Period; midpoint substitution is forbidden',
               reason:
-                "A proprietary vendor score with no physiologic unit is not a comparable measurement; normalizing it as a dimensionless quantity would misrepresent an undisclosed composite algorithm as an observable. The same verdict applies to Oura's daily sleep and activity scores, which are not yet inventoried in providers-adapter.json.",
+                "Version 0.6.0 carries the Oura readiness figure as the provider-scoped oura-readiness-score profile over the civil-day Period, on the dimensionless UCUM {score} annotation because the vendor publishes no physical unit for it. The code names the vendor and the profile description states the scale, so the figure cannot be read as an observable quantity. Nothing about the composite's inputs, weighting, or comparability across people is asserted, and Oura's daily sleep and activity scores remain outside the inventoried source surface.",
             },
           ],
         },
@@ -1176,8 +1138,9 @@ const providerAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
-            outputDiscriminator: 'native-recording',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+            outputRole: 'native-recording',
+            outputDiscriminator: 'single',
           },
           elements: [
             {
@@ -1191,13 +1154,17 @@ const providerAdapterCatalogValue = {
           ],
         },
       ],
-      identifierScope: 'none',
+      identifierScope: 'global',
+      providerScopeMode: 'documented-global-key-space',
       identifierScopeReason:
-        'Document ids are UUIDs, unique by construction across all accounts.',
+        'Document ids are UUIDs documented as globally unique. The provider-scope pair names that stable global document-id key space and is never replaced with a per-account value.',
     },
     {
       id: 'withings',
       title: 'Withings',
+      measurementOwner: 'withings',
+      observationProfile:
+        'https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation',
       sourceTypeCount: 42,
       groupedMappings: [
         {
@@ -1206,7 +1173,8 @@ const providerAdapterCatalogValue = {
           members: ['getmeas:9', 'getmeas:10'],
           sourceNativeId: 'the common measure-group grpid',
           measurementIds: ['blood-pressure'],
-          outputDiscriminator: 'blood-pressure-panel',
+          outputRole: 'blood-pressure-panel',
+          outputDiscriminator: 'single',
           rule: 'Emit exactly one panel only when one type 9 value and one type 10 value occur in the same measure group; otherwise emit neither component as a normalized Observation. Use getmeas:9+10, not either member token, in the source-record identity preimage.',
         },
       ],
@@ -1330,13 +1298,19 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:155',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-vascular-age',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['withings-vascular-age'],
+              unitConversion: 'provider SI value to UCUM a',
+              effective: 'measure group date',
               reason:
-                "Although two providers report it, each value is the output of an undisclosed proprietary algorithm over different inputs (Withings pulse-wave velocity versus Oura PPG features), so the numbers are not comparable and no shared physiological definition exists; normalizing them under one code would fabricate clinical comparability, and the diagnostic-adjacent 'age' framing makes a shared measurement unsafe. Both provider catalog rows already record this refusal.",
+                "Version 0.6.0 carries the Withings vascular-age figure as the provider-scoped withings-vascular-age profile, on an age scale in UCUM years. The profile names the vendor in its code and description, so the figure cannot be mistaken for a chronological age, for a clinical vascular assessment, or for Oura's cardiovascular age, which stays a separate measurement because the two are undisclosed algorithms over different inputs. No comparability between vendors and no diagnosis is asserted.",
             },
           ],
         },
@@ -1476,8 +1450,9 @@ const providerAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
-            outputDiscriminator: 'native-recording',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+            outputRole: 'native-recording',
+            outputDiscriminator: 'single',
           },
           elements: [
             {
@@ -1526,8 +1501,9 @@ const providerAdapterCatalogValue = {
             sourceNeutralProfile:
               'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
             adapterProfile:
-              'https://grovealliance.org/fhir/providers/StructureDefinition/provider-recording-document',
-            outputDiscriminator: 'native-recording',
+              'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+            outputRole: 'native-recording',
+            outputDiscriminator: 'single',
           },
           elements: [
             {
@@ -1630,97 +1606,144 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:91',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-pulse-wave-velocity',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['withings-pulse-wave-velocity'],
+              unitConversion: 'provider SI value to UCUM m/s',
+              effective: 'measure group date',
               reason:
-                'Diagnostic-adjacent cardiovascular assessment: Withings PWV is an aortic-stiffness screening value produced by a proprietary single-vendor scale algorithm (and was subject to regulatory withdrawal and reintroduction), with no second evidencing source and no safe wellness normalization, so admitting it as a normalized measurement would misrepresent a clinical vascular assessment.',
+                'Version 0.6.0 carries the Withings aortic pulse-wave velocity estimate as the provider-scoped withings-pulse-wave-velocity profile in UCUM metres per second. The code names the vendor rather than a shared arterial-stiffness concept, because no second inventoried source evidences it and a scale-derived estimate is not interchangeable with a tonometric measurement taken in clinic. No arterial-stiffness finding and no diagnosis is asserted.',
             },
           ],
         },
         {
           token: 'getmeas:130',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-atrial-fibrillation-notification-ecg',
+          ],
           elements: [
             {
               path: 'measure.value',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['withings-atrial-fibrillation-notification-ecg'],
+              effective: 'measure group date',
               reason:
-                'An AFib classification is diagnostic-adjacent and is not represented as an untyped scalar Observation.',
+                "Version 0.6.0 carries the fact that Withings' electrocardiogram screening algorithm flagged signs of atrial fibrillation, as the provider-scoped withings-atrial-fibrillation-notification-ecg profile with a closed single-code result, on the same basis as the HealthKit irregular-heart-rhythm notification. An Observation is admitted only for the vendor's positive screening classification: Withings publishes no encoding for the numeric measure.value, so a negative or inconclusive classification produces no output. No rhythm finding, atrial-fibrillation burden, or diagnosis is asserted, and the code is taken from the providers code system so no receiver can read it as one.",
             },
           ],
         },
         {
           token: 'getmeas:135',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-qrs-duration',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['qrs-duration'],
+              unitConversion: 'provider SI value to UCUM ms',
+              effective: 'measure group date',
               reason:
-                'A QRS interval requires an ECG-specific interpretation contract not present in version 0.5.0.',
+                'Version 0.6.0 carries the QRS duration the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-qrs-duration profile under LOINC 8633-0. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No rhythm interpretation, conduction finding, or diagnosis is asserted; the electrocardiogram recording remains the rhythm evidence.',
             },
           ],
         },
         {
           token: 'getmeas:136',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-pr-interval',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['pr-interval'],
+              unitConversion: 'provider SI value to UCUM ms',
+              effective: 'measure group date',
               reason:
-                'A PR interval requires an ECG-specific interpretation contract not present in version 0.5.0.',
+                'Version 0.6.0 carries the PR interval the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-pr-interval profile under LOINC 8625-6. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No rhythm interpretation, conduction finding, or diagnosis is asserted; the electrocardiogram recording remains the rhythm evidence.',
             },
           ],
         },
         {
           token: 'getmeas:137',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-qt-interval',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['qt-interval'],
+              unitConversion: 'provider SI value to UCUM ms',
+              effective: 'measure group date',
               reason:
-                'A QT interval requires an ECG-specific interpretation contract not present in version 0.5.0.',
+                'Version 0.6.0 carries the uncorrected QT interval the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-qt-interval profile under LOINC 8634-8. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No repolarization finding, rhythm interpretation, or diagnosis is asserted, and the value is never substituted for the rate-corrected interval.',
             },
           ],
         },
         {
           token: 'getmeas:138',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-corrected-qt-interval',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['corrected-qt-interval'],
+              unitConversion: 'provider SI value to UCUM ms',
+              effective: 'measure group date',
               reason:
-                'A corrected QT interval requires an ECG-specific interpretation contract not present in version 0.5.0.',
+                'Version 0.6.0 carries the rate-corrected QT interval Withings reports, as the provider-scoped withings-corrected-qt-interval profile under LOINC 8636-3. The profile is provider-scoped because Withings is the only inventoried source that reports the correction as a discrete measure and does not publish which correction formula it applied, so the value is deliberately not asserted to be interchangeable with a QTc read from a clinical twelve-lead electrocardiogram. No repolarization finding and no diagnosis is asserted.',
             },
           ],
         },
         {
           token: 'getmeas:139',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-atrial-fibrillation-notification-ppg',
+          ],
           elements: [
             {
               path: 'measure.value',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['withings-atrial-fibrillation-notification-ppg'],
+              effective: 'measure group date',
               reason:
-                'An AFib classification is diagnostic-adjacent and is not represented as an untyped scalar Observation.',
+                "Version 0.6.0 carries the fact that Withings' photoplethysmography screening algorithm flagged signs of atrial fibrillation, as the provider-scoped withings-atrial-fibrillation-notification-ppg profile with a closed single-code result. It is kept separate from the electrocardiogram notification because it screens a different signal. An Observation is admitted only for the vendor's positive screening classification: Withings publishes no encoding for the numeric measure.value, so a negative or inconclusive classification produces no output. No rhythm finding, atrial-fibrillation burden, or diagnosis is asserted.",
             },
           ],
         },
         {
           token: 'getmeas:167',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-nerve-health-score',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['withings-nerve-health-score'],
+              unitConversion:
+                'unitless provider value to the dimensionless UCUM {score} annotation',
+              effective: 'measure group date',
               reason:
-                'A proprietary vendor score with no physiologic unit, and additionally diagnostic-adjacent: Withings positions it as small-fiber-neuropathy screening, so an untyped scalar Observation would be misleading.',
+                'Version 0.6.0 carries the Withings nerve-health figure as the provider-scoped withings-nerve-health-score profile, on the dimensionless UCUM {score} annotation because the vendor publishes no physical unit for it. The code names the vendor and the profile description states the scale. Withings positions the figure as small-fiber-neuropathy screening, so the profile deliberately asserts no neuropathy finding, no nerve-conduction measurement, and no diagnosis.',
             },
           ],
         },
@@ -1748,13 +1771,20 @@ const providerAdapterCatalogValue = {
         },
         {
           token: 'getmeas:170',
-          status: 'intentionally-unsupported',
+          status: 'platform-exclusive',
+          profiles: [
+            'https://grovealliance.org/fhir/withings/StructureDefinition/withings-visceral-fat-index',
+          ],
           elements: [
             {
               path: 'measure.value*10^unit',
-              status: 'intentionally-unsupported',
+              status: 'platform-exclusive',
+              measurementIds: ['withings-visceral-fat-index'],
+              unitConversion:
+                'unitless provider value to the dimensionless UCUM {score} annotation',
+              effective: 'measure group date',
               reason:
-                'The value is a unitless proprietary rating, not a mass or area; emitting it as a dimensionless UCUM quantity would assert a measurand and comparability the vendor does not define.',
+                "Version 0.6.0 carries the Withings visceral-fat figure as the provider-scoped withings-visceral-fat-index profile, on the dimensionless UCUM {score} annotation because the API returns the value without a unit and it is a rating rather than a mass or an area. The code names the vendor, so the figure cannot be folded into a shared body-composition measurement, and no measurand, no mass, and no comparability with another vendor's visceral-fat figure is asserted.",
             },
           ],
         },
@@ -1795,15 +1825,20 @@ const providerAdapterCatalogValue = {
         },
       ],
       identifierScope: 'account',
+      providerScopeMode: 'deployment-scoped-account-pseudonym',
       identifierScopeReason:
         'grpid is a server-assigned integer that appears to come from a global sequence, but Withings does not document its scope. Scoped by account until they do.',
     },
   ],
   recordingDeviceIdentity: {
     adapterId: 'providers',
-    note: "A connected provider's device metadata lives on a separate vendor endpoint the adapter does not consume, and its per-unit identifiers are refused outright. Provider Observations therefore carry a per-sample recording Device until that input exists.",
-    sourceFields: {},
-    status: 'unavailable',
+    status: 'stable-token-required',
+    stableUnitToken:
+      'A caller-governed, deployment-scoped per-unit token from already-authorized provider device data.',
+    fallback:
+      'Omit Observation.device when no stable per-unit token exists. Manufacturer, model, payload group, account, and event identity do not prove a physical device instance.',
+    snapshot:
+      'When emitted, the Device carries both recording-device and event-scoped device-snapshot v2 identifiers.',
   },
 } as const
 
@@ -1958,6 +1993,17 @@ const adapterMeasurementCatalogValue = {
         unit: '%',
         example: 2,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          maximum: {
+            value: 100,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       method: {
         code: 'percentage-of-time',
@@ -2272,6 +2318,45 @@ const adapterMeasurementCatalogValue = {
         },
       ],
     },
+    'biological-sex': {
+      id: 'biological-sex',
+      profile: 'healthkit-biological-sex',
+      standardProfile: null,
+      title: 'Grove HealthKit Biological Sex',
+      description:
+        "Biological sex as a coded Observation. LOINC 46098-0 'Sex' is the context-free concept (verified ACTIVE, PROPERTY LP6886-8 Type, SCALE_TYP LP7750-5 Nom). 76689-9 'Sex assigned at birth' was rejected: the HealthKit characteristic states only a sex, never that it is the one assigned at birth, and adopting that code would fabricate a provenance the source does not carry. Value is a Grove-coded concept with the HKBiologicalSex token retained as secondary coding per the sleep-stage absorption pattern. HKBiologicalSex.notSet emits no Observation.",
+      code: {
+        system: 'http://loinc.org',
+        code: '46098-0',
+        display: 'Sex',
+      },
+      valueKind: 'codeableConcept',
+      owner: 'healthkit',
+      quantity: null,
+      valueSet:
+        'https://grovealliance.org/fhir/healthkit/ValueSet/healthkit-biological-sex',
+      resultCodeSystem:
+        'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-biological-sex',
+      allowedValues: ['female', 'male', 'other'],
+      resultCodes: [
+        {
+          code: 'female',
+          display: 'Female',
+          definition: 'HKBiologicalSex female.',
+        },
+        {
+          code: 'male',
+          display: 'Male',
+          definition: 'HKBiologicalSex male.',
+        },
+        {
+          code: 'other',
+          display: 'Other',
+          definition: 'HKBiologicalSex other.',
+        },
+      ],
+      effective: 'dateTime',
+    },
     'bladder-incontinence': {
       id: 'bladder-incontinence',
       profile: 'healthkit-bladder-incontinence',
@@ -2421,6 +2506,17 @@ const adapterMeasurementCatalogValue = {
         unit: '%',
         example: 0.04,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          maximum: {
+            value: 100,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       effective: 'dateTime',
     },
@@ -2594,6 +2690,24 @@ const adapterMeasurementCatalogValue = {
       },
       effective: 'dateTime',
     },
+    'date-of-birth': {
+      id: 'date-of-birth',
+      profile: 'healthkit-date-of-birth',
+      standardProfile: null,
+      title: 'Grove HealthKit Date of Birth',
+      description:
+        "Date of birth as an Observation. LOINC 21112-8 'Birth date' is the exact concept (verified ACTIVE, PROPERTY LP6882-7 TmStp, SCALE_TYP LP7753-9 Qn). A date of birth identifies a person across systems, so the adapter withholds it unless the deployment authorizes disclosure; a deployment that already knows its participant's demographics from enrollment should prefer that authoritative record over this assertion.",
+      code: {
+        system: 'http://loinc.org',
+        code: '21112-8',
+        display: 'Birth date',
+      },
+      valueKind: 'dateTime',
+      owner: 'healthkit',
+      quantity: null,
+      effective: 'dateTime',
+      example: '1985-04-12',
+    },
     'environmental-audio-exposure': {
       id: 'environmental-audio-exposure',
       profile: 'healthkit-environmental-audio-exposure',
@@ -2686,6 +2800,67 @@ const adapterMeasurementCatalogValue = {
         },
       },
       effective: 'Period',
+    },
+    'fitzpatrick-skin-type': {
+      id: 'fitzpatrick-skin-type',
+      profile: 'healthkit-fitzpatrick-skin-type',
+      standardProfile: null,
+      title: 'Grove HealthKit Fitzpatrick Skin Type',
+      description:
+        "Fitzpatrick sun-reactive skin type as a coded Observation. LOINC 66555-4 'Skin type [Fitzpatrick Classification Scale]' is the exact concept (verified ACTIVE, PROPERTY LP6886-8 Type, SCALE_TYP LP7750-5 Nom). The scale materially conditions UV-exposure interpretation, which is why it is modelled rather than left to the deployment. HKFitzpatrickSkinType.notSet emits no Observation.",
+      code: {
+        system: 'http://loinc.org',
+        code: '66555-4',
+        display: 'Skin type [Fitzpatrick Classification Scale]',
+      },
+      valueKind: 'codeableConcept',
+      owner: 'healthkit',
+      quantity: null,
+      valueSet:
+        'https://grovealliance.org/fhir/healthkit/ValueSet/healthkit-fitzpatrick-skin-type',
+      resultCodeSystem:
+        'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-fitzpatrick-skin-type',
+      allowedValues: [
+        'type-i',
+        'type-ii',
+        'type-iii',
+        'type-iv',
+        'type-v',
+        'type-vi',
+      ],
+      resultCodes: [
+        {
+          code: 'type-i',
+          display: 'Type I',
+          definition: 'Always burns, never tans.',
+        },
+        {
+          code: 'type-ii',
+          display: 'Type II',
+          definition: 'Usually burns, tans minimally.',
+        },
+        {
+          code: 'type-iii',
+          display: 'Type III',
+          definition: 'Sometimes burns mildly, tans uniformly.',
+        },
+        {
+          code: 'type-iv',
+          display: 'Type IV',
+          definition: 'Burns minimally, always tans well.',
+        },
+        {
+          code: 'type-v',
+          display: 'Type V',
+          definition: 'Very rarely burns, tans very easily.',
+        },
+        {
+          code: 'type-vi',
+          display: 'Type VI',
+          definition: 'Never burns, deeply pigmented.',
+        },
+      ],
+      effective: 'dateTime',
     },
     'food-correlation': {
       id: 'food-correlation',
@@ -3052,6 +3227,13 @@ const adapterMeasurementCatalogValue = {
         unit: 'puffs',
         example: 2,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          integerOnly: true,
+        },
       },
       effective: 'Period',
     },
@@ -3318,6 +3500,13 @@ const adapterMeasurementCatalogValue = {
         unit: 'drinks',
         example: 2,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          integerOnly: true,
+        },
       },
       effective: 'Period',
     },
@@ -3344,6 +3533,13 @@ const adapterMeasurementCatalogValue = {
         unit: 'falls',
         example: 1,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          integerOnly: true,
+        },
       },
       effective: 'Period',
     },
@@ -3393,6 +3589,17 @@ const adapterMeasurementCatalogValue = {
         unit: '%',
         example: 3.5,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          maximum: {
+            value: 100,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       effective: 'dateTime',
     },
@@ -3891,6 +4098,17 @@ const adapterMeasurementCatalogValue = {
         unit: 'valence',
         example: 0.4,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: -1,
+            inclusive: true,
+          },
+          maximum: {
+            value: 1,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       effective: 'Period',
       components: [
@@ -4308,6 +4526,13 @@ const adapterMeasurementCatalogValue = {
         unit: 'strokes',
         example: 640,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          integerOnly: true,
+        },
       },
       effective: 'Period',
     },
@@ -5433,6 +5658,17 @@ const adapterMeasurementCatalogValue = {
         unit: '%',
         example: 1.4,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          maximum: {
+            value: 100,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       effective: 'dateTime',
     },
@@ -5456,6 +5692,17 @@ const adapterMeasurementCatalogValue = {
         unit: '%',
         example: 27,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          maximum: {
+            value: 100,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       effective: 'dateTime',
     },
@@ -5543,6 +5790,17 @@ const adapterMeasurementCatalogValue = {
         unit: '%',
         example: 82,
         dimension: {},
+        valueDomain: {
+          minimum: {
+            value: 0,
+            inclusive: true,
+          },
+          maximum: {
+            value: 100,
+            inclusive: true,
+          },
+          integerOnly: false,
+        },
       },
       method: {
         code: 'rolling-mean',
@@ -6001,10 +6259,10 @@ const adapterMeasurementCatalogValue = {
       effective: 'Period',
     },
   },
-  providers: {
+  withings: {
     'body-fat-mass': {
       id: 'body-fat-mass',
-      profile: 'provider-body-fat-mass',
+      profile: 'withings-body-fat-mass',
       standardProfile: null,
       title: 'Body Fat Mass',
       description:
@@ -6015,7 +6273,7 @@ const adapterMeasurementCatalogValue = {
         display: 'Body fat [Mass] Calculated',
       },
       valueKind: 'quantity',
-      owner: 'providers',
+      owner: 'withings',
       quantity: {
         system: 'http://unitsofmeasure.org',
         code: 'kg',
@@ -6027,23 +6285,48 @@ const adapterMeasurementCatalogValue = {
       },
       effective: 'dateTime',
     },
+    'corrected-qt-interval': {
+      id: 'corrected-qt-interval',
+      profile: 'withings-corrected-qt-interval',
+      standardProfile: null,
+      title: 'Corrected QT Interval',
+      description:
+        "The rate-corrected QT interval a Withings device reports alongside its own electrocardiogram, normalized to UCUM milliseconds. Only Withings reports the correction as a discrete measure, so the profile is provider-scoped. The interval is the vendor algorithm's reading of its own recording; no rhythm interpretation, repolarization finding, or diagnosis is asserted, and the correction formula the vendor applied is not published, so the value is not interchangeable with a QTc read from a clinical twelve-lead electrocardiogram.",
+      code: {
+        system: 'http://loinc.org',
+        code: '8636-3',
+        display: 'Q-T interval corrected',
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'ms',
+        unit: 'ms',
+        example: 410,
+        dimension: {
+          s: 1,
+        },
+      },
+      effective: 'dateTime',
+    },
     'extracellular-water-mass': {
       id: 'extracellular-water-mass',
-      profile: 'provider-extracellular-water-mass',
+      profile: 'withings-extracellular-water-mass',
       standardProfile: null,
       title: 'Extracellular Water Mass',
       description:
         'Mass of extracellular body water estimated by bioelectrical impedance, normalized to UCUM kilograms. Only Withings evidences the compartmentalized value, so the profile is provider-scoped and is distinct from total body-water mass.',
       code: {
         system:
-          'https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement',
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
         code: 'extracellular-water-mass',
         display: 'Extracellular water mass',
         definition:
           'The mass of body water outside cells as estimated by bioelectrical impedance analysis.',
       },
       valueKind: 'quantity',
-      owner: 'providers',
+      owner: 'withings',
       quantity: {
         system: 'http://unitsofmeasure.org',
         code: 'kg',
@@ -6057,21 +6340,21 @@ const adapterMeasurementCatalogValue = {
     },
     'intracellular-water-mass': {
       id: 'intracellular-water-mass',
-      profile: 'provider-intracellular-water-mass',
+      profile: 'withings-intracellular-water-mass',
       standardProfile: null,
       title: 'Intracellular Water Mass',
       description:
         'Mass of intracellular body water estimated by bioelectrical impedance, normalized to UCUM kilograms. Only Withings evidences the compartmentalized value, so the profile is provider-scoped and is distinct from total body-water mass.',
       code: {
         system:
-          'https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement',
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
         code: 'intracellular-water-mass',
         display: 'Intracellular water mass',
         definition:
           'The mass of body water inside cells as estimated by bioelectrical impedance analysis.',
       },
       valueKind: 'quantity',
-      owner: 'providers',
+      owner: 'withings',
       quantity: {
         system: 'http://unitsofmeasure.org',
         code: 'kg',
@@ -6085,7 +6368,7 @@ const adapterMeasurementCatalogValue = {
     },
     'muscle-mass': {
       id: 'muscle-mass',
-      profile: 'provider-muscle-mass',
+      profile: 'withings-muscle-mass',
       standardProfile: null,
       title: 'Muscle Mass',
       description:
@@ -6096,7 +6379,7 @@ const adapterMeasurementCatalogValue = {
         display: 'Body muscle mass Calculated',
       },
       valueKind: 'quantity',
-      owner: 'providers',
+      owner: 'withings',
       quantity: {
         system: 'http://unitsofmeasure.org',
         code: 'kg',
@@ -6108,23 +6391,98 @@ const adapterMeasurementCatalogValue = {
       },
       effective: 'dateTime',
     },
+    'pr-interval': {
+      id: 'pr-interval',
+      profile: 'withings-pr-interval',
+      standardProfile: null,
+      title: 'PR Interval',
+      description:
+        "The PR interval a Withings device measures from its own electrocardiogram, normalized to UCUM milliseconds. Only Withings reports it as a discrete measure, so the profile is provider-scoped. The interval is the vendor algorithm's reading of its own recording; no conduction finding, rhythm interpretation, or diagnosis is asserted.",
+      code: {
+        system: 'http://loinc.org',
+        code: '8625-6',
+        display: 'P-R Interval',
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'ms',
+        unit: 'ms',
+        example: 160,
+        dimension: {
+          s: 1,
+        },
+      },
+      effective: 'dateTime',
+    },
+    'qrs-duration': {
+      id: 'qrs-duration',
+      profile: 'withings-qrs-duration',
+      standardProfile: null,
+      title: 'QRS Duration',
+      description:
+        "The QRS complex duration a Withings device measures from its own electrocardiogram, normalized to UCUM milliseconds. Only Withings reports it as a discrete measure, so the profile is provider-scoped. The interval is the vendor algorithm's reading of its own recording; no conduction finding, rhythm interpretation, or diagnosis is asserted.",
+      code: {
+        system: 'http://loinc.org',
+        code: '8633-0',
+        display: 'QRS duration',
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'ms',
+        unit: 'ms',
+        example: 92,
+        dimension: {
+          s: 1,
+        },
+      },
+      effective: 'dateTime',
+    },
+    'qt-interval': {
+      id: 'qt-interval',
+      profile: 'withings-qt-interval',
+      standardProfile: null,
+      title: 'QT Interval',
+      description:
+        "The uncorrected QT interval a Withings device measures from its own electrocardiogram, normalized to UCUM milliseconds. Only Withings reports it as a discrete measure, so the profile is provider-scoped. The interval is the vendor algorithm's reading of its own recording; no repolarization finding, rhythm interpretation, or diagnosis is asserted, and the rate correction is a separate measurement.",
+      code: {
+        system: 'http://loinc.org',
+        code: '8634-8',
+        display: 'Q-T interval',
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'ms',
+        unit: 'ms',
+        example: 390,
+        dimension: {
+          s: 1,
+        },
+      },
+      effective: 'dateTime',
+    },
     'sleeping-heart-rate-average': {
       id: 'sleeping-heart-rate-average',
-      profile: 'provider-sleeping-heart-rate-average',
+      profile: 'withings-sleeping-heart-rate-average',
       standardProfile: null,
       title: 'Sleeping Heart Rate Average',
       description:
         'The average heart rate across one sleep session, normalized to UCUM beats per minute. It is a session-windowed average, distinct from both the shared point heart-rate measurement and the daily resting-heart-rate estimate, and is implemented by the phase-2 aggregate design.',
       code: {
         system:
-          'https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement',
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
         code: 'sleeping-heart-rate-average',
         display: 'Sleeping heart rate average',
         definition:
           'The mean heart rate across the exact sleep-session Observation effective Period.',
       },
       valueKind: 'quantity',
-      owner: 'providers',
+      owner: 'withings',
       quantity: {
         system: 'http://unitsofmeasure.org',
         code: '/min',
@@ -6140,13 +6498,323 @@ const adapterMeasurementCatalogValue = {
       },
       effective: 'Period',
     },
+    'withings-atrial-fibrillation-notification-ecg': {
+      id: 'withings-atrial-fibrillation-notification-ecg',
+      profile: 'withings-atrial-fibrillation-notification-ecg',
+      standardProfile: null,
+      title: 'Withings Atrial Fibrillation Notification (ECG)',
+      description:
+        "Withings meastype 130: a screening notification from the vendor's proprietary electrocardiogram algorithm. It is emitted as a notification and never as a rhythm finding, exactly as the HealthKit irregular-heart-rhythm notification is: the recording itself remains the rhythm evidence. The adapter admits an Observation only for the vendor's positive screening classification; Withings publishes no encoding for the numeric measure.value, so no negative result, no inconclusive result, and no diagnosis is asserted. The code is deliberately taken from the providers code system so no receiver can read it as an atrial-fibrillation finding.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
+        code: 'withings-atrial-fibrillation-notification-ecg',
+        display: 'Withings atrial fibrillation notification (ECG)',
+        definition:
+          "A Withings screening notification stating that the vendor's electrocardiogram algorithm flagged signs of atrial fibrillation in the recording taken at the Observation effective instant.",
+      },
+      valueKind: 'codeableConcept',
+      owner: 'withings',
+      quantity: null,
+      valueSet:
+        'https://grovealliance.org/fhir/withings/ValueSet/withings-atrial-fibrillation-notification-ecg',
+      resultCodeSystem:
+        'https://grovealliance.org/fhir/withings/CodeSystem/withings-atrial-fibrillation-notification-ecg',
+      allowedValues: ['signs-detected'],
+      resultCodes: [
+        {
+          code: 'signs-detected',
+          display: 'Signs Detected',
+          definition:
+            "The vendor's electrocardiogram screening algorithm flagged signs of atrial fibrillation in this recording. Nothing beyond the notification is asserted.",
+        },
+      ],
+      effective: 'dateTime',
+    },
+    'withings-atrial-fibrillation-notification-ppg': {
+      id: 'withings-atrial-fibrillation-notification-ppg',
+      profile: 'withings-atrial-fibrillation-notification-ppg',
+      standardProfile: null,
+      title: 'Withings Atrial Fibrillation Notification (PPG)',
+      description:
+        "Withings meastype 139: a screening notification from the vendor's proprietary photoplethysmography algorithm, kept separate from the electrocardiogram notification because it screens a different signal. It is emitted as a notification and never as a rhythm finding. The adapter admits an Observation only for the vendor's positive screening classification; Withings publishes no encoding for the numeric measure.value, so no negative result, no inconclusive result, and no diagnosis is asserted. The code is deliberately taken from the providers code system so no receiver can read it as an atrial-fibrillation finding.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
+        code: 'withings-atrial-fibrillation-notification-ppg',
+        display: 'Withings atrial fibrillation notification (PPG)',
+        definition:
+          "A Withings screening notification stating that the vendor's photoplethysmography algorithm flagged signs of atrial fibrillation in the reading taken at the Observation effective instant.",
+      },
+      valueKind: 'codeableConcept',
+      owner: 'withings',
+      quantity: null,
+      valueSet:
+        'https://grovealliance.org/fhir/withings/ValueSet/withings-atrial-fibrillation-notification-ppg',
+      resultCodeSystem:
+        'https://grovealliance.org/fhir/withings/CodeSystem/withings-atrial-fibrillation-notification-ppg',
+      allowedValues: ['signs-detected'],
+      resultCodes: [
+        {
+          code: 'signs-detected',
+          display: 'Signs Detected',
+          definition:
+            "The vendor's photoplethysmography screening algorithm flagged signs of atrial fibrillation in this reading. Nothing beyond the notification is asserted.",
+        },
+      ],
+      effective: 'dateTime',
+    },
+    'withings-nerve-health-score': {
+      id: 'withings-nerve-health-score',
+      profile: 'withings-nerve-health-score',
+      standardProfile: null,
+      title: 'Withings Nerve Health Score',
+      description:
+        "Withings meastype 167: the vendor's nerve-health figure, computed by an undisclosed algorithm from electrochemical skin conductance measured at the feet. The vendor publishes no physical unit for it, so it carries the dimensionless UCUM {score} annotation rather than an invented unit or the conductance it derives from, and the profile description is the only statement of its scale. Withings positions the figure as small-fiber-neuropathy screening, so it is deliberately coded from the providers code system: it is a vendor screening figure and never a neuropathy finding or a diagnosis.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
+        code: 'withings-nerve-health-score',
+        display: 'Withings nerve health score',
+        definition:
+          "The bounded figure Withings' proprietary nerve-health algorithm computes from electrochemical skin conductance at the feet, at the Observation effective instant.",
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: '{score}',
+        unit: 'score',
+        example: 80,
+        dimension: {},
+      },
+      effective: 'dateTime',
+    },
+    'withings-pulse-wave-velocity': {
+      id: 'withings-pulse-wave-velocity',
+      profile: 'withings-pulse-wave-velocity',
+      standardProfile: null,
+      title: 'Withings Pulse Wave Velocity',
+      description:
+        "Withings meastype 91: the vendor's aortic pulse-wave velocity estimate, produced by an undisclosed single-vendor scale algorithm and normalized to UCUM metres per second. It is deliberately coded from the providers code system rather than a shared arterial-stiffness code, because no second source evidences it and the estimate is not interchangeable with a tonometric pulse-wave velocity measured in clinic. It is a wellness estimate and never an arterial-stiffness diagnosis.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
+        code: 'withings-pulse-wave-velocity',
+        display: 'Withings pulse wave velocity',
+        definition:
+          "The aortic pulse-wave velocity Withings' proprietary scale algorithm estimates at the Observation effective instant, in metres per second.",
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'm/s',
+        unit: 'm/s',
+        example: 7.5,
+        dimension: {
+          m: 1,
+          s: -1,
+        },
+      },
+      effective: 'dateTime',
+    },
+    'withings-vascular-age': {
+      id: 'withings-vascular-age',
+      profile: 'withings-vascular-age',
+      standardProfile: null,
+      title: 'Withings Vascular Age',
+      description:
+        "Withings meastype 155: the vendor's vascular-age figure, derived by an undisclosed algorithm from the pulse-wave velocity the same scale estimates, and reported on an age scale in UCUM years. It is a vendor score expressed in years, not a chronological age and not a vascular assessment. It is deliberately a separate measurement from the Oura cardiovascular age: the two are undisclosed algorithms over different inputs, so a shared code would fabricate a comparability neither vendor defines.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
+        code: 'withings-vascular-age',
+        display: 'Withings vascular age',
+        definition:
+          "The age-scaled figure Withings' proprietary vascular-age algorithm derives from its own pulse-wave velocity estimate, at the Observation effective instant.",
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'a',
+        unit: 'years',
+        example: 45,
+        dimension: {
+          s: 1,
+        },
+      },
+      effective: 'dateTime',
+    },
+    'withings-visceral-fat-index': {
+      id: 'withings-visceral-fat-index',
+      profile: 'withings-visceral-fat-index',
+      standardProfile: null,
+      title: 'Withings Visceral Fat Index',
+      description:
+        "Withings meastype 170: the vendor's visceral-fat figure, which the API returns without a unit. It is a bounded rating on the vendor's own scale rather than a mass or an area, so it carries the dimensionless UCUM {score} annotation instead of an invented mass or area unit, and it is kept apart from every shared body-composition measurement. The profile description is the only statement of its scale, and no comparability with another vendor's visceral-fat figure is asserted.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
+        code: 'withings-visceral-fat-index',
+        display: 'Withings visceral fat index',
+        definition:
+          "The bounded figure Withings' proprietary body-composition algorithm reports for abdominal visceral fat at the Observation effective instant.",
+      },
+      valueKind: 'quantity',
+      owner: 'withings',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: '{score}',
+        unit: 'score',
+        example: 8,
+        dimension: {},
+      },
+      effective: 'dateTime',
+    },
+  },
+  oura: {
+    'oura-cardiovascular-age': {
+      id: 'oura-cardiovascular-age',
+      profile: 'oura-cardiovascular-age',
+      standardProfile: null,
+      title: 'Oura Cardiovascular Age',
+      description:
+        "Oura's proprietary cardiovascular-age figure over a civil-day effective Period, reported on an age scale in UCUM years. It is a vendor score expressed in years, not a chronological age and not a vascular assessment. It is deliberately a separate measurement from the Withings vascular age: the two are undisclosed algorithms over different inputs, so a shared code would fabricate a comparability neither vendor defines.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/oura/CodeSystem/oura-measurement',
+        code: 'oura-cardiovascular-age',
+        display: 'Oura cardiovascular age',
+        definition:
+          "The age-scaled figure Oura's proprietary cardiovascular-age algorithm derives from its own photoplethysmography features over the exact civil-day effective Period.",
+      },
+      valueKind: 'quantity',
+      owner: 'oura',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: 'a',
+        unit: 'years',
+        example: 38,
+        dimension: {
+          s: 1,
+        },
+      },
+      effective: 'Period',
+    },
+    'oura-readiness-score': {
+      id: 'oura-readiness-score',
+      profile: 'oura-readiness-score',
+      standardProfile: null,
+      title: 'Oura Readiness Score',
+      description:
+        "Oura's proprietary daily readiness figure over a civil-day effective Period. The vendor publishes no physical unit for it and it measures no observable quantity, so it carries the dimensionless UCUM {score} annotation rather than an invented unit, and the profile description is the only statement of its scale. It is a vendor composite, not a physiological measurement, and nothing about the inputs, weighting, or comparability across people or firmware versions is asserted.",
+      code: {
+        system:
+          'https://grovealliance.org/fhir/oura/CodeSystem/oura-measurement',
+        code: 'oura-readiness-score',
+        display: 'Oura readiness score',
+        definition:
+          "The bounded composite figure Oura's proprietary readiness algorithm reports for the exact civil-day effective Period.",
+      },
+      valueKind: 'quantity',
+      owner: 'oura',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: '{score}',
+        unit: 'score',
+        example: 78,
+        dimension: {},
+      },
+      effective: 'Period',
+    },
+  },
+  'google-health': {
+    'resting-heart-rate-daily-average': {
+      id: 'resting-heart-rate-daily-average',
+      profile: 'google-health-daily-resting-heart-rate',
+      owner: 'google-health',
+      standardProfile: null,
+      title: 'Resting Heart Rate Daily Average',
+      description:
+        'A source-supplied mean resting heart rate over an exact civil-day Period, normalized to UCUM beats per minute. It is an aggregate estimate and is never substituted for a point RestingHeartRateRecord or HealthKit resting-heart-rate sample.',
+      code: {
+        system:
+          'https://grovealliance.org/fhir/google-health/CodeSystem/google-health-measurement',
+        code: 'resting-heart-rate-daily-average',
+        display: 'Resting heart rate daily average',
+        definition:
+          'The mean resting heart-rate estimate reported for the exact civil-day Period.',
+      },
+      valueKind: 'quantity',
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: '/min',
+        unit: 'beats/minute',
+        example: 58,
+        dimension: {
+          s: -1,
+        },
+      },
+      method: {
+        code: 'daily-mean',
+        display: 'Daily mean',
+      },
+      effective: 'Period',
+    },
   },
 } as const
 
 export const adapterMeasurementCatalog: typeof adapterMeasurementCatalogValue =
   deepFreeze(adapterMeasurementCatalogValue)
 
-const providerScalarMappingsValue = {
+const healthKitApplicationDeviceIdentityValue = {
+  profile:
+    'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-application-device',
+  snapshotIdentifierRole: 'device-snapshot',
+  bundleIdentifier: {
+    system:
+      'https://grovealliance.org/fhir/healthkit/NamingSystem/apple-bundle-id',
+    typeSystem:
+      'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-identifier-type',
+    typeCode: 'apple-bundle-id',
+    cardinality: '1..1',
+    meaning:
+      'Exact Apple application product bundle identifier; never an installation, host, account, or person identifier.',
+  },
+  classificationRule:
+    'The converting application always uses this profile. An HKSourceRevision author uses it only when the caller explicitly classifies that source as an application; never infer actor class from name, bundle text, UUID shape, or productType.',
+} as const
+
+export const healthKitApplicationDeviceIdentity: typeof healthKitApplicationDeviceIdentityValue =
+  deepFreeze(healthKitApplicationDeviceIdentityValue)
+
+const healthKitClinicalRecordAdmissionValue = {
+  profile:
+    'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-record-document',
+  payloadFormat: 'fhir-r4-resource',
+  sourceFHIRReleaseField: 'HKFHIRVersion.fhirRelease',
+  admittedFHIRRelease: 'r4',
+  fhirRepresentation: {
+    resourceType: 'DocumentReference',
+    extensionUrl:
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-fhir-release',
+    valueElement: 'valueCode',
+    cardinality: {
+      min: 1,
+      max: 1,
+    },
+    fixedValue: 'r4',
+  },
+  rejectedFHIRReleases: ['dstu2', 'unknown'],
+  rule: 'Admit a HealthKit clinical record only when HKFHIRVersion.fhirRelease is r4. Reject dstu2, unknown, a missing release, and every future release before emitting a DocumentReference; the payload is preserved byte-for-byte and never upgraded, downgraded, or inferred from its JSON shape.',
+} as const
+
+export const healthKitClinicalRecordAdmission: typeof healthKitClinicalRecordAdmissionValue =
+  deepFreeze(healthKitClinicalRecordAdmissionValue)
+
+const providerScalarOutputRolesValue = {
   'google-health-api': {
     steps: {
       'step-count': 'step-count',
@@ -6177,7 +6845,7 @@ const providerScalarMappingsValue = {
       'heart-rate-variability-sdnn': 'heart-rate-variability-sdnn',
     },
     'daily-resting-heart-rate': {
-      'resting-heart-rate': 'resting-heart-rate',
+      'resting-heart-rate-daily-average': 'resting-heart-rate-daily-average',
     },
     'daily-respiratory-rate': {
       'respiratory-rate-average': 'respiratory-rate-average',
@@ -6230,6 +6898,12 @@ const providerScalarMappingsValue = {
     vO2_max: {
       'vo2-max': 'vo2-max',
     },
+    daily_cardiovascular_age: {
+      'oura-cardiovascular-age': 'oura-cardiovascular-age',
+    },
+    daily_readiness: {
+      'oura-readiness-score': 'oura-readiness-score',
+    },
   },
   withings: {
     'getmeas:1': {
@@ -6252,6 +6926,9 @@ const providerScalarMappingsValue = {
     },
     'getmeas:123': {
       'vo2-max': 'vo2-max',
+    },
+    'getmeas:155': {
+      'withings-vascular-age': 'withings-vascular-age',
     },
     'getactivity:steps': {
       'step-count': 'step-count',
@@ -6302,11 +6979,40 @@ const providerScalarMappingsValue = {
     'getmeas:88': {
       'bone-mass': 'bone-mass',
     },
+    'getmeas:91': {
+      'withings-pulse-wave-velocity': 'withings-pulse-wave-velocity',
+    },
+    'getmeas:130': {
+      'withings-atrial-fibrillation-notification-ecg':
+        'withings-atrial-fibrillation-notification-ecg',
+    },
+    'getmeas:135': {
+      'qrs-duration': 'qrs-duration',
+    },
+    'getmeas:136': {
+      'pr-interval': 'pr-interval',
+    },
+    'getmeas:137': {
+      'qt-interval': 'qt-interval',
+    },
+    'getmeas:138': {
+      'corrected-qt-interval': 'corrected-qt-interval',
+    },
+    'getmeas:139': {
+      'withings-atrial-fibrillation-notification-ppg':
+        'withings-atrial-fibrillation-notification-ppg',
+    },
+    'getmeas:167': {
+      'withings-nerve-health-score': 'withings-nerve-health-score',
+    },
     'getmeas:168': {
       'extracellular-water-mass': 'extracellular-water-mass',
     },
     'getmeas:169': {
       'intracellular-water-mass': 'intracellular-water-mass',
+    },
+    'getmeas:170': {
+      'withings-visceral-fat-index': 'withings-visceral-fat-index',
     },
     'getmeas:196': {
       'electrodermal-activity': 'electrodermal-activity',
@@ -6317,14 +7023,233 @@ const providerScalarMappingsValue = {
   },
 } as const
 
-export const providerScalarMappings: typeof providerScalarMappingsValue =
-  deepFreeze(providerScalarMappingsValue)
+export const providerScalarOutputRoles: typeof providerScalarOutputRolesValue =
+  deepFreeze(providerScalarOutputRolesValue)
+
+const providerScalarOutputDiscriminatorsValue = {
+  'google-health-api': {
+    steps: {
+      'step-count': 'single',
+    },
+    distance: {
+      distance: 'single',
+    },
+    'active-energy-burned': {
+      'active-energy': 'single',
+    },
+    weight: {
+      'body-weight': 'single',
+    },
+    'body-fat': {
+      'body-fat-percentage': 'single',
+    },
+    height: {
+      'body-height': 'single',
+    },
+    'vo2-max': {
+      'vo2-max': 'single',
+    },
+    'daily-oxygen-saturation': {
+      'oxygen-saturation-daily-average': 'single',
+    },
+    'heart-rate-variability': {
+      'heart-rate-variability-rmssd': 'single',
+      'heart-rate-variability-sdnn': 'single',
+    },
+    'daily-resting-heart-rate': {
+      'resting-heart-rate-daily-average': 'single',
+    },
+    'daily-respiratory-rate': {
+      'respiratory-rate-average': 'single',
+    },
+    'blood-glucose': {
+      'blood-glucose-unspecified-specimen': 'single',
+    },
+    'core-body-temperature': {
+      'body-temperature': 'single',
+    },
+    floors: {
+      'flights-climbed': 'single',
+    },
+    'basal-energy-burned': {
+      'basal-energy': 'single',
+    },
+    sleep: {
+      'sleep-duration': 'single',
+      'deep-sleep-duration': 'single',
+      'rem-sleep-duration': 'single',
+      'light-sleep-duration': 'single',
+      'sleep-awake-duration': 'single',
+    },
+    exercise: {
+      workout: 'single',
+    },
+  },
+  oura: {
+    daily_activity: {
+      'step-count': 'single',
+      'active-energy': 'single',
+      distance: 'single',
+    },
+    sleep: {
+      'sleep-duration': 'single',
+      'deep-sleep-duration': 'single',
+      'rem-sleep-duration': 'single',
+      'light-sleep-duration': 'single',
+      'sleep-awake-duration': 'single',
+      'sleep-heart-rate': 'single',
+      'respiratory-rate-average': 'single',
+    },
+    daily_spo2: {
+      'oxygen-saturation-daily-average': 'single',
+    },
+    workout: {
+      workout: 'single',
+    },
+    vO2_max: {
+      'vo2-max': 'single',
+    },
+    daily_cardiovascular_age: {
+      'oura-cardiovascular-age': 'single',
+    },
+    daily_readiness: {
+      'oura-readiness-score': 'single',
+    },
+  },
+  withings: {
+    'getmeas:1': {
+      'body-weight': 'single',
+    },
+    'getmeas:4': {
+      'body-height': 'single',
+    },
+    'getmeas:6': {
+      'body-fat-percentage': 'single',
+    },
+    'getmeas:11': {
+      'heart-rate': 'single',
+    },
+    'getmeas:54': {
+      'oxygen-saturation': 'single',
+    },
+    'getmeas:71': {
+      'body-temperature': 'single',
+    },
+    'getmeas:123': {
+      'vo2-max': 'single',
+    },
+    'getmeas:155': {
+      'withings-vascular-age': 'single',
+    },
+    'getactivity:steps': {
+      'step-count': 'single',
+    },
+    'getactivity:distance': {
+      distance: 'single',
+    },
+    'getactivity:calories': {
+      'active-energy': 'single',
+    },
+    'getsummary:deepsleepduration': {
+      'deep-sleep-duration': 'single',
+    },
+    'getsummary:remsleepduration': {
+      'rem-sleep-duration': 'single',
+    },
+    'getsummary:lightsleepduration': {
+      'light-sleep-duration': 'single',
+    },
+    'getsummary:wakeupduration': {
+      'sleep-awake-duration': 'single',
+    },
+    'getsummary:hr_average': {
+      'sleep-heart-rate': 'single',
+      'sleeping-heart-rate-average': 'single',
+    },
+    'getsummary:rr_average': {
+      'respiratory-rate-average': 'single',
+    },
+    'getworkouts:interval': {
+      workout: 'single',
+    },
+    'getmeas:5': {
+      'lean-body-mass': 'single',
+    },
+    'getmeas:8': {
+      'body-fat-mass': 'single',
+    },
+    'getmeas:73': {
+      'skin-temperature': 'single',
+    },
+    'getmeas:76': {
+      'muscle-mass': 'single',
+    },
+    'getmeas:77': {
+      'body-water-mass': 'single',
+    },
+    'getmeas:88': {
+      'bone-mass': 'single',
+    },
+    'getmeas:91': {
+      'withings-pulse-wave-velocity': 'single',
+    },
+    'getmeas:130': {
+      'withings-atrial-fibrillation-notification-ecg': 'single',
+    },
+    'getmeas:135': {
+      'qrs-duration': 'single',
+    },
+    'getmeas:136': {
+      'pr-interval': 'single',
+    },
+    'getmeas:137': {
+      'qt-interval': 'single',
+    },
+    'getmeas:138': {
+      'corrected-qt-interval': 'single',
+    },
+    'getmeas:139': {
+      'withings-atrial-fibrillation-notification-ppg': 'single',
+    },
+    'getmeas:167': {
+      'withings-nerve-health-score': 'single',
+    },
+    'getmeas:168': {
+      'extracellular-water-mass': 'single',
+    },
+    'getmeas:169': {
+      'intracellular-water-mass': 'single',
+    },
+    'getmeas:170': {
+      'withings-visceral-fat-index': 'single',
+    },
+    'getmeas:196': {
+      'electrodermal-activity': 'single',
+    },
+    'getmeas:9+10': {
+      'blood-pressure': 'single',
+    },
+  },
+} as const
+
+export const providerScalarOutputDiscriminators: typeof providerScalarOutputDiscriminatorsValue =
+  deepFreeze(providerScalarOutputDiscriminatorsValue)
 
 const providerRecordEffectiveRulesValue = {
   oura: {
     daily_activity: {
       kind: 'complete-civil-day-period',
       measurementIds: ['step-count', 'active-energy', 'distance'],
+      outputsShareEffective: true,
+    },
+    daily_cardiovascular_age: {
+      kind: 'complete-civil-day-period',
+      measurementIds: ['oura-cardiovascular-age'],
+      outputsShareEffective: true,
+    },
+    daily_readiness: {
+      kind: 'complete-civil-day-period',
+      measurementIds: ['oura-readiness-score'],
       outputsShareEffective: true,
     },
   },
@@ -6350,7 +7275,7 @@ const providerRecordEffectiveRulesValue = {
 export const providerRecordEffectiveRules: typeof providerRecordEffectiveRulesValue =
   deepFreeze(providerRecordEffectiveRulesValue)
 
-const providerRawMappingsValue = {
+const providerRawOutputRolesValue = {
   'google-health-api': {
     'heart-rate': 'native-recording',
   },
@@ -6363,109 +7288,47 @@ const providerRawMappingsValue = {
   },
 } as const
 
-export const providerRawMappings: typeof providerRawMappingsValue = deepFreeze(
-  providerRawMappingsValue,
-)
+export const providerRawOutputRoles: typeof providerRawOutputRolesValue =
+  deepFreeze(providerRawOutputRolesValue)
 
-const groveRecordingFormatRegistryValue = {
-  codeSystem:
-    'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
-  valueSet:
-    'https://grovealliance.org/fhir/sensor/ValueSet/grove-recording-format',
-  formats: {
-    'heart-rate-samples': {
-      title: 'Heart Rate Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'triaxial-acceleration-samples': {
-      title: 'Triaxial Acceleration Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'ambient-light-samples': {
-      title: 'Ambient Light Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'ambient-pressure-samples': {
-      title: 'Ambient Pressure Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'pedometer-samples': {
-      title: 'Pedometer Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'wrist-temperature-samples': {
-      title: 'Wrist Temperature Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'triaxial-rotation-samples': {
-      title: 'Triaxial Rotation Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'odometer-samples': {
-      title: 'Odometer Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'beat-interval-series': {
-      title: 'Beat Interval Series',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'location-track-samples': {
-      title: 'Location Track Samples',
-      contentType: 'text/csv',
-      status: 'active',
-    },
-    'fhir-resource-array': {
-      title: 'FHIR Resource Array',
-      contentType: 'application/vnd.grovealliance.fhir-array+json',
-      status: 'active',
-    },
-    'fhir-resource': {
-      title: 'FHIR Resource',
-      contentType: 'application/fhir+json',
-      status: 'active',
-    },
-    'clinical-document': {
-      title: 'Clinical Document',
-      contentType: 'application/hl7-cda+xml',
-      status: 'active',
-    },
-    'native-recording': {
-      title: 'Native Recording',
-      contentType: 'application/vnd.grovealliance.native+json',
-      status: 'active',
-    },
-    'provider-recording': {
-      title: 'Provider Recording',
-      contentType: 'application/vnd.grovealliance.provider+json',
-      status: 'active',
-    },
-    'photoplethysmogram-samples': {
-      title: 'Photoplethysmogram Samples',
-      contentType: 'application/vnd.grovealliance.ppg',
-      status: 'active',
-    },
+const providerRawOutputDiscriminatorsValue = {
+  'google-health-api': {
+    'heart-rate': 'single',
+  },
+  oura: {
+    heartrate: 'single',
+  },
+  withings: {
+    activityIntraday: 'single',
+    sleepIntraday: 'single',
   },
 } as const
 
-export const groveRecordingFormatRegistry: typeof groveRecordingFormatRegistryValue =
-  deepFreeze(groveRecordingFormatRegistryValue)
+export const providerRawOutputDiscriminators: typeof providerRawOutputDiscriminatorsValue =
+  deepFreeze(providerRawOutputDiscriminatorsValue)
 
 export type AdapterMeasurementCatalog = typeof adapterMeasurementCatalog
 
-export type ProviderRecordingFormat =
-  keyof typeof groveRecordingFormatRegistry.formats
+export type HealthKitApplicationDeviceIdentity =
+  typeof healthKitApplicationDeviceIdentity
 
-export type ProviderScalarMappings = typeof providerScalarMappings
+export type HealthKitClinicalRecordAdmission =
+  typeof healthKitClinicalRecordAdmission
+
+export {
+  groveRecordingFormatRegistry,
+  type GroveRecordingFormat,
+  type ProviderRecordingFormat,
+} from '../mobile/measurement-catalog.generated.js'
+
+export type ProviderScalarOutputRoles = typeof providerScalarOutputRoles
+
+export type ProviderScalarOutputDiscriminators =
+  typeof providerScalarOutputDiscriminators
 
 export type ProviderRecordEffectiveRules = typeof providerRecordEffectiveRules
 
-export type ProviderRawMappings = typeof providerRawMappings
+export type ProviderRawOutputRoles = typeof providerRawOutputRoles
+
+export type ProviderRawOutputDiscriminators =
+  typeof providerRawOutputDiscriminators

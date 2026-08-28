@@ -1,21 +1,16 @@
 {
   "source": {
     "adapter": { "kind": "providers", "provider": "withings" },
-    "providerAccountIdentifier": {
+    "providerScopeIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-withings-001",
-      "assurance": "deployment-scoped-pseudonym"
+      "assurance": "deployment-scoped-account-pseudonym"
     },
     "sourceType": "getmeas:1",
     "sourceNativeId": "synthetic-weight-2026-08-20",
     "recordingMethod": "automatically-recorded",
     "dataOrigin": {
-      "identity": {
-        "identifier": {
-          "system": "https://example.org/data-origins",
-          "value": "withings"
-        }
-      },
+      "sourceDeviceToken": "origin-instance-withings-001",
       "name": "Withings"
     }
   },

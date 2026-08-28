@@ -15,6 +15,12 @@ import {
 import { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
 import { isR4ResourceType } from './r4-resource-types.js'
 import {
+  isExactQuestionnaireUrl,
+  isQuestionnaireResponseBuilderReference,
+  QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES,
+  QUESTIONNAIRE_RESPONSE_SOURCE_TYPES,
+} from './references.js'
+import {
   questionnaireBuilderInputSchema,
   questionnaireResponseBuilderInputSchema,
 } from './schemas.js'
@@ -25,12 +31,13 @@ import type {
   QuestionnaireResponseInput,
 } from './types.js'
 import {
+  cloneJsonValue,
+  err,
   issues,
   parseAbsoluteUri,
   parseCanonical,
   parseFhirId,
   parseFhirInstant,
-  parsePatientReference,
   parseSemVer,
   type Issue,
   type Result,
@@ -63,14 +70,23 @@ const schemaIssue = (entry: z.core.$ZodIssue): Issue => ({
 })
 
 const parseBuilderInput = <T>(schema: z.ZodType, input: unknown): Result<T> => {
-  const parsed = schema.safeParse(input)
-  return parsed.success ?
-      ({ ok: true, value: parsed.data as T, warnings: [] } as const)
-    : issues(parsed.error.issues.map(schemaIssue))
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  try {
+    const parsed = schema.safeParse(snapshot.value)
+    return parsed.success ?
+        ({ ok: true, value: parsed.data as T, warnings: [] } as const)
+      : issues(parsed.error.issues.map(schemaIssue))
+  } catch {
+    return err(
+      'schema-invalid',
+      'Questionnaire builder input could not be safely inspected.',
+    )
+  }
 }
 
 const extensionCount = (
-  extensions: ReadonlyArray<{ readonly url: string }> | undefined,
+  extensions: ReadonlyArray<{ readonly url?: string }> | undefined,
   url: string,
 ) => extensions?.filter((extension) => extension.url === url).length ?? 0
 
@@ -78,9 +94,13 @@ const validateQuestionnaireInput = (
   input: QuestionnaireInput,
 ): readonly Issue[] => {
   const failures: Issue[] = []
-  if (!parseAbsoluteUri(input.url).ok) {
+  if (!isExactQuestionnaireUrl(input.url)) {
     failures.push(
-      issue('invalid-uri', ['url'], 'Questionnaire.url is invalid.'),
+      issue(
+        'invalid-uri',
+        ['url'],
+        'Questionnaire.url must be an exact absolute HTTP(S) canonical without a fragment or version delimiter.',
+      ),
     )
   }
   if (!parseSemVer(input.version).ok) {
@@ -233,18 +253,32 @@ const validateResponseInput = (
       issue('invalid-identifier', ['id'], 'Response.id is invalid.'),
     )
   }
-  if (input.subject !== undefined && !parsePatientReference(input.subject).ok) {
+  if (
+    input.subject !== undefined &&
+    !isQuestionnaireResponseBuilderReference(input.subject)
+  ) {
     failures.push(
-      issue('invalid-reference', ['subject'], 'Response.subject is invalid.'),
+      issue(
+        'invalid-reference',
+        ['subject'],
+        'Response.subject requires one typed literal or identifier-only logical R4 Reference.',
+      ),
     )
   }
-  for (const [field, reference] of [
-    ['authorReference', input.authorReference],
-    ['sourceReference', input.sourceReference],
+  for (const [field, reference, allowedTypes] of [
+    ['author', input.author, QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES],
+    ['source', input.source, QUESTIONNAIRE_RESPONSE_SOURCE_TYPES],
   ] as const) {
-    if (reference?.trim() === '') {
+    if (
+      reference !== undefined &&
+      !isQuestionnaireResponseBuilderReference(reference, allowedTypes)
+    ) {
       failures.push(
-        issue('invalid-reference', [field], `${field} must not be empty.`),
+        issue(
+          'invalid-reference',
+          [field],
+          `${field} requires one typed literal or identifier-only logical Reference to an admitted target type.`,
+        ),
       )
     }
   }
@@ -298,14 +332,14 @@ export const buildQuestionnaireResponse = (
     status: validatedInput.status,
     ...(validatedInput.subject === undefined ?
       {}
-    : { subject: { reference: validatedInput.subject } }),
+    : { subject: validatedInput.subject }),
     authored: validatedInput.authored,
-    ...(validatedInput.authorReference === undefined ?
+    ...(validatedInput.author === undefined ?
       {}
-    : { author: { reference: validatedInput.authorReference } }),
-    ...(validatedInput.sourceReference === undefined ?
+    : { author: validatedInput.author }),
+    ...(validatedInput.source === undefined ?
       {}
-    : { source: { reference: validatedInput.sourceReference } }),
+    : { source: validatedInput.source }),
     ...(validatedInput.items === undefined ?
       {}
     : { item: validatedInput.items }),

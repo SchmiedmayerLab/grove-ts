@@ -11,13 +11,13 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.5.0' as const
+export const groveFhirContractVersion = '0.6.0' as const
 
 export const groveFhirVersion = '4.0.1' as const
 
 const groveMobilePackageMetadataValue = {
   fhirVersion: '4.0.1',
-  version: '0.5.0',
+  version: '0.6.0',
   packageId: 'org.grovealliance.fhir.mobile',
   canonical: 'https://grovealliance.org/fhir/mobile',
   dependencies: ['hl7.terminology.r4#7.3.0', 'hl7.fhir.uv.extensions.r4#5.3.0'],
@@ -26,140 +26,2301 @@ const groveMobilePackageMetadataValue = {
 export const groveMobilePackageMetadata: typeof groveMobilePackageMetadataValue =
   deepFreeze(groveMobilePackageMetadataValue)
 
-const groveFhirExchangeIdentityValue = {
-  schemaVersion: 1,
-  version: '0.5.0',
-  fhirVersion: '4.0.1',
-  profile:
+const groveMobileProfileCanonicalsValue = {
+  'grove-application-device':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
+  'grove-host-device':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device',
+  'grove-mobile-conversion-provenance':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-conversion-provenance',
+  'grove-mobile-exchange-bundle':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
-  entryIdentifierExtension:
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier',
-  fullUrlAlgorithm: {
-    name: 'uuid-v5-composed-identifier-v1',
-    namespace: 'a9a39cf1-c944-5d15-a3c2-c395969ea101',
-    input:
-      'UTF-8 bytes of the system, one U+007C VERTICAL LINE, then the value',
-    rejects:
-      'The system must not contain a vertical bar, so the input splits unambiguously at the first one. The value may contain vertical bars, because a composed identifier is built from them. An isolated UTF-16 surrogate in either is rejected. Nothing is escaped: an escaping rule is the conformance surface this scheme exists to remove.',
-    output: 'urn:uuid:<lowercase RFC 4122 UUID version 5>',
-    whyADigestHere:
-      'Version 5 turns an identifier into the URN a Bundle fullUrl must be. It is a format conversion, not concealment: the identifier it is built from travels in the clear on the same resource.',
-  },
-  resourceId: {
-    role: 'repository logical id',
-    required: false,
-    sourceIdentityAllowed: false,
-  },
-  internalReferences: {
-    containedReferencesAllowed: true,
-    bundleEntryReferences: 'must use an entry fullUrl UUID URN',
-    unresolvedUuidUrnsAllowed: false,
-  },
-  recordingDeviceIdentity: {
-    purpose:
-      "A recording Device deduplicates across every Observation it produced, so one participant's recorder is stored once instead of once per sample.",
-    subjectParticipates:
-      'A wearable belongs to a person, so the subject partitions the key: two participants wearing the same model are two devices, which is what Device means in R4. This is the one identity in the family that admits a subject reference; every other identity derives from source data alone and must not.',
-    versionsExcluded:
-      "Firmware and software change over a recorder's life and are therefore not part of its identity. They are not carried on the deduplicated Device either, because a backfill converts samples out of order and would leave an arbitrary value behind. Each Observation states the versions in force when it was recorded.",
-    failClosed:
-      'The key requires a non-empty manufacturer and at least one of model or hardwareVersion. A source that states less has no admitted device identity; the producer emits its per-sample derived identity instead of asserting a shared device.',
-    prohibitedInputs: [
-      'vendor per-unit identifiers and serial numbers, including a digest of one',
-      'firmware, software, Resource.id, repository ids, and processing timestamps',
-    ],
-    lexicalRules: {
-      absentField:
-        'An absent source field is the empty string; it is never omitted from the composition.',
-      normalization:
-        'Source strings are used exactly as the platform states them; no trimming, case folding, or Unicode normalization is applied.',
-      noSeparatorInComponents:
-        'No component may contain U+007C VERTICAL LINE. A source value carrying one is rejected rather than escaped.',
-    },
-    vectors: [
-      {
-        case: 'apple-watch',
-        components: [
-          'Patient/1a2b3c',
-          'healthkit',
-          'Apple Inc.',
-          'Watch',
-          'Watch7,12',
-        ],
-        value: 'v1:Patient/1a2b3c|healthkit|Apple Inc.|Watch|Watch7,12',
-      },
-      {
-        case: 'no-hardware-version',
-        components: [
-          'Patient/1a2b3c',
-          'health-connect',
-          'Google',
-          'Pixel Watch',
-          '',
-        ],
-        value: 'v1:Patient/1a2b3c|health-connect|Google|Pixel Watch|',
-      },
-      {
-        case: 'different-participant-same-model',
-        components: [
-          'Patient/9z8y7x',
-          'healthkit',
-          'Apple Inc.',
-          'Watch',
-          'Watch7,12',
-        ],
-        value: 'v1:Patient/9z8y7x|healthkit|Apple Inc.|Watch|Watch7,12',
-      },
-    ],
-    composition: [
-      'subjectReference',
-      'adapterId',
-      'manufacturer',
-      'model',
-      'hardwareVersion',
-    ],
-    form: 'v1:<subjectReference>|<adapterId>|<manufacturer>|<model>|<hardwareVersion>',
-    fixedArity:
-      'Exactly five components, so an absent source field is an empty component rather than an omitted one. The arity is fixed, so an empty component is unambiguous.',
-  },
-  vectors: [
-    {
-      case: 'ascii',
-      system: 'https://study.example.org/fhir/identifiers/mobile-observation',
-      value: 'heart-rate-20260820-001',
-      input:
-        'https://study.example.org/fhir/identifiers/mobile-observation|heart-rate-20260820-001',
-      fullUrl: 'urn:uuid:72a64652-0bad-517d-8a36-39e3b6adccac',
-    },
-    {
-      case: 'non-ascii',
-      system: 'https://例.example/識別子',
-      value: 'café-東京',
-      input: 'https://例.example/識別子|café-東京',
-      fullUrl: 'urn:uuid:31acad95-5e9a-5b0f-b5b7-4f4627825b6b',
-    },
-    {
-      case: 'composed-value',
-      system:
-        'https://grovealliance.org/fhir/mobile/NamingSystem/grove-writer-record-id',
-      value: 'v1:com.withings.wiscale2|17348211',
-      input:
-        'https://grovealliance.org/fhir/mobile/NamingSystem/grove-writer-record-id|v1:com.withings.wiscale2|17348211',
-      fullUrl: 'urn:uuid:68db0fd4-0146-59c9-86cf-934f00881095',
-    },
-    {
-      case: 'rejected-separator-in-system',
-      system: 'https://example.org/a|b',
-      value: 'x',
-      input: null,
-      fullUrl: null,
-      note: 'A vertical bar in the system would make the split ambiguous, so it is rejected. A bar in the value is ordinary, as the composed-value case shows.',
-    },
-  ],
+  'grove-mobile-retraction-bundle':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle',
+  'grove-mobile-retraction-provenance':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-provenance',
+  'grove-recording-device':
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
+  'grove-sensor-recording-document':
+    'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
 } as const
 
-export const groveFhirExchangeIdentity: typeof groveFhirExchangeIdentityValue =
-  deepFreeze(groveFhirExchangeIdentityValue)
+export const groveMobileProfileCanonicals: typeof groveMobileProfileCanonicalsValue =
+  deepFreeze(groveMobileProfileCanonicalsValue)
+
+const groveExchangeProtocolValue = {
+  $schema:
+    'https://grovealliance.org/fhir/catalog/schemas/exchange-protocol.schema.json',
+  schemaVersion: 1,
+  version: '0.6.0',
+  protocolVersion: 2,
+  releaseVersion: '0.6.0',
+  fhirVersion: '4.0.1',
+  profiles: {
+    activeBundle:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle',
+    conversionProvenance:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-conversion-provenance',
+    retractionBundle:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle',
+    retractionProvenance:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-provenance',
+  },
+  extensions: {
+    entryNodeKey:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key',
+    retractionTargetRole:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-retraction-target-role',
+    writerRecordVersion:
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-writer-record-version',
+  },
+  codeSystems: {
+    identifierRole:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role',
+    lifecycleEvent:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-lifecycle-event',
+    retractionTargetRole:
+      'https://grovealliance.org/fhir/mobile/CodeSystem/grove-retraction-target-role',
+  },
+  conformanceLevels: [
+    {
+      code: 'fhir-r4',
+      authority: 'FHIR R4 and the exact packages in the release manifest',
+      validator: 'HL7 FHIR Validator',
+    },
+    {
+      code: 'grove-profile',
+      authority:
+        'Published Grove StructureDefinitions, ValueSets, CodeSystems, and FHIRPath invariants',
+      validator: 'HL7 FHIR Validator with the exact Grove packages',
+    },
+    {
+      code: 'grove-producer',
+      authority:
+        'This protocol, its closed catalogs, and the shared positive and negative corpora',
+      validator:
+        'Any implementation that reports the exact stable Grove rule identifiers',
+    },
+  ],
+  producerDiagnostics: [
+    {
+      code: 'mobile-exchange.unclassified',
+      reason:
+        'A producer-contract failure reached the exchange diagnostic boundary without a more specific registered rule; validation fails closed and the conformance kit must classify the gap.',
+    },
+    {
+      code: 'mobile-exchange.entry-node-key',
+      reason:
+        'Every Bundle entry must carry exactly one complete Grove exchange entry node key.',
+    },
+    {
+      code: 'mobile-exchange.deterministic-full-url',
+      reason:
+        'Bundle.entry.fullUrl must be the UUID version 5 value derived from its complete entry identifier.',
+    },
+    {
+      code: 'mobile-exchange.resolved-reference',
+      reason:
+        'Every internal UUID URN reference must resolve to a Bundle entry fullUrl.',
+    },
+    {
+      code: 'mobile-exchange.event-identity',
+      reason:
+        'Bundle.identifier.value must be the canonical e2 producer UUID and positive sequence form.',
+    },
+    {
+      code: 'mobile-exchange.entry-node-digest',
+      reason:
+        'An entry-node digest must be derived from the enclosing event identifier, role, and ordinal.',
+    },
+    {
+      code: 'mobile-exchange.identity-system-role',
+      reason:
+        'Within one event graph, each Grove Identifier.system names exactly one Grove identifier role; one namespace cannot change meaning between nodes.',
+    },
+    {
+      code: 'mobile-output.source-output-required',
+      reason:
+        'Every active clinical output must carry its exact typed source-output identity in addition to source-record identity.',
+    },
+    {
+      code: 'mobile-output.hybrid-companion',
+      reason:
+        'A hybrid-required output and its exact source-preservation companion must form the catalog-declared closed, same-source, bidirectionally linked graph.',
+    },
+    {
+      code: 'healthkit-ecg.output-graph',
+      reason:
+        'A HealthKit ECG event must satisfy the catalog-owned waveform, optional average-heart-rate, symptom-member, relationship-direction, identity, and effective-period graph contract.',
+    },
+    {
+      code: 'mobile-exchange.transform-provenance',
+      reason:
+        'An active event must contain exactly one transform Provenance and no retraction Provenance.',
+    },
+    {
+      code: 'mobile-retraction.logical-target',
+      reason:
+        'A retraction target must be a typed logical Reference without a literal reference.',
+    },
+    {
+      code: 'mobile-retraction.target-role',
+      reason:
+        'Every retraction target must carry exactly one closed Grove target-role code.',
+    },
+    {
+      code: 'mobile-retraction.opaque-target',
+      reason:
+        'A retraction target must use the exact canonical v2 HMAC identity previously emitted.',
+    },
+    {
+      code: 'mobile-retraction.no-clinical-copy',
+      reason:
+        'A retraction event contains its lifecycle Provenance and optional Device agents, never a copied or mutilated clinical resource.',
+    },
+    {
+      code: 'mobile-exchange.lifecycle-coding',
+      reason:
+        'A lifecycle Provenance must carry exactly one coding across the ISO transform and Grove retraction lifecycle systems; translations from other systems remain open.',
+    },
+    {
+      code: 'mobile-output.semantic-profile',
+      reason:
+        'Every active Observation must directly claim one admitted Grove semantic profile shape; an empty claim cannot bypass semantic validation.',
+    },
+    {
+      code: 'mobile-output.fixed-quantity-unit',
+      reason:
+        'Every Quantity-valued catalog measurement uses the exact fixed system and code declared by its semantic profile contract.',
+    },
+    {
+      code: 'mobile-output.quantity-value-domain',
+      reason:
+        'Every Quantity-valued catalog measurement stays within its reviewed representational minimum, maximum, and integer-only domain without inventing a physiologic range.',
+    },
+    {
+      code: 'mobile-exchange.reference-target-type',
+      reason:
+        'An Observation subject resolves to a Patient entry, not merely to any existing fullUrl.',
+    },
+    {
+      code: 'mobile-exchange.reference-declared-type',
+      reason:
+        "When Reference.type is present it must equal the referenced entry's actual resourceType token.",
+    },
+    {
+      code: 'mobile-exchange.logical-source-entity',
+      reason:
+        'Lifecycle Provenance carries exactly one logical source-record Identifier entity and never a literal source Reference.',
+    },
+    {
+      code: 'mobile-retraction.role-target-type',
+      reason:
+        'Every retraction target role fixes its admitted resource type and Identifier role.',
+    },
+    {
+      code: 'mobile-exchange.single-source-entity',
+      reason:
+        'A lifecycle Provenance identifies exactly one source-record entity.',
+    },
+    {
+      code: 'mobile-exchange.reference-shape',
+      reason:
+        'A governed Reference is exclusively resolving-literal or identifier-only logical, never both.',
+    },
+    {
+      code: 'mobile-exchange.logical-patient-reference',
+      reason:
+        'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier.',
+    },
+    {
+      code: 'mobile-output.adapter-only-profile',
+      reason:
+        'An adapter-only active output type must directly claim exactly its one admitted adapter profile.',
+    },
+    {
+      code: 'mobile-exchange.entry-resource-type',
+      reason:
+        'An active event admits only its closed output, supporting, and lifecycle resource type set.',
+    },
+    {
+      code: 'mobile-exchange.contained-resource-prohibited',
+      reason:
+        'Mobile exchange events prohibit contained resources; every graph node must be an addressable Bundle entry.',
+    },
+    {
+      code: 'mobile-output.document-profile',
+      reason:
+        'Every active DocumentReference must directly claim exactly one admitted recording or clinical-document profile mode.',
+    },
+    {
+      code: 'mobile-support.device-profile',
+      reason:
+        'Every active Device must directly claim exactly one admitted Grove Device profile mode.',
+    },
+    {
+      code: 'mobile-support.connected',
+      reason:
+        'Every supporting resource must be connected to an output or the lifecycle Provenance.',
+    },
+    {
+      code: 'mobile-exchange.provenance-profile',
+      reason:
+        'The sole active lifecycle Provenance must directly claim exactly one admitted Mobile or adapter conversion profile.',
+    },
+  ],
+  event: {
+    semanticUnit:
+      'Exactly one immutable source record revision or one retraction assertion. A transport may batch complete event Bundles without changing this unit.',
+    bundleIdentifier: {
+      system:
+        'A deployment-owned absolute URI, stable for the producer instance and never reused for another key space.',
+      valueForm:
+        'e2:<lowercase-producer-instance-uuid>:<positive-monotonic-sequence>',
+      soleEventBusinessIdentifier: true,
+    },
+    times: {
+      occurred:
+        'The source activity or retraction-detection time, carried on Provenance.occurred[x].',
+      recorded:
+        'The time the Provenance assertion was recorded; mandatory Provenance.recorded.',
+      assembled:
+        'The time the immutable exchange graph was assembled; mandatory Bundle.timestamp.',
+    },
+    retry:
+      'An exact retry reuses the Bundle identifier, all three times, entry keys, and payload. Any source revision or content change receives a new sequence.',
+    transport:
+      'Bundle.type is collection. Bundle.entry.request and Bundle.entry.response are prohibited; repository application and atomicity are separate sink behavior.',
+  },
+  opaqueIdentity: {
+    algorithm: 'HMAC-SHA-256',
+    domain: 'org.grovealliance.fhir.identity.v2',
+    preimage:
+      "The domain, one identity kind from the closed identityKinds list, and exactly that kind's typed components in declared order. Every typed component is a non-empty Unicode-scalar string; missing, empty, additional, reordered, or non-scalar components are errors. Every field is encoded as an unsigned 32-bit big-endian byte length followed by its exact UTF-8 bytes.",
+    valueForm:
+      'v2:<key-id>:<positive-key-epoch>:<43-character-base64url-digest-without-padding>',
+    identifierSystem:
+      'Deployment-owned and immutable for one identity kind, deployment scope, key id, and key epoch. A rotated key uses a new system and epoch.',
+    keyRequirements: {
+      minimumBytes: 32,
+      managedSecret: true,
+      testKeysProhibited: true,
+    },
+    componentRequirements: {
+      valueType: 'unicode-scalar-string',
+      nonEmpty: true,
+      arity: 'exactly-kind-components',
+    },
+    privacy:
+      'HMAC reduces disclosure of native identifiers. It does not de-identify subjects, times, clinical data, graph relationships, or attachments.',
+    informationPreservation: {
+      hmacGuarantee: 'equality-and-reconciliation',
+      reversible: false,
+      exactNativeRoundTrip:
+        'optional-governed-source-identifier-on-catalog-designated-primary',
+      potentiallyInternalCoordinates: [
+        'output-role',
+        'output-discriminator',
+        'child-index',
+      ],
+      internalCoordinateRule:
+        'A coordinate may exist only in the HMAC preimage when it has no standalone source or clinical meaning.',
+      semanticSourceFactRule:
+        'Every meaningful source order, time, multiplicity, ordinal, or other source fact must also be preserved in a FHIR element or registered source payload; a HMAC preimage is never its sole representation.',
+    },
+    rotation:
+      'A deployment must retain old key epochs while identifiers from them can be replayed or retracted. Losing a key ends deterministic reconciliation for that epoch; a new key must never be presented under the old system.',
+    identityKinds: [
+      {
+        kind: 'source-record',
+        identifierRole: 'source-record',
+        components: [
+          'adapter-id',
+          'source-type',
+          'repository-scope-system',
+          'repository-scope-value',
+          'native-record-id',
+        ],
+      },
+      {
+        kind: 'source-output',
+        identifierRole: 'source-output',
+        components: [
+          'adapter-id',
+          'source-type',
+          'repository-scope-system',
+          'repository-scope-value',
+          'native-record-id',
+          'output-role',
+          'output-discriminator',
+        ],
+      },
+      {
+        kind: 'writer-record',
+        identifierRole: 'writer-record',
+        components: [
+          'writer-application-system',
+          'writer-application-value',
+          'writer-record-id',
+        ],
+      },
+      {
+        kind: 'provider-record',
+        identifierRole: 'source-record',
+        components: [
+          'provider-code',
+          'source-type',
+          'provider-scope-system',
+          'provider-scope-value',
+          'native-record-id',
+        ],
+      },
+      {
+        kind: 'provider-output',
+        identifierRole: 'source-output',
+        components: [
+          'provider-code',
+          'source-type',
+          'provider-scope-system',
+          'provider-scope-value',
+          'native-record-id',
+          'output-role',
+          'output-discriminator',
+        ],
+      },
+      {
+        kind: 'source-artifact',
+        identifierRole: 'source-artifact',
+        components: [
+          'adapter-id',
+          'source-type',
+          'repository-scope-system',
+          'repository-scope-value',
+          'native-record-id',
+          'format-code',
+          'part-index',
+        ],
+      },
+      {
+        kind: 'provider-artifact',
+        identifierRole: 'source-artifact',
+        components: [
+          'provider-code',
+          'source-type',
+          'provider-scope-system',
+          'provider-scope-value',
+          'native-record-id',
+          'format-code',
+          'part-index',
+        ],
+      },
+      {
+        kind: 'source-context',
+        identifierRole: 'source-context',
+        components: [
+          'adapter-id',
+          'context-type',
+          'repository-scope-system',
+          'repository-scope-value',
+          'native-context-id',
+        ],
+      },
+      {
+        kind: 'recording-device',
+        identifierRole: 'recording-device',
+        components: [
+          'adapter-id',
+          'subject-system',
+          'subject-value',
+          'stable-unit-token',
+        ],
+      },
+      {
+        kind: 'device-snapshot',
+        identifierRole: 'device-snapshot',
+        components: [
+          'event-system',
+          'event-value',
+          'device-role',
+          'source-device-token',
+        ],
+      },
+    ],
+  },
+  governedSourceIdentifier: {
+    purpose:
+      'Optional source-native round-trip or traceability identity on the one primary source-derived output. It supplements, and never replaces, the mandatory opaque Grove source-record and source-output identifiers.',
+    placement:
+      'Use Resource.identifier only on the designated one-to-one primary representation of the source record. Do not repeat one source-native identifier on child outputs, synthesized specimens, source artifacts, device snapshots, or other supporting nodes. A source-only conversion may designate its DocumentReference as primary.',
+    system:
+      'Identifier.system is a deployment- or source-authority-owned absolute URI naming the exact native key space. When the native value is not globally unique, the system must identify the governed repository/account/store scope; an underspecified vendor-wide system is nonconformant.',
+    value:
+      'Identifier.value is the exact source-native value. It is emitted only under an explicit deployment purpose and disclosure policy; omission remains conformant and does not weaken Grove reconciliation.',
+    type: 'Identifier.type is optional when system fully defines the key space, as in FHIR R4. A present type may be text-only. Every present Coding has an absolute system and a code in the FHIR code lexical form; no Coding may use the Grove identifier-role CodeSystem because source-native identifiers are not Grove graph keys.',
+    prohibitions:
+      'Never use a source-native value as Resource.id, a Bundle entry key, retraction address, arbitrary Observation component, or untyped metadata. Do not incidentally copy it into Attachment.title, Attachment.url, transport/object names, or logs; a deployment that deliberately uses it in a separate non-FHIR storage contract must govern that use explicitly.',
+    closedProfiles:
+      'A profile with a closed or exact Identifier set admits no governed source identifier unless that profile explicitly adds such a slice. Supporting nodes whose identity is synthesized from another source record remain closed.',
+    validation: {
+      optionality: 'optional',
+      designatedNode: {
+        lifecycle: 'active',
+        r4Element: 'Resource.identifier',
+        designationMode: 'catalog-output-selector',
+        maxPerPrimaryOutput: 1,
+        maxPrimaryOutputsPerEvent: 1,
+        ambiguityRule: 'omit-native-identifier',
+        outputModeRules: {
+          'semantic-only': 'sole-source-derived-output',
+          'source-only': 'sole-document-reference-output',
+          'hybrid-required': 'one-structured-primary-never-companion-artifact',
+          choice: 'one-selected-one-to-one-output',
+        },
+        adapterSelectors: {
+          healthkit: {
+            catalog: 'catalog/healthkit-adapter.json',
+            rowCollection: 'rows',
+            rowKey: 'sourceTypeIdentifier',
+            sourceMarker: {
+              kind: 'extension',
+              url: 'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-source-type-extension',
+              valueElement: 'valueCode',
+            },
+            strategy: 'unique-output-intersecting-source-row-profiles',
+            excludedProfiles: [
+              'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-average-heart-rate-observation',
+              'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-workout-segment',
+            ],
+          },
+          'health-connect': {
+            catalog: 'catalog/health-connect-adapter.json',
+            rowCollection: 'recordTypes',
+            rowKey: 'token',
+            sourceMarker: {
+              kind: 'extension',
+              url: 'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-record-type',
+              valueElement: 'valueCode',
+            },
+            strategy: 'unique-output-selected-by-source-row-output-contract',
+            eligibleCountRules: ['exactly-one'],
+            eligibleGraphRules: ['exactly-one-admitted-specimen-output'],
+            excludedResourceTypes: ['Specimen'],
+          },
+          providers: {
+            catalog: 'catalog/providers-adapter.json',
+            rowCollection: 'providers.sourceTypes',
+            rowKey: 'provider-id+token',
+            sourceMarker: {
+              kind: 'extension',
+              url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
+              valueElement: 'valueCode',
+            },
+            providerMarker: {
+              kind: 'extension',
+              url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider',
+              valueElement: 'valueCode',
+            },
+            strategy: 'unique-supported-measurement-or-sole-source-document',
+          },
+          sensorkit: {
+            catalog: 'catalog/sensorkit-adapter.json',
+            rowCollection: 'entries',
+            rowKey: 'sourceTypeCode',
+            sourceMarker: {
+              kind: 'extension',
+              url: 'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-source-type',
+              valueElement: 'valueCode',
+            },
+            strategy: 'unique-structured-row-profile-or-sole-source-document',
+          },
+        },
+      },
+      identifier: {
+        classification: {
+          activeOutputNonGroveIdentifier: 'governed-source-identifier',
+          supportNodeIdentifier: 'profile-defined-non-source-identifier',
+          supportLeakageDetection:
+            'exact-system-and-value-pair-match-to-active-governed-identifier',
+        },
+        system: {
+          required: true,
+          absoluteUri: true,
+          scope: 'deployment-or-exact-source-authority-key-space',
+        },
+        value: {
+          required: true,
+          nonEmpty: true,
+          exactSourceValue: true,
+        },
+        type: {
+          required: false,
+          textOnlyAllowed: true,
+          coding: {
+            systemRequired: true,
+            systemAbsoluteUri: true,
+            codeRequired: true,
+            codeLexicalForm: 'fhir-code',
+            groveRoleCodingAllowed: false,
+          },
+        },
+      },
+      forbiddenIdentityUses: [
+        'resource-id',
+        'bundle-entry-key',
+        'retraction-address',
+        'observation-component',
+        'untyped-metadata',
+        'attachment-title',
+        'attachment-url',
+      ],
+      forbiddenIdentityUseEnforcement: {
+        exactIdentifierPair: {
+          r4Paths: ['**.Identifier'],
+          matchRule: 'exact-system-and-value',
+          enforcement: 'event-validator',
+        },
+        resourceId: {
+          r4Paths: ['**.Resource.id'],
+          matchRule: 'no-value-only-heuristic',
+          enforcement: 'producer-obligation-and-profile-review',
+        },
+        bundleEntryKey: {
+          r4Paths: [
+            'Bundle.entry.fullUrl',
+            'Bundle.entry.extension.valueIdentifier.value',
+          ],
+          matchRule:
+            'identifier-pair-structural-validation; no-fullUrl-value-heuristic',
+          enforcement: 'exchange-entry-key-validator-and-producer-obligation',
+        },
+        retractionAddress: {
+          r4Paths: [
+            'Provenance.target.reference',
+            'Provenance.target.identifier.value',
+          ],
+          matchRule:
+            'identifier-pair-structural-validation; no-reference-value-heuristic',
+          enforcement: 'retraction-profile-validator-and-producer-obligation',
+        },
+        observationComponent: {
+          r4Paths: ['Observation.component.value[x]'],
+          matchRule: 'no-value-only-heuristic',
+          enforcement:
+            'closed-adapter-component-semantics-and-producer-obligation',
+        },
+        untypedMetadata: {
+          r4Paths: [],
+          matchRule: 'no-generic-carrier-admitted',
+          enforcement:
+            'closed-adapter-metadata-allowlists-and-no-grove-generic-extension',
+        },
+        attachmentPresentation: {
+          r4Paths: [
+            'DocumentReference.content.attachment.title',
+            'DocumentReference.content.attachment.url',
+          ],
+          matchRule: 'no-substring-heuristic',
+          enforcement: 'deployment-governance-and-producer-obligation',
+        },
+      },
+      duplicateElsewhereInEventAllowed: false,
+      neverResourceTypes: [
+        'Specimen',
+        'Patient',
+        'Device',
+        'ResearchStudy',
+        'ResearchSubject',
+        'PlanDefinition',
+        'QuestionnaireResponse',
+        'Provenance',
+        'Bundle',
+      ],
+      neverProfiles: [
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-average-heart-rate-observation',
+      ],
+      healthConnectChildCountRules: [
+        'one-per-sample',
+        'one-per-stage',
+        'one-per-present-field',
+      ],
+      healthConnectChildGraphRules: [
+        'one-per-source-segment-or-lap',
+        'one-per-source-delta',
+      ],
+      recordingDocumentRule:
+        "A DocumentReference may carry the governed source Identifier only when it is the active event's sole source-derived output; a companion source artifact in a hybrid graph is not primary.",
+    },
+  },
+  entryIdentity: {
+    selection:
+      'Use the selected complete business Identifier pair for a resource that has one. Otherwise use the entry-node Identifier carried by the Grove entry-node-key extension.',
+    resourceIdentifierPriority: [
+      'source-output',
+      'source-artifact',
+      'source-record',
+      'writer-record',
+      'device-snapshot',
+      'recording-device',
+    ],
+    entryNode: {
+      system: 'A deployment-owned absolute URI for event-scoped graph nodes.',
+      domain: 'org.grovealliance.fhir.entry-node.v2',
+      components: [
+        'event-system',
+        'event-value',
+        'node-role',
+        'zero-based-ordinal',
+      ],
+      valueForm:
+        'n2:<node-role>:<zero-based-ordinal>:<43-character-base64url-sha256-without-padding>',
+      digest:
+        'Unkeyed SHA-256 over the same unsigned 32-bit length-framed UTF-8 encoding. It is a deterministic graph key, not a privacy control.',
+    },
+    fullUrl: {
+      algorithm:
+        'UUID version 5 over the unsigned 32-bit length-framed UTF-8 fields [Identifier.system, Identifier.value]. Identifier.system is an absolute ASCII RFC 3986 URI; an IRI must first be represented as its canonical URI form (for example IDNA plus percent-encoding) before it enters FHIR or the identity preimage.',
+      namespace: '43df4575-bff7-5a57-9a80-2472cd2b0623',
+      output: 'urn:uuid:<lowercase RFC 4122 UUID version 5>',
+      privacy:
+        'UUID version 5 is formatting only and makes no concealment claim.',
+    },
+  },
+  lifecycle: {
+    active: {
+      activitySystem:
+        'http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle',
+      activityCode: 'transform',
+      codingCardinality:
+        'Exactly one coding from the ISO lifecycle system and zero codings from the Grove lifecycle system; translations from unrelated systems remain open.',
+      shape:
+        'One active Bundle contains every output derived from exactly one source record revision and exactly one conversion Provenance targeting every output.',
+      entryResourcePolicy: {
+        outputResourceTypes: [
+          'Observation',
+          'DocumentReference',
+          'Specimen',
+          'VisionPrescription',
+          'MedicationAdministration',
+          'MedicationStatement',
+        ],
+        supportingResourceTypes: [
+          'Patient',
+          'Device',
+          'ResearchStudy',
+          'ResearchSubject',
+          'PlanDefinition',
+          'QuestionnaireResponse',
+        ],
+        lifecycleResourceType: 'Provenance',
+        otherResourceTypesAllowed: false,
+        containedResourcesAllowed: false,
+        supportingResourcesMustBeConnected: true,
+        profileClaimAuthority: 'catalog/profile-claims.json',
+        rule: 'Every top-level entry is one admitted source-derived output, the sole conversion Provenance, or a connected supporting resource. Every output and each Device or QuestionnaireResponse matches one exact direct-profile mode. Contained resources are prohibited so clinical output cannot bypass event identity and Provenance targeting.',
+      },
+      adapterOnlyOutputProfileClaims: {
+        authority: 'catalog/profile-claims.json',
+        resourceTypes: [
+          'Specimen',
+          'VisionPrescription',
+          'MedicationAdministration',
+          'MedicationStatement',
+        ],
+        rule: 'Each listed active output type is admitted only under the exact one-profile adapter claim for that resourceType. An unprofiled or source-neutral output of one of these types is prohibited.',
+      },
+    },
+    retraction: {
+      activitySystem:
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-lifecycle-event',
+      activityCode: 'source-record-retracted',
+      codingCardinality:
+        'Exactly one coding from the Grove lifecycle system and zero codings from the ISO lifecycle system; translations from unrelated systems remain open.',
+      meaning:
+        'The producer records that its source no longer exposes the record and identifies the exact previously emitted graph nodes. It neither asserts clinical error nor instructs a FHIR server to delete anything.',
+      target:
+        'Each Provenance.target is a typed logical Reference with exactly one complete Identifier and one Grove target-role extension. Literal references and copied active clinical resources are prohibited.',
+      targetRoles: {
+        'primary-output': {
+          identifierRole: 'source-output',
+          resourceTypes: [
+            'Observation',
+            'VisionPrescription',
+            'MedicationAdministration',
+            'MedicationStatement',
+          ],
+        },
+        'source-artifact': {
+          identifierRole: 'source-output',
+          resourceTypes: ['DocumentReference'],
+        },
+        'child-output': {
+          identifierRole: 'source-output',
+          resourceTypes: ['Observation'],
+        },
+        specimen: {
+          identifierRole: 'source-output',
+          resourceTypes: ['Specimen'],
+        },
+        'device-snapshot': {
+          identifierRole: 'device-snapshot',
+          resourceTypes: ['Device'],
+        },
+      },
+      sink: 'A receiver must resolve every target unambiguously under its indexed complete Identifier pair before applying its separately configured idempotent and atomic lifecycle policy.',
+    },
+  },
+  referencePolicy: {
+    literalClosure:
+      'Every literal Reference in an exchange Bundle resolves to exactly one Bundle.entry.fullUrl. Contained resources and #id references are prohibited in Mobile active and retraction event Bundles.',
+    declaredType:
+      'When Reference.type is present on a literal reference, it is the exact target resourceType token.',
+    governedShape:
+      'Every reference at a governed path is either one resolving Bundle fullUrl with no logical identifier, or one identifier-only logical reference with no literal, an exact allowed Reference.type, and one complete absolute-system Identifier. Identifier-only Patient references carry a deployment-scoped pseudonym and are not fabricated Bundle nodes.',
+    paths: [
+      {
+        resourceType: 'Observation',
+        path: 'subject',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'Observation',
+        path: 'device',
+        targetTypes: ['Device'],
+      },
+      {
+        resourceType: 'Observation',
+        path: 'specimen',
+        targetTypes: ['Specimen'],
+      },
+      {
+        resourceType: 'Observation',
+        path: 'focus',
+        targetTypes: ['Location'],
+      },
+      {
+        resourceType: 'Observation',
+        path: 'hasMember',
+        targetTypes: ['Observation'],
+      },
+      {
+        resourceType: 'Observation',
+        path: 'derivedFrom',
+        targetTypes: [
+          'Observation',
+          'DocumentReference',
+          'QuestionnaireResponse',
+        ],
+      },
+      {
+        resourceType: 'DocumentReference',
+        path: 'subject',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'Specimen',
+        path: 'subject',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'MedicationAdministration',
+        path: 'subject',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'MedicationStatement',
+        path: 'subject',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'VisionPrescription',
+        path: 'patient',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'ResearchSubject',
+        path: 'individual',
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'ResearchSubject',
+        path: 'study',
+        targetTypes: ['ResearchStudy'],
+      },
+      {
+        resourceType: 'ResearchStudy',
+        path: 'protocol',
+        targetTypes: ['PlanDefinition'],
+      },
+      {
+        resourceType: 'Device',
+        path: 'parent',
+        targetTypes: ['Device'],
+      },
+    ],
+    extensionTargets: [
+      {
+        url: 'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
+        targetTypes: ['Device'],
+      },
+      {
+        url: 'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',
+        targetTypes: ['ResearchStudy'],
+      },
+    ],
+  },
+  outputModes: [
+    {
+      code: 'semantic-only',
+      meaning:
+        'A reviewed FHIR semantic projection is the complete admitted output.',
+    },
+    {
+      code: 'source-only',
+      meaning:
+        'No safe semantic projection is admitted; emit the registered source-preservation artifact.',
+    },
+    {
+      code: 'hybrid-required',
+      meaning:
+        'Emit both the semantic projection and exact source-preservation artifact in one validated graph.',
+    },
+    {
+      code: 'choice',
+      meaning:
+        'The catalog explicitly admits equivalent alternatives and names every allowed choice.',
+    },
+  ],
+  outputCountRules: [
+    'exactly-one',
+    'zero-or-one',
+    'one-per-sample',
+    'one-per-stage',
+    'one-per-present-field',
+    'graph-specific',
+  ],
+  recordingDevice: {
+    instanceRule:
+      'A shared FHIR Device requires a deployment-governed stable per-unit token. Manufacturer, model, hardware version, subject, or their digest cannot establish physical-instance identity.',
+    unknownInstance:
+      'If no stable per-unit token is available, omit the shared Device and retain model/source description only where the selected resource permits it.',
+    snapshots:
+      'A Grove recording Device carries both its stable per-unit recording-device identifier and a distinct event-scoped device-snapshot identifier. The snapshot is the selected entry key. Event-time firmware, software, operating-system, and application build facts are immutable snapshot data; never mutate one shared Device while importing historical events out of order.',
+    roles:
+      'The device-snapshot component device-role is the resource kind only: application, host, or recording-device. Participation roles such as assembler, enterer, gateway, or author never enter identity. One Device resource may participate in several roles; graph construction deduplicates the resource and retains every role relationship.',
+  },
+  payload: {
+    attachmentSize:
+      'When a Grove profile requires Attachment.size it is the exact pre-base64 byte count and must be between 0 and 2147483647 inclusive. Larger payloads are rejected unless a future segmented manifest profile is used.',
+    attachmentHash:
+      'FHIR R4 Attachment.hash is base64 SHA-1 over the pre-base64 payload bytes. Stronger integrity uses a separately defined manifest element and never changes Attachment.hash semantics.',
+    semanticComparison:
+      'FHIR graphs compare semantically through lossless JSON tokens that preserve decimal lexemes. Whole-Bundle byte equality is not required.',
+    byteComparison:
+      'Exact bytes are required for identity preimages and registered opaque, CSV, or binary payloads.',
+  },
+  testVectors: {
+    keyHex: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
+    keyId: 'test-key',
+    epoch: '1',
+    warning:
+      'Public conformance key only. A production deployment must reject this key.',
+    identitySystems: [
+      {
+        identityKind: 'source-record',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1',
+      },
+      {
+        identityKind: 'source-output',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-source-output-v2/test-key/1',
+      },
+      {
+        identityKind: 'writer-record',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-writer-record-v2/test-key/1',
+      },
+      {
+        identityKind: 'provider-record',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-provider-record-v2/test-key/1',
+      },
+      {
+        identityKind: 'provider-output',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-provider-output-v2/test-key/1',
+      },
+      {
+        identityKind: 'source-artifact',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-source-artifact-v2/test-key/1',
+      },
+      {
+        identityKind: 'provider-artifact',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v2/test-key/1',
+      },
+      {
+        identityKind: 'source-context',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-source-context-v2/test-key/1',
+      },
+      {
+        identityKind: 'recording-device',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-recording-device-v2/test-key/1',
+      },
+      {
+        identityKind: 'device-snapshot',
+        system:
+          'https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v2/test-key/1',
+      },
+    ],
+    measurementExamples: {
+      effectiveInstant: '2026-08-19T10:30:00-07:00',
+      effectivePeriodStart: '2026-08-19T00:00:00-07:00',
+      effectivePeriodEnd: '2026-08-20T00:00:00-07:00',
+      healthConnectLastModifiedTime: '2026-08-20T08:00:00Z',
+      nativeRecordPrefix: 'record-',
+      repositoryScope: {
+        system: 'https://study.example.org/fhir/NamingSystem/source-repository',
+        value: '1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+      },
+      providerScope: {
+        system: 'https://study.example.org/fhir/NamingSystem/provider-account',
+        value: 'acct-7f3a9c',
+      },
+      globalProviderScope: {
+        system:
+          'https://study.example.org/fhir/NamingSystem/provider-key-space',
+        value: 'oura-document-id-global',
+      },
+      coordinates: {
+        canonicalInstant: '2026-08-19T17:30:00.000000000Z',
+        canonicalPeriodStart: '2026-08-19T07:00:00.000000000Z',
+        canonicalPeriodEnd: '2026-08-20T07:00:00.000000000Z',
+        occurrence: '0',
+        sleepStageToken: 'STAGE_TYPE_LIGHT',
+        exerciseSegmentToken: 'EXERCISE_LAP',
+      },
+    },
+    identities: [
+      {
+        id: 'unicode-and-separator-source-record',
+        identityKind: 'source-record',
+        components: [
+          'health-connect',
+          'RestingHeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          'record|東京',
+        ],
+        value: 'v2:test-key:1:UKY2qgzSB8--SueGxEfOhpElzHTVJ6usIUWV_KUTD6o',
+      },
+      {
+        id: 'multi-output-sample',
+        identityKind: 'source-output',
+        components: [
+          'health-connect',
+          'HeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          'record-heart-001',
+          'sample',
+          '2026-08-19T10:30:00.000000000Z|0',
+        ],
+        value: 'v2:test-key:1:PQCWz9dZSrJm-KrbhbkckGeowkjhSSwWDRCVuF3VfXw',
+      },
+      {
+        id: 'provider-account-complete-pair',
+        identityKind: 'provider-record',
+        components: [
+          'withings',
+          'measure',
+          'https://accounts.example.org',
+          'patient|α',
+          '17348211',
+        ],
+        value: 'v2:test-key:1:p3NFdQ-hmHon98JG7cmCbLncbAmNkjkBa5sYocSr6pw',
+      },
+      {
+        id: 'provider-output-domain-separated',
+        identityKind: 'provider-output',
+        components: [
+          'withings',
+          'getmeas:9+10',
+          'https://accounts.example.org',
+          'patient|α',
+          '17348211',
+          'blood-pressure-panel',
+          'single',
+        ],
+        value: 'v2:test-key:1:HjBwHRt0W3-CbhJbc7hGpWRp92zug70gt5m626T4Y2U',
+      },
+      {
+        id: 'provider-artifact-domain-separated',
+        identityKind: 'provider-artifact',
+        components: [
+          'google-health-api',
+          'heart-rate',
+          'https://accounts.example.org',
+          'patient|α',
+          'recording-001',
+          'provider-recording',
+          '0',
+        ],
+        value: 'v2:test-key:1:CxLpZ4NQee12xCyJCGimrxMLEKvbRt54Kl6RTh9UsrU',
+      },
+      {
+        id: 'generic-source-artifact',
+        identityKind: 'source-artifact',
+        components: [
+          'sensorkit',
+          'device-usage',
+          'https://store.example.org',
+          'default',
+          'record-001',
+          'native-recording',
+          '0',
+        ],
+        value: 'v2:test-key:1:7QkJwJojYb7w6BlKMy3TyoX-sgiPzjGJHL1euY-4SKk',
+      },
+      {
+        id: 'writer-record-complete-application-pair',
+        identityKind: 'writer-record',
+        components: [
+          'https://applications.example.org',
+          'com.withings.wiscale2',
+          'logical-record-001',
+        ],
+        value: 'v2:test-key:1:N4QSlWU6sNp9ahfyfSRTUO0K_VIZZoy-Lw3JTNrDzP4',
+      },
+      {
+        id: 'healthkit-medication-source-context',
+        identityKind: 'source-context',
+        components: [
+          'healthkit',
+          'medication-health-concept',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          '2f8a51c6-9d34-4e07-b2f1-63c8ad905e12',
+        ],
+        value: 'v2:test-key:1:nq3ZogmXHSznC1LC1wNMm7KTQChgapPzmjmGeB9RHcw',
+      },
+      {
+        id: 'recording-device-per-unit',
+        identityKind: 'recording-device',
+        components: [
+          'healthkit',
+          'https://study.example.org/participants',
+          'participant-001',
+          'watch-unit-token-001',
+        ],
+        value: 'v2:test-key:1:MWGV3Vfk0jfLIr0nowr_I7TAwoqGtpSkxUi1d8FxTnE',
+      },
+      {
+        id: 'device-snapshot-per-event',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v2',
+          'e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
+          'application',
+          'com.example.app|1.2.3',
+        ],
+        value: 'v2:test-key:1:TUaZacIuSMAFl_WbhxvMBX4AgxIKcHw_KvbntQdXYxQ',
+      },
+    ],
+    invalidIdentities: [
+      {
+        id: 'empty-typed-component',
+        identityKind: 'source-record',
+        components: [
+          'health-connect',
+          'RestingHeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          '',
+          'record-001',
+        ],
+        expectedError: 'empty-component',
+      },
+      {
+        id: 'provider-components-under-generic-record-kind',
+        identityKind: 'source-record',
+        components: [
+          'oura',
+          'daily_activity',
+          'https://accounts.example.org',
+          'patient-001',
+          'activity-001',
+        ],
+        expectedError: 'provider-kind-required',
+      },
+      {
+        id: 'provider-components-under-generic-output-kind',
+        identityKind: 'source-output',
+        components: [
+          'withings',
+          'getmeas:9+10',
+          'https://accounts.example.org',
+          'patient-001',
+          '17348211',
+          'blood-pressure-panel',
+          'single',
+        ],
+        expectedError: 'provider-kind-required',
+      },
+      {
+        id: 'provider-components-under-generic-artifact-kind',
+        identityKind: 'source-artifact',
+        components: [
+          'google-health-api',
+          'heart-rate',
+          'https://accounts.example.org',
+          'patient-001',
+          'recording-001',
+          'provider-recording',
+          '0',
+        ],
+        expectedError: 'provider-kind-required',
+      },
+    ],
+    event: {
+      system: 'https://study.example.org/fhir/NamingSystem/grove-event-v2',
+      producerInstance: '1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+      sequence: '42',
+      value: 'e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
+    },
+    entryNode: {
+      system: 'https://study.example.org/fhir/NamingSystem/grove-entry-node-v2',
+      role: 'conversion-provenance',
+      ordinal: '0',
+      value:
+        'n2:conversion-provenance:0:SwGD7C4DT5_9kgIOQ9h7W8I4UdwJPuEOnkh2TgQVwko',
+      fullUrl: 'urn:uuid:9908feb7-0370-5f06-a689-f8afa210eb41',
+    },
+    fullUrls: [
+      {
+        id: 'unicode-value-and-escaped-system',
+        system: 'https://xn--fsq.example/%E8%AD%98%E5%88%A5%E5%AD%90',
+        value: 'café|東京',
+        fullUrl: 'urn:uuid:d35e4203-71f6-595c-bd1b-306b8414974e',
+      },
+    ],
+  },
+} as const
+
+export const groveExchangeProtocol: typeof groveExchangeProtocolValue =
+  deepFreeze(groveExchangeProtocolValue)
+
+const groveExchangeRuleDiagnosticsValue = {
+  'mobile-exchange.entry-node-key': {
+    reason:
+      'Every Bundle entry must carry exactly one complete Grove exchange entry node key.',
+    severity: 'error',
+  },
+  'mobile-exchange.deterministic-full-url': {
+    reason:
+      'Bundle.entry.fullUrl must be the UUID version 5 value derived from its complete entry identifier.',
+    severity: 'error',
+  },
+  'mobile-exchange.resolved-reference': {
+    reason:
+      'Every internal UUID URN reference must resolve to a Bundle entry fullUrl.',
+    severity: 'error',
+  },
+  'mobile-output.fixed-quantity-unit': {
+    reason:
+      'Every Quantity-valued catalog measurement uses the exact fixed system and code declared by its semantic profile contract.',
+    severity: 'error',
+  },
+  'mobile-exchange.event-identity': {
+    reason:
+      'Bundle.identifier.value must be the canonical e2 producer UUID and positive sequence form.',
+    severity: 'error',
+  },
+  'mobile-exchange.entry-node-digest': {
+    reason:
+      'An entry-node digest must be derived from the enclosing event identifier, role, and ordinal.',
+    severity: 'error',
+  },
+  'mobile-output.source-output-required': {
+    reason:
+      'Every active clinical output must carry its exact typed source-output identity in addition to source-record identity.',
+    severity: 'error',
+  },
+  'mobile-exchange.identity-system-role': {
+    reason:
+      'Within one event graph, each Grove Identifier.system names exactly one Grove identifier role; one namespace cannot change meaning between nodes.',
+    severity: 'error',
+  },
+  'mobile-exchange.transform-provenance': {
+    reason:
+      'An active event must contain exactly one transform Provenance and no retraction Provenance.',
+    severity: 'error',
+  },
+  'mobile-retraction.logical-target': {
+    reason:
+      'A retraction target must be a typed logical Reference without a literal reference.',
+    severity: 'error',
+  },
+  'mobile-retraction.target-role': {
+    reason:
+      'Every retraction target must carry exactly one closed Grove target-role code.',
+    severity: 'error',
+  },
+  'mobile-retraction.opaque-target': {
+    reason:
+      'A retraction target must use the exact canonical v2 HMAC identity previously emitted.',
+    severity: 'error',
+  },
+  'mobile-retraction.no-clinical-copy': {
+    reason:
+      'A retraction event contains its lifecycle Provenance and optional Device agents, never a copied or mutilated clinical resource.',
+    severity: 'error',
+  },
+  'mobile-exchange.lifecycle-coding': {
+    reason:
+      'A lifecycle Provenance must carry exactly one coding across the ISO transform and Grove retraction lifecycle systems; translations from other systems remain open.',
+    severity: 'error',
+  },
+  'mobile-output.semantic-profile': {
+    reason:
+      'Every active Observation must directly claim one admitted Grove semantic profile shape; an empty claim cannot bypass semantic validation.',
+    severity: 'error',
+  },
+  'mobile-exchange.reference-target-type': {
+    reason:
+      'An Observation subject resolves to a Patient entry, not merely to any existing fullUrl.',
+    severity: 'error',
+  },
+  'mobile-exchange.reference-declared-type': {
+    reason:
+      "When Reference.type is present it must equal the referenced entry's actual resourceType token.",
+    severity: 'error',
+  },
+  'mobile-exchange.logical-source-entity': {
+    reason:
+      'Lifecycle Provenance carries exactly one logical source-record Identifier entity and never a literal source Reference.',
+    severity: 'error',
+  },
+  'mobile-retraction.role-target-type': {
+    reason:
+      'Every retraction target role fixes its admitted resource type and Identifier role.',
+    severity: 'error',
+  },
+  'mobile-exchange.single-source-entity': {
+    reason:
+      'A lifecycle Provenance identifies exactly one source-record entity.',
+    severity: 'error',
+  },
+  'mobile-exchange.reference-shape': {
+    reason:
+      'A governed Reference is exclusively resolving-literal or identifier-only logical, never both.',
+    severity: 'error',
+  },
+  'mobile-exchange.logical-patient-reference': {
+    reason:
+      'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier.',
+    severity: 'error',
+  },
+  'mobile-exchange.entry-resource-type': {
+    reason:
+      'An active event admits only its closed output, supporting, and lifecycle resource type set.',
+    severity: 'error',
+  },
+  'mobile-output.adapter-only-profile': {
+    reason:
+      'An adapter-only active output type must directly claim exactly its one admitted adapter profile.',
+    severity: 'error',
+  },
+  'mobile-exchange.contained-resource-prohibited': {
+    reason:
+      'Mobile exchange events prohibit contained resources; every graph node must be an addressable Bundle entry.',
+    severity: 'error',
+  },
+  'mobile-output.document-profile': {
+    reason:
+      'Every active DocumentReference must directly claim exactly one admitted recording or clinical-document profile mode.',
+    severity: 'error',
+  },
+  'mobile-support.device-profile': {
+    reason:
+      'Every active Device must directly claim exactly one admitted Grove Device profile mode.',
+    severity: 'error',
+  },
+  'mobile-exchange.provenance-profile': {
+    reason:
+      'The sole active lifecycle Provenance must directly claim exactly one admitted Mobile or adapter conversion profile.',
+    severity: 'error',
+  },
+  'mobile-support.connected': {
+    reason:
+      'Every supporting resource must be connected to an output or the lifecycle Provenance.',
+    severity: 'error',
+  },
+} as const
+
+export const groveExchangeRuleDiagnostics: typeof groveExchangeRuleDiagnosticsValue =
+  deepFreeze(groveExchangeRuleDiagnosticsValue)
+
+const groveProfileClaimsValue = {
+  $schema:
+    'https://grovealliance.org/fhir/catalog/schemas/catalog-contracts.schema.json',
+  schemaVersion: 1,
+  fhirVersion: '4.0.1',
+  version: '0.6.0',
+  observationAdapterClaim: {
+    cardinality: 2,
+    members: [
+      'exactly one semantic profile from catalog/measurement-catalog.json (shared or owner-specific), sharedSensorProfiles, or standardAdapterClaims',
+      'exactly one adapter profile listed below',
+    ],
+    inheritedProfilesAreNotDeclared: true,
+    adapterProfiles: [
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-average-heart-rate-observation',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation',
+      'https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation',
+      'https://grovealliance.org/fhir/oura/StructureDefinition/oura-observation',
+      'https://grovealliance.org/fhir/google-health/StructureDefinition/google-health-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation',
+    ],
+    sharedSensorProfiles: [
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation',
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-sampled-data-observation',
+    ],
+    standardAdapterClaims: [
+      {
+        id: 'healthkit-body-mass-index',
+        semanticProfile: 'http://hl7.org/fhir/StructureDefinition/bmi',
+        adapterProfile:
+          'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation',
+        cardinality: 2,
+        reason:
+          'The authoritative R4 BMI profile is reused directly; BMI is not a one-source Mobile profile.',
+      },
+    ],
+    forbiddenExplicitProfiles: [
+      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-observation',
+      'http://hl7.org/fhir/StructureDefinition/bp',
+      'http://hl7.org/fhir/StructureDefinition/bodyheight',
+      'http://hl7.org/fhir/StructureDefinition/bodytemp',
+      'http://hl7.org/fhir/StructureDefinition/bodyweight',
+      'http://hl7.org/fhir/StructureDefinition/heartrate',
+      'http://hl7.org/fhir/StructureDefinition/oxygensat',
+      'http://hl7.org/fhir/StructureDefinition/resprate',
+    ],
+  },
+  healthKitSingleProfileObservationClaims: {
+    cardinality: 1,
+    profiles: [
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-exercise-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-move-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-stand-hour',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-stand-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-atrial-fibrillation-burden',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-audiogram-panel',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-biological-sex',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bladder-incontinence',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bleeding-after-pregnancy',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bleeding-during-pregnancy',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-alcohol-content',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-type',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-contraceptive-use',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-cycling-functional-threshold-power',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-date-of-birth',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-sound-reduction',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-fitzpatrick-skin-type',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-food-correlation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-forced-expiratory-volume-1',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-forced-vital-capacity',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-gad7-assessment',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-handwashing-session',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-headphone-audio-exposure',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-headphone-audio-exposure-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-heart-rate-recovery-one-minute',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-high-heart-rate-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-hypertension-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-infrequent-menstrual-cycles',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-inhaler-usage',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-insulin-delivery',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-heart-rhythm-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-menstrual-cycles',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-lactation-status',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-low-cardio-fitness-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-low-heart-rate-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-alcoholic-beverages',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-times-fallen',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-peak-expiratory-flow-rate',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-peripheral-perfusion-index',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-persistent-intermenstrual-bleeding',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-phq9-assessment',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-physical-effort',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-status',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-test-result',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-progesterone-test-result',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-prolonged-menstrual-periods',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-ground-contact-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-stride-length',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-vertical-oscillation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-six-minute-walk-test-distance',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleep-apnea-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleeping-breathing-disturbances',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-stair-ascent-speed',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-stair-descent-speed',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-state-of-mind',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-swimming-stroke-count',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-abdominal-cramps',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-acne',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-appetite-changes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-bloating',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-breast-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chest-tightness-or-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chills',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-constipation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-coughing',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-diarrhea',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dizziness',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dry-skin',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fainting',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fatigue',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fever',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-generalized-body-ache',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-hair-loss',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-headache',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-heartburn',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-hot-flashes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-loss-of-smell',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-loss-of-taste',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-lower-back-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-memory-lapse',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-mood-changes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-nausea',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-night-sweats',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-pelvic-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-rapid-pounding-or-fluttering-heartbeat',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-runny-nose',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-shortness-of-breath',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sinus-congestion',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-skipped-heartbeat',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sleep-changes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sore-throat',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-vomiting',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-wheezing',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-time-in-daylight',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-toothbrushing-session',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-underwater-depth',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-uv-exposure',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vaginal-dryness',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-waist-circumference',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-asymmetry',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-double-support',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-heart-rate-average',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-speed',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-steadiness',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-steadiness-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-step-length',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-water-temperature',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-wheelchair-use',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-workout-effort-score',
+    ],
+    otherProfilesAllowed: false,
+  },
+  healthKitEcgGraphClaim: {
+    waveform: {
+      cardinality: {
+        min: 1,
+        max: 1,
+      },
+      profiles: [
+        'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation',
+      ],
+      outputIdentity: {
+        role: 'electrocardiogram',
+        discriminator: 'single',
+      },
+    },
+    averageHeartRate: {
+      cardinality: {
+        min: 0,
+        max: 1,
+      },
+      profiles: [
+        'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-heart-rate',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-average-heart-rate-observation',
+      ],
+      code: {
+        system: 'http://loinc.org',
+        code: '8867-4',
+        display: 'Heart rate',
+      },
+      quantity: {
+        system: 'http://unitsofmeasure.org',
+        code: '/min',
+        unit: 'beats/minute',
+      },
+      outputIdentity: {
+        role: 'average-heart-rate',
+        discriminator: 'single',
+      },
+      sameSourceRecord: true,
+      sameEffectivePeriod: true,
+      reference: {
+        sourceOutput: 'average-heart-rate',
+        r4Path: 'Observation.derivedFrom',
+        targetOutput: 'electrocardiogram',
+        targetType: 'Observation',
+        referenceShape: 'resolving-literal',
+        min: 1,
+        max: 1,
+      },
+    },
+    correlatedSymptoms: {
+      sourceOutput: 'electrocardiogram',
+      r4Path: 'Observation.hasMember',
+      targetOutputClass: 'admitted-healthkit-symptom',
+      targetProfiles: [
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chest-tightness-or-pain',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dizziness',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fainting',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fatigue',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-rapid-pounding-or-fluttering-heartbeat',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-shortness-of-breath',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-skipped-heartbeat',
+      ],
+      targetType: 'Observation',
+      referenceShape: 'identifier-only',
+      identifierRole: 'source-output',
+      sameEventBundle: false,
+      cardinality: {
+        min: 0,
+        max: '*',
+      },
+      statusConditionedCardinality: [
+        {
+          status: 'notSet',
+          min: 0,
+          max: 0,
+        },
+        {
+          status: 'none',
+          min: 0,
+          max: 0,
+        },
+        {
+          status: 'present',
+          min: 1,
+          max: '*',
+        },
+      ],
+      distinctIdentifiers: true,
+      preserveDuplicateSourceSamples: true,
+    },
+    provenance: {
+      profile:
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-conversion-provenance',
+      rule: 'The ECG conversion Provenance targets the waveform and the optional average-heart-rate output. Each correlated symptom has its own source-record event and normal HealthKit conversion Provenance.',
+    },
+  },
+  sensorRecordingDocumentClaim: {
+    resourceType: 'DocumentReference',
+    cardinality: 1,
+    profiles: [
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
+    ],
+    otherProfilesAllowed: false,
+    requiredIdentifierRoles: [
+      'source-record',
+      'source-output',
+      'source-artifact',
+    ],
+  },
+  healthKitRecordingDocumentClaim: {
+    cardinality: 2,
+    profiles: [
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-recording-document',
+    ],
+    otherProfilesAllowed: false,
+    requiredIdentifierRoles: [
+      'source-record',
+      'source-output',
+      'source-artifact',
+    ],
+  },
+  healthKitClinicalRecordDocumentClaim: {
+    cardinality: 1,
+    profiles: [
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-record-document',
+    ],
+    otherProfilesAllowed: false,
+    requiredIdentifierRoles: [
+      'source-record',
+      'source-output',
+      'source-artifact',
+    ],
+  },
+  healthKitPlatformExclusiveResourceClaims: [
+    {
+      resourceType: 'VisionPrescription',
+      profile:
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vision-prescription',
+      cardinality: 1,
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: ['source-record', 'source-output'],
+    },
+    {
+      resourceType: 'MedicationAdministration',
+      profile:
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-medication-dose-event',
+      cardinality: 1,
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: ['source-record', 'source-output'],
+    },
+    {
+      resourceType: 'MedicationStatement',
+      profile:
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-user-annotated-medication',
+      cardinality: 1,
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: [
+        'source-record',
+        'source-output',
+        'source-context',
+      ],
+    },
+  ],
+  healthConnectPlatformExclusiveClaims: {
+    cardinality: 1,
+    profiles: [
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose',
+    ],
+    otherProfilesAllowed: false,
+  },
+  sensorKitRecordingDocumentClaim: {
+    cardinality: 2,
+    profiles: [
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document',
+    ],
+    otherProfilesAllowed: false,
+    requiredIdentifierRoles: [
+      'source-record',
+      'source-output',
+      'source-artifact',
+    ],
+  },
+  providerRecordingDocumentClaim: {
+    cardinality: 2,
+    profiles: [
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
+      'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+    ],
+    otherProfilesAllowed: false,
+    requiredIdentifierRoles: [
+      'source-record',
+      'source-output',
+      'source-artifact',
+    ],
+  },
+  activeDeviceClaims: [
+    {
+      id: 'mobile-recording-device',
+      resourceType: 'Device',
+      cardinality: 1,
+      profiles: [
+        'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
+      ],
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: ['recording-device', 'device-snapshot'],
+    },
+    {
+      id: 'mobile-application-device',
+      resourceType: 'Device',
+      cardinality: 1,
+      profiles: [
+        'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
+      ],
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: ['device-snapshot'],
+    },
+    {
+      id: 'mobile-host-device',
+      resourceType: 'Device',
+      cardinality: 1,
+      profiles: [
+        'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device',
+      ],
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: ['device-snapshot'],
+    },
+    {
+      id: 'healthkit-application-device',
+      resourceType: 'Device',
+      cardinality: 1,
+      profiles: [
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-application-device',
+      ],
+      otherProfilesAllowed: false,
+      requiredIdentifierRoles: ['device-snapshot'],
+    },
+  ],
+  activeQuestionnaireResponseClaim: {
+    resourceType: 'QuestionnaireResponse',
+    cardinality: 1,
+    profiles: [
+      'https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response',
+    ],
+    otherProfilesAllowed: false,
+  },
+  adapterConversionProvenanceClaims: [
+    {
+      adapter: 'healthkit',
+      profile:
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-conversion-provenance',
+      targetAdapterProfiles: [
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-exercise-time',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-move-time',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-stand-hour',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-stand-time',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-atrial-fibrillation-burden',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-audiogram-panel',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-biological-sex',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bladder-incontinence',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bleeding-after-pregnancy',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bleeding-during-pregnancy',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-alcohol-content',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-type',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-record-document',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-contraceptive-use',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-cycling-functional-threshold-power',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-date-of-birth',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-average-heart-rate-observation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-sound-reduction',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-fitzpatrick-skin-type',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-food-correlation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-forced-expiratory-volume-1',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-forced-vital-capacity',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-gad7-assessment',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-handwashing-session',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-headphone-audio-exposure',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-headphone-audio-exposure-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-heart-rate-recovery-one-minute',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-high-heart-rate-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-hypertension-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-infrequent-menstrual-cycles',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-inhaler-usage',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-insulin-delivery',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-heart-rhythm-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-menstrual-cycles',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-lactation-status',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-low-cardio-fitness-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-low-heart-rate-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-medication-dose-event',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-alcoholic-beverages',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-times-fallen',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-peak-expiratory-flow-rate',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-peripheral-perfusion-index',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-persistent-intermenstrual-bleeding',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-phq9-assessment',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-physical-effort',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-status',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-test-result',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-progesterone-test-result',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-prolonged-menstrual-periods',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-recording-document',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-ground-contact-time',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-stride-length',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-vertical-oscillation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-six-minute-walk-test-distance',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleep-apnea-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleeping-breathing-disturbances',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-stair-ascent-speed',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-stair-descent-speed',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-state-of-mind',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-swimming-stroke-count',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-abdominal-cramps',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-acne',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-appetite-changes',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-bloating',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-breast-pain',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chest-tightness-or-pain',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chills',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-constipation',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-coughing',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-diarrhea',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dizziness',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dry-skin',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fainting',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fatigue',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fever',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-generalized-body-ache',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-hair-loss',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-headache',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-heartburn',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-hot-flashes',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-loss-of-smell',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-loss-of-taste',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-lower-back-pain',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-memory-lapse',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-mood-changes',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-nausea',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-night-sweats',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-pelvic-pain',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-rapid-pounding-or-fluttering-heartbeat',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-runny-nose',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-shortness-of-breath',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sinus-congestion',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-skipped-heartbeat',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sleep-changes',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sore-throat',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-vomiting',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-wheezing',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-time-in-daylight',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-toothbrushing-session',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-underwater-depth',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-user-annotated-medication',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-uv-exposure',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vaginal-dryness',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vision-prescription',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-waist-circumference',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-asymmetry',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-double-support',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-heart-rate-average',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-speed',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-steadiness',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-steadiness-notification',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-step-length',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-water-temperature',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-wheelchair-use',
+        'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-workout-effort-score',
+      ],
+      rule: 'One Provenance in the active exchange graph targets every admitted HealthKit structured or byte-preserving output produced from its exact sole typed source-record Identifier, including child-only Observation, recording, clinical-document, vision, dose, and tracked-medication resources; every target is an internal UUID reference. An active conversion graph never encodes retraction by mutating output status. A separate retraction Bundle with retraction Provenance asserts source removal and carries no conversion Provenance.',
+      sourceIdentifierRole: 'source-record',
+      sourceIdentityKind: 'source-record',
+    },
+    {
+      adapter: 'health-connect',
+      profile:
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-conversion-provenance',
+      targetAdapterProfiles: [
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation',
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose',
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose',
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose',
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose',
+        'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-specimen',
+      ],
+      rule: 'One Provenance in the active exchange graph targets every Health Connect Observation and synthesized Specimen produced from its exact sole typed source-record Identifier; every target is an internal UUID reference. The Provenance directly declares only the Health Connect conversion profile; its inherited Mobile profile is not repeated. An active conversion graph never encodes retraction by mutating output status. A separate retraction Bundle with retraction Provenance asserts source removal and carries no conversion Provenance.',
+      sourceIdentifierRole: 'source-record',
+      sourceIdentityKind: 'source-record',
+    },
+    {
+      adapter: 'providers',
+      profile:
+        'https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance',
+      targetAdapterProfiles: [
+        'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+        'https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation',
+        'https://grovealliance.org/fhir/oura/StructureDefinition/oura-observation',
+        'https://grovealliance.org/fhir/google-health/StructureDefinition/google-health-observation',
+      ],
+      rule: 'One Provenance in the active exchange graph targets every connected-provider Observation carrying its exact provider-owned adapter envelope and every Provider Recording Document carrying its exact sole typed source-record Identifier; the abstract ProvidersObservation parent is never a direct claim. Every target is an internal UUID reference. An active conversion graph never encodes retraction by mutating output status. A separate retraction Bundle with retraction Provenance asserts source removal and carries no conversion Provenance.',
+      sourceIdentifierRole: 'source-record',
+      sourceIdentityKind: 'provider-record',
+    },
+    {
+      adapter: 'sensorkit',
+      profile:
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-conversion-provenance',
+      targetAdapterProfiles: [
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-accelerometer-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-device-usage-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-keyboard-metrics-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-messages-usage-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-on-wrist-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-phone-usage-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ppg-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-sleep-session-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-visit-observation',
+        'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-wrist-temperature-observation',
+      ],
+      rule: 'One Provenance in the active exchange graph targets every SensorKit structured and raw output carrying its exact sole typed source-record Identifier; every target is an internal UUID reference. An active conversion graph never encodes retraction by mutating output status. A separate retraction Bundle with retraction Provenance asserts source removal and carries no conversion Provenance.',
+      sourceIdentifierRole: 'source-record',
+      sourceIdentityKind: 'source-record',
+    },
+  ],
+  sensorKitPlatformExclusiveClaims: {
+    cardinality: 1,
+    profiles: [
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-accelerometer-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-device-usage-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-keyboard-metrics-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-messages-usage-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-on-wrist-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-phone-usage-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ppg-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-sleep-session-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-visit-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-wrist-temperature-observation',
+    ],
+    otherProfilesAllowed: false,
+  },
+  sensorKitHybridObservationClaims: {
+    cardinality: 2,
+    profiles: [
+      'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-ecg-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation',
+    ],
+    requiredCompanionProfile:
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document',
+    rule: 'The ECG Observation and exact native Recording Document are linked in one exchange graph, share the exact source-record Identifier, and are both targeted by one SensorKit conversion Provenance.',
+  },
+  healthConnectSpecimenClaim: {
+    resourceType: 'Specimen',
+    cardinality: 1,
+    profile:
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-specimen',
+    otherProfilesAllowed: false,
+    requiredIdentifierRoles: ['source-record', 'source-output'],
+  },
+} as const
+
+export const groveProfileClaims: typeof groveProfileClaimsValue = deepFreeze(
+  groveProfileClaimsValue,
+)
+
+const adapterSourceMarkerClaimsValue = [
+  {
+    adapter: 'healthkit',
+    profiles: [
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-exercise-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-move-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-stand-hour',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-apple-stand-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-atrial-fibrillation-burden',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-audiogram-panel',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-biological-sex',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bladder-incontinence',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bleeding-after-pregnancy',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-bleeding-during-pregnancy',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-alcohol-content',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-blood-type',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-record-document',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-contraceptive-use',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-cycling-functional-threshold-power',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-date-of-birth',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-average-heart-rate-observation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-ecg-observation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-audio-exposure-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-environmental-sound-reduction',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-fitzpatrick-skin-type',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-food-correlation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-forced-expiratory-volume-1',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-forced-vital-capacity',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-gad7-assessment',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-handwashing-session',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-headphone-audio-exposure',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-headphone-audio-exposure-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-heart-rate-recovery-one-minute',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-high-heart-rate-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-hypertension-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-infrequent-menstrual-cycles',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-inhaler-usage',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-insulin-delivery',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-heart-rhythm-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-irregular-menstrual-cycles',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-lactation-status',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-low-cardio-fitness-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-low-heart-rate-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-medication-dose-event',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-alcoholic-beverages',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-number-of-times-fallen',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-observation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-peak-expiratory-flow-rate',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-peripheral-perfusion-index',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-persistent-intermenstrual-bleeding',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-phq9-assessment',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-physical-effort',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-status',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-pregnancy-test-result',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-progesterone-test-result',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-prolonged-menstrual-periods',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-recording-document',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-ground-contact-time',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-stride-length',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-running-vertical-oscillation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-six-minute-walk-test-distance',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleep-apnea-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleeping-breathing-disturbances',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-stair-ascent-speed',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-stair-descent-speed',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-state-of-mind',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-swimming-stroke-count',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-abdominal-cramps',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-acne',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-appetite-changes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-bloating',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-breast-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chest-tightness-or-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-chills',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-constipation',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-coughing',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-diarrhea',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dizziness',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-dry-skin',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fainting',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fatigue',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-fever',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-generalized-body-ache',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-hair-loss',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-headache',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-heartburn',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-hot-flashes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-loss-of-smell',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-loss-of-taste',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-lower-back-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-memory-lapse',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-mood-changes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-nausea',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-night-sweats',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-pelvic-pain',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-rapid-pounding-or-fluttering-heartbeat',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-runny-nose',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-shortness-of-breath',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sinus-congestion',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-skipped-heartbeat',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sleep-changes',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-sore-throat',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-vomiting',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-symptom-wheezing',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-time-in-daylight',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-toothbrushing-session',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-underwater-depth',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-user-annotated-medication',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-uv-exposure',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vaginal-dryness',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-vision-prescription',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-waist-circumference',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-asymmetry',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-double-support',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-heart-rate-average',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-speed',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-steadiness',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-steadiness-notification',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-walking-step-length',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-water-temperature',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-wheelchair-use',
+      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-workout-effort-score',
+    ],
+    markers: [
+      {
+        kind: 'extension-url',
+        url: 'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-source-type-extension',
+        resourceTypes: [
+          'Observation',
+          'DocumentReference',
+          'VisionPrescription',
+          'MedicationAdministration',
+          'MedicationStatement',
+        ],
+      },
+    ],
+  },
+  {
+    adapter: 'health-connect',
+    profiles: [
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-observation',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-whole-blood-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-capillary-blood-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-serum-plasma-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-interstitial-glucose',
+      'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-specimen',
+    ],
+    markers: [
+      {
+        kind: 'extension-url',
+        url: 'https://grovealliance.org/fhir/health-connect/StructureDefinition/health-connect-record-type',
+        resourceTypes: ['Observation'],
+      },
+    ],
+  },
+  {
+    adapter: 'providers',
+    profiles: [
+      'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
+      'https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation',
+      'https://grovealliance.org/fhir/oura/StructureDefinition/oura-observation',
+      'https://grovealliance.org/fhir/google-health/StructureDefinition/google-health-observation',
+    ],
+    markers: [
+      {
+        kind: 'extension-url',
+        url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
+        resourceTypes: ['Observation', 'DocumentReference'],
+      },
+      {
+        kind: 'extension-url',
+        url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider',
+        resourceTypes: ['Observation', 'DocumentReference'],
+      },
+    ],
+  },
+  {
+    adapter: 'sensorkit',
+    profiles: [
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-accelerometer-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-device-usage-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ecg-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-keyboard-metrics-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-messages-usage-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-on-wrist-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-phone-usage-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-ppg-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-recording-document',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-sleep-session-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-visit-observation',
+      'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-wrist-temperature-observation',
+    ],
+    markers: [
+      {
+        kind: 'extension-url',
+        url: 'https://grovealliance.org/fhir/sensorkit/StructureDefinition/sensorkit-source-type',
+        resourceTypes: ['Observation', 'DocumentReference'],
+      },
+    ],
+  },
+] as const
+
+export const adapterSourceMarkerClaims: typeof adapterSourceMarkerClaimsValue =
+  deepFreeze(adapterSourceMarkerClaimsValue)
+
+const healthConnectDataOriginApplicationValue = {
+  sourceField: 'Metadata.dataOrigin.packageName',
+  r4Element: 'Provenance.entity.agent.who',
+  referenceType: 'Device',
+  referenceMode: 'identifier-only',
+  identifierSystem:
+    'https://grovealliance.org/fhir/health-connect/NamingSystem/android-package-name',
+  identifierValue: 'exact non-blank Metadata.dataOrigin.packageName',
+  literalReferenceAllowed: false,
+  eventBundleEntryRequired: false,
+  profileClaimRequired: false,
+  rule: 'Carry one complete absolute-system Identifier on the typed logical Device Reference. The package name identifies an application product, not an installation, host, account, person, or physical recording device.',
+} as const
+
+export const healthConnectDataOriginApplication: typeof healthConnectDataOriginApplicationValue =
+  deepFreeze(healthConnectDataOriginApplicationValue)
+
+const groveRecordingFormatRegistryValue = {
+  codeSystem:
+    'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
+  valueSet:
+    'https://grovealliance.org/fhir/sensor/ValueSet/grove-recording-format',
+  version: '0.6.0',
+  formats: {
+    'heart-rate-samples': {
+      title: 'Heart Rate Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'triaxial-acceleration-samples': {
+      title: 'Triaxial Acceleration Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'ambient-light-samples': {
+      title: 'Ambient Light Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'ambient-pressure-samples': {
+      title: 'Ambient Pressure Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'pedometer-samples': {
+      title: 'Pedometer Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'wrist-temperature-samples': {
+      title: 'Wrist Temperature Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'triaxial-rotation-samples': {
+      title: 'Triaxial Rotation Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'odometer-samples': {
+      title: 'Odometer Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'beat-interval-series': {
+      title: 'Beat Interval Series',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'location-track-samples': {
+      title: 'Location Track Samples',
+      contentType: 'text/csv',
+      status: 'active',
+    },
+    'fhir-collection-bundle': {
+      title: 'FHIR R4 Collection Bundle',
+      contentType: 'application/fhir+json',
+      status: 'active',
+    },
+    'fhir-r4-resource': {
+      title: 'FHIR R4 Resource',
+      contentType: 'application/fhir+json',
+      status: 'active',
+    },
+    'clinical-document': {
+      title: 'Clinical Document',
+      contentType: 'application/hl7-cda+xml',
+      status: 'active',
+    },
+    'native-recording': {
+      title: 'Native Recording',
+      contentType: 'application/vnd.grovealliance.native+json',
+      status: 'active',
+    },
+    'provider-recording': {
+      title: 'Provider Recording',
+      contentType: 'application/vnd.grovealliance.provider+json',
+      status: 'active',
+    },
+    'photoplethysmogram-samples': {
+      title: 'Photoplethysmogram Samples',
+      contentType: 'application/vnd.grovealliance.ppg',
+      status: 'active',
+    },
+  },
+} as const
+
+export const groveRecordingFormatRegistry: typeof groveRecordingFormatRegistryValue =
+  deepFreeze(groveRecordingFormatRegistryValue)
 
 const sharedMobileMeasurementCatalogValue = {
   'active-energy': {
@@ -271,6 +2432,7 @@ const sharedMobileMeasurementCatalogValue = {
       },
     },
     effective: 'dateTime',
+    forbiddenElements: ['specimen'],
   },
   'blood-pressure': {
     id: 'blood-pressure',
@@ -282,6 +2444,11 @@ const sharedMobileMeasurementCatalogValue = {
     code: {
       system: 'http://loinc.org',
       code: '85354-9',
+    },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
     },
     valueKind: 'components',
     components: [
@@ -340,6 +2507,17 @@ const sharedMobileMeasurementCatalogValue = {
       unit: '%',
       example: 22,
       dimension: {},
+      valueDomain: {
+        minimum: {
+          value: 0,
+          inclusive: true,
+        },
+        maximum: {
+          value: 100,
+          inclusive: true,
+        },
+        integerOnly: false,
+      },
     },
     effective: 'dateTime',
   },
@@ -353,6 +2531,11 @@ const sharedMobileMeasurementCatalogValue = {
     code: {
       system: 'http://loinc.org',
       code: '8302-2',
+    },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
     },
     valueKind: 'quantity',
     quantity: {
@@ -376,6 +2559,11 @@ const sharedMobileMeasurementCatalogValue = {
     code: {
       system: 'http://loinc.org',
       code: '8310-5',
+    },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
     },
     valueKind: 'quantity',
     quantity: {
@@ -423,6 +2611,11 @@ const sharedMobileMeasurementCatalogValue = {
     code: {
       system: 'http://loinc.org',
       code: '29463-7',
+    },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
     },
     valueKind: 'quantity',
     quantity: {
@@ -1703,6 +3896,13 @@ const sharedMobileMeasurementCatalogValue = {
       unit: 'flights',
       example: 12,
       dimension: {},
+      valueDomain: {
+        minimum: {
+          value: 0,
+          inclusive: true,
+        },
+        integerOnly: true,
+      },
     },
     effective: 'Period',
   },
@@ -1741,6 +3941,11 @@ const sharedMobileMeasurementCatalogValue = {
       system: 'http://loinc.org',
       code: '8867-4',
     },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
+    },
     valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
@@ -1751,7 +3956,7 @@ const sharedMobileMeasurementCatalogValue = {
         s: -1,
       },
     },
-    effective: 'dateTime',
+    effective: 'dateTime-or-Period',
   },
   'heart-rate-variability-rmssd': {
     id: 'heart-rate-variability-rmssd',
@@ -2055,6 +4260,11 @@ const sharedMobileMeasurementCatalogValue = {
       system: 'http://loinc.org',
       code: '2708-6',
     },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
+    },
     valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
@@ -2062,6 +4272,17 @@ const sharedMobileMeasurementCatalogValue = {
       unit: '%',
       example: 97,
       dimension: {},
+      valueDomain: {
+        minimum: {
+          value: 0,
+          inclusive: true,
+        },
+        maximum: {
+          value: 100,
+          inclusive: true,
+        },
+        integerOnly: false,
+      },
     },
     effective: 'dateTime',
   },
@@ -2084,6 +4305,17 @@ const sharedMobileMeasurementCatalogValue = {
       unit: '%',
       example: 96,
       dimension: {},
+      valueDomain: {
+        minimum: {
+          value: 0,
+          inclusive: true,
+        },
+        maximum: {
+          value: 100,
+          inclusive: true,
+        },
+        integerOnly: false,
+      },
     },
     method: {
       code: 'daily-mean',
@@ -2159,6 +4391,11 @@ const sharedMobileMeasurementCatalogValue = {
       system: 'http://loinc.org',
       code: '9279-1',
     },
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
+    },
     valueKind: 'quantity',
     quantity: {
       system: 'http://unitsofmeasure.org',
@@ -2199,17 +4436,27 @@ const sharedMobileMeasurementCatalogValue = {
   'resting-heart-rate': {
     id: 'resting-heart-rate',
     profile: 'grove-mobile-resting-heart-rate',
-    standardProfile: null,
+    standardProfile: 'http://hl7.org/fhir/StructureDefinition/heartrate',
     title: 'Resting Heart Rate',
     description:
-      'A windowed estimate of the heart rate while at rest, normalized to UCUM beats per minute over the exact estimation window. It is semantically distinct from the shared point heart-rate measurement and is implemented by the phase-2 aggregate design. LOINC 40443-4 is deliberately not used: it denotes a heart rate measured at rest, which R4 classifies as a vital sign, whereas this result is a derived daily estimate that must not be surfaced as a measured vital sign.',
+      'One instantaneous heart-rate measurement explicitly classified by its source as taken at rest, normalized to UCUM beats per minute. This is not an aggregate result: any daily or windowed estimate uses the separate resting-heart-rate-daily-average profile.',
     code: {
-      system:
-        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
-      code: 'resting-heart-rate',
-      display: 'Resting heart rate',
-      definition:
-        'The estimated heart rate at rest across the exact Observation effective Period.',
+      system: 'http://loinc.org',
+      code: '40443-4',
+      display: 'Heart rate --resting',
+    },
+    requiredCodings: [
+      {
+        slice: 'heartRate',
+        system: 'http://loinc.org',
+        code: '8867-4',
+        display: 'Heart rate',
+      },
+    ],
+    category: {
+      system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+      code: 'vital-signs',
+      display: 'Vital Signs',
     },
     valueKind: 'quantity',
     quantity: {
@@ -2221,11 +4468,7 @@ const sharedMobileMeasurementCatalogValue = {
         s: -1,
       },
     },
-    method: {
-      code: 'daily-mean',
-      display: 'Daily mean',
-    },
-    effective: 'Period',
+    effective: 'dateTime',
   },
   'sexual-activity': {
     id: 'sexual-activity',
@@ -2455,14 +4698,17 @@ const sharedMobileMeasurementCatalogValue = {
       unit: 'steps',
       example: 8432,
       dimension: {},
+      valueDomain: {
+        minimum: {
+          value: 0,
+          inclusive: true,
+        },
+        integerOnly: true,
+      },
       unitMustSupport: true,
     },
     effective: 'Period',
-    obeys: [
-      'grove-step-count-result-1',
-      'grove-step-count-period-1',
-      'grove-step-count-value-1',
-    ],
+    obeys: ['grove-step-count-result-1', 'grove-step-count-period-1'],
   },
   'vo2-max': {
     id: 'vo2-max',
@@ -2512,6 +4758,13 @@ const sharedMobileMeasurementCatalogValue = {
       unit: 'pushes',
       example: 1240,
       dimension: {},
+      valueDomain: {
+        minimum: {
+          value: 0,
+          inclusive: true,
+        },
+        integerOnly: true,
+      },
     },
     effective: 'Period',
   },
@@ -2925,3 +5178,11 @@ export const mobileEffectiveCanonicalizationVectors: typeof mobileEffectiveCanon
 
 export type SharedMobileMeasurementKind =
   keyof typeof sharedMobileMeasurementCatalog
+
+export type GroveRecordingFormat =
+  keyof typeof groveRecordingFormatRegistry.formats
+
+export type ProviderRecordingFormat = Extract<
+  GroveRecordingFormat,
+  'provider-recording'
+>

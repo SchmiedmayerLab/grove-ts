@@ -9,28 +9,46 @@
 import { z } from 'zod'
 import {
   providerRecordEffectiveRules,
-  providerScalarMappings,
+  providerScalarOutputDiscriminators,
+  providerScalarOutputRoles,
 } from './contract.generated.js'
+import { deriveProviderIdentities } from './identity.js'
 import {
-  deriveProviderIdentities,
-  parseResourceIdentityInput,
-} from './identity.js'
-import { containsReversibleIdentityRepresentation } from './privacy.js'
+  connectedProviderExclusiveDefinitions,
+  type ProviderMeasurementDefinition,
+} from './measurement-definition.js'
+import {
+  absoluteUriSchema,
+  applicationDeviceSchema,
+  deploymentIdentitySchema,
+  fhirIdSchema,
+  gatewayApplicationSchema,
+  governedSourceIdentifierIssues,
+  governedSourceIdentifierSchema,
+  identifierInputSchema,
+  mobileEffectiveInstantSchema,
+  nonBlankStringSchema,
+  primitiveInstantSchema,
+  providerPatientReferenceSchema,
+  providerScopeIdentifierIssues,
+  providerScopeIdentifierSchema,
+  providerResearchStudyReferenceSchema,
+  recordingDeviceSchema,
+} from './provider-input-schemas.js'
 import type {
   ProviderMeasurementBundleInput,
+  ConnectedProviderMeasurementKind,
   ConnectedProvider,
   NormalizedProviderRecord,
 } from './types.js'
 import {
+  cloneJsonValue,
   compareFhirInstants,
   deepFreeze,
+  err,
   issues,
   ok,
   parseAbsoluteUri,
-  parseFhirInstant,
-  parsePatientReference,
-  parsePositiveInteger,
-  parseResearchStudyReference,
   type Issue,
   type Result,
 } from '../core/index.js'
@@ -38,8 +56,8 @@ import {
   sharedMobileMeasurementCatalog,
   type SharedMobileMeasurementKind,
 } from '../mobile/measurement-catalog.generated.js'
-import { canonicalizeMobileEffectiveInstant } from '../mobile/time.js'
 import type {
+  ChoiceQuantityMeasurementKind,
   InstantCodedMeasurementKind,
   InstantQuantityMeasurementKind,
   MobileMeasurement,
@@ -47,99 +65,49 @@ import type {
   PeriodQuantityMeasurementKind,
 } from '../mobile/types.js'
 
-const primitiveInstantSchemaValue = z
-  .string()
-  .refine((value) => parseFhirInstant(value).ok, {
-    message:
-      'Expected an RFC 3339 instant with seconds and an explicit UTC offset.',
-  })
-export const primitiveInstantSchema: z.ZodString = primitiveInstantSchemaValue
-
-const mobileEffectiveInstantSchema = z.string().transform((value, context) => {
-  const canonical = canonicalizeMobileEffectiveInstant(value)
-  if (!canonical.ok) {
-    for (const issue of canonical.issues) {
-      context.addIssue({ code: 'custom', message: issue.message })
+type ParsedProviderMeasurement =
+  | MobileMeasurement
+  | {
+      readonly kind: string
+      readonly value: number | string
+      readonly effective:
+        | { readonly kind: 'date-time'; readonly value: string }
+        | {
+            readonly kind: 'period'
+            readonly start: string
+            readonly end: string
+          }
     }
-    return z.NEVER
-  }
-  return canonical.value
-})
 
-const nonBlankStringSchemaValue = z
-  .string()
-  .refine((value) => value.trim() !== '', 'Expected a non-blank string.')
-export const nonBlankStringSchema: z.ZodString = nonBlankStringSchemaValue
-
-const identifierInputSchemaValue = z.strictObject({
-  system: z.url(),
-  value: nonBlankStringSchema,
-})
-export const identifierInputSchema: z.ZodObject<
-  { system: z.ZodURL; value: z.ZodString },
-  z.core.$strict
-> = identifierInputSchemaValue
-
-const fhirIdSchemaValue = z.string().regex(/^[A-Za-z0-9\-.]{1,64}$/u)
-export const fhirIdSchema: z.ZodString = fhirIdSchemaValue
-
-const resourceIdentitySchema = z.strictObject({
-  identifier: identifierInputSchema,
-  id: fhirIdSchema.optional(),
-})
-
-const applicationDeviceSchemaValue = z.strictObject({
-  identity: resourceIdentitySchema,
-  name: nonBlankStringSchema,
-  version: nonBlankStringSchema.optional(),
-  manufacturer: nonBlankStringSchema.optional(),
-})
-export const applicationDeviceSchema: z.ZodType<{
-  identity: {
-    identifier: { system: string; value: string }
-    id?: string | undefined
-  }
-  name: string
-  version?: string | undefined
-  manufacturer?: string | undefined
-}> = applicationDeviceSchemaValue
-
-const recordingDeviceBase = {
-  identity: resourceIdentitySchema,
-  name: nonBlankStringSchema.optional(),
-  manufacturer: nonBlankStringSchema.optional(),
-  modelNumber: nonBlankStringSchema.optional(),
-} as const
-
-const recordingDeviceSchema = z.discriminatedUnion('identityScope', [
-  z.strictObject({
-    ...recordingDeviceBase,
-    identityScope: z.literal('deployment-scoped'),
-  }),
-  z.strictObject({
-    ...recordingDeviceBase,
-    identityScope: z.literal('authorized-hardware'),
-    disclosureAuthorization: z.literal('authorized-for-exchange'),
-  }),
-])
-
-const gatewayApplicationSchema = z.discriminatedUnion('kind', [
-  z.strictObject({
-    kind: z.literal('converter-application'),
-    roleAssurance: z.literal('mediated-or-routed-measurement'),
-  }),
-  z.strictObject({
-    kind: z.literal('distinct-application'),
-    roleAssurance: z.literal('mediated-or-routed-measurement'),
-    application: applicationDeviceSchema,
-  }),
-])
+export {
+  applicationDeviceSchema,
+  deploymentIdentitySchema,
+  fhirIdSchema,
+  governedSourceIdentifierIssues,
+  governedSourceIdentifierSchema,
+  identifierInputSchema,
+  nonBlankStringSchema,
+  primitiveInstantSchema,
+  providerPatientReferenceSchema,
+  providerScopeIdentifierIssues,
+  providerScopeIdentifierSchema,
+} from './provider-input-schemas.js'
 
 const sourceBase = {
   recordingMethod: z
     .enum(['actively-recorded', 'automatically-recorded', 'manual-entry'])
     .optional(),
   recordingDevice: recordingDeviceSchema.optional(),
+  writerRecord: z
+    .strictObject({
+      applicationIdentifier: identifierInputSchema,
+      nativeRecordId: nonBlankStringSchema,
+      version: z
+        .string()
+        .regex(/^(?:0|[1-9]\d*)$/u)
+        .optional(),
+    })
+    .optional(),
 } as const
 
 const sourceSchema = z.strictObject({
@@ -147,15 +115,13 @@ const sourceSchema = z.strictObject({
   adapter: z.strictObject({
     kind: z.literal('providers'),
     provider: z.enum(
-      Object.keys(providerScalarMappings) as [
+      Object.keys(providerScalarOutputRoles) as [
         ConnectedProvider,
         ...ConnectedProvider[],
       ],
     ),
   }),
-  providerAccountIdentifier: identifierInputSchema.extend({
-    assurance: z.literal('deployment-scoped-pseudonym'),
-  }),
+  providerScopeIdentifier: providerScopeIdentifierSchema,
   sourceType: nonBlankStringSchema,
   sourceNativeId: nonBlankStringSchema,
   dataOrigin: applicationDeviceSchema,
@@ -175,14 +141,14 @@ const periodEffectiveSchema = z
   .refine(
     (value) => {
       const ordering = compareFhirInstants(value.start, value.end)
-      return ordering.ok && ordering.value === -1
+      return ordering.ok && ordering.value !== 1
     },
-    { message: 'A measurement Period must end after it starts.' },
+    { message: 'A measurement Period must not end before it starts.' },
   )
 
 const measurementKindsWhere = <Kind extends SharedMobileMeasurementKind>(
   valueKind: 'codeableConcept' | 'quantity',
-  effective: 'Period' | 'dateTime',
+  effective: 'Period' | 'dateTime' | 'dateTime-or-Period',
   excluded?: SharedMobileMeasurementKind,
 ): [Kind, ...Kind[]] =>
   (
@@ -211,8 +177,26 @@ const periodQuantityMeasurementSchema = z.strictObject({
   kind: z.enum(
     measurementKindsWhere<PeriodQuantityMeasurementKind>('quantity', 'Period'),
   ),
-  value: z.number().nonnegative(),
+  value: z.number(),
   effective: periodEffectiveSchema,
+})
+
+const choiceQuantityMeasurementKinds =
+  measurementKindsWhere<ChoiceQuantityMeasurementKind>(
+    'quantity',
+    'dateTime-or-Period',
+  )
+const choiceQuantityMeasurementKindSet: ReadonlySet<string> = new Set(
+  choiceQuantityMeasurementKinds,
+)
+const choiceQuantityMeasurementSchema = z.strictObject({
+  kind: z.custom<ChoiceQuantityMeasurementKind>(
+    (value) =>
+      typeof value === 'string' && choiceQuantityMeasurementKindSet.has(value),
+    { message: 'Expected a catalog measurement with choice effective[x].' },
+  ),
+  value: z.number(),
+  effective: z.union([instantEffectiveSchema, periodEffectiveSchema]),
 })
 
 const instantCodedMeasurementSchema = z.strictObject({
@@ -240,8 +224,8 @@ const periodCodedMeasurementSchema = z.strictObject({
 
 const bloodPressureMeasurementSchema = z.strictObject({
   kind: z.literal('blood-pressure'),
-  systolic: z.number().positive(),
-  diastolic: z.number().positive(),
+  systolic: z.number(),
+  diastolic: z.number(),
   effective: instantEffectiveSchema,
 })
 
@@ -250,7 +234,7 @@ const sleepStageMeasurementSchema = z.strictObject({
   stage: z.enum(sharedMobileMeasurementCatalog['sleep-stage'].allowedValues),
   sourceStageCoding: z
     .strictObject({
-      system: z.url(),
+      system: absoluteUriSchema,
       code: nonBlankStringSchema,
       display: nonBlankStringSchema.optional(),
     })
@@ -258,66 +242,142 @@ const sleepStageMeasurementSchema = z.strictObject({
   effective: periodEffectiveSchema,
 })
 
-const measurementSchema = z.discriminatedUnion('kind', [
+const exclusiveDefinitions = connectedProviderExclusiveDefinitions
+const exclusiveQuantityKinds = Object.values(exclusiveDefinitions)
+  .filter(({ valueKind }) => valueKind === 'quantity')
+  .map(({ id }) => id) as [string, ...string[]]
+const exclusiveCodedKinds = Object.values(exclusiveDefinitions)
+  .filter(({ valueKind }) => valueKind === 'codeableConcept')
+  .map(({ id }) => id) as [string, ...string[]]
+
+const exclusiveQuantityMeasurementSchema = z.strictObject({
+  kind: z.enum(exclusiveQuantityKinds),
+  value: z.number(),
+  effective: z.union([instantEffectiveSchema, periodEffectiveSchema]),
+})
+
+const exclusiveCodedMeasurementSchema = z.strictObject({
+  kind: z.enum(exclusiveCodedKinds),
+  value: nonBlankStringSchema,
+  effective: z.union([instantEffectiveSchema, periodEffectiveSchema]),
+})
+
+const measurementSchema: z.ZodType<ParsedProviderMeasurement> = z.union([
   instantQuantityMeasurementSchema,
   periodQuantityMeasurementSchema,
+  choiceQuantityMeasurementSchema,
   instantCodedMeasurementSchema,
   periodCodedMeasurementSchema,
   bloodPressureMeasurementSchema,
   sleepStageMeasurementSchema,
-])
+  exclusiveQuantityMeasurementSchema,
+  exclusiveCodedMeasurementSchema,
+]) as unknown as z.ZodType<ParsedProviderMeasurement>
+
+interface NumericBoundary {
+  readonly value: number
+  readonly inclusive: boolean
+}
+
+const violatesMinimum = (value: number, boundary: NumericBoundary): boolean =>
+  value < boundary.value || (!boundary.inclusive && value === boundary.value)
+
+const violatesMaximum = (value: number, boundary: NumericBoundary): boolean =>
+  value > boundary.value || (!boundary.inclusive && value === boundary.value)
+
+const effectiveKindMatches = (
+  definition: ProviderMeasurementDefinition,
+  effectiveKind: 'date-time' | 'period',
+): boolean =>
+  definition.effective === 'dateTime-or-Period' ||
+  (definition.effective === 'dateTime' && effectiveKind === 'date-time') ||
+  (definition.effective === 'Period' && effectiveKind === 'period')
+
+const violatesRequiredPeriodOrdering = (
+  measurement: z.infer<typeof measurementSchema>,
+  definition: ProviderMeasurementDefinition,
+): boolean => {
+  if (
+    measurement.effective.kind !== 'period' ||
+    !(definition.obeys ?? []).includes('grove-step-count-period-1')
+  ) {
+    return false
+  }
+  const ordering = compareFhirInstants(
+    measurement.effective.start,
+    measurement.effective.end,
+  )
+  return !ordering.ok || ordering.value !== -1
+}
+
+const violatesQuantityDomain = (
+  value: number,
+  definition: ProviderMeasurementDefinition,
+): boolean => {
+  const domain = definition.quantity?.valueDomain
+  if (domain === undefined) return false
+  return (
+    violatesMinimum(value, domain.minimum) ||
+    (domain.maximum !== undefined && violatesMaximum(value, domain.maximum)) ||
+    (domain.integerOnly && !Number.isInteger(value))
+  )
+}
 
 const refineMeasurement = (
   measurement: z.infer<typeof measurementSchema>,
   path: ReadonlyArray<number | string>,
   context: z.core.$RefinementCtx,
 ) => {
+  const measurementDefinition =
+    (
+      sharedMobileMeasurementCatalog as unknown as Readonly<
+        Record<string, ProviderMeasurementDefinition>
+      >
+    )[measurement.kind] ?? exclusiveDefinitions[measurement.kind]
+  if (measurementDefinition === undefined) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'kind'],
+      message: `No closed Provider measurement definition exists for ${measurement.kind}.`,
+    })
+    return
+  }
   if (
-    measurement.effective.kind === 'date-time' &&
+    !effectiveKindMatches(measurementDefinition, measurement.effective.kind)
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'effective'],
+      message: `${measurement.kind} requires catalog effective[x] ${measurementDefinition.effective}.`,
+    })
+  }
+  if (violatesRequiredPeriodOrdering(measurement, measurementDefinition)) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'effective'],
+      message: `The ${measurement.kind} Period must satisfy its catalog-owned nonzero-duration rule.`,
+    })
+  }
+  if (
+    'value' in measurement &&
+    typeof measurement.value === 'string' &&
+    measurementDefinition.allowedValues?.includes(measurement.value) !== true
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'value'],
+      message: `Expected a catalog-allowed coded result for ${measurement.kind}.`,
+    })
+  }
+  if (
     'value' in measurement &&
     typeof measurement.value === 'number' &&
-    measurement.kind !== 'oxygen-saturation' &&
-    measurement.value <= 0
+    violatesQuantityDomain(measurement.value, measurementDefinition)
   ) {
     context.addIssue({
       code: 'custom',
       path: [...path, 'value'],
-      message: 'An instantaneous measurement value must be greater than zero.',
-    })
-  }
-  if ('value' in measurement && typeof measurement.value === 'string') {
-    const definition = sharedMobileMeasurementCatalog[measurement.kind]
-    if (
-      !('allowedValues' in definition) ||
-      !(definition.allowedValues as readonly string[]).includes(
-        measurement.value,
-      )
-    ) {
-      context.addIssue({
-        code: 'custom',
-        path: [...path, 'value'],
-        message: `Expected a catalog-allowed coded result for ${measurement.kind}.`,
-      })
-    }
-  }
-  if (
-    measurement.kind === 'oxygen-saturation' &&
-    (measurement.value < 0 || measurement.value > 100)
-  ) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'value'],
-      message: 'Oxygen saturation must be between 0 and 100 percent.',
-    })
-  }
-  if (
-    measurement.kind === 'step-count' &&
-    !Number.isInteger(measurement.value)
-  ) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'value'],
-      message: 'Step count must be an integer.',
+      message: `The ${measurement.kind} value is outside its catalog-owned value domain.`,
     })
   }
 }
@@ -342,144 +402,47 @@ const normalizedProviderRecordSchema = z
   .strictObject(normalizedProviderRecordShape)
   .superRefine(refineMeasurements)
 
+const scalarOutputRoles = providerScalarOutputRoles as Readonly<
+  Record<string, Readonly<Record<string, Readonly<Record<string, string>>>>>
+>
+
+const connectedProviderMeasurementKinds = [
+  ...new Set(
+    Object.values(scalarOutputRoles).flatMap((sources) =>
+      Object.values(sources).flatMap((mapping) => Object.keys(mapping)),
+    ),
+  ),
+] as [ConnectedProviderMeasurementKind, ...ConnectedProviderMeasurementKind[]]
+
 const providerMeasurementBundleInputSchema = z
   .strictObject({
     ...normalizedProviderRecordShape,
-    subject: z.string().refine((value) => parsePatientReference(value).ok, {
-      message:
-        'Expected Patient/{id} or an absolute HTTP(S) URL ending in /Patient/{id}.',
-    }),
+    subject: providerPatientReferenceSchema,
     application: applicationDeviceSchema,
     gatewayApplication: gatewayApplicationSchema.optional(),
-    eventSequence: z
-      .number()
-      .refine((value) => parsePositiveInteger(value).ok, {
-        message: 'Expected a positive safe integer greater than zero.',
-      }),
-    graphIdentifierSystem: z
-      .string()
-      .refine((value) => parseAbsoluteUri(value).ok, {
-        message: 'Expected an absolute URI the deployment owns.',
-      }),
-    issued: primitiveInstantSchema,
+    eventSequence: z.string().regex(/^[1-9]\d*$/u),
+    deploymentIdentity: deploymentIdentitySchema,
+    nativeIdentifierDisclosure: governedSourceIdentifierSchema.optional(),
+    occurred: primitiveInstantSchema,
     recorded: primitiveInstantSchema,
+    assembled: primitiveInstantSchema,
     repositoryIds: z
       .strictObject({
         bundle: fhirIdSchema.optional(),
         observations: z
           .partialRecord(
-            z.enum(
-              Object.keys(sharedMobileMeasurementCatalog) as [
-                MobileMeasurement['kind'],
-                ...Array<MobileMeasurement['kind']>,
-              ],
-            ),
+            z.enum(connectedProviderMeasurementKinds),
             fhirIdSchema,
           )
           .optional(),
         provenance: fhirIdSchema.optional(),
       })
       .optional(),
-    researchStudyReferences: z.array(z.string()).optional(),
+    researchStudyReferences: z
+      .array(providerResearchStudyReferenceSchema)
+      .optional(),
   })
   .superRefine(refineMeasurements)
-
-const applicationStrings = (
-  input: z.infer<typeof applicationDeviceSchema> | undefined,
-): readonly string[] =>
-  input === undefined ?
-    []
-  : [
-      input.identity.identifier.system,
-      input.identity.identifier.value,
-      input.identity.id ?? '',
-      input.name,
-      input.version ?? '',
-      input.manufacturer ?? '',
-    ]
-
-const recordingDeviceStrings = (
-  input: z.infer<typeof recordingDeviceSchema> | undefined,
-): readonly string[] =>
-  input === undefined ?
-    []
-  : [
-      input.identity.identifier.system,
-      input.identity.identifier.value,
-      input.identity.id ?? '',
-      input.name ?? '',
-      input.manufacturer ?? '',
-      input.modelNumber ?? '',
-    ]
-
-const stringLeaves = (value: unknown): readonly string[] => {
-  if (typeof value === 'string') return [value]
-  if (Array.isArray(value)) return value.flatMap(stringLeaves)
-  if (typeof value !== 'object' || value === null) return []
-  return Object.values(value).flatMap(stringLeaves)
-}
-
-const normalizedEmittedCallerStrings = (
-  input: z.infer<typeof normalizedProviderRecordSchema>,
-): readonly string[] => [
-  input.source.adapter.provider,
-  input.source.sourceType,
-  input.source.recordingMethod ?? '',
-  ...stringLeaves(input.measurements),
-  ...applicationStrings(input.source.dataOrigin),
-  ...recordingDeviceStrings(input.source.recordingDevice),
-]
-
-const graphEmittedCallerStrings = (
-  input: z.infer<typeof providerMeasurementBundleInputSchema>,
-): readonly string[] => [
-  ...normalizedEmittedCallerStrings(input),
-  input.subject,
-  input.issued,
-  input.recorded,
-  ...applicationStrings(input.application),
-  ...applicationStrings(
-    input.gatewayApplication?.kind === 'distinct-application' ?
-      input.gatewayApplication.application
-    : undefined,
-  ),
-  input.repositoryIds?.bundle ?? '',
-  ...Object.values(input.repositoryIds?.observations ?? {}),
-  input.repositoryIds?.provenance ?? '',
-  ...(input.researchStudyReferences ?? []),
-]
-
-const identityLeakageIssues = (
-  source: z.infer<typeof sourceSchema>,
-  emitted: readonly string[],
-): readonly Issue[] => {
-  const privateInputs = [
-    [source.sourceNativeId, ['source', 'sourceNativeId'], 'sourceNativeId'],
-    [
-      source.providerAccountIdentifier.value,
-      ['source', 'providerAccountIdentifier', 'value'],
-      'providerAccountIdentifier.value',
-    ],
-  ] as const
-  return privateInputs.flatMap(([privateValue, path, label]) =>
-    (
-      emitted.some(
-        (value) =>
-          value !== '' &&
-          containsReversibleIdentityRepresentation(value, privateValue),
-      )
-    ) ?
-      [
-        {
-          severity: 'error' as const,
-          code: 'invalid-identifier' as const,
-          path,
-          message: `${label} is an identity input only and must not appear in emitted FHIR metadata.`,
-        },
-      ]
-    : [],
-  )
-}
 
 export const normalizeZodIssue = (entry: z.core.$ZodIssue): Issue => ({
   severity: 'error',
@@ -496,11 +459,26 @@ const providerSourceMapping = (
   provider: ConnectedProvider,
   sourceType: string,
 ): Readonly<Record<string, string>> | undefined => {
-  const providerMappings = providerScalarMappings[provider] as Record<
+  const providerMappings = providerScalarOutputRoles[provider] as Record<
     string,
     Readonly<Record<string, string>> | undefined
   >
   return providerMappings[sourceType]
+}
+
+const providerSourceDiscriminatorMapping = (
+  provider: ConnectedProvider,
+  sourceType: string,
+): Readonly<Record<string, string>> | undefined => {
+  const providerMappings = providerScalarOutputDiscriminators[
+    provider
+  ] as Record<string, Readonly<Record<string, string>> | undefined>
+  return providerMappings[sourceType]
+}
+
+export interface ProviderOutputCoordinates {
+  readonly outputRole: string
+  readonly outputDiscriminator: string
 }
 
 interface RecordEffectiveRule {
@@ -586,12 +564,28 @@ const recordEffectiveIssues = (input: {
   )
 }
 
-export const providerOutputDiscriminator = (
+export const providerOutputRole = (
   provider: ConnectedProvider,
   sourceType: string,
-  kind: MobileMeasurement['kind'],
+  kind: string,
 ): string | undefined => {
   return providerSourceMapping(provider, sourceType)?.[kind]
+}
+
+/** Exact catalog-owned HMAC coordinates for one Provider Observation output. */
+export const providerOutputCoordinates = (
+  provider: ConnectedProvider,
+  sourceType: string,
+  kind: string,
+): ProviderOutputCoordinates | undefined => {
+  const outputRole = providerSourceMapping(provider, sourceType)?.[kind]
+  const outputDiscriminator = providerSourceDiscriminatorMapping(
+    provider,
+    sourceType,
+  )?.[kind]
+  return outputRole === undefined || outputDiscriminator === undefined ?
+      undefined
+    : { outputRole, outputDiscriminator }
 }
 
 const recordMappingIssues = (input: {
@@ -600,7 +594,7 @@ const recordMappingIssues = (input: {
   readonly repositoryIds?:
     | {
         readonly observations?:
-          | Readonly<Partial<Record<MobileMeasurement['kind'], string>>>
+          | Readonly<Partial<Record<ConnectedProviderMeasurementKind, string>>>
           | undefined
       }
     | undefined
@@ -621,6 +615,12 @@ const recordMappingIssues = (input: {
   }
 
   const findings: Issue[] = []
+  findings.push(
+    ...providerScopeIdentifierIssues(
+      input.source.adapter.provider,
+      input.source.providerScopeIdentifier,
+    ),
+  )
   const kinds = input.measurements.map(({ kind }) => kind)
   for (const [index, kind] of kinds.entries()) {
     if (!Object.hasOwn(mapping, kind)) {
@@ -642,7 +642,7 @@ const recordMappingIssues = (input: {
     })
   }
   for (const kind of Object.keys(input.repositoryIds?.observations ?? {})) {
-    if (!kinds.includes(kind as MobileMeasurement['kind'])) {
+    if (!kinds.includes(kind)) {
       findings.push({
         severity: 'error',
         code: 'invalid-reference',
@@ -689,15 +689,18 @@ const sortMeasurements = <
 export const parseNormalizedProviderRecord = (
   input: unknown,
 ): Result<NormalizedProviderRecord> => {
-  const result = normalizedProviderRecordSchema.safeParse(input)
-  if (!result.success) {
-    return issues(result.error.issues.map(normalizeZodIssue))
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  let result: ReturnType<typeof normalizedProviderRecordSchema.safeParse>
+  try {
+    result = normalizedProviderRecordSchema.safeParse(snapshot.value)
+  } catch {
+    return err(
+      'schema-invalid',
+      'Provider record validation could not safely inspect the supplied value.',
+    )
   }
-  const leakageIssues = identityLeakageIssues(
-    result.data.source,
-    normalizedEmittedCallerStrings(result.data),
-  )
-  if (leakageIssues.length > 0) return issues(leakageIssues)
+  if (!result.success) return issues(result.error.issues.map(normalizeZodIssue))
   const mappingIssues = recordMappingIssues(result.data)
   if (mappingIssues.length > 0) return issues(mappingIssues)
   return ok(
@@ -709,64 +712,30 @@ export const parseNormalizedProviderRecord = (
 export const parseProviderMeasurementBundleInput = (
   input: unknown,
 ): Result<ProviderMeasurementBundleInput> => {
-  const result = providerMeasurementBundleInputSchema.safeParse(input)
-  if (!result.success) {
-    return issues(result.error.issues.map(normalizeZodIssue))
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  let result: ReturnType<typeof providerMeasurementBundleInputSchema.safeParse>
+  try {
+    result = providerMeasurementBundleInputSchema.safeParse(snapshot.value)
+  } catch {
+    return err(
+      'schema-invalid',
+      'Provider graph input validation could not safely inspect the supplied value.',
+    )
   }
-  type GraphIdentityInput = readonly [
-    Parameters<typeof parseResourceIdentityInput>[0],
-    readonly string[],
-  ]
-  const graphIdentityInputs: GraphIdentityInput[] = [
-    [result.data.application.identity, ['application', 'identity']],
-    [
-      result.data.source.dataOrigin.identity,
-      ['source', 'dataOrigin', 'identity'],
-    ],
-  ]
-  if (result.data.source.recordingDevice !== undefined) {
-    graphIdentityInputs.push([
-      result.data.source.recordingDevice.identity,
-      ['source', 'recordingDevice', 'identity'],
-    ])
-  }
-  if (result.data.gatewayApplication?.kind === 'distinct-application') {
-    graphIdentityInputs.push([
-      result.data.gatewayApplication.application.identity,
-      ['gatewayApplication', 'application', 'identity'],
-    ])
-  }
-  const graphIdentityIssues = graphIdentityInputs.flatMap(
-    ([identity, path]) => {
-      const parsedIdentity = parseResourceIdentityInput(identity)
-      return parsedIdentity.ok ?
-          []
-        : parsedIdentity.issues.map((entry) => ({
-            ...entry,
-            path: [...path, ...entry.path],
-          }))
-    },
+  if (!result.success) return issues(result.error.issues.map(normalizeZodIssue))
+  const disclosureIssues = governedSourceIdentifierIssues(
+    result.data.nativeIdentifierDisclosure,
+    result.data.source.sourceNativeId,
+    result.data.deploymentIdentity,
   )
-  if (graphIdentityIssues.length > 0) return issues(graphIdentityIssues)
+  if (disclosureIssues.length > 0) return issues(disclosureIssues)
   const researchStudyIssues: Issue[] = []
-  for (const [index, reference] of (
-    result.data.researchStudyReferences ?? []
-  ).entries()) {
-    if (!parseResearchStudyReference(reference).ok) {
-      researchStudyIssues.push({
-        severity: 'error',
-        code: 'invalid-reference',
-        path: ['researchStudyReferences', index],
-        message:
-          'Expected ResearchStudy/{id} or an absolute HTTP(S) URL ending in /ResearchStudy/{id} without a query or fragment.',
-      })
-    }
-  }
-  if (
-    result.data.researchStudyReferences !== undefined &&
-    new Set(result.data.researchStudyReferences).size !==
-      result.data.researchStudyReferences.length
-  ) {
+  const researchStudyKeys = (result.data.researchStudyReferences ?? []).map(
+    ({ identifier }) =>
+      `${identifier.system.length}:${identifier.system}${identifier.value.length}:${identifier.value}`,
+  )
+  if (new Set(researchStudyKeys).size !== researchStudyKeys.length) {
     researchStudyIssues.push({
       severity: 'error',
       code: 'duplicate-identifier',
@@ -775,50 +744,72 @@ export const parseProviderMeasurementBundleInput = (
     })
   }
   if (researchStudyIssues.length > 0) return issues(researchStudyIssues)
-  const leakageIssues = identityLeakageIssues(
-    result.data.source,
-    graphEmittedCallerStrings(result.data),
-  )
-  if (leakageIssues.length > 0) return issues(leakageIssues)
   const mappingIssues = recordMappingIssues(result.data)
   if (mappingIssues.length > 0) return issues(mappingIssues)
-  const outputDiscriminators = result.data.measurements.map(({ kind }) =>
-    providerOutputDiscriminator(
+  const sourceMapping = providerSourceMapping(
+    result.data.source.adapter.provider,
+    result.data.source.sourceType,
+  )
+  if (
+    result.data.nativeIdentifierDisclosure !== undefined &&
+    (sourceMapping === undefined ||
+      Object.keys(sourceMapping).length !== 1 ||
+      result.data.measurements.length !== 1)
+  ) {
+    return issues([
+      {
+        severity: 'error',
+        code: 'value-mismatch',
+        path: ['nativeIdentifierDisclosure'],
+        message:
+          'The Provider catalog must designate one unique one-to-one Observation before a governed source Identifier may be disclosed; ambiguous multi-output records must omit it.',
+      },
+    ])
+  }
+  const outputCoordinates = result.data.measurements.map(({ kind }) =>
+    providerOutputCoordinates(
       result.data.source.adapter.provider,
       result.data.source.sourceType,
       kind,
     ),
   )
-  if (outputDiscriminators.some((value) => value === undefined)) {
+  const definedOutputCoordinates = outputCoordinates.filter(
+    (coordinates): coordinates is ProviderOutputCoordinates =>
+      coordinates !== undefined,
+  )
+  if (definedOutputCoordinates.length !== outputCoordinates.length) {
     return issues([
       {
         severity: 'error',
         code: 'unsupported-measurement',
         path: ['measurements'],
         message:
-          'Every emitted measurement requires a catalog-owned Provider output discriminator.',
+          'Every emitted measurement requires a catalog-owned Provider output role.',
       },
     ])
   }
-  const providerAccountSystem = parseAbsoluteUri(
-    result.data.source.providerAccountIdentifier.system,
+  const providerScopeSystem = parseAbsoluteUri(
+    result.data.source.providerScopeIdentifier.system,
   )
-  const eventSequence = parsePositiveInteger(result.data.eventSequence)
-  const graphSystem = parseAbsoluteUri(result.data.graphIdentifierSystem)
-  if (!providerAccountSystem.ok) return providerAccountSystem
-  if (!eventSequence.ok) return eventSequence
-  if (!graphSystem.ok) return graphSystem
+  if (!providerScopeSystem.ok) return providerScopeSystem
   const identity = deriveProviderIdentities({
     provider: result.data.source.adapter.provider,
-    providerAccountIdentifier: {
-      system: providerAccountSystem.value,
-      value: result.data.source.providerAccountIdentifier.value,
+    providerScopeIdentifier: {
+      system: providerScopeSystem.value,
+      value: result.data.source.providerScopeIdentifier.value,
+      assurance: result.data.source.providerScopeIdentifier.assurance,
     },
     sourceType: result.data.source.sourceType,
     sourceNativeId: result.data.source.sourceNativeId,
-    outputDiscriminators: outputDiscriminators as [string, ...string[]],
-    eventSequence: eventSequence.value,
-    graphIdentifierSystem: graphSystem.value,
+    outputs: definedOutputCoordinates.map(
+      ({ outputRole, outputDiscriminator }) => ({
+        kind: 'provider-output' as const,
+        outputRole,
+        outputDiscriminator,
+      }),
+    ),
+    eventSequence: result.data.eventSequence,
+    deployment: result.data.deploymentIdentity,
   })
   if (!identity.ok) return identity
   return ok(

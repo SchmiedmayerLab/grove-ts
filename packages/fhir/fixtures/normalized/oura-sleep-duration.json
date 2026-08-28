@@ -1,21 +1,16 @@
 {
   "source": {
     "adapter": { "kind": "providers", "provider": "oura" },
-    "providerAccountIdentifier": {
-      "system": "https://example.org/deployments/provider-accounts",
-      "value": "pseudonym-oura-001",
-      "assurance": "deployment-scoped-pseudonym"
+    "providerScopeIdentifier": {
+      "system": "https://example.org/provider-key-spaces",
+      "value": "oura-document-uuid-global",
+      "assurance": "documented-global-key-space"
     },
     "sourceType": "sleep",
     "sourceNativeId": "synthetic-sleep-2026-08-19",
     "recordingMethod": "automatically-recorded",
     "dataOrigin": {
-      "identity": {
-        "identifier": {
-          "system": "https://example.org/data-origins",
-          "value": "oura"
-        }
-      },
+      "sourceDeviceToken": "origin-instance-oura-001",
       "name": "Oura"
     }
   },

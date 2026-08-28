@@ -17,6 +17,9 @@ import type {
 type SharedCatalog =
   typeof import('./measurement-catalog.generated.js').sharedMobileMeasurementCatalog
 
+type OpaqueIdentityDefinition =
+  (typeof import('./measurement-catalog.generated.js').groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
+
 /** Kinds whose catalog definition declares the given value kind and effective. */
 type MeasurementKindsWhere<
   ValueKind extends string,
@@ -29,14 +32,20 @@ type MeasurementKindsWhere<
   : never
 }[SharedMobileMeasurementKind]
 
+/** Kinds whose profile explicitly admits either an instant or bounded Period. */
+export type ChoiceQuantityMeasurementKind = MeasurementKindsWhere<
+  'quantity',
+  'dateTime-or-Period'
+>
+
 export type InstantQuantityMeasurementKind = MeasurementKindsWhere<
   'quantity',
-  'dateTime'
+  'dateTime' | 'dateTime-or-Period'
 >
 
 export type PeriodQuantityMeasurementKind = MeasurementKindsWhere<
   'quantity',
-  'Period'
+  'Period' | 'dateTime-or-Period'
 >
 
 export type InstantCodedMeasurementKind = MeasurementKindsWhere<
@@ -78,6 +87,11 @@ export type PeriodQuantityMeasurement = {
     readonly effective: PeriodEffectiveTime
   }
 }[PeriodQuantityMeasurementKind]
+
+export type ChoiceQuantityMeasurement = Extract<
+  InstantQuantityMeasurement | PeriodQuantityMeasurement,
+  { readonly kind: ChoiceQuantityMeasurementKind }
+>
 
 export type InstantCodedMeasurement = {
   readonly [Kind in InstantCodedMeasurementKind]: {
@@ -124,6 +138,38 @@ export interface SleepStageMeasurement {
 export interface CompleteIdentifierInput {
   readonly system: AbsoluteUri
   readonly value: string
+  /** Grove role carried in Identifier.type for deployment-owned v2 identities. */
+  readonly role?: GroveIdentifierRole
+}
+
+/** Closed roles used to distinguish deployment-owned v2 identifier key spaces. */
+export type GroveIdentifierRole =
+  OpaqueIdentityDefinition['identifierRole'] | 'entry-node' | 'event'
+
+/** Closed HMAC domains from the Grove 0.6 exchange protocol. */
+export type GroveOpaqueIdentityKind = OpaqueIdentityDefinition['kind']
+
+export type GroveOpaqueIdentitySystems = Readonly<
+  Record<GroveOpaqueIdentityKind, AbsoluteUri>
+>
+
+/**
+ * Deployment-owned identity material.
+ *
+ * Every opaque system names exactly one deployment, identity kind, key id, and key epoch. The
+ * secret is used only while a graph is built and is never retained in, or emitted with, FHIR.
+ */
+export interface DeploymentIdentityInput {
+  readonly opaqueIdentifierSystems: GroveOpaqueIdentitySystems
+  readonly eventIdentifierSystem: AbsoluteUri
+  readonly entryNodeIdentifierSystem: AbsoluteUri
+  readonly keyId: string
+  /** Canonical positive decimal string; represented lexically to avoid JavaScript integer loss. */
+  readonly keyEpoch: string
+  /** Canonical unpadded base64url key material containing at least 32 bytes. */
+  readonly secretBase64Url: string
+  /** Canonical lowercase RFC 4122 UUID (versions 1 through 5). */
+  readonly producerInstance: string
 }
 
 /** Caller-owned business identity with an optional repository-assigned Resource.id. */
@@ -147,14 +193,33 @@ export interface IdentifiedEntryIdentityInput extends ResourceIdentityInput {
 }
 
 export interface ApplicationDeviceInput {
-  readonly identity: ResourceIdentityInput
+  /** Deployment-governed token for this source application/build; never emitted in clear. */
+  readonly sourceDeviceToken: string
+  readonly id?: FhirId
   readonly name: string
   readonly version?: string
+  readonly build?: string
   readonly manufacturer?: string
+  /** Optional immutable snapshot of the hardware/OS hosting this application. */
+  readonly host?: HostDeviceInput
+}
+
+export interface HostDeviceInput {
+  /** Event-time source token for this host snapshot; never emitted in clear. */
+  readonly sourceDeviceToken: string
+  readonly id?: FhirId
+  readonly name?: string
+  readonly manufacturer?: string
+  readonly modelNumber?: string
+  readonly operatingSystemVersion: string
 }
 
 interface RecordingDeviceBaseInput {
-  readonly identity: ResourceIdentityInput
+  /** Stable token for one physical unit; model, manufacturer, or subject are not substitutes. */
+  readonly stableUnitToken: string
+  /** Complete logical subject identity used only in the HMAC preimage. */
+  readonly subjectIdentifier: CompleteIdentifierInput
+  readonly id?: FhirId
   readonly name?: string
   readonly manufacturer?: string
   readonly modelNumber?: string

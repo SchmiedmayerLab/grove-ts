@@ -224,6 +224,36 @@ describe('bounded R4 schema invariants', () => {
     ).toBe(true)
   })
 
+  it('orders sub-millisecond fractions without truncation', () => {
+    expect(
+      periodSchema.safeParse({
+        start: '2026-01-01T00:00:00.0002Z',
+        end: '2026-01-01T00:00:00.0001Z',
+      }).success,
+    ).toBe(false)
+    expect(
+      periodSchema.safeParse({
+        start: '2026-01-01T00:00:00.0001Z',
+        end: '2026-01-01T00:00:00.0002Z',
+      }).success,
+    ).toBe(true)
+  })
+
+  it('keeps a leap second before the following wall-clock second', () => {
+    expect(
+      periodSchema.safeParse({
+        start: '2026-12-31T23:59:60.999999Z',
+        end: '2027-01-01T00:00:00Z',
+      }).success,
+    ).toBe(true)
+    expect(
+      periodSchema.safeParse({
+        start: '2027-01-01T00:00:00Z',
+        end: '2026-12-31T23:59:60.999999Z',
+      }).success,
+    ).toBe(false)
+  })
+
   it('types every temporal field, not only the ones an example happened to use', () => {
     expect(
       provenanceSchema.safeParse({

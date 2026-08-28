@@ -89,8 +89,34 @@ await requireByteIdentical(
   resolve(igRoot, 'Conformance/corpora/mobile-semantics/corpus.json'),
   'Conformance/corpora/mobile-semantics/corpus.json',
 )
+for (const name of [
+  'corpus.json',
+  'exchange-bundle.json',
+  'retraction-bundle.json',
+]) {
+  await requireByteIdentical(
+    resolve(
+      packageRoot,
+      '.grove-fhir/Conformance/corpora/mobile-exchange',
+      name,
+    ),
+    resolve(igRoot, 'Conformance/corpora/mobile-exchange', name),
+    `Conformance/corpora/mobile-exchange/${name}`,
+  )
+}
 
 const pin = await readJson(resolve(packageRoot, 'grove-fhir.json'))
+if (
+  pin.repository !== 'https://github.com/SchmiedmayerLab/grove-fhir' ||
+  typeof pin.ref !== 'string' ||
+  !/^[\da-f]{40}$/u.test(pin.ref) ||
+  typeof pin.archiveSha256 !== 'string' ||
+  !/^[\da-f]{64}$/u.test(pin.archiveSha256)
+) {
+  throw new Error(
+    'The Grove FHIR dependency pin must contain one complete commit SHA and archive SHA-256.',
+  )
+}
 const revision = spawnSync('git', ['-C', igRoot, 'rev-parse', 'HEAD'], {
   encoding: 'utf8',
 })
@@ -98,22 +124,13 @@ if (revision.status !== 0) {
   throw new Error('Cannot resolve the Grove FHIR checkout revision.')
 }
 const resolvedSha = revision.stdout.trim()
-const pinnedRef = pin.ref ?? pin.sha
-// A tag is resolved to the commit it names, so a moved tag is caught rather than trusted.
-const pinnedSha =
-  /^[\da-f]{40}$/u.test(pinnedRef) ? pinnedRef : (
-    spawnSync('git', ['-C', igRoot, 'rev-list', '-n', '1', pinnedRef], {
-      encoding: 'utf8',
-    }).stdout.trim()
-  )
+const pinnedRef = pin.ref
 stdout.write(`Grove FHIR pinned ref: ${pinnedRef}\n`)
 stdout.write(`Grove FHIR checkout SHA: ${resolvedSha}\n`)
 // The guide checkout and the catalogs this package generated from must be one commit.
-if (!structuralOnly && resolvedSha !== pinnedSha) {
+if (!structuralOnly && resolvedSha !== pinnedRef) {
   throw new Error(
-    `The Grove FHIR checkout is ${resolvedSha}, but this package is pinned to ${pinnedRef}` +
-      (pinnedSha && pinnedSha !== pinnedRef ? ` (${pinnedSha})` : '') +
-      '.',
+    `The Grove FHIR checkout is ${resolvedSha}, but this package is pinned to ${pinnedRef}.`,
   )
 }
 
@@ -131,16 +148,23 @@ if (structuralOnly) {
   producerArguments.push('--structural-only')
 } else {
   producerArguments.push(
+    '--allow-example-urls',
     '--validator',
     validator,
     '--package',
+    `google-health=${resolve(igRoot, 'google-health/output/package.tgz')}`,
+    '--package',
     `mobile=${resolve(igRoot, 'mobile/output/package.tgz')}`,
+    '--package',
+    `oura=${resolve(igRoot, 'oura/output/package.tgz')}`,
     '--package',
     `providers=${resolve(igRoot, 'providers/output/package.tgz')}`,
     '--package',
     `sensor=${resolve(igRoot, 'sensor/output/package.tgz')}`,
     '--package',
     `questionnaire=${resolve(igRoot, 'questionnaire/output/package.tgz')}`,
+    '--package',
+    `withings=${resolve(igRoot, 'withings/output/package.tgz')}`,
   )
 }
 run('python3', producerArguments, igRoot)

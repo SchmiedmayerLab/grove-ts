@@ -4,20 +4,15 @@
       "kind": "providers",
       "provider": "withings"
     },
-    "providerAccountIdentifier": {
+    "providerScopeIdentifier": {
       "system": "https://example.org/deployments/provider-accounts",
       "value": "pseudonym-withings-001",
-      "assurance": "deployment-scoped-pseudonym"
+      "assurance": "deployment-scoped-account-pseudonym"
     },
     "sourceType": "activityIntraday",
     "sourceNativeId": "synthetic-withings-activity-series-001",
     "dataOrigin": {
-      "identity": {
-        "identifier": {
-          "system": "https://example.org/data-origins",
-          "value": "withings"
-        }
-      },
+      "sourceDeviceToken": "origin-instance-withings-001",
       "name": "Withings"
     }
   },
