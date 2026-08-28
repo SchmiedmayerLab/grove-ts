@@ -1,0 +1,32 @@
+//
+// This source file is part of the Grove open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+//
+
+export type ReadonlyDeep<T> =
+  T extends (...arguments_: never[]) => unknown ? T
+  : T extends readonly unknown[] ?
+    Readonly<{ [Index in keyof T]: ReadonlyDeep<T[Index]> }>
+  : T extends object ? { readonly [Key in keyof T]: ReadonlyDeep<T[Key]> }
+  : T
+
+const isObject = (value: unknown): value is Record<PropertyKey, unknown> =>
+  typeof value === 'object' && value !== null
+
+export const deepFreeze = <T>(value: T): ReadonlyDeep<T> => {
+  if (!isObject(value) || Object.isFrozen(value)) {
+    return value as ReadonlyDeep<T>
+  }
+
+  // Freeze before descending: the frozen check above is what stops a cycle, so a node that
+  // reaches itself through its own children must already be frozen by the time it is revisited.
+  Object.freeze(value)
+  for (const nested of Object.values(value)) {
+    deepFreeze(nested)
+  }
+
+  return value as ReadonlyDeep<T>
+}

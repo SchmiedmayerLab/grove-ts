@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "fhirVersion": "4.0.1",
+  "producer": { "name": "Grove TypeScript", "version": "0.0.0" },
+  "packages": [
+    {
+      "alias": "mobile",
+      "packageId": "org.grovealliance.fhir.mobile",
+      "version": "0.5.0"
+    },
+    {
+      "alias": "providers",
+      "packageId": "org.grovealliance.fhir.providers",
+      "version": "0.5.0"
+    },
+    {
+      "alias": "sensor",
+      "packageId": "org.grovealliance.fhir.sensor",
+      "version": "0.5.0"
+    },
+    {
+      "alias": "questionnaire",
+      "packageId": "org.grovealliance.fhir.questionnaire",
+      "version": "0.5.0"
+    }
+  ],
+  "resources": [
+    {
+      "path": "resources/mobile-active-energy.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-basal-energy.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-blood-glucose-unspecified-specimen.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-blood-pressure.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-body-fat-percentage.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-body-height.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-body-temperature.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-body-water-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-body-weight.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-bone-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-deep-sleep-duration.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-distance.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-electrodermal-activity.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-flights-climbed.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-heart-rate.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-heart-rate-variability-rmssd.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-heart-rate-variability-sdnn.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-lean-body-mass.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-light-sleep-duration.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-oxygen-saturation.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-oxygen-saturation-daily-average.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-rem-sleep-duration.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-respiratory-rate-average.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-resting-heart-rate.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-skin-temperature.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-sleep-awake-duration.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-sleep-duration.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-sleep-heart-rate.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-step-count.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-vo2-max.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/mobile-workout.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/provider-oura-daily-activity.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/recording-google-health-api-heart-rate.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/recording-oura-heartrate.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/recording-withings-activityintraday.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/recording-withings-sleepintraday.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
+      "path": "resources/questionnaire.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire"
+      ]
+    },
+    {
+      "path": "resources/questionnaire-response.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response"
+      ]
+    }
+  ],
+  "semanticVectors": [
+    {
+      "id": "active-energy",
+      "path": "resources/mobile-active-energy.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "basal-energy",
+      "path": "resources/mobile-basal-energy.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "blood-glucose-unspecified-specimen",
+      "path": "resources/mobile-blood-glucose-unspecified-specimen.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "blood-pressure",
+      "path": "resources/mobile-blood-pressure.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "body-fat-percentage",
+      "path": "resources/mobile-body-fat-percentage.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "body-height",
+      "path": "resources/mobile-body-height.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "body-temperature",
+      "path": "resources/mobile-body-temperature.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "body-water-mass",
+      "path": "resources/mobile-body-water-mass.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "body-weight",
+      "path": "resources/mobile-body-weight.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "bone-mass",
+      "path": "resources/mobile-bone-mass.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "deep-sleep-duration",
+      "path": "resources/mobile-deep-sleep-duration.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "distance",
+      "path": "resources/mobile-distance.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "electrodermal-activity",
+      "path": "resources/mobile-electrodermal-activity.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "flights-climbed",
+      "path": "resources/mobile-flights-climbed.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "heart-rate",
+      "path": "resources/mobile-heart-rate.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "heart-rate-variability-rmssd",
+      "path": "resources/mobile-heart-rate-variability-rmssd.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "heart-rate-variability-sdnn",
+      "path": "resources/mobile-heart-rate-variability-sdnn.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "lean-body-mass",
+      "path": "resources/mobile-lean-body-mass.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "light-sleep-duration",
+      "path": "resources/mobile-light-sleep-duration.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "oxygen-saturation",
+      "path": "resources/mobile-oxygen-saturation.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "oxygen-saturation-daily-average",
+      "path": "resources/mobile-oxygen-saturation-daily-average.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "rem-sleep-duration",
+      "path": "resources/mobile-rem-sleep-duration.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "respiratory-rate-average",
+      "path": "resources/mobile-respiratory-rate-average.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "resting-heart-rate",
+      "path": "resources/mobile-resting-heart-rate.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "skin-temperature",
+      "path": "resources/mobile-skin-temperature.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "sleep-awake-duration",
+      "path": "resources/mobile-sleep-awake-duration.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "sleep-duration",
+      "path": "resources/mobile-sleep-duration.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "sleep-heart-rate",
+      "path": "resources/mobile-sleep-heart-rate.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "step-count",
+      "path": "resources/mobile-step-count.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "vo2-max",
+      "path": "resources/mobile-vo2-max.json",
+      "resourcePointer": "/entry/0/resource"
+    },
+    {
+      "id": "workout",
+      "path": "resources/mobile-workout.json",
+      "resourcePointer": "/entry/0/resource"
+    }
+  ]
+}

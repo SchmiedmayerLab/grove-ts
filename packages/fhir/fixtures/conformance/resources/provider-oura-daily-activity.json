@@ -1,0 +1,415 @@
+{
+  "resourceType": "Bundle",
+  "meta": {
+    "profile": [
+      "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+    ]
+  },
+  "identifier": {
+    "system": "urn:grove:provider-graph:org.grovealliance.example",
+    "value": "oura|32|exchange-bundle"
+  },
+  "type": "collection",
+  "timestamp": "2026-08-21T07:02:00Z",
+  "entry": [
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:source-oura-daily-activity|step-count"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:8847e52b-0da0-5755-a027-e33cc367c692",
+      "resource": {
+        "resourceType": "Observation",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-step-count",
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider",
+            "valueCode": "oura"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type",
+            "valueCode": "oura/daily_activity"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-method",
+            "valueCoding": {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-recording-method",
+              "code": "automatically-recorded"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+            "value": "source-oura-daily-activity"
+          },
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:source-oura-daily-activity|step-count"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "activity",
+                "display": "Activity"
+              }
+            ],
+            "text": "Activity"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+              "code": "step-count-total"
+            }
+          ]
+        },
+        "subject": { "reference": "Patient/example" },
+        "effectivePeriod": {
+          "start": "2026-08-20T00:00:00.000-07:00",
+          "end": "2026-08-21T00:00:00.000-07:00"
+        },
+        "issued": "2026-08-21T07:01:00Z",
+        "valueQuantity": {
+          "value": 1042,
+          "unit": "steps",
+          "system": "http://unitsofmeasure.org",
+          "code": "{steps}"
+        }
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:source-oura-daily-activity|active-energy"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:c99ba8fc-e79e-5b15-bf68-bee5a5e5934b",
+      "resource": {
+        "resourceType": "Observation",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy",
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider",
+            "valueCode": "oura"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type",
+            "valueCode": "oura/daily_activity"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-method",
+            "valueCoding": {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-recording-method",
+              "code": "automatically-recorded"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+            "value": "source-oura-daily-activity"
+          },
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:source-oura-daily-activity|active-energy"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "activity",
+                "display": "Activity"
+              }
+            ],
+            "text": "Activity"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement",
+              "code": "active-energy-burned"
+            }
+          ]
+        },
+        "subject": { "reference": "Patient/example" },
+        "effectivePeriod": {
+          "start": "2026-08-20T00:00:00.000-07:00",
+          "end": "2026-08-21T00:00:00.000-07:00"
+        },
+        "issued": "2026-08-21T07:01:00Z",
+        "valueQuantity": {
+          "value": 312.5,
+          "unit": "kcal",
+          "system": "http://unitsofmeasure.org",
+          "code": "kcal"
+        }
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:source-oura-daily-activity|distance"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:0aa056e7-092f-5cc6-901d-86a9427c89e0",
+      "resource": {
+        "resourceType": "Observation",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance",
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider",
+            "valueCode": "oura"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type",
+            "valueCode": "oura/daily_activity"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-method",
+            "valueCoding": {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-recording-method",
+              "code": "automatically-recorded"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+            "value": "source-oura-daily-activity"
+          },
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-output-id",
+            "value": "v1:source-oura-daily-activity|distance"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "activity",
+                "display": "Activity"
+              }
+            ],
+            "text": "Activity"
+          }
+        ],
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "103208-5" }]
+        },
+        "subject": { "reference": "Patient/example" },
+        "effectivePeriod": {
+          "start": "2026-08-20T00:00:00.000-07:00",
+          "end": "2026-08-21T00:00:00.000-07:00"
+        },
+        "issued": "2026-08-21T07:01:00Z",
+        "valueQuantity": {
+          "value": 4820.5,
+          "unit": "m",
+          "system": "http://unitsofmeasure.org",
+          "code": "m"
+        }
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/testing/data-origins",
+            "value": "connected-provider"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:8ade7702-2fc8-5fc3-b489-25894b62ae2e",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/testing/data-origins",
+            "value": "connected-provider"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Synthetic connected provider",
+            "type": "user-friendly-name"
+          }
+        ]
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/testing/applications",
+            "value": "grove-ts-0.2"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:e000a26a-c10e-54eb-9573-1f0721d6ade6",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/testing/applications",
+            "value": "grove-ts-0.2"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Grove TypeScript conformance producer",
+            "type": "user-friendly-name"
+          }
+        ],
+        "version": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "urn:iso:std:iso:11073:10101",
+                  "code": "531975",
+                  "display": "Software revision"
+                }
+              ]
+            },
+            "value": "0.0.0"
+          }
+        ]
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "urn:grove:provider-graph:org.grovealliance.example",
+            "value": "oura|32|conversion-provenance"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:8da79180-b7a2-5851-9af5-75e3b41a0d2f",
+      "resource": {
+        "resourceType": "Provenance",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance"
+          ]
+        },
+        "target": [
+          { "reference": "urn:uuid:8847e52b-0da0-5755-a027-e33cc367c692" },
+          { "reference": "urn:uuid:c99ba8fc-e79e-5b15-bf68-bee5a5e5934b" },
+          { "reference": "urn:uuid:0aa056e7-092f-5cc6-901d-86a9427c89e0" }
+        ],
+        "recorded": "2026-08-21T07:02:00Z",
+        "activity": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle",
+              "code": "transform",
+              "display": "Transform/Translate Record Lifecycle Event"
+            }
+          ],
+          "text": "Transform/Translate Record Lifecycle Event"
+        },
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler",
+                  "display": "Assembler"
+                }
+              ],
+              "text": "Assembler"
+            },
+            "who": {
+              "reference": "urn:uuid:e000a26a-c10e-54eb-9573-1f0721d6ade6"
+            }
+          }
+        ],
+        "entity": [
+          {
+            "role": "source",
+            "what": {
+              "identifier": {
+                "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+                "value": "source-oura-daily-activity"
+              }
+            },
+            "agent": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                      "code": "enterer",
+                      "display": "Enterer"
+                    }
+                  ],
+                  "text": "Enterer"
+                },
+                "who": {
+                  "reference": "urn:uuid:8ade7702-2fc8-5fc3-b489-25894b62ae2e"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

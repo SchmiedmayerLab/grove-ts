@@ -1,0 +1,47 @@
+{
+  "resourceType": "Questionnaire",
+  "meta": {
+    "profile": [
+      "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire"
+    ]
+  },
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/artifact-versionAlgorithm",
+      "valueCoding": {
+        "system": "http://hl7.org/fhir/version-algorithm",
+        "code": "semver"
+      }
+    }
+  ],
+  "url": "https://grovealliance.org/fhir/testing/Questionnaire/grove-ts-conformance",
+  "version": "1.0.0",
+  "name": "GroveTsConformance",
+  "title": "Grove TypeScript conformance instrument",
+  "status": "active",
+  "subjectType": ["Patient"],
+  "item": [
+    {
+      "linkId": "wellbeing",
+      "text": "How are you feeling?",
+      "type": "choice",
+      "required": true,
+      "answerOption": [
+        {
+          "valueCoding": {
+            "system": "https://grovealliance.org/fhir/testing/CodeSystem/wellbeing",
+            "code": "well",
+            "display": "Well"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://grovealliance.org/fhir/testing/CodeSystem/wellbeing",
+            "code": "unwell",
+            "display": "Unwell"
+          }
+        }
+      ]
+    }
+  ]
+}

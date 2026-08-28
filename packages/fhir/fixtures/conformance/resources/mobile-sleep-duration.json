@@ -1,0 +1,247 @@
+{
+  "resourceType": "Bundle",
+  "meta": {
+    "profile": [
+      "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+    ]
+  },
+  "identifier": {
+    "system": "urn:grove:provider-graph:org.grovealliance.example",
+    "value": "google-health-api|27|exchange-bundle"
+  },
+  "type": "collection",
+  "timestamp": "2026-08-20T12:02:00Z",
+  "entry": [
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+            "value": "v1:google-health-api|account-google-health-api|sleep|source-sleep-duration"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:2196ef69-d631-5ca9-b4f8-09c36888ddae",
+      "resource": {
+        "resourceType": "Observation",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-duration",
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider",
+            "valueCode": "google-health-api"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type",
+            "valueCode": "google-health-api/sleep"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-method",
+            "valueCoding": {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-recording-method",
+              "code": "automatically-recorded"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+            "value": "v1:google-health-api|account-google-health-api|sleep|source-sleep-duration"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "activity",
+                "display": "Activity"
+              }
+            ],
+            "text": "Activity"
+          }
+        ],
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "93832-4" }]
+        },
+        "subject": { "reference": "Patient/example" },
+        "effectivePeriod": {
+          "start": "2026-08-19T23:00:00.000-07:00",
+          "end": "2026-08-20T06:30:00.000-07:00"
+        },
+        "issued": "2026-08-20T12:01:00Z",
+        "valueQuantity": {
+          "value": 7.5,
+          "unit": "h",
+          "system": "http://unitsofmeasure.org",
+          "code": "h"
+        }
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/testing/data-origins",
+            "value": "connected-provider"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:8ade7702-2fc8-5fc3-b489-25894b62ae2e",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/testing/data-origins",
+            "value": "connected-provider"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Synthetic connected provider",
+            "type": "user-friendly-name"
+          }
+        ]
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "https://grovealliance.org/fhir/testing/applications",
+            "value": "grove-ts-0.2"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:e000a26a-c10e-54eb-9573-1f0721d6ade6",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://grovealliance.org/fhir/testing/applications",
+            "value": "grove-ts-0.2"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Grove TypeScript conformance producer",
+            "type": "user-friendly-name"
+          }
+        ],
+        "version": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "urn:iso:std:iso:11073:10101",
+                  "code": "531975",
+                  "display": "Software revision"
+                }
+              ]
+            },
+            "value": "0.0.0"
+          }
+        ]
+      }
+    },
+    {
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-identifier",
+          "valueIdentifier": {
+            "system": "urn:grove:provider-graph:org.grovealliance.example",
+            "value": "google-health-api|27|conversion-provenance"
+          }
+        }
+      ],
+      "fullUrl": "urn:uuid:127ca2f2-f330-50e4-9834-8ad85f792dc2",
+      "resource": {
+        "resourceType": "Provenance",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/providers/StructureDefinition/provider-conversion-provenance"
+          ]
+        },
+        "target": [
+          { "reference": "urn:uuid:2196ef69-d631-5ca9-b4f8-09c36888ddae" }
+        ],
+        "recorded": "2026-08-20T12:02:00Z",
+        "activity": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle",
+              "code": "transform",
+              "display": "Transform/Translate Record Lifecycle Event"
+            }
+          ],
+          "text": "Transform/Translate Record Lifecycle Event"
+        },
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler",
+                  "display": "Assembler"
+                }
+              ],
+              "text": "Assembler"
+            },
+            "who": {
+              "reference": "urn:uuid:e000a26a-c10e-54eb-9573-1f0721d6ade6"
+            }
+          }
+        ],
+        "entity": [
+          {
+            "role": "source",
+            "what": {
+              "identifier": {
+                "system": "https://grovealliance.org/fhir/providers/NamingSystem/provider-source-record-id",
+                "value": "v1:google-health-api|account-google-health-api|sleep|source-sleep-duration"
+              }
+            },
+            "agent": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                      "code": "enterer",
+                      "display": "Enterer"
+                    }
+                  ],
+                  "text": "Enterer"
+                },
+                "who": {
+                  "reference": "urn:uuid:8ade7702-2fc8-5fc3-b489-25894b62ae2e"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

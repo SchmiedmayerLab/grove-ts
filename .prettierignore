@@ -15,5 +15,10 @@
 **/*.tsbuildinfo
 **/.docusaurus
 packages/design-system/docs/docs/api
+packages/fhir/catalog/grove-fhir/*.json
+!packages/fhir/catalog/grove-fhir/source-ref.json
+packages/fhir/catalog/grove-fhir-conformance/*.json
 .parcel-cache
 node_modules
+
+packages/fhir/.fhir-cache/

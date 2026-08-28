@@ -5,9 +5,6 @@
     "moduleResolution": "NodeNext",
     "noEmit": true,
     "types": ["jest", "node"],
-    "paths": {
-      "@schmiedmayerlab/grove-firebase-utils": ["../../firebase-utils/src"]
-    },
     "rootDir": "../"
   },
   "include": ["./**/*.ts", "../src/**/*.ts"],

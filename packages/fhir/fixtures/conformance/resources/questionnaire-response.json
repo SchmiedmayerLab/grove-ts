@@ -1,0 +1,44 @@
+{
+  "resourceType": "QuestionnaireResponse",
+  "meta": {
+    "profile": [
+      "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response"
+    ]
+  },
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode",
+      "valueCodeableConcept": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationMode",
+            "code": "ELECTRONIC"
+          }
+        ]
+      }
+    }
+  ],
+  "identifier": {
+    "system": "https://grovealliance.org/fhir/testing/questionnaire-responses",
+    "value": "grove-ts-conformance-response"
+  },
+  "questionnaire": "https://grovealliance.org/fhir/testing/Questionnaire/grove-ts-conformance|1.0.0",
+  "status": "completed",
+  "subject": { "reference": "Patient/example" },
+  "authored": "2026-08-20T12:00:00Z",
+  "item": [
+    {
+      "linkId": "wellbeing",
+      "text": "How are you feeling?",
+      "answer": [
+        {
+          "valueCoding": {
+            "system": "https://grovealliance.org/fhir/testing/CodeSystem/wellbeing",
+            "code": "well",
+            "display": "Well"
+          }
+        }
+      ]
+    }
+  ]
+}
