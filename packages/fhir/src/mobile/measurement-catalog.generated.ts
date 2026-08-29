@@ -51,9 +51,9 @@ export const groveMobileProfileCanonicals: typeof groveMobileProfileCanonicalsVa
 const groveExchangeProtocolValue = {
   $schema:
     'https://grovealliance.org/fhir/catalog/schemas/exchange-protocol.schema.json',
-  schemaVersion: 1,
+  schemaVersion: 0,
   version: '0.6.0',
-  protocolVersion: 2,
+  protocolVersion: 0,
   releaseVersion: '0.6.0',
   fhirVersion: '4.0.1',
   profiles: {
@@ -126,7 +126,7 @@ const groveExchangeProtocolValue = {
     {
       code: 'mobile-exchange.event-identity',
       reason:
-        'Bundle.identifier.value must be the canonical e2 producer UUID and positive sequence form.',
+        'Bundle.identifier.value must be the canonical e0 producer UUID and positive sequence form.',
     },
     {
       code: 'mobile-exchange.entry-node-digest',
@@ -171,7 +171,7 @@ const groveExchangeProtocolValue = {
     {
       code: 'mobile-retraction.opaque-target',
       reason:
-        'A retraction target must use the exact canonical v2 HMAC identity previously emitted.',
+        'A retraction target must use the exact canonical v0 HMAC identity previously emitted.',
     },
     {
       code: 'mobile-retraction.no-clinical-copy',
@@ -196,12 +196,12 @@ const groveExchangeProtocolValue = {
     {
       code: 'mobile-output.quantity-value-domain',
       reason:
-        'Every Quantity-valued catalog measurement stays within its reviewed representational minimum, maximum, and integer-only domain without inventing a physiologic range.',
+        'Every Quantity-valued catalog measurement stays within its catalog-declared representational minimum, maximum, and integer-only domain without inventing a physiologic range.',
     },
     {
       code: 'mobile-exchange.reference-target-type',
       reason:
-        'An Observation subject resolves to a Patient entry, not merely to any existing fullUrl.',
+        'Every governed Patient reference resolves to a Patient entry, not merely to any existing fullUrl.',
     },
     {
       code: 'mobile-exchange.reference-declared-type',
@@ -226,12 +226,12 @@ const groveExchangeProtocolValue = {
     {
       code: 'mobile-exchange.reference-shape',
       reason:
-        'A governed Reference is exclusively resolving-literal or identifier-only logical, never both.',
+        'Each governed path has its declared singular or repeating shape and contains valid Reference objects that are exclusively resolving-literal or identifier-only logical, never both.',
     },
     {
       code: 'mobile-exchange.logical-patient-reference',
       reason:
-        'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier.',
+        'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier without a Grove role or protocol-reserved system.',
     },
     {
       code: 'mobile-output.adapter-only-profile',
@@ -276,7 +276,7 @@ const groveExchangeProtocolValue = {
       system:
         'A deployment-owned absolute URI, stable for the producer instance and never reused for another key space.',
       valueForm:
-        'e2:<lowercase-producer-instance-uuid>:<positive-monotonic-sequence>',
+        'e0:<lowercase-producer-instance-uuid>:<positive-monotonic-sequence>',
       soleEventBusinessIdentifier: true,
     },
     times: {
@@ -294,11 +294,11 @@ const groveExchangeProtocolValue = {
   },
   opaqueIdentity: {
     algorithm: 'HMAC-SHA-256',
-    domain: 'org.grovealliance.fhir.identity.v2',
+    domain: 'org.grovealliance.fhir.identity.v0',
     preimage:
       "The domain, one identity kind from the closed identityKinds list, and exactly that kind's typed components in declared order. Every typed component is a non-empty Unicode-scalar string; missing, empty, additional, reordered, or non-scalar components are errors. Every field is encoded as an unsigned 32-bit big-endian byte length followed by its exact UTF-8 bytes.",
     valueForm:
-      'v2:<key-id>:<positive-key-epoch>:<43-character-base64url-digest-without-padding>',
+      'v0:<key-id>:<positive-key-epoch>:<43-character-base64url-digest-without-padding>',
     identifierSystem:
       'Deployment-owned and immutable for one identity kind, deployment scope, key id, and key epoch. A rotated key uses a new system and epoch.',
     keyRequirements: {
@@ -664,7 +664,7 @@ const groveExchangeProtocolValue = {
     ],
     entryNode: {
       system: 'A deployment-owned absolute URI for event-scoped graph nodes.',
-      domain: 'org.grovealliance.fhir.entry-node.v2',
+      domain: 'org.grovealliance.fhir.entry-node.v0',
       components: [
         'event-system',
         'event-value',
@@ -672,7 +672,7 @@ const groveExchangeProtocolValue = {
         'zero-based-ordinal',
       ],
       valueForm:
-        'n2:<node-role>:<zero-based-ordinal>:<43-character-base64url-sha256-without-padding>',
+        'n0:<node-role>:<zero-based-ordinal>:<43-character-base64url-sha256-without-padding>',
       digest:
         'Unkeyed SHA-256 over the same unsigned 32-bit length-framed UTF-8 encoding. It is a deterministic graph key, not a privacy control.',
     },
@@ -775,36 +775,53 @@ const groveExchangeProtocolValue = {
     declaredType:
       'When Reference.type is present on a literal reference, it is the exact target resourceType token.',
     governedShape:
-      'Every reference at a governed path is either one resolving Bundle fullUrl with no logical identifier, or one identifier-only logical reference with no literal, an exact allowed Reference.type, and one complete absolute-system Identifier. Identifier-only Patient references carry a deployment-scoped pseudonym and are not fabricated Bundle nodes.',
+      'Every reference at a governed path is either one resolving Bundle fullUrl with no logical identifier, or one identifier-only logical reference with no literal, an exact allowed Reference.type, and one complete absolute-system Identifier. Identifier-only Patient references carry the exact deployment-scoped pseudonym pair, use no Grove identifier role or protocol-reserved code-system URI, and are not fabricated Bundle nodes.',
+    identifierOnlyPatient: {
+      systemRule:
+        'Identifier.system is an absolute pseudonym namespace and is not one of the protocol-reserved code-system URIs. Namespace ownership and deployment scope are producer/deployment obligations; this validator proves only absolute-URI shape and reserved-system exclusion.',
+      valueRule:
+        'Identifier.value is the exact non-empty caller-supplied pseudonym token; producers do not normalize or replace it.',
+      reservedSystems: [
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role',
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-lifecycle-event',
+        'https://grovealliance.org/fhir/mobile/CodeSystem/grove-retraction-target-role',
+      ],
+    },
     paths: [
       {
         resourceType: 'Observation',
         path: 'subject',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'Observation',
         path: 'device',
+        repeating: false,
         targetTypes: ['Device'],
       },
       {
         resourceType: 'Observation',
         path: 'specimen',
+        repeating: false,
         targetTypes: ['Specimen'],
       },
       {
         resourceType: 'Observation',
         path: 'focus',
+        repeating: true,
         targetTypes: ['Location'],
       },
       {
         resourceType: 'Observation',
         path: 'hasMember',
+        repeating: true,
         targetTypes: ['Observation'],
       },
       {
         resourceType: 'Observation',
         path: 'derivedFrom',
+        repeating: true,
         targetTypes: [
           'Observation',
           'DocumentReference',
@@ -814,46 +831,61 @@ const groveExchangeProtocolValue = {
       {
         resourceType: 'DocumentReference',
         path: 'subject',
+        repeating: false,
+        targetTypes: ['Patient'],
+      },
+      {
+        resourceType: 'QuestionnaireResponse',
+        path: 'subject',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'Specimen',
         path: 'subject',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'MedicationAdministration',
         path: 'subject',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'MedicationStatement',
         path: 'subject',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'VisionPrescription',
         path: 'patient',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'ResearchSubject',
         path: 'individual',
+        repeating: false,
         targetTypes: ['Patient'],
       },
       {
         resourceType: 'ResearchSubject',
         path: 'study',
+        repeating: false,
         targetTypes: ['ResearchStudy'],
       },
       {
         resourceType: 'ResearchStudy',
         path: 'protocol',
+        repeating: true,
         targetTypes: ['PlanDefinition'],
       },
       {
         resourceType: 'Device',
         path: 'parent',
+        repeating: false,
         targetTypes: ['Device'],
       },
     ],
@@ -871,8 +903,7 @@ const groveExchangeProtocolValue = {
   outputModes: [
     {
       code: 'semantic-only',
-      meaning:
-        'A reviewed FHIR semantic projection is the complete admitted output.',
+      meaning: 'A FHIR semantic projection is the complete admitted output.',
     },
     {
       code: 'source-only',
@@ -928,52 +959,52 @@ const groveExchangeProtocolValue = {
       {
         identityKind: 'source-record',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1',
       },
       {
         identityKind: 'source-output',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-source-output-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-source-output-v0/test-key/1',
       },
       {
         identityKind: 'writer-record',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-writer-record-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-writer-record-v0/test-key/1',
       },
       {
         identityKind: 'provider-record',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-provider-record-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-provider-record-v0/test-key/1',
       },
       {
         identityKind: 'provider-output',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-provider-output-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-provider-output-v0/test-key/1',
       },
       {
         identityKind: 'source-artifact',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-source-artifact-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-source-artifact-v0/test-key/1',
       },
       {
         identityKind: 'provider-artifact',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v0/test-key/1',
       },
       {
         identityKind: 'source-context',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-source-context-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-source-context-v0/test-key/1',
       },
       {
         identityKind: 'recording-device',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-recording-device-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-recording-device-v0/test-key/1',
       },
       {
         identityKind: 'device-snapshot',
         system:
-          'https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v2/test-key/1',
+          'https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v0/test-key/1',
       },
     ],
     measurementExamples: {
@@ -1015,7 +1046,7 @@ const groveExchangeProtocolValue = {
           'default',
           'record|東京',
         ],
-        value: 'v2:test-key:1:UKY2qgzSB8--SueGxEfOhpElzHTVJ6usIUWV_KUTD6o',
+        value: 'v0:test-key:1:BDCkwCFA2Wg4-fHVRsy4L0JWYuvQknZkCTXL4Ct01IQ',
       },
       {
         id: 'multi-output-sample',
@@ -1029,7 +1060,7 @@ const groveExchangeProtocolValue = {
           'sample',
           '2026-08-19T10:30:00.000000000Z|0',
         ],
-        value: 'v2:test-key:1:PQCWz9dZSrJm-KrbhbkckGeowkjhSSwWDRCVuF3VfXw',
+        value: 'v0:test-key:1:MYPFjAMsSt0suOqpN29y_KjG__sagIpCbYKAfVKx6ck',
       },
       {
         id: 'provider-account-complete-pair',
@@ -1041,7 +1072,7 @@ const groveExchangeProtocolValue = {
           'patient|α',
           '17348211',
         ],
-        value: 'v2:test-key:1:p3NFdQ-hmHon98JG7cmCbLncbAmNkjkBa5sYocSr6pw',
+        value: 'v0:test-key:1:qfmx1ajnVg_rNE8qiL_hIAWI8GtbVpRtf6T2RWREezM',
       },
       {
         id: 'provider-output-domain-separated',
@@ -1055,7 +1086,7 @@ const groveExchangeProtocolValue = {
           'blood-pressure-panel',
           'single',
         ],
-        value: 'v2:test-key:1:HjBwHRt0W3-CbhJbc7hGpWRp92zug70gt5m626T4Y2U',
+        value: 'v0:test-key:1:mum-FTSsu6Kv_QBFNSjcFuznTp5C6D3QnrQ6iwm23Ec',
       },
       {
         id: 'provider-artifact-domain-separated',
@@ -1069,7 +1100,7 @@ const groveExchangeProtocolValue = {
           'provider-recording',
           '0',
         ],
-        value: 'v2:test-key:1:CxLpZ4NQee12xCyJCGimrxMLEKvbRt54Kl6RTh9UsrU',
+        value: 'v0:test-key:1:0LxvhsWmRngwxPPMqWk7--4qTN8Wa1j-oTbGuMCCgrA',
       },
       {
         id: 'generic-source-artifact',
@@ -1083,7 +1114,7 @@ const groveExchangeProtocolValue = {
           'native-recording',
           '0',
         ],
-        value: 'v2:test-key:1:7QkJwJojYb7w6BlKMy3TyoX-sgiPzjGJHL1euY-4SKk',
+        value: 'v0:test-key:1:iN5W23PWv_0jfI3RuCiO__c--cElAPDllZ4Gl_3CUPM',
       },
       {
         id: 'writer-record-complete-application-pair',
@@ -1093,7 +1124,7 @@ const groveExchangeProtocolValue = {
           'com.withings.wiscale2',
           'logical-record-001',
         ],
-        value: 'v2:test-key:1:N4QSlWU6sNp9ahfyfSRTUO0K_VIZZoy-Lw3JTNrDzP4',
+        value: 'v0:test-key:1:DvVpDnGZfj28tqpozMhpZSHjT2J65wvN_bmTYu0x0Cw',
       },
       {
         id: 'healthkit-medication-source-context',
@@ -1105,7 +1136,7 @@ const groveExchangeProtocolValue = {
           'default',
           '2f8a51c6-9d34-4e07-b2f1-63c8ad905e12',
         ],
-        value: 'v2:test-key:1:nq3ZogmXHSznC1LC1wNMm7KTQChgapPzmjmGeB9RHcw',
+        value: 'v0:test-key:1:YTeSyVMN8VDKaIp7rLq6h9HfDIypiKcwO-nFqCJA8Dk',
       },
       {
         id: 'recording-device-per-unit',
@@ -1116,18 +1147,18 @@ const groveExchangeProtocolValue = {
           'participant-001',
           'watch-unit-token-001',
         ],
-        value: 'v2:test-key:1:MWGV3Vfk0jfLIr0nowr_I7TAwoqGtpSkxUi1d8FxTnE',
+        value: 'v0:test-key:1:BZfymBSOLQlRaEwkvjBNFKbiTvUoNrz8CJEgYlztkus',
       },
       {
         id: 'device-snapshot-per-event',
         identityKind: 'device-snapshot',
         components: [
-          'https://study.example.org/fhir/NamingSystem/grove-event-v2',
-          'e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
           'application',
           'com.example.app|1.2.3',
         ],
-        value: 'v2:test-key:1:TUaZacIuSMAFl_WbhxvMBX4AgxIKcHw_KvbntQdXYxQ',
+        value: 'v0:test-key:1:Q2sME_dGFj94xyprI1HtMokER94GYsHINZi0ilnsnRY',
       },
     ],
     invalidIdentities: [
@@ -1185,18 +1216,18 @@ const groveExchangeProtocolValue = {
       },
     ],
     event: {
-      system: 'https://study.example.org/fhir/NamingSystem/grove-event-v2',
+      system: 'https://study.example.org/fhir/NamingSystem/grove-event-v0',
       producerInstance: '1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
       sequence: '42',
-      value: 'e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
+      value: 'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
     },
     entryNode: {
-      system: 'https://study.example.org/fhir/NamingSystem/grove-entry-node-v2',
+      system: 'https://study.example.org/fhir/NamingSystem/grove-entry-node-v0',
       role: 'conversion-provenance',
       ordinal: '0',
       value:
-        'n2:conversion-provenance:0:SwGD7C4DT5_9kgIOQ9h7W8I4UdwJPuEOnkh2TgQVwko',
-      fullUrl: 'urn:uuid:9908feb7-0370-5f06-a689-f8afa210eb41',
+        'n0:conversion-provenance:0:8JmcQF7rmULm9uJBkHWruJwfMu3GJTxGWqXWn2DGqWk',
+      fullUrl: 'urn:uuid:71abc484-b9ee-511e-b22a-5b35d026d620',
     },
     fullUrls: [
       {
@@ -1235,7 +1266,7 @@ const groveExchangeRuleDiagnosticsValue = {
   },
   'mobile-exchange.event-identity': {
     reason:
-      'Bundle.identifier.value must be the canonical e2 producer UUID and positive sequence form.',
+      'Bundle.identifier.value must be the canonical e0 producer UUID and positive sequence form.',
     severity: 'error',
   },
   'mobile-exchange.entry-node-digest': {
@@ -1270,7 +1301,7 @@ const groveExchangeRuleDiagnosticsValue = {
   },
   'mobile-retraction.opaque-target': {
     reason:
-      'A retraction target must use the exact canonical v2 HMAC identity previously emitted.',
+      'A retraction target must use the exact canonical v0 HMAC identity previously emitted.',
     severity: 'error',
   },
   'mobile-retraction.no-clinical-copy': {
@@ -1290,7 +1321,7 @@ const groveExchangeRuleDiagnosticsValue = {
   },
   'mobile-exchange.reference-target-type': {
     reason:
-      'An Observation subject resolves to a Patient entry, not merely to any existing fullUrl.',
+      'Every governed Patient reference resolves to a Patient entry, not merely to any existing fullUrl.',
     severity: 'error',
   },
   'mobile-exchange.reference-declared-type': {
@@ -1315,12 +1346,12 @@ const groveExchangeRuleDiagnosticsValue = {
   },
   'mobile-exchange.reference-shape': {
     reason:
-      'A governed Reference is exclusively resolving-literal or identifier-only logical, never both.',
+      'Each governed path has its declared singular or repeating shape and contains valid Reference objects that are exclusively resolving-literal or identifier-only logical, never both.',
     severity: 'error',
   },
   'mobile-exchange.logical-patient-reference': {
     reason:
-      'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier.',
+      'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier without a Grove role or protocol-reserved system.',
     severity: 'error',
   },
   'mobile-exchange.entry-resource-type': {
@@ -1366,7 +1397,7 @@ export const groveExchangeRuleDiagnostics: typeof groveExchangeRuleDiagnosticsVa
 const groveProfileClaimsValue = {
   $schema:
     'https://grovealliance.org/fhir/catalog/schemas/catalog-contracts.schema.json',
-  schemaVersion: 1,
+  schemaVersion: 0,
   fhirVersion: '4.0.1',
   version: '0.6.0',
   observationAdapterClaim: {
@@ -2303,17 +2334,17 @@ const groveRecordingFormatRegistryValue = {
     },
     'native-recording': {
       title: 'Native Recording',
-      contentType: 'application/vnd.grovealliance.native+json',
+      contentType: 'application/json',
       status: 'active',
     },
     'provider-recording': {
       title: 'Provider Recording',
-      contentType: 'application/vnd.grovealliance.provider+json',
+      contentType: 'application/json',
       status: 'active',
     },
     'photoplethysmogram-samples': {
       title: 'Photoplethysmogram Samples',
-      contentType: 'application/vnd.grovealliance.ppg',
+      contentType: 'application/octet-stream',
       status: 'active',
     },
   },
@@ -2385,7 +2416,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Basal Energy Burned',
     description:
-      'Resting (basal) energy expenditure accrued during an exact effective Period, normalized to UCUM kilocalories. It is disjoint from active-energy: the two measurements never overlap in meaning and are summed only by consumers.',
+      'Resting (basal) energy expenditure accrued during an exact effective Period, normalized to UCUM kilocalories. It is disjoint from active-energy and may be combined with it only through an explicit derived-total calculation.',
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',
@@ -2786,7 +2817,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Deep Sleep Duration',
     description:
-      'Total time classified as deep sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals, distinct from the interval sleep-stage Observation, and is implemented by the phase-2 aggregate design.',
+      'Total time classified as deep sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is distinct from the interval sleep-stage Observation.',
     code: {
       system: 'http://loinc.org',
       code: '93831-6',
@@ -4045,7 +4076,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Lean Body Mass',
     description:
-      'A source-neutral lean body mass normalized to UCUM kilograms. Consumer bioimpedance sources report fat-free mass under this label; the lean-body-mass versus fat-free-mass distinction (essential fat) is not recoverable from any source, so Withings fat-free mass joins this measurement with that caveat rather than forming a separate concept.',
+      'A source-neutral lean body mass normalized to UCUM kilograms. Consumer bioimpedance devices report fat-free mass under this label; the lean-body-mass versus fat-free-mass distinction (essential fat) is not recoverable from any source, so Withings fat-free mass joins this measurement with that caveat rather than forming a separate concept.',
     code: {
       system: 'http://loinc.org',
       code: '91557-9',
@@ -4069,7 +4100,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Light Sleep Duration',
     description:
-      'Total time classified as light sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is implemented by the phase-2 aggregate design.',
+      'Total time classified as light sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is distinct from the interval sleep-stage Observation.',
     code: {
       system: 'http://loinc.org',
       code: '93830-8',
@@ -4292,7 +4323,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Oxygen Saturation Daily Average',
     description:
-      'The mean oxygen saturation over a civil-date effective Period, normalized to UCUM percent. It is distinct from the point-in-time shared oxygen-saturation measurement and is implemented by the phase-2 aggregate design.',
+      'The mean oxygen saturation over a civil-date effective Period, normalized to UCUM percent. The exact aggregation window is carried by effectivePeriod, and the result is distinct from the point-in-time shared oxygen-saturation measurement.',
     code: {
       system: 'http://loinc.org',
       code: '103209-3',
@@ -4358,7 +4389,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'REM Sleep Duration',
     description:
-      'Total time classified as REM sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is implemented by the phase-2 aggregate design.',
+      'Total time classified as REM sleep within one sleep session or civil-day summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is distinct from the interval sleep-stage Observation.',
     code: {
       system: 'http://loinc.org',
       code: '93829-0',
@@ -4414,7 +4445,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Respiratory Rate Average',
     description:
-      'The mean respiratory rate over a windowed effective Period, normalized to UCUM breaths per minute; current source windows are a civil date (Google) and a sleep session (Oura, Withings), and the window is carried entirely by the effectivePeriod. It is distinct from the point-in-time shared respiratory-rate measurement and is implemented by the phase-2 aggregate design.',
+      'The mean respiratory rate over a windowed effective Period, normalized to UCUM breaths per minute. Admitted source windows are a civil date (Google Health API) and a sleep session (Oura and Withings), and the exact window is carried by effectivePeriod. The result is distinct from the point-in-time shared respiratory-rate measurement.',
     code: {
       system: 'http://loinc.org',
       code: '103217-6',
@@ -4541,7 +4572,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Awake Duration During Sleep',
     description:
-      'Total time awake within one sleep session or civil-day sleep summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is implemented by the phase-2 aggregate design.',
+      'Total time awake within one sleep session or civil-day sleep summary, normalized to UCUM minutes over the exact session Period. It is a stage-total aggregate without per-stage intervals and is distinct from the interval sleep-stage Observation.',
     code: {
       system: 'http://loinc.org',
       code: '93828-2',
@@ -4593,7 +4624,7 @@ const sharedMobileMeasurementCatalogValue = {
     standardProfile: null,
     title: 'Sleep Heart Rate',
     description:
-      "A heart-rate statistic computed over one sleep session (Oura reports the session minimum, Withings the session mean), normalized to UCUM beats per minute over the exact session Period. The statistic is carried by the aggregate design's fixed method coding, never collapsed into the shared point heart-rate measurement.",
+      'A heart-rate statistic computed over one sleep session (Oura reports the session minimum, Withings the session mean), normalized to UCUM beats per minute over the exact session Period. A required method coding distinguishes the statistic, which is never collapsed into the shared point heart-rate measurement.',
     code: {
       system:
         'https://grovealliance.org/fhir/mobile/CodeSystem/grove-mobile-measurement',

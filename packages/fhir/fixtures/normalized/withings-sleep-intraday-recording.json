@@ -18,7 +18,7 @@
   },
   "attachment": {
     "kind": "embedded",
-    "contentType": "application/vnd.grovealliance.provider+json",
+    "contentType": "application/json",
     "title": "Authorized minimized Withings sleep recording",
     "format": "provider-recording",
     "payloadAssertion": "caller-authorized-opaque-payload",

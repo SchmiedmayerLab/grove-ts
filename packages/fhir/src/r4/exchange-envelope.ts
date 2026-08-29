@@ -215,7 +215,7 @@ const validateEntryKeyValue = (
       context,
       'mobile-exchange.opaque-entry-key',
       ['entry', index, 'extension'],
-      'Business entry keys require a closed role and canonical v2 HMAC value.',
+      'Business entry keys require a closed role and canonical v0 HMAC value.',
     )
   }
 }
@@ -313,7 +313,7 @@ const resourceIdentityRoleCounts = (
         context,
         'mobile-exchange.opaque-resource-identity',
         ['entry', index, 'resource', 'identifier'],
-        'A typed resource identity must be one complete canonical v2 HMAC Identifier.',
+        'A typed resource identity must be one complete canonical v0 HMAC Identifier.',
       )
     }
   }
@@ -556,7 +556,7 @@ export const validateExchangeEnvelope = (
       context,
       'mobile-exchange.event-identity',
       ['identifier'],
-      'Bundle.identifier must be one complete typed canonical e2 event Identifier.',
+      'Bundle.identifier must be one complete typed canonical e0 event Identifier.',
     )
     return undefined
   }

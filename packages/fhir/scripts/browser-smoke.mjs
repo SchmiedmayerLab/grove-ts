@@ -224,7 +224,7 @@ try {
       },
       attachment: {
         kind: 'embedded',
-        contentType: 'application/vnd.grovealliance.provider+json',
+        contentType: 'application/json',
         title: 'Authorized minimized provider recording',
         format: 'provider-recording',
         payloadAssertion: 'caller-authorized-opaque-payload',
@@ -325,7 +325,7 @@ try {
     result.recordingGraph !== true ||
     result.retractionGraph !== true ||
     result.rawSourceCount !== 4 ||
-    result.scalarMeasurementCount !== 48 ||
+    result.scalarMeasurementCount !== 47 ||
     result.providerApiVisibleFromMobile ||
     result.providerApiVisibleFromRoot ||
     result.internalGraphVisible ||

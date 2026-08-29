@@ -96,7 +96,7 @@ export const deriveDeviceSnapshotEntryIdentity = (
     eventRole !== 'event' ||
     typeof eventValue !== 'string' ||
     !isEventIdentityValue(eventValue) ||
-    !eventValue.startsWith(`e2:${safeDeployment.value.producerInstance}:`)
+    !eventValue.startsWith(`e0:${safeDeployment.value.producerInstance}:`)
   ) {
     return err(
       'invalid-identifier',

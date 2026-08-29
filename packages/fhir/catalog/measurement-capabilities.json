@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 0,
   "igVersion": "0.6.0",
   "canonicalBase": "https://grovealliance.org/fhir",
   "recordConversion": {

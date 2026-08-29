@@ -155,7 +155,7 @@ Four conventions are visible in that call and hold throughout the package:
   This is why the example parses its literals instead of passing raw strings.
 - **You supply governed identity inputs; the package derives the graph.**
   The deployment owns the key, key-epoch-specific Identifier systems, producer instance, monotonic event sequence, account pseudonym, source-native id, and all event times.
-  Source and output identifiers use the Grove v2 domain-separated HMAC contract; internal `urn:uuid` links use UUIDv5 over the selected complete Identifier pair.
+  Source and output identifiers use the Grove v0 domain-separated HMAC contract; internal `urn:uuid` links use UUIDv5 over the selected complete Identifier pair.
   An exact retry reuses the event sequence, `occurred`, `recorded`, `assembled`, and payload. A changed source revision or payload is a new event with a new sequence.
 - **Results are frozen plain JSON.**
   Serialize them, store them, send them; there are no classes and no hidden state.

@@ -169,7 +169,7 @@ const validateRetractionTargetIdentity = (
       context,
       'mobile-retraction.opaque-target',
       ['entry', 'resource', 'target', index, 'identifier'],
-      'Each target requires the exact typed canonical v2 HMAC Identifier previously emitted.',
+      'Each target requires the exact typed canonical v0 HMAC Identifier previously emitted.',
     )
   }
 }

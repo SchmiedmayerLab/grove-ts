@@ -46,7 +46,7 @@ describe('source-neutral Mobile contract', () => {
       'org.grovealliance.fhir.mobile',
     )
     expect(Object.isFrozen(groveMobilePackageMetadata)).toBe(true)
-    expect(mobile.groveExchangeProtocol.protocolVersion).toBe(2)
+    expect(mobile.groveExchangeProtocol.protocolVersion).toBe(0)
     expect(mobile.groveMobileContract.version).toBe('0.6.0')
     expect(Object.isFrozen(mobile.groveMobileContract)).toBe(true)
     expect('groveFhirExchangeIdentity' in mobile).toBe(false)

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 0,
   "fhirVersion": "4.0.1",
   "producer": { "name": "Grove TypeScript", "version": "0.0.0" },
   "packages": [
@@ -240,12 +240,6 @@
     },
     {
       "path": "resources/provider-withings-withings-vascular-age.json",
-      "requiredProfiles": [
-        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
-      ]
-    },
-    {
-      "path": "resources/provider-withings-sleeping-heart-rate-average.json",
       "requiredProfiles": [
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
       ]

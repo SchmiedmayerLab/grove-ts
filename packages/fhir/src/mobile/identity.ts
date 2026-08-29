@@ -39,10 +39,10 @@ const UNSIGNED_DECIMAL = /^(?:0|[1-9]\d*)$/u
 const LOWERCASE_ROLE = /^[a-z][a-z\d-]*$/u
 const CANONICAL_PRODUCER_UUID =
   /^[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u
-const OPAQUE_VALUE = /^v2:[A-Za-z\d._-]+:[1-9]\d*:[A-Za-z\d_-]{43}$/u
+const OPAQUE_VALUE = /^v0:[A-Za-z\d._-]+:[1-9]\d*:[A-Za-z\d_-]{43}$/u
 const EVENT_VALUE =
-  /^e2:[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}:[1-9]\d*$/u
-const ENTRY_NODE_VALUE = /^n2:[a-z][a-z\d-]*:(?:0|[1-9]\d*):[A-Za-z\d_-]{43}$/u
+  /^e0:[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}:[1-9]\d*$/u
+const ENTRY_NODE_VALUE = /^n0:[a-z][a-z\d-]*:(?:0|[1-9]\d*):[A-Za-z\d_-]{43}$/u
 const BASE64_URL = /^[A-Za-z\d_-]+$/u
 const MINIMUM_HMAC_KEY_BYTES = 32
 
@@ -383,7 +383,7 @@ const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
   ) {
     return err(
       'invalid-code',
-      'Identity kind is not part of the closed Grove v2 identity contract.',
+      'Identity kind is not part of the closed Grove v0 identity contract.',
       ['identityKind'],
     )
   }
@@ -458,12 +458,12 @@ const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
   const digest = hmac(sha256, secret, preimage.value)
   return ok({
     system: validated.value.opaqueIdentifierSystems[identityKind],
-    value: `v2:${validated.value.keyId}:${validated.value.keyEpoch}:${base64UrlWithoutPadding(digest)}`,
+    value: `v0:${validated.value.keyId}:${validated.value.keyEpoch}:${base64UrlWithoutPadding(digest)}`,
     role: identifierRoleByKind[identityKind],
   })
 }
 
-/** Derives one deployment-owned, role-typed Grove v2 HMAC Identifier. */
+/** Derives one deployment-owned, role-typed Grove v0 HMAC Identifier. */
 export const deriveOpaqueIdentifier = <Kind extends GroveOpaqueIdentityKind>(
   deployment: DeploymentIdentityInput,
   identityKind: Kind,
@@ -520,7 +520,7 @@ export const deriveEventIdentifier = (
   }
   return ok({
     system: validated.value.eventIdentifierSystem,
-    value: `e2:${validated.value.producerInstance}:${sequence}`,
+    value: `e0:${validated.value.producerInstance}:${sequence}`,
     role: 'event',
   })
 }
@@ -567,7 +567,7 @@ export const deriveEntryNodeValue = (
   ])
   if (!preimage.ok) return preimage
   return ok(
-    `n2:${role}:${ordinal}:${base64UrlWithoutPadding(sha256(preimage.value))}`,
+    `n0:${role}:${ordinal}:${base64UrlWithoutPadding(sha256(preimage.value))}`,
   )
 }
 
@@ -599,7 +599,7 @@ export const deriveEntryNodeIdentifier = (
     eventValue.role !== 'event' ||
     typeof eventValue.value !== 'string' ||
     !EVENT_VALUE.test(eventValue.value) ||
-    !eventValue.value.startsWith(`e2:${validated.value.producerInstance}:`)
+    !eventValue.value.startsWith(`e0:${validated.value.producerInstance}:`)
   ) {
     return err(
       'invalid-identifier',

@@ -37,7 +37,10 @@ export const completeIdentifier = (
 
 const LOWERCASE_UUID_V5 =
   /^urn:uuid:[\da-f]{8}-[\da-f]{4}-5[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u
-const ENTRY_NODE_PARTS = /^n2:([a-z][a-z\d-]*):(0|[1-9]\d*):[A-Za-z\d_-]{43}$/u
+const ENTRY_NODE_PARTS = /^n0:([a-z][a-z\d-]*):(0|[1-9]\d*):[A-Za-z\d_-]{43}$/u
+const LOGICAL_PATIENT_RESERVED_SYSTEMS = new Set<string>(
+  groveMobileContract.referencePolicy.identifierOnlyPatient.reservedSystems,
+)
 
 export const isLowercaseUuidV5 = (value: string): boolean =>
   LOWERCASE_UUID_V5.test(value)
@@ -266,6 +269,7 @@ const validateGovernedReferenceShape = (
     parseAbsoluteUri(value.identifier.system).ok &&
     typeof value.type === 'string' &&
     allowedTypes.has(value.type)
+  const patientOnly = allowedTypes.size === 1 && allowedTypes.has('Patient')
   if (hasLiteral && hasIdentifier) {
     addIssue(
       context,
@@ -277,7 +281,7 @@ const validateGovernedReferenceShape = (
   } else if (!hasLiteral && hasIdentifier && !validLogical) {
     addIssue(
       context,
-      allowedTypes.size === 1 && allowedTypes.has('Patient') ?
+      patientOnly ?
         'mobile-exchange.logical-patient-reference'
       : 'mobile-exchange.reference-shape',
       path,
@@ -292,6 +296,37 @@ const validateGovernedReferenceShape = (
       'A governed Reference requires exactly one resolving literal or identifier-only logical shape.',
       location,
     )
+  } else if (validLogical && patientOnly) {
+    const identifier = asRecord(value.identifier)
+    if (
+      typeof identifier?.system === 'string' &&
+      LOGICAL_PATIENT_RESERVED_SYSTEMS.has(identifier.system)
+    ) {
+      addIssue(
+        context,
+        'mobile-exchange.logical-patient-reference',
+        [...path, 'identifier', 'system'],
+        'A logical Patient identifier cannot use a protocol-reserved code-system URI.',
+        `${location}.identifier.system`,
+      )
+    }
+    const type = asRecord(identifier?.type)
+    const coding = Array.isArray(type?.coding) ? type.coding : []
+    if (
+      coding.some(
+        (candidate) =>
+          asRecord(candidate)?.system ===
+          groveMobileContract.systems.identifierRole,
+      )
+    ) {
+      addIssue(
+        context,
+        'mobile-exchange.logical-patient-reference',
+        [...path, 'identifier', 'type'],
+        'A logical Patient identifier cannot carry a Grove identifier role.',
+        `${location}.identifier.type`,
+      )
+    }
   }
 }
 

@@ -33,7 +33,7 @@ interface CorpusCase {
 }
 
 interface ExchangeCorpus {
-  readonly schemaVersion: 1
+  readonly schemaVersion: 0
   readonly cases: readonly CorpusCase[]
 }
 
@@ -449,8 +449,8 @@ describe('shared Grove Mobile exchange corpus', () => {
           path: '/entry/1/resource/identifier/1',
           value: {
             system:
-              'https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1',
-            value: 'v2:test-key:1:Fz7vAPqR5b-ZOS8DwWQn3q7MogUtBVdlb3vYhRZniGU',
+              'https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1',
+            value: 'v0:test-key:1:Fz7vAPqR5b-ZOS8DwWQn3q7MogUtBVdlb3vYhRZniGU',
             type: {
               coding: [
                 {

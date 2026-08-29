@@ -15,7 +15,7 @@
       ]
     },
     "system": "https://grovealliance.org/fhir/testing/identity/event",
-    "value": "e2:33fc1b64-6b4c-4bb8-994a-82a8d72eb5dc:17"
+    "value": "e0:33fc1b64-6b4c-4bb8-994a-82a8d72eb5dc:17"
   },
   "type": "collection",
   "timestamp": "2026-08-20T12:03:00Z",
@@ -34,11 +34,11 @@
               ]
             },
             "system": "https://grovealliance.org/fhir/testing/identity/provider-output/fixture-key/1",
-            "value": "v2:fixture-key:1:60eY9xJ1BGUKk02Wzxgbw8I-KsJkvA6QmeqDHUea5cI"
+            "value": "v0:fixture-key:1:CZXatvohITV673olsXmQKz38AcBWcMpvz5he0Qm5VKI"
           }
         }
       ],
-      "fullUrl": "urn:uuid:137fe5e0-b993-59e2-9bbb-d01b6822b871",
+      "fullUrl": "urn:uuid:8270c509-bfdf-5d38-a815-b7e2214c5058",
       "resource": {
         "resourceType": "Observation",
         "meta": {
@@ -67,7 +67,7 @@
         "identifier": [
           {
             "system": "https://grovealliance.org/fhir/testing/identity/provider-record/fixture-key/1",
-            "value": "v2:fixture-key:1:3SuDnTSHb_y1kwQTccpLSh5rdP0Qva9KPCWHyEPmNvo",
+            "value": "v0:fixture-key:1:tkdht7TFVXQyq6IHNvYVQ8tNFVyUPgbZXNMZPxXED6U",
             "type": {
               "coding": [
                 {
@@ -79,7 +79,7 @@
           },
           {
             "system": "https://grovealliance.org/fhir/testing/identity/provider-output/fixture-key/1",
-            "value": "v2:fixture-key:1:60eY9xJ1BGUKk02Wzxgbw8I-KsJkvA6QmeqDHUea5cI",
+            "value": "v0:fixture-key:1:CZXatvohITV673olsXmQKz38AcBWcMpvz5he0Qm5VKI",
             "type": {
               "coding": [
                 {
@@ -124,11 +124,11 @@
               ]
             },
             "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
-            "value": "v2:fixture-key:1:SH0IL9WB76tc2lwGI9J70EPhdFxAisS-WQ4aSdsR1Qg"
+            "value": "v0:fixture-key:1:OVqOPjrQEoSJS--PZePeSkqILMB9dA0xef1_SpJ4viY"
           }
         }
       ],
-      "fullUrl": "urn:uuid:9c3b7af2-e57b-5aa4-a641-f803c710cabd",
+      "fullUrl": "urn:uuid:1ac62dcf-7508-5504-8cf9-88aa67a19f05",
       "resource": {
         "resourceType": "Device",
         "meta": {
@@ -139,7 +139,7 @@
         "identifier": [
           {
             "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
-            "value": "v2:fixture-key:1:SH0IL9WB76tc2lwGI9J70EPhdFxAisS-WQ4aSdsR1Qg",
+            "value": "v0:fixture-key:1:OVqOPjrQEoSJS--PZePeSkqILMB9dA0xef1_SpJ4viY",
             "type": {
               "coding": [
                 {
@@ -173,11 +173,11 @@
               ]
             },
             "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
-            "value": "v2:fixture-key:1:aONwM6Z7mj9j_sHLBy2z7oJ1BRb0j2uummA3OVRLzxs"
+            "value": "v0:fixture-key:1:RMkmXi5iDHPmp9alpqCtmszW5AIvyyRqxxRMY_nwChw"
           }
         }
       ],
-      "fullUrl": "urn:uuid:a9c59fa6-4464-5e8a-a09b-34f4e6cb7597",
+      "fullUrl": "urn:uuid:dc091ace-e49f-5779-bcad-c1b7724d6484",
       "resource": {
         "resourceType": "Device",
         "meta": {
@@ -188,7 +188,7 @@
         "identifier": [
           {
             "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
-            "value": "v2:fixture-key:1:aONwM6Z7mj9j_sHLBy2z7oJ1BRb0j2uummA3OVRLzxs",
+            "value": "v0:fixture-key:1:RMkmXi5iDHPmp9alpqCtmszW5AIvyyRqxxRMY_nwChw",
             "type": {
               "coding": [
                 {
@@ -236,11 +236,11 @@
               ]
             },
             "system": "https://grovealliance.org/fhir/testing/identity/entry-node",
-            "value": "n2:conversion-provenance:0:F8Eww65FNK0JXLReGmb39_Jelr5uRaoowR8DRk3D5TI"
+            "value": "n0:conversion-provenance:0:qtQ7FdqRyP8fcGw_zIozpXqNB9VIxfITbTY4xqoSj3Y"
           }
         }
       ],
-      "fullUrl": "urn:uuid:2114ba63-5ea2-5848-826a-94999484e6a2",
+      "fullUrl": "urn:uuid:6cfc6400-6efa-5c4a-8345-f481d5f52388",
       "resource": {
         "resourceType": "Provenance",
         "meta": {
@@ -249,7 +249,7 @@
           ]
         },
         "target": [
-          { "reference": "urn:uuid:137fe5e0-b993-59e2-9bbb-d01b6822b871" }
+          { "reference": "urn:uuid:8270c509-bfdf-5d38-a815-b7e2214c5058" }
         ],
         "occurredDateTime": "2026-08-20T12:00:00Z",
         "recorded": "2026-08-20T12:02:00Z",
@@ -276,7 +276,7 @@
               "text": "Assembler"
             },
             "who": {
-              "reference": "urn:uuid:a9c59fa6-4464-5e8a-a09b-34f4e6cb7597"
+              "reference": "urn:uuid:dc091ace-e49f-5779-bcad-c1b7724d6484"
             }
           }
         ],
@@ -286,7 +286,7 @@
             "what": {
               "identifier": {
                 "system": "https://grovealliance.org/fhir/testing/identity/provider-record/fixture-key/1",
-                "value": "v2:fixture-key:1:3SuDnTSHb_y1kwQTccpLSh5rdP0Qva9KPCWHyEPmNvo",
+                "value": "v0:fixture-key:1:tkdht7TFVXQyq6IHNvYVQ8tNFVyUPgbZXNMZPxXED6U",
                 "type": {
                   "coding": [
                     {
@@ -310,7 +310,7 @@
                   "text": "Enterer"
                 },
                 "who": {
-                  "reference": "urn:uuid:9c3b7af2-e57b-5aa4-a641-f803c710cabd"
+                  "reference": "urn:uuid:1ac62dcf-7508-5504-8cf9-88aa67a19f05"
                 }
               }
             ]

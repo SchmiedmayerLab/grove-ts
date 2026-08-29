@@ -259,7 +259,6 @@ describe('profile-specific resource semantic boundaries', () => {
           format: {
             system:
               'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
-            version: '0.6.0',
             code: 'sensor-recording',
           },
         },

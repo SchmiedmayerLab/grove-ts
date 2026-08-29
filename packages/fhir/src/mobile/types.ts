@@ -138,11 +138,11 @@ export interface SleepStageMeasurement {
 export interface CompleteIdentifierInput {
   readonly system: AbsoluteUri
   readonly value: string
-  /** Grove role carried in Identifier.type for deployment-owned v2 identities. */
+  /** Grove role carried in Identifier.type for deployment-owned v0 identities. */
   readonly role?: GroveIdentifierRole
 }
 
-/** Closed roles used to distinguish deployment-owned v2 identifier key spaces. */
+/** Closed roles used to distinguish deployment-owned v0 identifier key spaces. */
 export type GroveIdentifierRole =
   OpaqueIdentityDefinition['identifierRole'] | 'entry-node' | 'event'
 

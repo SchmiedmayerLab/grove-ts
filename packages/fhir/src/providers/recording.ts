@@ -9,7 +9,6 @@
 import { sha1 } from '@noble/hashes/legacy.js'
 import { z } from 'zod'
 import {
-  groveFhirContractVersion,
   groveRecordingFormatRegistry,
   providerAdapterCatalog,
   providerRawOutputRoles,
@@ -657,17 +656,12 @@ export const buildProviderRecordingBundle = (
     content: [
       {
         attachment: attachmentFor(validated.attachment),
-        format: {
-          // The release travels in the instance: a receiver reads which registry generation
-          // defined this code, and the producer contract refuses a version that never did.
-          ...coding(
-            groveRecordingFormatRegistry.codeSystem,
-            validated.attachment.format,
-            groveRecordingFormatRegistry.formats[validated.attachment.format]
-              .title,
-          ),
-          version: groveFhirContractVersion,
-        },
+        format: coding(
+          groveRecordingFormatRegistry.codeSystem,
+          validated.attachment.format,
+          groveRecordingFormatRegistry.formats[validated.attachment.format]
+            .title,
+        ),
       },
     ],
   }

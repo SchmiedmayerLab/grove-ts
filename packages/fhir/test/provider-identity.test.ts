@@ -62,7 +62,7 @@ describe('Provider R4 graph builder', () => {
       )['provider-output'],
     ])
     for (const identity of observation.identifier ?? []) {
-      expect(identity.value).toMatch(/^v2:test-key:1:[A-Za-z0-9_-]{43}$/u)
+      expect(identity.value).toMatch(/^v0:test-key:1:[A-Za-z0-9_-]{43}$/u)
     }
     expect(result.value.identifier.system).toBe(
       deploymentIdentity.eventIdentifierSystem,
@@ -349,7 +349,7 @@ describe('Provider R4 graph builder', () => {
     expect(observation?.identifier).toHaveLength(2)
     expect(observation?.identifier?.map((entry) => entry.value)).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/^v2:test-key:1:[A-Za-z0-9_-]{43}$/u),
+        expect.stringMatching(/^v0:test-key:1:[A-Za-z0-9_-]{43}$/u),
       ]),
     )
 
@@ -374,7 +374,7 @@ describe('Provider R4 graph builder', () => {
       (resource) => resource.resourceType === 'Observation',
     )
     expect(unicodeObservation?.identifier?.[0]?.value).toMatch(
-      /^v2:test-key:1:[A-Za-z0-9_-]{43}$/u,
+      /^v0:test-key:1:[A-Za-z0-9_-]{43}$/u,
     )
     expect(JSON.stringify(unicodeResult)).not.toContain('résumé-\u0001')
   })

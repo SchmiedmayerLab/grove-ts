@@ -341,8 +341,6 @@ const groveProviderProfileCanonicalsValue = {
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-sleep-stage',
   'healthkit-sleeping-breathing-disturbances':
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-sleeping-breathing-disturbances',
-  'withings-sleeping-heart-rate-average':
-    'https://grovealliance.org/fhir/withings/StructureDefinition/withings-sleeping-heart-rate-average',
   'grove-mobile-speed':
     'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-speed',
   'healthkit-stair-ascent-speed':
@@ -521,7 +519,7 @@ export const groveProviderProfileCanonicals: typeof groveProviderProfileCanonica
 const providerAdapterCatalogValue = {
   $schema:
     'https://grovealliance.org/fhir/catalog/schemas/catalog-contracts.schema.json',
-  schemaVersion: 1,
+  schemaVersion: 0,
   fhirVersion: '4.0.1',
   version: '0.6.0',
   packageId: 'org.grovealliance.fhir.providers',
@@ -580,30 +578,30 @@ const providerAdapterCatalogValue = {
   ],
   statusDefinitions: {
     supported:
-      'Version 0.6.0 defines an exact conversion to every semantic profile listed for the source element, whether the profile is shared or provider-owned.',
+      'The Grove FHIR contracts define an exact conversion to every semantic profile listed for the source element, whether the profile is shared or provider-owned.',
     'mapped-standard':
-      'Version 0.6.0 admits only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
+      'The Grove FHIR contracts admit only the listed source-neutral Sensor recording contract and does not assert a scalar clinical result.',
     'platform-exclusive':
-      'Version 0.6.0 defines the listed provider-scoped structured profile because no exact shared profile exists.',
+      'The Grove FHIR contracts define the listed provider-scoped structured profile because no exact shared profile exists.',
     unmodeled:
-      'The source element is inventoried, but no shared or provider-scoped profile models it in version 0.6.0 and no output is admitted.',
+      'The source element is inventoried, but no shared or provider-scoped profile models it under the Grove FHIR contracts and no output is admitted.',
     deferred:
-      'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant version 0.6.0 output.',
+      'A plausible shared mapping is known, but the source evidence, time semantics, or result shape is insufficient for a conformant output under the Grove FHIR contracts.',
     'intentionally-unsupported':
-      'Version 0.6.0 deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
+      'The Grove FHIR contracts deliberately refuses a normalized conversion because doing so would be misleading or diagnostic-adjacent.',
   },
   observationIssued: {
     cardinality: '0..0',
     source:
-      'only an exact provider field explicitly declared by its catalog row; no such field is declared in 0.6.0',
-    rule: 'Version 0.6.0 declares no authoritative provider row field for result availability or current-version modification, so every Provider Observation omits Observation.issued. Conversion, retrieval, assembly, and upload times are prohibited substitutes.',
+      'only an exact provider field explicitly declared by its catalog row; no such field is declared under the Grove FHIR contracts',
+    rule: 'The Grove FHIR contracts declare no authoritative provider row field for result availability or current-version modification, so every Provider Observation omits Observation.issued. Conversion, retrieval, assembly, and upload times are prohibited substitutes.',
   },
   sourceEvidence: {
     accessed: '2026-08-20',
     scope:
       'Exact provider data-type tokens and consumed fields frozen in providers[].sourceTypes; conversion operates only on already-obtained payloads and defines no provider fetching.',
     tokenBinding:
-      'Each providers[].sourceTypes[].token and elements[].path is part of the exact v0.6.0 consumed source surface.',
+      'Each providers[].sourceTypes[].token and elements[].path is part of the exact consumed source surface under the Grove FHIR contracts.',
     providers: [
       {
         id: 'google-health-api',
@@ -633,7 +631,7 @@ const providerAdapterCatalogValue = {
   },
   identity: {
     contract: 'catalog/exchange-protocol.json',
-    protocolVersion: 2,
+    protocolVersion: 0,
     adapterId: 'providers',
     sourceRecord: {
       identityKind: 'provider-record',
@@ -814,10 +812,7 @@ const providerAdapterCatalogValue = {
             {
               path: 'heartRateVariability.standardDeviationMilliseconds',
               status: 'supported',
-              measurementIds: [
-                'heart-rate-variability-rmssd',
-                'heart-rate-variability-sdnn',
-              ],
+              measurementIds: ['heart-rate-variability-sdnn'],
             },
           ],
         },
@@ -1046,7 +1041,7 @@ const providerAdapterCatalogValue = {
               path: 'average_hrv',
               status: 'unmodeled',
               reason:
-                'Oura reports this as an RMSSD average over the sleep session, which the shared heart-rate-variability-rmssd measurement represents. Unmodelled only until the session-window effective rule for it is settled.',
+                'Oura reports this as an RMSSD average over the sleep session, but this contract does not define the exact session window to use as Observation.effectivePeriod. No FHIR output is admitted.',
             },
             {
               path: 'average_breath',
@@ -1106,7 +1101,7 @@ const providerAdapterCatalogValue = {
               effective:
                 'the source civil day represented as a complete day Period; midpoint substitution is forbidden',
               reason:
-                "Version 0.6.0 carries the Oura cardiovascular-age figure as the provider-scoped oura-cardiovascular-age profile, on an age scale in UCUM years over the civil-day Period. The profile names the vendor in its code and description, so the figure cannot be mistaken for a chronological age, for a clinical vascular assessment, or for Withings' vascular age, which stays a separate measurement because the two are undisclosed algorithms over different inputs. No comparability between vendors and no diagnosis is asserted.",
+                "The Grove FHIR contracts carry the Oura cardiovascular-age figure as the provider-scoped oura-cardiovascular-age profile, on an age scale in UCUM years over the civil-day Period. The profile names the vendor in its code and description, so the figure cannot be mistaken for a chronological age, for a clinical vascular assessment, or for Withings' vascular age, which stays a separate measurement because the two are undisclosed algorithms over different inputs. No comparability between vendors and no diagnosis is asserted.",
             },
           ],
         },
@@ -1126,7 +1121,7 @@ const providerAdapterCatalogValue = {
               effective:
                 'the source civil day represented as a complete day Period; midpoint substitution is forbidden',
               reason:
-                "Version 0.6.0 carries the Oura readiness figure as the provider-scoped oura-readiness-score profile over the civil-day Period, on the dimensionless UCUM {score} annotation because the vendor publishes no physical unit for it. The code names the vendor and the profile description states the scale, so the figure cannot be read as an observable quantity. Nothing about the composite's inputs, weighting, or comparability across people is asserted, and Oura's daily sleep and activity scores remain outside the inventoried source surface.",
+                "The Grove FHIR contracts carry the Oura readiness figure as the provider-scoped oura-readiness-score profile over the civil-day Period, on the dimensionless UCUM {score} annotation because the vendor publishes no physical unit for it. The code names the vendor and the profile description states the scale, so the figure cannot be read as an observable quantity. Nothing about the composite's inputs, weighting, or comparability across people is asserted, and Oura's daily sleep and activity scores remain outside the inventoried source surface.",
             },
           ],
         },
@@ -1310,7 +1305,7 @@ const providerAdapterCatalogValue = {
               unitConversion: 'provider SI value to UCUM a',
               effective: 'measure group date',
               reason:
-                "Version 0.6.0 carries the Withings vascular-age figure as the provider-scoped withings-vascular-age profile, on an age scale in UCUM years. The profile names the vendor in its code and description, so the figure cannot be mistaken for a chronological age, for a clinical vascular assessment, or for Oura's cardiovascular age, which stays a separate measurement because the two are undisclosed algorithms over different inputs. No comparability between vendors and no diagnosis is asserted.",
+                "The Grove FHIR contracts carry the Withings vascular-age figure as the provider-scoped withings-vascular-age profile, on an age scale in UCUM years. The profile names the vendor in its code and description, so the figure cannot be mistaken for a chronological age, for a clinical vascular assessment, or for Oura's cardiovascular age, which stays a separate measurement because the two are undisclosed algorithms over different inputs. No comparability between vendors and no diagnosis is asserted.",
             },
           ],
         },
@@ -1407,10 +1402,8 @@ const providerAdapterCatalogValue = {
             {
               path: 'data.hr_average',
               status: 'supported',
-              measurementIds: [
-                'sleep-heart-rate',
-                'sleeping-heart-rate-average',
-              ],
+              measurementIds: ['sleep-heart-rate'],
+              effective: 'exact sleep-session Period',
               aggregationMethod: {
                 'sleep-heart-rate': 'session-mean',
               },
@@ -1618,7 +1611,7 @@ const providerAdapterCatalogValue = {
               unitConversion: 'provider SI value to UCUM m/s',
               effective: 'measure group date',
               reason:
-                'Version 0.6.0 carries the Withings aortic pulse-wave velocity estimate as the provider-scoped withings-pulse-wave-velocity profile in UCUM metres per second. The code names the vendor rather than a shared arterial-stiffness concept, because no second inventoried source evidences it and a scale-derived estimate is not interchangeable with a tonometric measurement taken in clinic. No arterial-stiffness finding and no diagnosis is asserted.',
+                'The Grove FHIR contracts carry the Withings aortic pulse-wave velocity estimate as the provider-scoped withings-pulse-wave-velocity profile in UCUM metres per second. The code names the vendor rather than a shared arterial-stiffness concept, because no second inventoried source evidences it and a scale-derived estimate is not interchangeable with a tonometric measurement taken in clinic. No arterial-stiffness finding and no diagnosis is asserted.',
             },
           ],
         },
@@ -1635,7 +1628,7 @@ const providerAdapterCatalogValue = {
               measurementIds: ['withings-atrial-fibrillation-notification-ecg'],
               effective: 'measure group date',
               reason:
-                "Version 0.6.0 carries the fact that Withings' electrocardiogram screening algorithm flagged signs of atrial fibrillation, as the provider-scoped withings-atrial-fibrillation-notification-ecg profile with a closed single-code result, on the same basis as the HealthKit irregular-heart-rhythm notification. An Observation is admitted only for the vendor's positive screening classification: Withings publishes no encoding for the numeric measure.value, so a negative or inconclusive classification produces no output. No rhythm finding, atrial-fibrillation burden, or diagnosis is asserted, and the code is taken from the providers code system so no receiver can read it as one.",
+                "The Grove FHIR contracts carry the fact that Withings' electrocardiogram screening algorithm flagged signs of atrial fibrillation, as the provider-scoped withings-atrial-fibrillation-notification-ecg profile with a closed single-code result, on the same basis as the HealthKit irregular-heart-rhythm notification. An Observation is admitted only for the vendor's positive screening classification: Withings publishes no encoding for the numeric measure.value, so a negative or inconclusive classification produces no output. No rhythm finding, atrial-fibrillation burden, or diagnosis is asserted, and the code is taken from the providers code system so it cannot be interpreted as one.",
             },
           ],
         },
@@ -1653,7 +1646,7 @@ const providerAdapterCatalogValue = {
               unitConversion: 'provider SI value to UCUM ms',
               effective: 'measure group date',
               reason:
-                'Version 0.6.0 carries the QRS duration the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-qrs-duration profile under LOINC 8633-0. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No rhythm interpretation, conduction finding, or diagnosis is asserted; the electrocardiogram recording remains the rhythm evidence.',
+                'The Grove FHIR contracts carry the QRS duration the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-qrs-duration profile under LOINC 8633-0. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No rhythm interpretation, conduction finding, or diagnosis is asserted; the electrocardiogram recording remains the rhythm evidence.',
             },
           ],
         },
@@ -1671,7 +1664,7 @@ const providerAdapterCatalogValue = {
               unitConversion: 'provider SI value to UCUM ms',
               effective: 'measure group date',
               reason:
-                'Version 0.6.0 carries the PR interval the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-pr-interval profile under LOINC 8625-6. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No rhythm interpretation, conduction finding, or diagnosis is asserted; the electrocardiogram recording remains the rhythm evidence.',
+                'The Grove FHIR contracts carry the PR interval the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-pr-interval profile under LOINC 8625-6. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No rhythm interpretation, conduction finding, or diagnosis is asserted; the electrocardiogram recording remains the rhythm evidence.',
             },
           ],
         },
@@ -1689,7 +1682,7 @@ const providerAdapterCatalogValue = {
               unitConversion: 'provider SI value to UCUM ms',
               effective: 'measure group date',
               reason:
-                'Version 0.6.0 carries the uncorrected QT interval the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-qt-interval profile under LOINC 8634-8. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No repolarization finding, rhythm interpretation, or diagnosis is asserted, and the value is never substituted for the rate-corrected interval.',
+                'The Grove FHIR contracts carry the uncorrected QT interval the Withings algorithm measured from its own electrocardiogram, as the provider-scoped withings-qt-interval profile under LOINC 8634-8. The profile is provider-scoped because Withings is the only inventoried source that reports the interval as a discrete measure. No repolarization finding, rhythm interpretation, or diagnosis is asserted, and the value is never substituted for the rate-corrected interval.',
             },
           ],
         },
@@ -1707,7 +1700,7 @@ const providerAdapterCatalogValue = {
               unitConversion: 'provider SI value to UCUM ms',
               effective: 'measure group date',
               reason:
-                'Version 0.6.0 carries the rate-corrected QT interval Withings reports, as the provider-scoped withings-corrected-qt-interval profile under LOINC 8636-3. The profile is provider-scoped because Withings is the only inventoried source that reports the correction as a discrete measure and does not publish which correction formula it applied, so the value is deliberately not asserted to be interchangeable with a QTc read from a clinical twelve-lead electrocardiogram. No repolarization finding and no diagnosis is asserted.',
+                'The Grove FHIR contracts carry the rate-corrected QT interval Withings reports, as the provider-scoped withings-corrected-qt-interval profile under LOINC 8636-3. The profile is provider-scoped because Withings is the only inventoried source that reports the correction as a discrete measure and does not publish which correction formula it applied, so the value is deliberately not asserted to be interchangeable with a QTc read from a clinical twelve-lead electrocardiogram. No repolarization finding and no diagnosis is asserted.',
             },
           ],
         },
@@ -1724,7 +1717,7 @@ const providerAdapterCatalogValue = {
               measurementIds: ['withings-atrial-fibrillation-notification-ppg'],
               effective: 'measure group date',
               reason:
-                "Version 0.6.0 carries the fact that Withings' photoplethysmography screening algorithm flagged signs of atrial fibrillation, as the provider-scoped withings-atrial-fibrillation-notification-ppg profile with a closed single-code result. It is kept separate from the electrocardiogram notification because it screens a different signal. An Observation is admitted only for the vendor's positive screening classification: Withings publishes no encoding for the numeric measure.value, so a negative or inconclusive classification produces no output. No rhythm finding, atrial-fibrillation burden, or diagnosis is asserted.",
+                "The Grove FHIR contracts carry the fact that Withings' photoplethysmography screening algorithm flagged signs of atrial fibrillation, as the provider-scoped withings-atrial-fibrillation-notification-ppg profile with a closed single-code result. It is kept separate from the electrocardiogram notification because it screens a different signal. An Observation is admitted only for the vendor's positive screening classification: Withings publishes no encoding for the numeric measure.value, so a negative or inconclusive classification produces no output. No rhythm finding, atrial-fibrillation burden, or diagnosis is asserted.",
             },
           ],
         },
@@ -1743,7 +1736,7 @@ const providerAdapterCatalogValue = {
                 'unitless provider value to the dimensionless UCUM {score} annotation',
               effective: 'measure group date',
               reason:
-                'Version 0.6.0 carries the Withings nerve-health figure as the provider-scoped withings-nerve-health-score profile, on the dimensionless UCUM {score} annotation because the vendor publishes no physical unit for it. The code names the vendor and the profile description states the scale. Withings positions the figure as small-fiber-neuropathy screening, so the profile deliberately asserts no neuropathy finding, no nerve-conduction measurement, and no diagnosis.',
+                'The Grove FHIR contracts carry the Withings nerve-health figure as the provider-scoped withings-nerve-health-score profile, on the dimensionless UCUM {score} annotation because the vendor publishes no physical unit for it. The code names the vendor and the profile description states the scale. Withings positions the figure as small-fiber-neuropathy screening, so the profile deliberately asserts no neuropathy finding, no nerve-conduction measurement, and no diagnosis.',
             },
           ],
         },
@@ -1784,7 +1777,7 @@ const providerAdapterCatalogValue = {
                 'unitless provider value to the dimensionless UCUM {score} annotation',
               effective: 'measure group date',
               reason:
-                "Version 0.6.0 carries the Withings visceral-fat figure as the provider-scoped withings-visceral-fat-index profile, on the dimensionless UCUM {score} annotation because the API returns the value without a unit and it is a rating rather than a mass or an area. The code names the vendor, so the figure cannot be folded into a shared body-composition measurement, and no measurand, no mass, and no comparability with another vendor's visceral-fat figure is asserted.",
+                "The Grove FHIR contracts carry the Withings visceral-fat figure as the provider-scoped withings-visceral-fat-index profile, on the dimensionless UCUM {score} annotation because the API returns the value without a unit and it is a rating rather than a mass or an area. The code names the vendor, so the figure cannot be folded into a shared body-composition measurement, and no measurand, no mass, and no comparability with another vendor's visceral-fat figure is asserted.",
             },
           ],
         },
@@ -1838,7 +1831,7 @@ const providerAdapterCatalogValue = {
     fallback:
       'Omit Observation.device when no stable per-unit token exists. Manufacturer, model, payload group, account, and event identity do not prove a physical device instance.',
     snapshot:
-      'When emitted, the Device carries both recording-device and event-scoped device-snapshot v2 identifiers.',
+      'When emitted, the Device carries both recording-device and event-scoped device-snapshot v0 identifiers.',
   },
 } as const
 
@@ -1976,7 +1969,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Atrial Fibrillation Burden',
       description:
-        'The estimated percentage of analyzed time showing atrial fibrillation over a multi-day estimation window, normalized to UCUM percent. It is a windowed estimate implemented by the phase-2 aggregate design; the Withings AFib classification scalars remain intentionally unsupported and never join it.',
+        'The estimated percentage of analyzed time showing atrial fibrillation over a multi-day estimation window, normalized to UCUM percent. It is a source-supplied windowed estimate whose exact analysis window is carried by effectivePeriod; the Withings AFib classification scalars remain intentionally unsupported and never join it.',
       code: {
         system:
           'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement',
@@ -2324,7 +2317,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Grove HealthKit Biological Sex',
       description:
-        "Biological sex as a coded Observation. LOINC 46098-0 'Sex' is the context-free concept (verified ACTIVE, PROPERTY LP6886-8 Type, SCALE_TYP LP7750-5 Nom). 76689-9 'Sex assigned at birth' was rejected: the HealthKit characteristic states only a sex, never that it is the one assigned at birth, and adopting that code would fabricate a provenance the source does not carry. Value is a Grove-coded concept with the HKBiologicalSex token retained as secondary coding per the sleep-stage absorption pattern. HKBiologicalSex.notSet emits no Observation.",
+        "Biological sex as a coded Observation using LOINC 46098-0 'Sex'. LOINC 76689-9 'Sex assigned at birth' is not used because the HealthKit characteristic states only sex and does not assert birth-assignment provenance. The value uses a Grove code with the exact HKBiologicalSex token retained as secondary coding; HKBiologicalSex.notSet produces no Observation.",
       code: {
         system: 'http://loinc.org',
         code: '46098-0',
@@ -2489,7 +2482,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Blood Alcohol Content',
       description:
-        'Blood alcohol content as the mass-percent concentration figure a breathalyzer or user reports, kept as the plain UCUM percent scalar per the decided contract. It is not converted into a laboratory ethanol mass concentration.',
+        'Blood alcohol content as the mass-percent concentration figure a breathalyzer or user reports, represented as a UCUM percent scalar. It is not converted into a laboratory ethanol mass concentration.',
       code: {
         system:
           'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement',
@@ -2526,7 +2519,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Grove HealthKit Blood Type',
       description:
-        "ABO and Rh group as a coded Observation. LOINC 882-1 'ABO and Rh group [Type] in Blood' is the exact concept (re-verified ACTIVE, PROPERTY LP6886-8 Type, SCALE_TYP LP7750-5 Nom). Value is a Grove-coded ABO/Rh concept with the HKBloodType token retained as secondary coding per the sleep-stage absorption pattern.",
+        "ABO and Rh group as a coded Observation using LOINC 882-1 'ABO and Rh group [Type] in Blood'. The value uses a Grove ABO/Rh code with the exact HKBloodType token retained as secondary coding.",
       code: {
         system: 'http://loinc.org',
         code: '882-1',
@@ -2696,7 +2689,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Grove HealthKit Date of Birth',
       description:
-        "Date of birth as an Observation. LOINC 21112-8 'Birth date' is the exact concept (verified ACTIVE, PROPERTY LP6882-7 TmStp, SCALE_TYP LP7753-9 Qn). A date of birth identifies a person across systems, so the adapter withholds it unless the deployment authorizes disclosure; a deployment that already knows its participant's demographics from enrollment should prefer that authoritative record over this assertion.",
+        "Date of birth as an Observation using LOINC 21112-8 'Birth date'. A date of birth identifies a person across systems, so the adapter withholds it unless the deployment authorizes disclosure; a deployment that already knows its participant's demographics from enrollment should prefer that authoritative record over this assertion.",
       code: {
         system: 'http://loinc.org',
         code: '21112-8',
@@ -2807,7 +2800,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Grove HealthKit Fitzpatrick Skin Type',
       description:
-        "Fitzpatrick sun-reactive skin type as a coded Observation. LOINC 66555-4 'Skin type [Fitzpatrick Classification Scale]' is the exact concept (verified ACTIVE, PROPERTY LP6886-8 Type, SCALE_TYP LP7750-5 Nom). The scale materially conditions UV-exposure interpretation, which is why it is modelled rather than left to the deployment. HKFitzpatrickSkinType.notSet emits no Observation.",
+        "Fitzpatrick sun-reactive skin type as a coded Observation using LOINC 66555-4 'Skin type [Fitzpatrick Classification Scale]'. The scale materially conditions UV-exposure interpretation, which is why it is modelled rather than left to the deployment. HKFitzpatrickSkinType.notSet produces no Observation.",
       code: {
         system: 'http://loinc.org',
         code: '66555-4',
@@ -2940,7 +2933,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Grove HealthKit GAD-7 Score',
       description:
-        "HKGAD7Assessment (iOS 18, HKScoredAssessment subclass): score 0-21, answers [HKGAD7Assessment.Answer], risk. Routing recommendation: platform-exclusive score Observation on exact LOINC 70274-6 'Generalized anxiety disorder 7 item (GAD-7) total score [Reported.PHQ]' (re-verified ACTIVE, PROPERTY LP185820-0 Score, SCALE_TYP LP7753-9 Qn). The seven answers are retained as components coded with the LOINC GAD-7 item codes under panel 69737-5 (re-verified), each valued with the standard LOINC answer codes (LA6568-5 'Not at all', LA6569-3 'Several days', LA6570-1 'More than half the days', LA6571-9 'Nearly every day' — all four displays re-verified against LOINC 2.82 via tx.fhir.org) absorbing Answer cases notAtAll, severalDays, moreThanHalfTheDays, nearlyEveryDay; Risk (noneToMinimal, mild, moderate, severe — re-verified) is redundant with the published score bands and is carried only as an Observation.interpretation-style Grove coding, not a value.",
+        "A HealthKit GAD-7 assessment represented by its 0-21 total score using LOINC 70274-6 'Generalized anxiety disorder 7 item (GAD-7) total score [Reported.PHQ]'. The seven item answers are retained as components using the standard LOINC GAD-7 item and answer codes under panel 69737-5. HealthKit's risk classification is redundant with the score bands and is retained as a Grove interpretation coding rather than a second result value.",
       code: {
         system: 'http://loinc.org',
         code: '70274-6',
@@ -3243,7 +3236,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Insulin Delivery',
       description:
-        'The quantity of insulin delivered during the exact effective Period, normalized to UCUM international units, with a REQUIRED delivery-reason component distinguishing basal from bolus delivery per the decided contract. A sample without the HKMetadataKeyInsulinDeliveryReason metadata fails closed.',
+        'The quantity of insulin delivered during the exact effective Period, normalized to UCUM international units. A required delivery-reason component distinguishes basal from bolus delivery; a sample without HKMetadataKeyInsulinDeliveryReason fails closed.',
       code: {
         system:
           'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement',
@@ -3648,7 +3641,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Grove HealthKit PHQ-9 Score',
       description:
-        "HKPHQ9Assessment (iOS 18, HKScoredAssessment subclass): score 0-27, answers [HKPHQ9Assessment.Answer] including preferNotToAnswer, risk. Routing recommendation: platform-exclusive score Observation on exact LOINC 44261-6 'Patient Health Questionnaire 9 item (PHQ-9) total score [Reported]' (re-verified ACTIVE, Score, Qn); item answers retained as components under panel 44249-1 'PHQ-9 quick depression assessment panel [Reported.PHQ]' (re-verified) with the standard LA answer codes; preferNotToAnswer maps to a component with dataAbsentReason asked-declined, which is the semantically exact FHIR mechanism; Risk (noneToMinimal, mild, moderate, moderatelySevere, severe — re-verified) carried as interpretation-style Grove coding only.",
+        "A HealthKit PHQ-9 assessment represented by its 0-27 total score using LOINC 44261-6 'Patient Health Questionnaire 9 item (PHQ-9) total score [Reported]'. Item answers are retained as components under LOINC panel 44249-1 with the standard answer codes; preferNotToAnswer maps to dataAbsentReason asked-declined. HealthKit's risk classification is retained as a Grove interpretation coding rather than a second result value.",
       code: {
         system: 'http://loinc.org',
         code: '44261-6',
@@ -3935,7 +3928,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Six-Minute Walk Test Distance',
       description:
-        "The distance walked (or estimated walkable) in six minutes, using LOINC Six minute walk test and normalized to UCUM metres. Apple's samples are predominantly rolling-window mobility estimates rather than administered tests, so the phase-2 aggregate design owns the emission contract.",
+        "The distance walked (or estimated walkable) in six minutes, using LOINC Six minute walk test and normalized to UCUM metres. Apple's samples are predominantly rolling-window mobility estimates rather than administered tests, so effectivePeriod carries the exact measurement window.",
       code: {
         system: 'http://loinc.org',
         code: '64098-7',
@@ -5619,7 +5612,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Waist Circumference',
       description:
-        'A HealthKit-exclusive waist circumference normalized to UCUM centimetres. The LOINC code asserts the umbilicus site and tape-measure method that HealthKit does not itself state; this is the established consumer-health interoperability mapping and the caveat is documented rather than inventing a Grove code.',
+        'A HealthKit-exclusive waist circumference normalized to UCUM centimetres. The selected LOINC code asserts the umbilicus site and tape-measure method that HealthKit does not itself state; the profile documents that caveat rather than inventing a Grove code.',
       code: {
         system: 'http://loinc.org',
         code: '8280-0',
@@ -5712,7 +5705,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Walking Heart Rate Average',
       description:
-        'The average heart rate during walking activity over a daily window, normalized to UCUM beats per minute. HealthKit-only evidence today; the phase-2 aggregate design implements the windowing.',
+        'The average heart rate during walking activity over a daily window, normalized to UCUM beats per minute. This is a HealthKit-specific source-supplied aggregate whose exact daily window is carried by effectivePeriod.',
       code: {
         system:
           'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement',
@@ -5773,7 +5766,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Walking Steadiness',
       description:
-        "Apple's windowed walking-steadiness score, a rolling multi-day percentage summarizing gait stability, normalized to UCUM percent over the exact aggregation Period. As a windowed aggregate it is implemented by the phase-2 aggregate design rather than as a point measurement.",
+        "Apple's windowed walking-steadiness score, a rolling multi-day percentage summarizing gait stability, normalized to UCUM percent over the exact aggregation Period. It is represented as a source-supplied aggregate with an exact effectivePeriod, not as a point measurement.",
       code: {
         system:
           'https://grovealliance.org/fhir/healthkit/CodeSystem/healthkit-measurement',
@@ -6372,7 +6365,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Muscle Mass',
       description:
-        'A providers-exclusive whole-body muscle mass calculated by bioimpedance analysis, normalized to UCUM kilograms. It is distinct from lean body mass (which additionally includes bone, water, and organ mass) and is not folded into that shared measurement.',
+        'A Withings-specific whole-body muscle mass calculated by bioimpedance analysis, normalized to UCUM kilograms. It is distinct from lean body mass (which additionally includes bone, water, and organ mass) and is not folded into that shared measurement.',
       code: {
         system: 'http://loinc.org',
         code: '73964-9',
@@ -6466,45 +6459,13 @@ const adapterMeasurementCatalogValue = {
       },
       effective: 'dateTime',
     },
-    'sleeping-heart-rate-average': {
-      id: 'sleeping-heart-rate-average',
-      profile: 'withings-sleeping-heart-rate-average',
-      standardProfile: null,
-      title: 'Sleeping Heart Rate Average',
-      description:
-        'The average heart rate across one sleep session, normalized to UCUM beats per minute. It is a session-windowed average, distinct from both the shared point heart-rate measurement and the daily resting-heart-rate estimate, and is implemented by the phase-2 aggregate design.',
-      code: {
-        system:
-          'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
-        code: 'sleeping-heart-rate-average',
-        display: 'Sleeping heart rate average',
-        definition:
-          'The mean heart rate across the exact sleep-session Observation effective Period.',
-      },
-      valueKind: 'quantity',
-      owner: 'withings',
-      quantity: {
-        system: 'http://unitsofmeasure.org',
-        code: '/min',
-        unit: 'beats/minute',
-        example: 55,
-        dimension: {
-          s: -1,
-        },
-      },
-      method: {
-        code: 'session-mean',
-        display: 'Session mean',
-      },
-      effective: 'Period',
-    },
     'withings-atrial-fibrillation-notification-ecg': {
       id: 'withings-atrial-fibrillation-notification-ecg',
       profile: 'withings-atrial-fibrillation-notification-ecg',
       standardProfile: null,
       title: 'Withings Atrial Fibrillation Notification (ECG)',
       description:
-        "Withings meastype 130: a screening notification from the vendor's proprietary electrocardiogram algorithm. It is emitted as a notification and never as a rhythm finding, exactly as the HealthKit irregular-heart-rhythm notification is: the recording itself remains the rhythm evidence. The adapter admits an Observation only for the vendor's positive screening classification; Withings publishes no encoding for the numeric measure.value, so no negative result, no inconclusive result, and no diagnosis is asserted. The code is deliberately taken from the providers code system so no receiver can read it as an atrial-fibrillation finding.",
+        "Withings meastype 130: a screening notification from the vendor's proprietary electrocardiogram algorithm. It is emitted as a notification and never as a rhythm finding, exactly as the HealthKit irregular-heart-rhythm notification is: the recording itself remains the rhythm evidence. The adapter admits an Observation only for the vendor's positive screening classification; Withings publishes no encoding for the numeric measure.value, so no negative result, no inconclusive result, and no diagnosis is asserted. The code is deliberately taken from the providers code system so it cannot be interpreted as an atrial-fibrillation finding.",
       code: {
         system:
           'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
@@ -6537,7 +6498,7 @@ const adapterMeasurementCatalogValue = {
       standardProfile: null,
       title: 'Withings Atrial Fibrillation Notification (PPG)',
       description:
-        "Withings meastype 139: a screening notification from the vendor's proprietary photoplethysmography algorithm, kept separate from the electrocardiogram notification because it screens a different signal. It is emitted as a notification and never as a rhythm finding. The adapter admits an Observation only for the vendor's positive screening classification; Withings publishes no encoding for the numeric measure.value, so no negative result, no inconclusive result, and no diagnosis is asserted. The code is deliberately taken from the providers code system so no receiver can read it as an atrial-fibrillation finding.",
+        "Withings meastype 139: a screening notification from the vendor's proprietary photoplethysmography algorithm, kept separate from the electrocardiogram notification because it screens a different signal. It is emitted as a notification and never as a rhythm finding. The adapter admits an Observation only for the vendor's positive screening classification; Withings publishes no encoding for the numeric measure.value, so no negative result, no inconclusive result, and no diagnosis is asserted. The code is deliberately taken from the providers code system so it cannot be interpreted as an atrial-fibrillation finding.",
       code: {
         system:
           'https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement',
@@ -6953,7 +6914,6 @@ const providerScalarOutputRolesValue = {
     },
     'getsummary:hr_average': {
       'sleep-heart-rate': 'sleep-heart-rate',
-      'sleeping-heart-rate-average': 'sleeping-heart-rate-average',
     },
     'getsummary:rr_average': {
       'respiratory-rate-average': 'respiratory-rate-average',
@@ -7164,7 +7124,6 @@ const providerScalarOutputDiscriminatorsValue = {
     },
     'getsummary:hr_average': {
       'sleep-heart-rate': 'single',
-      'sleeping-heart-rate-average': 'single',
     },
     'getsummary:rr_average': {
       'respiratory-rate-average': 'single',

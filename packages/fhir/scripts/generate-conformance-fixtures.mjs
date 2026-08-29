@@ -7,7 +7,7 @@
 //
 
 import { Buffer } from 'node:buffer'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { argv, stdout } from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -501,9 +501,7 @@ const recordingBundle = ({ provider, sourceType }, index) =>
       },
       attachment: {
         kind: 'embedded',
-        contentType: unwrap(
-          parseMediaType('application/vnd.grovealliance.provider+json'),
-        ),
+        contentType: unwrap(parseMediaType('application/json')),
         title: 'Authorized minimized provider recording',
         format: 'provider-recording',
         payloadAssertion: 'caller-authorized-opaque-payload',
@@ -776,7 +774,7 @@ for (const [path, value] of resources) {
 }
 
 const manifest = {
-  schemaVersion: 1,
+  schemaVersion: 0,
   fhirVersion: packageGraph.fhirVersion,
   producer: { name: 'Grove TypeScript', version: producerVersion },
   packages: conformancePackages,
@@ -870,6 +868,26 @@ if (invalid.length > 0) {
 
 await mkdir(resourceRoot, { recursive: true })
 await mkdir(resolve(fixtureRoot, 'mobile-exchange'), { recursive: true })
+for (const directory of ['resources', 'mobile-exchange']) {
+  const expected = new Set(
+    [...serialized.keys()]
+      .filter((relative) => relative.startsWith(`${directory}/`))
+      .map((relative) => relative.slice(directory.length + 1)),
+  )
+  const stale = (await readdir(resolve(fixtureRoot, directory))).filter(
+    (name) =>
+      (name.endsWith('.json') || name.endsWith('.json.license')) &&
+      !expected.has(name),
+  )
+  if (check && stale.length > 0) {
+    throw new Error(
+      `Unexpected conformance fixtures: ${stale.map((name) => `${directory}/${name}`).join(', ')}`,
+    )
+  }
+  await Promise.all(
+    stale.map((name) => rm(resolve(fixtureRoot, directory, name))),
+  )
+}
 for (const [relative, value] of serialized) {
   const path = resolve(fixtureRoot, relative)
   if (check) {

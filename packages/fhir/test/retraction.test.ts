@@ -275,9 +275,7 @@ describe('Provider source-record retraction', () => {
       },
       attachment: {
         kind: 'embedded',
-        contentType: unwrap(
-          parseMediaType('application/vnd.grovealliance.provider+json'),
-        ),
+        contentType: unwrap(parseMediaType('application/json')),
         title: 'Authorized minimized provider recording',
         format: 'provider-recording',
         payloadAssertion: 'verified-sanitized-input',

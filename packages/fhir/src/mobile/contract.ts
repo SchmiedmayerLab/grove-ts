@@ -100,7 +100,7 @@ const groveMobileContractValue: GroveMobileProtocolContract = {
   recordingFormats: groveRecordingFormatRegistry,
 }
 
-/** Runtime constants projected from the pinned, generated Grove 0.6 protocol catalog. */
+/** Runtime constants projected from the pinned Grove protocol catalog. */
 export const groveMobileContract: GroveMobileProtocolContract = deepFreeze(
   groveMobileContractValue,
 )

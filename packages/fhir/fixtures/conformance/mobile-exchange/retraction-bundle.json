@@ -17,8 +17,8 @@
         }
       ]
     },
-    "system": "https://study.example.org/fhir/NamingSystem/grove-event-v2",
-    "value": "e2:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:43"
+    "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+    "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:43"
   },
   "entry": [
     {
@@ -35,12 +35,12 @@
                 }
               ]
             },
-            "system": "https://study.example.org/fhir/NamingSystem/grove-entry-node-v2",
-            "value": "n2:retraction-provenance:0:kry9tA8wKNb5VGuzulTG-msyl6iRqHJuR2y1eK-7VOc"
+            "system": "https://study.example.org/fhir/NamingSystem/grove-entry-node-v0",
+            "value": "n0:retraction-provenance:0:o0Qrv-QfsfhozEJ5jeXVloNGbKrhYM9Rk6eziKoPmV4"
           }
         }
       ],
-      "fullUrl": "urn:uuid:39f1693a-d1b3-597c-998f-0837dbd1d6d1",
+      "fullUrl": "urn:uuid:f99194b8-aaf8-5fdb-91fa-19309bdd6716",
       "resource": {
         "resourceType": "Provenance",
         "id": "GroveMobileRetractionProvenanceExample",
@@ -81,8 +81,8 @@
                     }
                   ]
                 },
-                "system": "https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v2/test-key/1",
-                "value": "v2:test-key:1:4hdZeDHmzYotDYvBYG1H5YZPDtfGbMiEftruwDvait4"
+                "system": "https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v0/test-key/1",
+                "value": "v0:test-key:1:JUZooa4NZX-rlMn9-NC8W078xzEuUO9X3Xo1mgk0Vac"
               }
             }
           }
@@ -101,8 +101,8 @@
                     }
                   ]
                 },
-                "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1",
-                "value": "v2:test-key:1:1y-KjnPSgOBDI5pE69EVN8U7Oaen_WM4cPL-sBxDKgw"
+                "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1",
+                "value": "v0:test-key:1:ptHr751zWyYfaR2WIvrP1TfnVEK4bInC__ibP_AYfVY"
               }
             }
           }
@@ -126,8 +126,8 @@
                   }
                 ]
               },
-              "system": "https://study.example.org/fhir/NamingSystem/grove-source-output-v2/test-key/1",
-              "value": "v2:test-key:1:_sudqhgnrCDWXSytfxliI_fzd0qjFUMFobOIMP6Z5gw"
+              "system": "https://study.example.org/fhir/NamingSystem/grove-source-output-v0/test-key/1",
+              "value": "v0:test-key:1:PPULnf0LKpASjIj8mU5TKafPKig_oqWND3_dHFShGd8"
             }
           }
         ],

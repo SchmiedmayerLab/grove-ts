@@ -363,7 +363,7 @@ const validateRecordingDocument = (
     typeof format?.code === 'string' ? formats[format.code] : undefined
   if (
     format?.system !== groveMobileContract.recordingFormats.codeSystem ||
-    format.version !== groveMobileContract.recordingFormats.version ||
+    format.version !== undefined ||
     definition?.status !== 'active' ||
     definition.contentType !== attachment?.contentType
   ) {
@@ -371,7 +371,7 @@ const validateRecordingDocument = (
       context,
       'mobile-recording-document.format',
       [...path, 'content', 0, 'format'],
-      'Recording format, release, and content type must match the active Grove registry entry.',
+      'Recording format and content type must match the active Grove registry entry; release-coupled Coding.version is not carried in an instance.',
     )
   }
 }

@@ -118,9 +118,7 @@ const rawInput = (
     },
     attachment: {
       kind: 'embedded',
-      contentType: unwrap(
-        parseMediaType('application/vnd.grovealliance.provider+json'),
-      ),
+      contentType: unwrap(parseMediaType('application/json')),
       title: 'Authorized minimized provider recording',
       format: 'provider-recording',
       payloadAssertion: 'caller-authorized-opaque-payload',
@@ -383,7 +381,6 @@ describe('Provider native recording graph', () => {
         format: {
           system:
             'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
-          version: '0.6.0',
           code: healthKitClinicalRecordAdmission.payloadFormat,
         },
         attachment: {
@@ -526,7 +523,7 @@ describe('Provider native recording graph', () => {
     expect(documentEntry.resource.content).toEqual([
       {
         attachment: {
-          contentType: 'application/vnd.grovealliance.provider+json',
+          contentType: 'application/json',
           data: 'AQID',
           size: 3,
           hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
@@ -535,7 +532,6 @@ describe('Provider native recording graph', () => {
         format: {
           system:
             'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
-          version: '0.6.0',
           code: 'provider-recording',
           display: 'Provider Recording',
         },
@@ -601,7 +597,7 @@ describe('Provider native recording graph', () => {
       },
     },
     {
-      name: 'wrong recording registry version',
+      name: 'release-coupled recording registry version',
       mutate: (document: MutableJsonObject) => {
         const content = document.content
         if (!Array.isArray(content)) throw new Error('Expected content.')
@@ -621,7 +617,7 @@ describe('Provider native recording graph', () => {
           mutableObject(content[0], 'content').attachment,
           'content.attachment',
         )
-        attachment.contentType = 'application/json'
+        attachment.contentType = 'text/plain'
       },
     },
     {
@@ -692,7 +688,7 @@ describe('Provider native recording graph', () => {
     }
     expect(document.identifier).toHaveLength(3)
     for (const entry of document.identifier ?? []) {
-      expect(entry.value).toMatch(/^v2:test-key:1:[A-Za-z0-9_-]{43}$/u)
+      expect(entry.value).toMatch(/^v0:test-key:1:[A-Za-z0-9_-]{43}$/u)
     }
   })
 
@@ -808,9 +804,7 @@ describe('Provider native recording graph', () => {
       ...input,
       attachment: {
         kind: 'external',
-        contentType: unwrap(
-          parseMediaType('application/vnd.grovealliance.provider+json'),
-        ),
+        contentType: unwrap(parseMediaType('application/json')),
         title: 'Authorized minimized Oura recording',
         format: 'provider-recording',
         payloadAssertion: 'verified-sanitized-input',
@@ -937,7 +931,7 @@ describe('Provider native recording graph', () => {
     const input = rawInput('oura', 'heartrate')
     const external = {
       kind: 'external',
-      contentType: 'application/vnd.grovealliance.provider+json',
+      contentType: 'application/json',
       title: 'Authorized recording',
       format: 'provider-recording',
       payloadAssertion: 'caller-authorized-opaque-payload',

@@ -44,34 +44,34 @@ const uri = (value: string): AbsoluteUri => unwrap(parseAbsoluteUri(value))
 const conformanceDeployment = {
   opaqueIdentifierSystems: {
     'source-record': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1',
     ),
     'source-output': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-output-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-source-output-v0/test-key/1',
     ),
     'writer-record': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-writer-record-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-writer-record-v0/test-key/1',
     ),
     'provider-record': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-provider-record-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-provider-record-v0/test-key/1',
     ),
     'provider-output': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-provider-output-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-provider-output-v0/test-key/1',
     ),
     'source-artifact': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-artifact-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-source-artifact-v0/test-key/1',
     ),
     'provider-artifact': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v0/test-key/1',
     ),
     'source-context': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-context-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-source-context-v0/test-key/1',
     ),
     'recording-device': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-recording-device-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-recording-device-v0/test-key/1',
     ),
     'device-snapshot': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v2/test-key/1',
+      'https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v0/test-key/1',
     ),
   },
   eventIdentifierSystem: uri(groveExchangeProtocol.testVectors.event.system),
@@ -106,7 +106,7 @@ const deriveVectorIdentity = <Kind extends GroveOpaqueIdentityKind>(
     components,
   )
 
-describe('Grove exchange protocol v2 identity', () => {
+describe('Grove exchange protocol v0 identity', () => {
   it('fails closed without throwing at every untyped identity boundary', () => {
     const invalidValues = [null, undefined, 42, 'wrong-shape', Symbol('x')]
     for (const invalid of invalidValues) {
@@ -468,7 +468,7 @@ describe('Grove exchange protocol v2 identity', () => {
         runtimeDeployment,
         {
           ...event,
-          value: 'e2:13ed2fea-25b0-4d0d-9a26-c6d2a7f057a2:1',
+          value: 'e0:13ed2fea-25b0-4d0d-9a26-c6d2a7f057a2:1',
         },
         'conversion-provenance',
         '0',
@@ -505,15 +505,15 @@ describe('Grove exchange protocol v2 identity', () => {
       deriveEntryNodeIdentifier(runtimeDeployment, event, 'Uppercase', '0').ok,
     ).toBe(false)
     expect(isEventIdentityValue(42 as never)).toBe(false)
-    expect(isEventIdentityValue('e2:not-a-uuid:1')).toBe(false)
+    expect(isEventIdentityValue('e0:not-a-uuid:1')).toBe(false)
     expect(containsIsolatedSurrogate(42 as never)).toBe(true)
   })
 
   it('rejects noncanonical base64url digest spellings', () => {
     const noncanonicalDigest = `${'A'.repeat(42)}B`
-    expect(isOpaqueIdentityValue(`v2:key:1:${noncanonicalDigest}`)).toBe(false)
+    expect(isOpaqueIdentityValue(`v0:key:1:${noncanonicalDigest}`)).toBe(false)
     expect(
-      isEntryNodeIdentityValue(`n2:resource:0:${noncanonicalDigest}`),
+      isEntryNodeIdentityValue(`n0:resource:0:${noncanonicalDigest}`),
     ).toBe(false)
   })
 })

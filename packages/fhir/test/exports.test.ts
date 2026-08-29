@@ -74,7 +74,7 @@ describe('public entry-point boundaries', () => {
   it('exposes bounded generated version and package metadata', () => {
     expect(root.groveFhirVersion).toBe('4.0.1')
     expect(root.groveFhirContractVersion).toBe('0.6.0')
-    expect(root.groveExchangeProtocol.protocolVersion).toBe(2)
+    expect(root.groveExchangeProtocol.protocolVersion).toBe(0)
     expect(root.groveMobileContract.version).toBe('0.6.0')
     expect(
       root.groveMobileContract.identity.resourceIdentifierPriority,

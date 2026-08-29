@@ -57,7 +57,7 @@ if (!Array.isArray(measurements) || measurements.length === 0) {
 
 const mobileMeasurements = measurements.filter(isMobileOwned)
 if (
-  semanticCorpus.schemaVersion !== 1 ||
+  semanticCorpus.schemaVersion !== 0 ||
   semanticCorpus.fhirVersion !== '4.0.1' ||
   semanticCorpus.version !== catalog.version ||
   !Array.isArray(semanticCorpus.vectors) ||
@@ -1146,7 +1146,7 @@ const expectedProviderArtifactComponents = [
 ]
 if (
   providerIdentity?.contract !== 'catalog/exchange-protocol.json' ||
-  providerIdentity.protocolVersion !== 2 ||
+  providerIdentity.protocolVersion !== 0 ||
   providerIdentity.adapterId !== 'providers' ||
   providerIdentity.sourceRecord?.identityKind !== 'provider-record' ||
   providerIdentity.sourceRecord?.identifierRole !== 'source-record' ||
@@ -1189,7 +1189,7 @@ if (
   formatRegistry.formats?.['fhir-r4-resource']?.contentType !==
     'application/fhir+json' ||
   formatRegistry.formats?.['provider-recording']?.contentType !==
-    'application/vnd.grovealliance.provider+json'
+    'application/json'
 ) {
   throw new Error('Recording format registry is incomplete.')
 }
@@ -1286,7 +1286,7 @@ const sourceContextVector = identityVectors?.find(
   ({ id }) => id === 'healthkit-medication-source-context',
 )
 const opaqueIdentityValue =
-  /^v2:[A-Za-z0-9._-]+:[1-9][0-9]*:[A-Za-z0-9_-]{43}$/u
+  /^v0:[A-Za-z0-9._-]+:[1-9][0-9]*:[A-Za-z0-9_-]{43}$/u
 const retractionTargetRules =
   exchangeProtocol.lifecycle?.retraction?.targetRoles
 const retractionTargetEntries =
@@ -1357,6 +1357,7 @@ const expectedReferencePaths = [
     ['Observation', 'DocumentReference', 'QuestionnaireResponse'],
   ],
   ['DocumentReference', 'subject', ['Patient']],
+  ['QuestionnaireResponse', 'subject', ['Patient']],
   ['Specimen', 'subject', ['Patient']],
   ['MedicationAdministration', 'subject', ['Patient']],
   ['MedicationStatement', 'subject', ['Patient']],
@@ -1396,9 +1397,9 @@ const exchangeRuleRows = exchangeCorpus.cases?.map(
   ({ expectedRule }) => expectedRule,
 )
 if (
-  exchangeProtocol.schemaVersion !== 1 ||
+  exchangeProtocol.schemaVersion !== 0 ||
   exchangeProtocol.version !== packageGraph.version ||
-  exchangeProtocol.protocolVersion !== 2 ||
+  exchangeProtocol.protocolVersion !== 0 ||
   exchangeProtocol.releaseVersion !== packageGraph.version ||
   exchangeProtocol.fhirVersion !== '4.0.1' ||
   exchangeProtocol.profiles?.activeBundle !==
@@ -1412,9 +1413,9 @@ if (
   exchangeProtocol.opaqueIdentity?.algorithm !== 'HMAC-SHA-256' ||
   exchangeProtocol.opaqueIdentity?.keyRequirements?.minimumBytes !== 32 ||
   exchangeProtocol.opaqueIdentity?.domain !==
-    'org.grovealliance.fhir.identity.v2' ||
+    'org.grovealliance.fhir.identity.v0' ||
   exchangeProtocol.entryIdentity?.entryNode?.domain !==
-    'org.grovealliance.fhir.entry-node.v2' ||
+    'org.grovealliance.fhir.entry-node.v0' ||
   exchangeProtocol.entryIdentity?.fullUrl?.namespace !==
     '43df4575-bff7-5a57-9a80-2472cd2b0623' ||
   !uniqueNonemptyStrings(
@@ -1496,9 +1497,9 @@ if (
   typeof exchangeProtocol.referencePolicy?.literalClosure !== 'string' ||
   typeof exchangeProtocol.referencePolicy?.declaredType !== 'string' ||
   typeof exchangeProtocol.referencePolicy?.governedShape !== 'string' ||
-  exchangeCorpus.schemaVersion !== 1 ||
+  exchangeCorpus.schemaVersion !== 0 ||
   !Array.isArray(exchangeRuleRows) ||
-  exchangeRuleRows.length !== 31 ||
+  exchangeRuleRows.length !== 34 ||
   Object.keys(exchangeRuleDiagnostics).length !==
     new Set(exchangeRuleRows.map(({ code }) => code)).size ||
   exchangeRuleRows.some(
@@ -1598,7 +1599,7 @@ if (
   sourceOutputVector?.identityKind !== 'source-output' ||
   sourceOutputVector.components?.length !== 7 ||
   sourceOutputVector.value !==
-    'v2:test-key:1:PQCWz9dZSrJm-KrbhbkckGeowkjhSSwWDRCVuF3VfXw' ||
+    'v0:test-key:1:MYPFjAMsSt0suOqpN29y_KjG__sagIpCbYKAfVKx6ck' ||
   sourceContextVector?.identityKind !== 'source-context'
 ) {
   throw new Error('Exchange protocol catalog is incomplete or inconsistent.')

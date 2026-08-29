@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 0,
   "version": "0.6.0",
   "bases": [
     { "id": "mobile-exchange", "path": "exchange-bundle.json" },
@@ -80,7 +80,7 @@
       ],
       "expectedRule": {
         "code": "mobile-exchange.event-identity",
-        "reason": "Bundle.identifier.value must be the canonical e2 producer UUID and positive sequence form.",
+        "reason": "Bundle.identifier.value must be the canonical e0 producer UUID and positive sequence form.",
         "location": "Bundle.identifier.value",
         "severity": "error"
       }
@@ -92,7 +92,7 @@
         {
           "op": "replace",
           "path": "/entry/0/extension/0/valueIdentifier/value",
-          "value": "n2:patient:0:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          "value": "n0:patient:0:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         }
       ],
       "expectedRule": {
@@ -120,7 +120,7 @@
         {
           "op": "replace",
           "path": "/entry/2/resource/identifier/1/system",
-          "value": "https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1"
+          "value": "https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1"
         }
       ],
       "expectedRule": {
@@ -187,7 +187,7 @@
       ],
       "expectedRule": {
         "code": "mobile-retraction.opaque-target",
-        "reason": "A retraction target must use the exact canonical v2 HMAC identity previously emitted.",
+        "reason": "A retraction target must use the exact canonical v0 HMAC identity previously emitted.",
         "location": "Provenance.target[0].identifier.value",
         "severity": "error"
       }
@@ -267,12 +267,12 @@
         {
           "op": "replace",
           "path": "/entry/2/resource/subject/reference",
-          "value": "urn:uuid:8f87a88a-8744-5116-8901-9274f62472ac"
+          "value": "urn:uuid:aef62dba-db7e-5a99-a854-3b5ec312312f"
         }
       ],
       "expectedRule": {
         "code": "mobile-exchange.reference-target-type",
-        "reason": "An Observation subject resolves to a Patient entry, not merely to any existing fullUrl.",
+        "reason": "Every governed Patient reference resolves to a Patient entry, not merely to any existing fullUrl.",
         "location": "Observation.subject.reference",
         "severity": "error"
       }
@@ -301,7 +301,7 @@
         {
           "op": "add",
           "path": "/entry/3/resource/entity/0/what/reference",
-          "value": "urn:uuid:3314ab4c-4ab3-536f-a556-e3b6ff97762d"
+          "value": "urn:uuid:d5137e30-79b1-5110-a09c-bd2528e25085"
         }
       ],
       "expectedRule": {
@@ -347,8 +347,8 @@
                     }
                   ]
                 },
-                "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1",
-                "value": "v2:test-key:1:1y-KjnPSgOBDI5pE69EVN8U7Oaen_WM4cPL-sBxDKgw"
+                "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1",
+                "value": "v0:test-key:1:ptHr751zWyYfaR2WIvrP1TfnVEK4bInC__ibP_AYfVY"
               }
             }
           }
@@ -376,7 +376,7 @@
       ],
       "expectedRule": {
         "code": "mobile-exchange.reference-shape",
-        "reason": "A governed Reference is exclusively resolving-literal or identifier-only logical, never both.",
+        "reason": "Each governed path has its declared singular or repeating shape and contains valid Reference objects that are exclusively resolving-literal or identifier-only logical, never both.",
         "location": "Observation.subject",
         "severity": "error"
       }
@@ -398,7 +398,7 @@
       ],
       "expectedRule": {
         "code": "mobile-exchange.logical-patient-reference",
-        "reason": "An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier.",
+        "reason": "An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier without a Grove role or protocol-reserved system.",
         "location": "Observation.subject",
         "severity": "error"
       }
@@ -490,8 +490,8 @@
                     }
                   ]
                 },
-                "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v2/test-key/1",
-                "value": "v2:test-key:1:1y-KjnPSgOBDI5pE69EVN8U7Oaen_WM4cPL-sBxDKgw"
+                "system": "https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1",
+                "value": "v0:test-key:1:ptHr751zWyYfaR2WIvrP1TfnVEK4bInC__ibP_AYfVY"
               },
               {
                 "type": {
@@ -502,13 +502,13 @@
                     }
                   ]
                 },
-                "system": "https://study.example.org/fhir/NamingSystem/grove-source-output-v2/test-key/1",
-                "value": "v2:test-key:1:_sudqhgnrCDWXSytfxliI_fzd0qjFUMFobOIMP6Z5gw"
+                "system": "https://study.example.org/fhir/NamingSystem/grove-source-output-v0/test-key/1",
+                "value": "v0:test-key:1:PPULnf0LKpASjIj8mU5TKafPKig_oqWND3_dHFShGd8"
               }
             ],
             "status": "current",
             "subject": {
-              "reference": "urn:uuid:3314ab4c-4ab3-536f-a556-e3b6ff97762d"
+              "reference": "urn:uuid:d5137e30-79b1-5110-a09c-bd2528e25085"
             },
             "date": "2026-08-19T17:30:00Z",
             "content": [
@@ -552,6 +552,66 @@
       }
     },
     {
+      "id": "questionnaire-response-subject-wrong-target",
+      "base": "mobile-exchange",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/entry/4/resource/subject",
+          "value": {
+            "reference": "urn:uuid:aef62dba-db7e-5a99-a854-3b5ec312312f"
+          }
+        }
+      ],
+      "expectedRule": {
+        "code": "mobile-exchange.reference-target-type",
+        "reason": "Every governed Patient reference resolves to a Patient entry, not merely to any existing fullUrl.",
+        "location": "QuestionnaireResponse.subject.reference",
+        "severity": "error"
+      }
+    },
+    {
+      "id": "questionnaire-response-subject-reserved-system",
+      "base": "mobile-exchange",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/entry/4/resource/subject/identifier/system",
+          "value": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role"
+        }
+      ],
+      "expectedRule": {
+        "code": "mobile-exchange.logical-patient-reference",
+        "reason": "An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier without a Grove role or protocol-reserved system.",
+        "location": "QuestionnaireResponse.subject.identifier.system",
+        "severity": "error"
+      }
+    },
+    {
+      "id": "questionnaire-response-subject-grove-role",
+      "base": "mobile-exchange",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/entry/4/resource/subject/identifier/type",
+          "value": {
+            "coding": [
+              {
+                "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                "code": "source-record"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedRule": {
+        "code": "mobile-exchange.logical-patient-reference",
+        "reason": "An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier without a Grove role or protocol-reserved system.",
+        "location": "QuestionnaireResponse.subject.identifier.type",
+        "severity": "error"
+      }
+    },
+    {
       "id": "disconnected-supporting-patient",
       "base": "mobile-exchange",
       "patch": [
@@ -559,7 +619,7 @@
           "op": "add",
           "path": "/entry/-",
           "value": {
-            "fullUrl": "urn:uuid:19e3b5cf-5c03-57a3-a9ff-6c0cb3025341",
+            "fullUrl": "urn:uuid:27d2d3da-934e-52bd-ad54-d720752df13f",
             "extension": [
               {
                 "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
@@ -572,8 +632,8 @@
                       }
                     ]
                   },
-                  "system": "https://study.example.org/fhir/NamingSystem/grove-entry-node-v2",
-                  "value": "n2:patient:1:wTdrAaKPt3xdV3VbfjLhG5fqVbRBmQe1q_UMGSBeopU"
+                  "system": "https://study.example.org/fhir/NamingSystem/grove-entry-node-v0",
+                  "value": "n0:patient:1:qN9xaTdoz-LfvONC7FgEUNMz06zyWhfzD0khPhtjVig"
                 }
               }
             ],
