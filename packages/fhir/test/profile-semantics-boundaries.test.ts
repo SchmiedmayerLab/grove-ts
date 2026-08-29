@@ -281,7 +281,6 @@ describe('profile-specific resource semantic boundaries', () => {
       throw new Error('Missing recording content.')
     formatContent.format = {
       system: 'https://example.org/wrong',
-      version: 'future',
       code: 'unknown',
     }
     expectRule(
