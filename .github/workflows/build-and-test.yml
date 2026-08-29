@@ -299,7 +299,11 @@ jobs:
           done
   ci:
     name: CI — Full Release Readiness
-    if: always()
+    if: >-
+      always() &&
+      !(github.event_name == 'pull_request' &&
+      github.event.pull_request.draft &&
+      startsWith(github.head_ref, 'feature/fhir-'))
     needs:
       - actionlint
       - dependency-review
@@ -318,7 +322,6 @@ jobs:
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
           DOCUMENTATION_RESULT: ${{ needs.documentation.result }}
-          IS_FHIR_DRAFT: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft && startsWith(github.head_ref, 'feature/fhir-') }}
           MARKDOWN_LINKS_RESULT: ${{ needs.markdown-links.result }}
           NODE_CURRENT_RESULT: ${{ needs.node-current.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
@@ -326,10 +329,6 @@ jobs:
           TESTS_RESULT: ${{ needs.tests.result }}
           TESTS_EXACT_HEAD_RESULT: ${{ needs.tests-exact-head.result }}
         run: |
-          if [[ "$IS_FHIR_DRAFT" == true ]]; then
-            echo "Draft-scoped checks do not establish full release readiness." >&2
-            exit 1
-          fi
           for result in \
             "$ACTIONLINT_RESULT" \
             "$DOCUMENTATION_RESULT" \

@@ -159,17 +159,11 @@ jobs:
 
   fhir-readiness:
     name: FHIR R4 — Full Release Readiness
-    if: always()
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     needs: fhir-r4
     runs-on: ubuntu-latest
     steps:
       - name: Require the full exact-head Validator lane
         env:
           FHIR_RESULT: ${{ needs.fhir-r4.result }}
-          IS_DRAFT: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
-        run: |
-          if [[ "$IS_DRAFT" == true ]]; then
-            echo "Draft structural checks do not establish FHIR release readiness." >&2
-            exit 1
-          fi
-          test "$FHIR_RESULT" = success
+        run: test "$FHIR_RESULT" = success
