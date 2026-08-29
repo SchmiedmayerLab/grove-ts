@@ -146,7 +146,7 @@ export interface CompleteIdentifierInput {
 export type GroveIdentifierRole =
   OpaqueIdentityDefinition['identifierRole'] | 'entry-node' | 'event'
 
-/** Closed HMAC domains from the Grove 0.6 exchange protocol. */
+/** Closed HMAC domains from the Grove exchange protocol. */
 export type GroveOpaqueIdentityKind = OpaqueIdentityDefinition['kind']
 
 export type GroveOpaqueIdentitySystems = Readonly<
