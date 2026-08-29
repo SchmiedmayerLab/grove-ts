@@ -8,7 +8,7 @@
 // GENERATED FILE. Run `npm run generate:zod` after changing the generator or the release pin.
 //
 
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, sonarjs/no-nested-functions, sonarjs/regex-complexity, sonarjs/concise-regex, sonarjs/single-char-in-character-classes, sonarjs/single-character-alternation */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, sonarjs/no-nested-functions, sonarjs/regex-complexity, sonarjs/concise-regex, sonarjs/single-character-alternation */
 
 import type {
   Account as FhirAccount,
@@ -49925,17 +49925,7 @@ export const dateTimeSchema: z.ZodType<string> = z
     message: 'Expected a real Gregorian calendar date for FHIR dateTime.',
   })
 
-export const decimalSchema: z.ZodType<number> = z
-  .number()
-  .refine(
-    (value) =>
-      new RegExp('^(?:-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?)$').test(
-        String(value),
-      ),
-    {
-      message: 'Expected a valid FHIR decimal.',
-    },
-  )
+export const decimalSchema: z.ZodType<number> = z.number()
 
 export const idSchema: z.ZodType<string> = z
   .string()
@@ -49958,12 +49948,6 @@ export const integerSchema: z.ZodType<number> = z
   .int()
   .min(-2147483648)
   .max(2147483647)
-  .refine(
-    (value) => new RegExp('^(?:-?([0]|([1-9][0-9]*)))$').test(String(value)),
-    {
-      message: 'Expected a valid FHIR integer.',
-    },
-  )
 
 export const markdownSchema: z.ZodType<string> = z
   .string()
@@ -49981,9 +49965,7 @@ export const positiveIntSchema: z.ZodType<number> = z
   .int()
   .min(-2147483648)
   .max(2147483647)
-  .refine((value) => new RegExp('^(?:[1-9][0-9]*)$').test(String(value)), {
-    message: 'Expected a valid FHIR positiveInt.',
-  })
+  .positive()
 
 export const stringSchema: z.ZodType<string> = z
   .string()
@@ -50003,12 +49985,7 @@ export const unsignedIntSchema: z.ZodType<number> = z
   .int()
   .min(-2147483648)
   .max(2147483647)
-  .refine(
-    (value) => new RegExp('^(?:[0]|([1-9][0-9]*))$').test(String(value)),
-    {
-      message: 'Expected a valid FHIR unsignedInt.',
-    },
-  )
+  .nonnegative()
 
 export const uriSchema: z.ZodType<string> = z
   .string()

@@ -11,17 +11,22 @@ import {
   type AbsoluteUri,
   type Result,
 } from '../src/core/index.js'
-import { deriveConformanceVectorOpaqueIdentifier } from '../src/mobile/identity.js'
+import {
+  containsIsolatedSurrogate,
+  deriveConformanceVectorOpaqueIdentifier,
+} from '../src/mobile/identity.js'
 import {
   createEntryIdentity,
   deriveEntryFullUrl,
   deriveEntryNodeIdentifier,
+  deriveEntryNodeValue,
   deriveEventIdentifier,
   deriveOpaqueIdentifier,
   entryIdentifierName,
   encodeLengthFramedUtf8,
   groveExchangeProtocol,
   isEntryNodeIdentityValue,
+  isEventIdentityValue,
   isOpaqueIdentityValue,
   validateDeploymentIdentity,
   type DeploymentIdentityInput,
@@ -284,6 +289,30 @@ describe('Grove exchange protocol v2 identity', () => {
     }
   })
 
+  it.each([
+    { opaqueIdentifierSystems: null },
+    { opaqueIdentifierSystems: [] },
+    { keyId: 42 },
+    { keyId: 'not a token' },
+    { keyEpoch: 1 },
+    { keyEpoch: '0' },
+    { producerInstance: 42 },
+    { producerInstance: runtimeDeployment.producerInstance.toUpperCase() },
+    { secretBase64Url: 42 },
+    { secretBase64Url: '*' },
+    { secretBase64Url: 'A' },
+    { secretBase64Url: 'AA' },
+    { eventIdentifierSystem: '/relative' },
+    { entryNodeIdentifierSystem: '/relative' },
+  ])('rejects malformed deployment field set %#', (replacement) => {
+    expect(
+      validateDeploymentIdentity({
+        ...runtimeDeployment,
+        ...replacement,
+      }).ok,
+    ).toBe(false)
+  })
+
   it('rejects unknown identity kinds and every wrong component arity at runtime', () => {
     const source = identityVectors.find(
       ({ identityKind }) => identityKind === 'source-output',
@@ -309,6 +338,25 @@ describe('Grove exchange protocol v2 identity', () => {
         'extra',
       ] as never).ok,
     ).toBe(false)
+  })
+
+  it('rejects non-string identity components after validating their arity', () => {
+    const source = identityVectors.find(
+      ({ identityKind }) => identityKind === 'source-output',
+    )
+    if (source === undefined) throw new Error('Missing source-output vector.')
+    const components: unknown[] = [...source.components]
+    components[1] = 42
+    expect(
+      deriveOpaqueIdentifier(
+        runtimeDeployment,
+        'source-output',
+        components as never,
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-identifier', path: ['components'] }],
+    })
   })
 
   it('rejects empty or malformed Unicode only at the typed opaque-identity boundary', () => {
@@ -426,6 +474,39 @@ describe('Grove exchange protocol v2 identity', () => {
         '0',
       ).ok,
     ).toBe(false)
+  })
+
+  it('validates event and entry-node lexical boundaries independently', () => {
+    const event = unwrap(
+      deriveEventIdentifier(
+        runtimeDeployment,
+        groveExchangeProtocol.testVectors.event.sequence,
+      ),
+    )
+    expect(deriveEventIdentifier(runtimeDeployment, 1 as never).ok).toBe(false)
+    expect(deriveEventIdentifier(runtimeDeployment, '0').ok).toBe(false)
+    expect(
+      deriveEntryNodeValue('/relative', event.value, 'resource', '0').ok,
+    ).toBe(false)
+    expect(
+      deriveEntryNodeValue(event.system, event.value, 42 as never, '0').ok,
+    ).toBe(false)
+    expect(
+      deriveEntryNodeValue(event.system, event.value, 'Uppercase', '0').ok,
+    ).toBe(false)
+    expect(
+      deriveEntryNodeValue(event.system, event.value, 'resource', 0 as never)
+        .ok,
+    ).toBe(false)
+    expect(
+      deriveEntryNodeValue(event.system, event.value, 'resource', '01').ok,
+    ).toBe(false)
+    expect(
+      deriveEntryNodeIdentifier(runtimeDeployment, event, 'Uppercase', '0').ok,
+    ).toBe(false)
+    expect(isEventIdentityValue(42 as never)).toBe(false)
+    expect(isEventIdentityValue('e2:not-a-uuid:1')).toBe(false)
+    expect(containsIsolatedSurrogate(42 as never)).toBe(true)
   })
 
   it('rejects noncanonical base64url digest spellings', () => {

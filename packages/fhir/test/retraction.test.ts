@@ -366,8 +366,10 @@ describe('Provider source-record retraction', () => {
     const device = active.entry.find(
       ({ resource }) =>
         resource.resourceType === 'Device' &&
-        resource.meta?.profile?.includes(
-          'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
+        resource.meta?.profile?.some(
+          (profile) =>
+            profile ===
+            'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
         ),
     )?.resource
     if (device?.resourceType !== 'Device') {

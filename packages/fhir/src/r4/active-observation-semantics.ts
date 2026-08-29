@@ -129,9 +129,8 @@ const PROVIDER_OBSERVATION_PROFILES: ReadonlySet<string> = new Set(
 const hasExactProviderObservationClaim = (
   observation: UnknownRecord,
   match: MeasurementDefinition | null,
+  directProfiles: readonly string[],
 ): boolean => {
-  const profiles = asRecord(observation.meta)?.profile
-  const directProfiles = Array.isArray(profiles) ? profiles : []
   const providerMarkers =
     Array.isArray(observation.extension) ?
       observation.extension.filter(
@@ -163,11 +162,10 @@ const hasExactProviderObservationClaim = (
   if (
     provider === undefined ||
     semanticProfile === undefined ||
-    !Array.isArray(profiles) ||
-    profiles.length !== 2 ||
-    new Set(profiles).size !== 2 ||
-    !profiles.includes(semanticProfile) ||
-    !profiles.includes(provider.observationProfile) ||
+    directProfiles.length !== 2 ||
+    new Set(directProfiles).size !== 2 ||
+    !directProfiles.includes(semanticProfile) ||
+    !directProfiles.includes(provider.observationProfile) ||
     (match.owner !== undefined && provider.measurementOwner !== match.owner)
   ) {
     return false
@@ -181,40 +179,50 @@ const setsEqual = (
 ): boolean =>
   left.size === right.size && [...left].every((value) => right.has(value))
 
+interface ObservationProfileAdmission {
+  readonly match: MeasurementDefinition | null
+  readonly directProfiles: readonly string[]
+}
+
 const admittedObservationProfile = (
   profiles: unknown,
-): MeasurementDefinition | null | undefined => {
-  if (
-    !Array.isArray(profiles) ||
-    profiles.length === 0 ||
-    profiles.some((profile) => typeof profile !== 'string')
-  ) {
-    return undefined
-  }
-  const direct = new Set(profiles as readonly string[])
-  if (direct.size !== profiles.length) return undefined
+): ObservationProfileAdmission | undefined => {
+  if (!Array.isArray(profiles) || profiles.length === 0) return undefined
+  const directProfiles = profiles.filter(
+    (profile): profile is string => typeof profile === 'string',
+  )
+  if (directProfiles.length !== profiles.length) return undefined
+  const direct = new Set(directProfiles)
+  if (direct.size !== directProfiles.length) return undefined
   if (
     direct.size === 1 &&
     [...direct].every((profile) => SENSORKIT_PLATFORM_PROFILES.has(profile))
   ) {
-    return null
+    return { match: null, directProfiles }
   }
-  if (setsEqual(direct, SENSORKIT_HYBRID_PROFILES)) return null
+  if (setsEqual(direct, SENSORKIT_HYBRID_PROFILES)) {
+    return { match: null, directProfiles }
+  }
 
-  const semantic = [...direct].filter((profile) =>
+  const semanticProfiles = [...direct].filter((profile) =>
     SHARED_SEMANTIC_PROFILES.has(profile),
   )
+  const [semanticProfile, ...additionalSemanticProfiles] = semanticProfiles
   const adapters = [...direct].filter((profile) =>
     ADAPTER_OBSERVATION_PROFILES.has(profile),
   )
   if (
-    semantic.length !== 1 ||
+    semanticProfile === undefined ||
+    additionalSemanticProfiles.length > 0 ||
     adapters.length > 1 ||
-    direct.size !== semantic.length + adapters.length
+    direct.size !== semanticProfiles.length + adapters.length
   ) {
     return undefined
   }
-  return MEASUREMENT_BY_PROFILE.get(semantic[0] ?? '') ?? null
+  return {
+    match: MEASUREMENT_BY_PROFILE.get(semanticProfile) ?? null,
+    directProfiles,
+  }
 }
 
 /** Whether an Observation directly declares one exact catalog-admitted semantic profile shape. */
@@ -223,9 +231,16 @@ export const hasAdmittedMobileObservationProfile = (
 ): boolean => {
   const observation = asRecord(resource)
   if (observation?.resourceType !== 'Observation') return false
-  const match = admittedObservationProfile(asRecord(observation.meta)?.profile)
+  const admission = admittedObservationProfile(
+    asRecord(observation.meta)?.profile,
+  )
   return (
-    match !== undefined && hasExactProviderObservationClaim(observation, match)
+    admission !== undefined &&
+    hasExactProviderObservationClaim(
+      observation,
+      admission.match,
+      admission.directProfiles,
+    )
   )
 }
 
@@ -496,13 +511,14 @@ const validateCodeableConceptResult = (
 ): void => {
   const result = asRecord(observation.valueCodeableConcept)
   const codings = Array.isArray(result?.coding) ? result.coding : []
+  const allowedValues = new Set(match.allowedValues ?? [])
   const admitted = codings.filter((candidate) => {
     const coding = asRecord(candidate)
     return (
       coding !== undefined &&
       coding.system === match.resultCodeSystem &&
       typeof coding.code === 'string' &&
-      (match.allowedValues ?? []).includes(coding.code)
+      allowedValues.has(coding.code)
     )
   })
   const invalidSameSystem = codings.some((candidate) => {
@@ -510,8 +526,7 @@ const validateCodeableConceptResult = (
     return (
       coding !== undefined &&
       coding.system === match.resultCodeSystem &&
-      (typeof coding.code !== 'string' ||
-        !(match.allowedValues ?? []).includes(coding.code))
+      (typeof coding.code !== 'string' || !allowedValues.has(coding.code))
     )
   })
   if (admitted.length !== 1 || invalidSameSystem) {
@@ -644,10 +659,16 @@ export const validateMobileObservationSemantics = (
 ): void => {
   const observation = asRecord(resource)
   if (observation?.resourceType !== 'Observation') return
-  const match = admittedObservationProfile(asRecord(observation.meta)?.profile)
+  const admission = admittedObservationProfile(
+    asRecord(observation.meta)?.profile,
+  )
   if (
-    match === undefined ||
-    !hasExactProviderObservationClaim(observation, match)
+    admission === undefined ||
+    !hasExactProviderObservationClaim(
+      observation,
+      admission.match,
+      admission.directProfiles,
+    )
   ) {
     addIssue(
       context,
@@ -657,6 +678,7 @@ export const validateMobileObservationSemantics = (
     )
     return
   }
+  const { match } = admission
   if (match === null) return
   if (observation.status !== 'final') {
     addIssue(

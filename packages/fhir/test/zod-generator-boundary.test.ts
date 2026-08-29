@@ -18,6 +18,33 @@ interface GeneratorElement {
   readonly maxValueInteger?: unknown
 }
 
+const numericPrimitive = (name: string, regex: string) => ({
+  resourceType: 'StructureDefinition',
+  name,
+  kind: 'primitive-type',
+  snapshot: {
+    element: [
+      { path: name, min: 0, max: '1' },
+      {
+        path: `${name}.value`,
+        min: 0,
+        max: '1',
+        type: [
+          {
+            code: 'http://hl7.org/fhirpath/System.String',
+            extension: [
+              {
+                url: 'http://hl7.org/fhir/StructureDefinition/regex',
+                valueString: regex,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+})
+
 const structure = (
   name: string,
   elements: readonly GeneratorElement[] = [{ path: name, min: 0, max: '1' }],
@@ -101,6 +128,17 @@ describe('Zod generator package boundary', () => {
     expect(() =>
       assertSafeGeneratorInput(input(new Map([['Example', definition]]))),
     ).toThrow(/type\[0\]\.code/u)
+  })
+
+  it('rejects a changed numeric primitive pattern before generation', () => {
+    const definition = numericPrimitive(
+      'positiveInt',
+      '[1-9][0-9]*);globalThis.compromised=true;//',
+    )
+
+    expect(() =>
+      assertSafeGeneratorInput(input(new Map([['positiveInt', definition]]))),
+    ).toThrow(/positiveInt\.value regex/u)
   })
 
   it.each([

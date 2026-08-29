@@ -10,9 +10,10 @@
  * Generate Zod runtime schemas from a FHIR release's own StructureDefinitions.
  *
  * Nothing here is transcribed by hand. Cardinality, choice types, required-binding enumerations
- * and even the primitive regexes come from the published definitions, so a schema cannot drift
- * from the specification it claims to implement, and a second release costs one argument rather
- * than a second corpus.
+ * and string primitive regexes come from the published definitions. Numeric primitive patterns
+ * are checked at the package boundary and rendered as equivalent value-space constraints because
+ * JSON parsing has already discarded their lexical form. A second release still costs one
+ * argument rather than a second corpus.
  *
  * Usage:
  *   node scripts/generate-zod-schemas.mjs --release r4
@@ -802,20 +803,14 @@ function renderStructure(structure, context, pending) {
         constrained = `${constrained}.min(${bounds.min})`
       if (bounds.max !== undefined)
         constrained = `${constrained}.max(${bounds.max})`
+      if (root === 'positiveInt') constrained = `${constrained}.positive()`
+      if (root === 'unsignedInt') constrained = `${constrained}.nonnegative()`
     }
     if (['date', 'dateTime', 'instant'].includes(root)) {
       constrained = `${constrained}.refine(hasValidFhirCalendarDate, { message: ${JSON.stringify(`Expected a real Gregorian calendar date for FHIR ${root}.`)} })`
     }
     if (['canonical', 'uri', 'url', 'xhtml'].includes(root)) {
       constrained = `${constrained}.min(1)`
-    }
-    if (regex && base.startsWith('z.number()')) {
-      // positiveInt and unsignedInt state their bound as a lexical pattern; testing the string
-      // form applies the specification's own constraint rather than a hand-chosen one.
-      const source = JSON.stringify(`^(?:${regex})$`)
-      constrained = `${constrained}.refine((value) => new RegExp(${source}).test(String(value)), {
-  message: ${JSON.stringify(`Expected a valid FHIR ${root}.`)},
-})`
     }
     const output =
       base === 'z.boolean()' ? 'boolean'
@@ -1093,7 +1088,7 @@ const HEADER = `//
 // GENERATED FILE. Run \`npm run generate:zod\` after changing the generator or the release pin.
 //
 
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, sonarjs/no-nested-functions, sonarjs/regex-complexity, sonarjs/concise-regex, sonarjs/single-char-in-character-classes, sonarjs/single-character-alternation */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion, sonarjs/no-nested-functions, sonarjs/regex-complexity, sonarjs/concise-regex, sonarjs/single-character-alternation */
 
 `
 

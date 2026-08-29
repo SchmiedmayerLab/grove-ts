@@ -203,7 +203,8 @@ describe('generated Zod schemas', () => {
   })
 
   it('bounds the integer primitives the specification bounds', () => {
-    // positiveInt and unsignedInt state their range as a lexical pattern rather than a min.
+    // The package boundary verifies the published lexical patterns; runtime schemas enforce the
+    // equivalent value-space constraints after JSON parsing has discarded the original lexeme.
     expect(() => positiveIntSchema.parse(0)).toThrow()
     expect(positiveIntSchema.parse(1)).toBe(1)
     expect(() => unsignedIntSchema.parse(-1)).toThrow()

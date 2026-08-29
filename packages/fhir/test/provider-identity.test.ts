@@ -513,16 +513,20 @@ describe('Provider R4 graph builder', () => {
     const hostEntries = result.value.entry.filter(
       ({ resource }) =>
         resource.resourceType === 'Device' &&
-        resource.meta?.profile?.includes(
-          'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device',
+        resource.meta?.profile?.some(
+          (profile) =>
+            profile ===
+            'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device',
         ),
     )
     expect(hostEntries).toHaveLength(3)
     for (const applicationDevice of resources(result)) {
       if (
         applicationDevice.resourceType !== 'Device' ||
-        !applicationDevice.meta?.profile?.includes(
-          'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
+        !applicationDevice.meta?.profile?.some(
+          (profile) =>
+            profile ===
+            'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
         )
       ) {
         continue

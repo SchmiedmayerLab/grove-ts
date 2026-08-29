@@ -26,6 +26,7 @@ import {
   canonicalizeMobileEffectiveInstant,
   deriveEntryFullUrl,
   mobileEffectiveCanonicalizationVectors,
+  sharedMobileMeasurementCatalog,
   type MobileMeasurement,
 } from '../src/mobile/index.js'
 import { deriveProviderIdentities } from '../src/providers/identity.js'
@@ -36,6 +37,11 @@ import {
   providerOutputCoordinates,
   type ProviderMeasurementBundleInput,
 } from '../src/providers/index.js'
+import {
+  providerMeasurementDefinition,
+  providerMeasurementProfile,
+  providerObservationProfile,
+} from '../src/providers/measurement-definition.js'
 
 describe('Provider R4 graph builder', () => {
   it('rounds Mobile effective instants before enforcing ordering and catalog-owned duration rules', () => {
@@ -433,6 +439,110 @@ describe('Provider R4 graph builder', () => {
         eventSequence: '0',
       }).ok,
     ).toBe(false)
+
+    const malformed = [
+      { ...valid, provider: 42 },
+      { ...valid, sourceType: 42 },
+      { ...valid, outputs: 42 },
+      { ...valid, outputs: [] },
+      { ...valid, outputs: [null] },
+      {
+        ...valid,
+        outputs: [{ ...valid.outputs[0], unexpected: true }],
+      },
+      {
+        ...valid,
+        providerScopeIdentifier: {
+          ...valid.providerScopeIdentifier,
+          value: 42,
+        },
+      },
+      {
+        ...valid,
+        providerScopeIdentifier: {
+          ...valid.providerScopeIdentifier,
+          value: '  ',
+        },
+      },
+      {
+        ...valid,
+        providerScopeIdentifier: {
+          ...valid.providerScopeIdentifier,
+          assurance: 'documented-global-key-space',
+        },
+      },
+      { ...valid, sourceNativeId: 42 },
+      { ...valid, sourceNativeId: '  ' },
+      { ...valid, provenanceNodeRole: 'unknown' },
+    ]
+    for (const candidate of malformed) {
+      expect(deriveProviderIdentities(candidate as never).ok).toBe(false)
+    }
+
+    expect(
+      deriveProviderIdentities({
+        ...valid,
+        outputs: [],
+        provenanceNodeRole: 'retraction-provenance',
+      }).ok,
+    ).toBe(true)
+
+    const raw = {
+      ...valid,
+      provider: 'oura',
+      sourceType: 'heartrate',
+      providerScopeIdentifier: {
+        ...valid.providerScopeIdentifier,
+        assurance: 'documented-global-key-space',
+      },
+      outputs: [
+        {
+          kind: 'provider-artifact',
+          formatCode: 'provider-recording',
+          partIndex: '0',
+        },
+      ],
+    } as const
+    expect(deriveProviderIdentities(raw).ok).toBe(true)
+    expect(
+      deriveProviderIdentities({
+        ...raw,
+        outputs: [{ ...raw.outputs[0], partIndex: '01' }],
+      }).ok,
+    ).toBe(false)
+    expect(
+      deriveProviderIdentities({
+        ...raw,
+        outputs: [{ ...raw.outputs[0], formatCode: 'invented' }],
+      }).ok,
+    ).toBe(false)
+  })
+
+  it('resolves only shared or exact provider-owned measurement definitions', () => {
+    expect(providerMeasurementDefinition('withings', 'heart-rate')).toBe(
+      sharedMobileMeasurementCatalog['heart-rate'],
+    )
+    expect(
+      providerMeasurementProfile('withings', 'withings-vascular-age'),
+    ).toBe(
+      'https://grovealliance.org/fhir/withings/StructureDefinition/withings-vascular-age',
+    )
+    expect(providerObservationProfile('withings')).toBe(
+      'https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation',
+    )
+    expect(
+      providerMeasurementDefinition('withings', 'oura-cardiovascular-age'),
+    ).toBeUndefined()
+    expect(
+      providerMeasurementDefinition('unknown' as never, 'heart-rate'),
+    ).toBe(sharedMobileMeasurementCatalog['heart-rate'])
+    expect(
+      providerMeasurementDefinition('unknown' as never, 'unknown'),
+    ).toBeUndefined()
+    expect(
+      providerMeasurementProfile('unknown' as never, 'unknown'),
+    ).toBeUndefined()
+    expect(providerObservationProfile('unknown' as never)).toBeUndefined()
   })
 
   it('reports malformed Provider parser and identity inputs without throwing', () => {

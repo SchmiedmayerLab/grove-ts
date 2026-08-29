@@ -11,6 +11,17 @@ const ELEMENT_SEGMENT = /^[A-Za-z][A-Za-z0-9]*(?:\[x\])?$/u
 const CARDINALITY = /^(?:0|[1-9]\d*)$/u
 const FHIR_PATH_SYSTEM_TYPE =
   /^http:\/\/hl7\.org\/fhirpath\/System\.[A-Za-z][A-Za-z0-9]*$/u
+const FHIR_REGEX_EXTENSION = 'http://hl7.org/fhir/StructureDefinition/regex'
+
+// JavaScript receives FHIR JSON numbers after their lexical representation has been parsed.
+// Keep the release pattern as an integrity assertion, then render the equivalent value-space
+// constraint without copying package-owned text into generated TypeScript.
+const NUMERIC_PRIMITIVE_REGEXES = new Map([
+  ['decimal', '-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?'],
+  ['integer', '-?([0]|([1-9][0-9]*))'],
+  ['positiveInt', '[1-9][0-9]*'],
+  ['unsignedInt', '[0]|([1-9][0-9]*)'],
+])
 
 const RESERVED_WORDS = new Set([
   'await',
@@ -266,6 +277,24 @@ const validateStructure = (
   const elements = structure.snapshot?.element
   if (!Array.isArray(elements) || elements.length === 0) {
     fail(`${name}.snapshot.element`, elements, 'must be a non-empty array')
+  }
+  const expectedNumericRegex = NUMERIC_PRIMITIVE_REGEXES.get(name)
+  if (expectedNumericRegex !== undefined) {
+    const valueElement = elements.find(
+      (element) => element?.path === `${name}.value`,
+    )
+    const patterns = (valueElement?.type ?? []).flatMap((type) =>
+      (type?.extension ?? [])
+        .filter((extension) => extension?.url === FHIR_REGEX_EXTENSION)
+        .map((extension) => extension.valueString),
+    )
+    if (patterns.length !== 1 || patterns[0] !== expectedNumericRegex) {
+      fail(
+        `${name}.value regex`,
+        patterns,
+        `must equal the expected ${name} lexical constraint`,
+      )
+    }
   }
   for (const [index, element] of elements.entries()) {
     const label = `${name}.snapshot.element[${index}]`

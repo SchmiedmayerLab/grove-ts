@@ -68,31 +68,32 @@ const ADAPTER_ONLY_OUTPUT_PROFILE_CLAIMS = [
   groveProfileClaims.healthConnectSpecimenClaim,
   ...groveProfileClaims.healthKitPlatformExclusiveResourceClaims,
 ] as const
-const ADAPTER_ONLY_OUTPUT_TYPES: ReadonlySet<string> = new Set(
-  groveMobileContract.lifecycle.adapterOnlyOutputProfileClaims.resourceTypes,
+type AdapterOnlyOutputProfileClaim =
+  (typeof ADAPTER_ONLY_OUTPUT_PROFILE_CLAIMS)[number]
+const ADAPTER_ONLY_OUTPUT_PROFILE_CLAIM_BY_TYPE: ReadonlyMap<
+  string,
+  AdapterOnlyOutputProfileClaim
+> = new Map(
+  ADAPTER_ONLY_OUTPUT_PROFILE_CLAIMS.map((claim) => [
+    claim.resourceType,
+    claim,
+  ]),
 )
-
 /** Whether an adapter-only output declares its exact catalog-owned single profile. */
 export const hasAdmittedAdapterOnlyOutputProfile = (
   resource: unknown,
 ): boolean => {
   const record = asRecord(resource)
-  if (
-    typeof record?.resourceType !== 'string' ||
-    !ADAPTER_ONLY_OUTPUT_TYPES.has(record.resourceType)
-  ) {
-    return true
-  }
-  const claim = ADAPTER_ONLY_OUTPUT_PROFILE_CLAIMS.find(
-    ({ resourceType }) => resourceType === record.resourceType,
+  if (typeof record?.resourceType !== 'string') return true
+  const claim = ADAPTER_ONLY_OUTPUT_PROFILE_CLAIM_BY_TYPE.get(
+    record.resourceType,
   )
-  const expectedProfile = claim?.profile
+  if (claim === undefined) return true
   const profiles = asRecord(record.meta)?.profile
   return (
-    typeof expectedProfile === 'string' &&
     Array.isArray(profiles) &&
     profiles.length === 1 &&
-    profiles[0] === expectedProfile
+    profiles[0] === claim.profile
   )
 }
 
@@ -122,9 +123,7 @@ const exactProfileClaim = (
     )
   })
   if (matching.length !== 1) return undefined
-  const claim = matching[0]
-  if (claim === undefined) return undefined
-  return claim
+  return matching.at(0)
 }
 
 /** Whether an active DocumentReference declares one exact catalog-admitted direct profile mode. */
@@ -464,19 +463,14 @@ const validateAdapterOnlyOutputProfile = (
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ) => {
-  if (
-    typeof resource.resourceType !== 'string' ||
-    !ADAPTER_ONLY_OUTPUT_TYPES.has(resource.resourceType)
-  ) {
-    return
-  }
-  const matchingClaims = ADAPTER_ONLY_OUTPUT_PROFILE_CLAIMS.filter(
-    ({ resourceType }) => resourceType === resource.resourceType,
+  if (typeof resource.resourceType !== 'string') return
+  const claim = ADAPTER_ONLY_OUTPUT_PROFILE_CLAIM_BY_TYPE.get(
+    resource.resourceType,
   )
-  const claim = matchingClaims[0]
+  if (claim === undefined) return
   const exactProfile = hasAdmittedAdapterOnlyOutputProfile(resource)
   const requiredRoles: ReadonlySet<string> = new Set<string>(
-    claim?.requiredIdentifierRoles ?? [],
+    claim.requiredIdentifierRoles,
   )
   const invalidRoles =
     [...requiredRoles].some((role) => roleCounts.get(role) !== 1) ||

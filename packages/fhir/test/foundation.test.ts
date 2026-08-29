@@ -8,6 +8,7 @@
 
 import { expectTypeOf } from 'expect-type'
 import { compareFhirInstants, deepFreeze } from '../src/core/index.js'
+import { cloneJsonValue } from '../src/core/json.js'
 import {
   collectResults,
   err,
@@ -405,6 +406,58 @@ describe('Result composition', () => {
         expect.objectContaining({ code: 'invalid-type', path: [1] }),
       )
     }
+
+    const validIssue = {
+      severity: 'error',
+      code: 'invalid-type',
+      path: ['value'],
+      message: 'Invalid value.',
+    } as const
+    const malformedIssues = [
+      null,
+      { ...validIssue, severity: 'fatal' },
+      { ...validIssue, code: 42 },
+      { ...validIssue, path: 'value' },
+      { ...validIssue, path: [true] },
+      { ...validIssue, message: 42 },
+      { ...validIssue, reason: 42 },
+      { ...validIssue, location: 42 },
+    ]
+    for (const malformedIssue of malformedIssues) {
+      expect(
+        mapResult(
+          {
+            ok: true,
+            value: 1,
+            warnings: [malformedIssue],
+          } as unknown as Result<number>,
+          (value) => value,
+        ).ok,
+      ).toBe(false)
+    }
+  })
+})
+
+describe('hostile JSON snapshots', () => {
+  it('rejects symbol properties and non-data array elements', () => {
+    const object = { value: 1, [Symbol('metadata')]: 2 }
+    const array = [1]
+    Object.defineProperty(array, '0', {
+      enumerable: true,
+      get: () => 1,
+    })
+
+    expect(cloneJsonValue(object).ok).toBe(false)
+    expect(cloneJsonValue(array).ok).toBe(false)
+  })
+
+  it('rejects extra array properties and invalid nested values', () => {
+    const arrayWithProperty = [1] as number[] & { label?: string }
+    arrayWithProperty.label = 'not JSON array data'
+
+    expect(cloneJsonValue(arrayWithProperty).ok).toBe(false)
+    expect(cloneJsonValue([Number.POSITIVE_INFINITY]).ok).toBe(false)
+    expect(cloneJsonValue({ nested: Number.NaN }).ok).toBe(false)
   })
 })
 
