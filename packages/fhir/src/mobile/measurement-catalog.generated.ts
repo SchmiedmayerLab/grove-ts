@@ -2322,9 +2322,12 @@ const groveRecordingFormatRegistryValue = {
       contentType: 'application/fhir+json',
       status: 'active',
     },
-    'fhir-r4-resource': {
-      title: 'FHIR R4 Resource',
-      contentType: 'application/fhir+json',
+    'fhir-resource': {
+      title: 'FHIR Resource',
+      contentTypes: [
+        'application/fhir+json; fhirVersion=1.0',
+        'application/fhir+json; fhirVersion=4.0',
+      ],
       status: 'active',
     },
     'clinical-document': {

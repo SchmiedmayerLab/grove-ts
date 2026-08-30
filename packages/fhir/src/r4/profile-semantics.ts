@@ -248,33 +248,6 @@ const validateRecordingDocument = (
       'A source-preservation DocumentReference must declare exactly one catalog-admitted direct profile set.',
     )
   }
-  if (claim === groveProfileClaims.healthKitClinicalRecordDocumentClaim) {
-    const definition = healthKitClinicalRecordAdmission.fhirRepresentation
-    const extensions =
-      Array.isArray(resource.extension) ? resource.extension : []
-    const matching = extensions.filter(
-      (extension) => asRecord(extension)?.url === definition.extensionUrl,
-    )
-    const representedRelease = asRecord(matching[0])
-    const valueElements = Object.keys(representedRelease ?? {}).filter((key) =>
-      /^value[A-Z]/u.test(key),
-    )
-    if (
-      resource.resourceType !== definition.resourceType ||
-      matching.length < definition.cardinality.min ||
-      matching.length > definition.cardinality.max ||
-      representedRelease?.[definition.valueElement] !== definition.fixedValue ||
-      valueElements.length !== 1 ||
-      valueElements[0] !== definition.valueElement
-    ) {
-      addIssue(
-        context,
-        'healthkit-clinical-record.fhir-release',
-        [...path, 'extension'],
-        'A HealthKit clinical-record document must carry exactly the catalog-admitted FHIR release representation.',
-      )
-    }
-  }
   const requiredRoles: ReadonlySet<string> = new Set<string>(
     claim?.requiredIdentifierRoles ?? [],
   )
@@ -357,21 +330,51 @@ const validateRecordingDocument = (
     }
   }
   const formats = groveMobileContract.recordingFormats.formats as Readonly<
-    Record<string, { readonly contentType: string; readonly status: string }>
+    Record<
+      string,
+      {
+        readonly contentType?: string
+        readonly contentTypes?: readonly string[]
+        readonly status: string
+      }
+    >
   >
   const definition =
     typeof format?.code === 'string' ? formats[format.code] : undefined
+  const admittedContentTypes =
+    definition?.contentTypes ??
+    (definition?.contentType === undefined ? [] : [definition.contentType])
+  const attachmentContentType =
+    typeof attachment?.contentType === 'string' ?
+      attachment.contentType
+    : undefined
   if (
     format?.system !== groveMobileContract.recordingFormats.codeSystem ||
     format.version !== undefined ||
     definition?.status !== 'active' ||
-    definition.contentType !== attachment?.contentType
+    attachmentContentType === undefined ||
+    !admittedContentTypes.includes(attachmentContentType)
   ) {
     addIssue(
       context,
       'mobile-recording-document.format',
       [...path, 'content', 0, 'format'],
       'Recording format and content type must match the active Grove registry entry; release-coupled Coding.version is not carried in an instance.',
+    )
+  }
+  if (
+    claim === groveProfileClaims.healthKitClinicalRecordDocumentClaim &&
+    (format?.code !== healthKitClinicalRecordAdmission.payloadFormat ||
+      !Object.values(
+        healthKitClinicalRecordAdmission.fhirRepresentation
+          .contentTypeByRelease,
+      ).some((contentType) => contentType === attachmentContentType))
+  ) {
+    addIssue(
+      context,
+      'healthkit-clinical-record.fhir-release',
+      [...path, 'content', 0],
+      'A HealthKit clinical-record document must use the FHIR resource format and one catalog-admitted versioned FHIR JSON media type.',
     )
   }
 }

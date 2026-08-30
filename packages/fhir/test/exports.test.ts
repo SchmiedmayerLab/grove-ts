@@ -128,16 +128,22 @@ describe('public entry-point boundaries', () => {
       ),
     ).toBe(true)
     const clinicalAdmission = provider.healthKitClinicalRecordAdmission
-    expect(clinicalAdmission.fhirRepresentation.fixedValue).toBe(
-      clinicalAdmission.admittedFHIRRelease,
+    expect(clinicalAdmission.admittedFHIRReleases).toEqual(['dstu2', 'r4'])
+    const contentTypes = Object.values(
+      clinicalAdmission.fhirRepresentation.contentTypeByRelease,
     )
     expect(
       provider.groveRecordingFormatRegistry.formats[
         clinicalAdmission.payloadFormat
-      ].contentType,
-    ).toBe('application/fhir+json')
+      ].contentTypes,
+    ).toEqual(contentTypes)
     expect(Object.isFrozen(clinicalAdmission)).toBe(true)
     expect(Object.isFrozen(clinicalAdmission.fhirRepresentation)).toBe(true)
+    expect(
+      Object.isFrozen(
+        clinicalAdmission.fhirRepresentation.contentTypeByRelease,
+      ),
+    ).toBe(true)
   })
 
   it('deeply freezes every generated contract read by public builders', () => {

@@ -8,7 +8,6 @@
 
 import { readFile, writeFile } from 'node:fs/promises'
 import { argv } from 'node:process'
-import { URL } from 'node:url'
 
 import { format } from 'prettier'
 
@@ -596,6 +595,12 @@ const healthKitClinicalRecordAdmission =
   healthKitAdapter.clinicalRecordAdmission
 const healthKitClinicalFhirRepresentation =
   healthKitClinicalRecordAdmission?.fhirRepresentation
+const healthKitClinicalFhirReleases =
+  healthKitClinicalRecordAdmission?.admittedFHIRReleases
+const healthKitClinicalContentTypes =
+  healthKitClinicalFhirRepresentation?.contentTypeByRelease
+const healthKitClinicalFormat =
+  formatRegistry.formats?.[healthKitClinicalRecordAdmission?.payloadFormat]
 const healthKitApplicationDeviceIdentity =
   healthKitAdapter.applicationDeviceIdentity
 const healthKitBundleIdentifier =
@@ -605,23 +610,20 @@ if (
   healthKitClinicalRecordAdmission === null ||
   Array.isArray(healthKitClinicalRecordAdmission) ||
   Object.keys(healthKitClinicalRecordAdmission).sort().join(',') !==
-    'admittedFHIRRelease,fhirRepresentation,payloadFormat,profile,rejectedFHIRReleases,rule,sourceFHIRReleaseField' ||
+    'admittedFHIRReleases,fhirRepresentation,payloadFormat,profile,rejectedFHIRReleases,rule,sourceFHIRReleaseField' ||
   healthKitClinicalRecordAdmission.profile !==
     profiles['healthkit-clinical-record-document'] ||
   typeof healthKitClinicalRecordAdmission.payloadFormat !== 'string' ||
-  formatRegistry.formats?.[healthKitClinicalRecordAdmission.payloadFormat]
-    ?.status !== 'active' ||
-  formatRegistry.formats[healthKitClinicalRecordAdmission.payloadFormat]
-    .contentType !== 'application/fhir+json' ||
+  healthKitClinicalFormat?.status !== 'active' ||
   typeof healthKitClinicalRecordAdmission.sourceFHIRReleaseField !== 'string' ||
   healthKitClinicalRecordAdmission.sourceFHIRReleaseField.trim() === '' ||
-  typeof healthKitClinicalRecordAdmission.admittedFHIRRelease !== 'string' ||
-  healthKitClinicalRecordAdmission.admittedFHIRRelease.trim() === '' ||
+  JSON.stringify(healthKitClinicalFhirReleases) !==
+    JSON.stringify(['dstu2', 'r4']) ||
   !uniqueNonemptyStrings(
     healthKitClinicalRecordAdmission.rejectedFHIRReleases,
   ) ||
-  healthKitClinicalRecordAdmission.rejectedFHIRReleases.includes(
-    healthKitClinicalRecordAdmission.admittedFHIRRelease,
+  healthKitClinicalRecordAdmission.rejectedFHIRReleases.some((release) =>
+    healthKitClinicalFhirReleases.includes(release),
   ) ||
   typeof healthKitClinicalRecordAdmission.rule !== 'string' ||
   healthKitClinicalRecordAdmission.rule.trim() === '' ||
@@ -629,15 +631,21 @@ if (
   healthKitClinicalFhirRepresentation === null ||
   Array.isArray(healthKitClinicalFhirRepresentation) ||
   Object.keys(healthKitClinicalFhirRepresentation).sort().join(',') !==
-    'cardinality,extensionUrl,fixedValue,resourceType,valueElement' ||
+    'contentTypeByRelease,resourceType' ||
   healthKitClinicalFhirRepresentation.resourceType !== 'DocumentReference' ||
-  typeof healthKitClinicalFhirRepresentation.extensionUrl !== 'string' ||
-  !URL.canParse(healthKitClinicalFhirRepresentation.extensionUrl) ||
-  healthKitClinicalFhirRepresentation.valueElement !== 'valueCode' ||
-  healthKitClinicalFhirRepresentation.cardinality?.min !== 1 ||
-  healthKitClinicalFhirRepresentation.cardinality.max !== 1 ||
-  healthKitClinicalFhirRepresentation.fixedValue !==
-    healthKitClinicalRecordAdmission.admittedFHIRRelease
+  typeof healthKitClinicalContentTypes !== 'object' ||
+  healthKitClinicalContentTypes === null ||
+  Array.isArray(healthKitClinicalContentTypes) ||
+  JSON.stringify(Object.keys(healthKitClinicalContentTypes).sort()) !==
+    JSON.stringify([...healthKitClinicalFhirReleases].sort()) ||
+  !uniqueNonemptyStrings(Object.values(healthKitClinicalContentTypes)) ||
+  !uniqueNonemptyStrings(healthKitClinicalFormat.contentTypes) ||
+  JSON.stringify(healthKitClinicalFormat.contentTypes) !==
+    JSON.stringify(
+      healthKitClinicalFhirReleases.map(
+        (release) => healthKitClinicalContentTypes[release],
+      ),
+    )
 ) {
   throw new Error(
     'HealthKit clinical-record FHIR admission must remain complete and closed.',
@@ -1184,10 +1192,12 @@ if (
   typeof formatRegistry.valueSet !== 'string' ||
   Object.keys(formatRegistry.formats ?? {}).length === 0 ||
   Object.hasOwn(formatRegistry.formats ?? {}, 'fhir-resource-array') ||
+  Object.hasOwn(formatRegistry.formats ?? {}, 'fhir-r4-resource') ||
   formatRegistry.formats?.['fhir-collection-bundle']?.contentType !==
     'application/fhir+json' ||
-  formatRegistry.formats?.['fhir-r4-resource']?.contentType !==
-    'application/fhir+json' ||
+  !uniqueNonemptyStrings(
+    formatRegistry.formats?.['fhir-resource']?.contentTypes,
+  ) ||
   formatRegistry.formats?.['provider-recording']?.contentType !==
     'application/json'
 ) {
@@ -1201,9 +1211,11 @@ const recordingFormatRegistry = {
   version: formatRegistry.version,
   formats: Object.fromEntries(
     Object.entries(formatRegistry.formats).map(([code, entry]) => {
+      const hasContentType = typeof entry.contentType === 'string'
+      const hasContentTypes = uniqueNonemptyStrings(entry.contentTypes)
       if (
         typeof entry.title !== 'string' ||
-        typeof entry.contentType !== 'string' ||
+        hasContentType === hasContentTypes ||
         entry.status !== 'active'
       ) {
         throw new Error(`Recording format ${code} is incomplete.`)
@@ -1212,7 +1224,9 @@ const recordingFormatRegistry = {
         code,
         {
           title: entry.title,
-          contentType: entry.contentType,
+          ...(hasContentType ?
+            { contentType: entry.contentType }
+          : { contentTypes: entry.contentTypes }),
           status: entry.status,
         },
       ]

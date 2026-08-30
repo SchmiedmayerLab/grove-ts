@@ -359,10 +359,6 @@ describe('Provider native recording graph', () => {
     }
     document.extension = [
       {
-        url: representation.extensionUrl,
-        [representation.valueElement]: representation.fixedValue,
-      },
-      {
         url: healthKitMarker.url,
         valueCode: 'HKClinicalTypeIdentifierAllergyRecord',
       },
@@ -384,7 +380,7 @@ describe('Provider native recording graph', () => {
           code: healthKitClinicalRecordAdmission.payloadFormat,
         },
         attachment: {
-          contentType: 'application/fhir+json',
+          contentType: representation.contentTypeByRelease.r4,
           title: 'Provider-issued AllergyIntolerance',
           data: 'eyJyZXNvdXJjZVR5cGUiOiJBbGxlcmd5SW50b2xlcmFuY2UiLCJwYXRpZW50Ijp7ImlkZW50aWZpZXIiOnsic3lzdGVtIjoiaHR0cHM6Ly9leGFtcGxlLm9yZy9wYXRpZW50IiwidmFsdWUiOiJwc2V1ZG9ueW0ifX19',
           size: 123,
@@ -458,43 +454,43 @@ describe('Provider native recording graph', () => {
         'clinical DocumentReference',
       )
     }
+    const clinicalContentIn = (candidate: unknown): Record<string, unknown> => {
+      const content = clinicalDocumentIn(candidate).content
+      if (!Array.isArray(content) || content.length !== 1) {
+        throw new Error('Expected one clinical DocumentReference.content item.')
+      }
+      return mutableObject(content[0], 'clinical content')
+    }
+    const dstu2 = structuredClone(bundle)
+    mutableObject(
+      clinicalContentIn(dstu2).attachment,
+      'clinical attachment',
+    ).contentType = representation.contentTypeByRelease.dstu2
+    expect(parseGroveMobileExchangeBundle(dstu2).ok).toBe(true)
+
     const invalidRepresentations = [
       (candidate: Record<string, unknown>) => {
-        Reflect.deleteProperty(candidate, 'extension')
+        mutableObject(candidate.attachment, 'clinical attachment').contentType =
+          'application/fhir+json'
       },
       (candidate: Record<string, unknown>) => {
-        candidate.extension = [
-          {
-            url: representation.extensionUrl,
-            [representation.valueElement]: representation.fixedValue,
-          },
-          {
-            url: representation.extensionUrl,
-            [representation.valueElement]: representation.fixedValue,
-          },
-        ]
+        mutableObject(candidate.attachment, 'clinical attachment').contentType =
+          'application/fhir+json; fhirVersion=5.0'
       },
       (candidate: Record<string, unknown>) => {
-        candidate.extension = [
-          {
-            url: representation.extensionUrl,
-            [representation.valueElement]:
-              healthKitClinicalRecordAdmission.rejectedFHIRReleases[0],
-          },
-        ]
+        mutableObject(candidate.format, 'clinical format').code =
+          'native-recording'
       },
       (candidate: Record<string, unknown>) => {
-        candidate.extension = [
-          {
-            url: representation.extensionUrl,
-            valueString: representation.fixedValue,
-          },
-        ]
+        Reflect.deleteProperty(
+          mutableObject(candidate.attachment, 'clinical attachment'),
+          'contentType',
+        )
       },
     ]
     for (const mutate of invalidRepresentations) {
       const candidate = structuredClone(bundle)
-      mutate(clinicalDocumentIn(candidate))
+      mutate(clinicalContentIn(candidate))
       const result = parseGroveMobileExchangeBundle(candidate)
       expect(result.ok).toBe(false)
       if (result.ok) continue

@@ -6754,22 +6754,18 @@ export const healthKitApplicationDeviceIdentity: typeof healthKitApplicationDevi
 const healthKitClinicalRecordAdmissionValue = {
   profile:
     'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-record-document',
-  payloadFormat: 'fhir-r4-resource',
+  payloadFormat: 'fhir-resource',
   sourceFHIRReleaseField: 'HKFHIRVersion.fhirRelease',
-  admittedFHIRRelease: 'r4',
+  admittedFHIRReleases: ['dstu2', 'r4'],
   fhirRepresentation: {
     resourceType: 'DocumentReference',
-    extensionUrl:
-      'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-clinical-fhir-release',
-    valueElement: 'valueCode',
-    cardinality: {
-      min: 1,
-      max: 1,
+    contentTypeByRelease: {
+      dstu2: 'application/fhir+json; fhirVersion=1.0',
+      r4: 'application/fhir+json; fhirVersion=4.0',
     },
-    fixedValue: 'r4',
   },
-  rejectedFHIRReleases: ['dstu2', 'unknown'],
-  rule: 'Admit a HealthKit clinical record only when HKFHIRVersion.fhirRelease is r4. Reject dstu2, unknown, a missing release, and every future release before emitting a DocumentReference; the payload is preserved byte-for-byte and never upgraded, downgraded, or inferred from its JSON shape.',
+  rejectedFHIRReleases: ['unknown'],
+  rule: 'Admit a HealthKit clinical record only when HKFHIRVersion.fhirRelease is exactly dstu2 or r4, then set Attachment.contentType to its matching versioned FHIR JSON media type. Reject an unknown, missing, or future release before emission; preserve the provider-issued payload bytes exactly and never convert, re-encode, or infer their release from JSON shape.',
 } as const
 
 export const healthKitClinicalRecordAdmission: typeof healthKitClinicalRecordAdmissionValue =

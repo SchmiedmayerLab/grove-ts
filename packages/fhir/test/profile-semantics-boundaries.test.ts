@@ -363,17 +363,19 @@ describe('profile-specific resource semantic boundaries', () => {
     expectRule(neutral, 'mobile-exchange\\.adapter-source-marker')
   })
 
-  it('validates the fixed FHIR release declaration on clinical documents', () => {
+  it('validates the versioned FHIR media type on clinical documents', () => {
     const claim = groveProfileClaims.healthKitClinicalRecordDocumentClaim
-    const definition = healthKitClinicalRecordAdmission.fhirRepresentation
     const document = {
       resourceType: 'DocumentReference',
       meta: { profile: claim.profiles },
-      extension: [
+      content: [
         {
-          url: definition.extensionUrl,
-          [definition.valueElement]: definition.fixedValue,
-          valueString: definition.fixedValue,
+          format: {
+            system:
+              'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
+            code: healthKitClinicalRecordAdmission.payloadFormat,
+          },
+          attachment: { contentType: 'application/fhir+json' },
         },
       ],
     }
