@@ -56,9 +56,7 @@ export const renderMeasurementCatalogSources = ({
   import { deepFreeze } from '../core/index.js'
 
   `
-  const versions = `export const groveFhirContractVersion = ${JSON.stringify(packageGraph.version)} as const
-
-  export const groveFhirVersion = ${JSON.stringify(packageGraph.fhirVersion)} as const
+  const versions = `export const groveFhirVersion = ${JSON.stringify(packageGraph.fhirVersion)} as const
   `
 
   const mobileUnformattedOutput = `${header(true)}${versions}

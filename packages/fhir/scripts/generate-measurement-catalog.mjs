@@ -46,6 +46,30 @@ const uniqueNonemptyStrings = (values) =>
   values.length > 0 &&
   values.every((value) => typeof value === 'string' && value.length > 0) &&
   new Set(values).size === values.length
+const exactSet = (left, right) =>
+  Array.isArray(left) &&
+  Array.isArray(right) &&
+  left.length === right.length &&
+  new Set(left).size === left.length &&
+  left.every((value) => right.includes(value))
+// A registry format declares either one media type or a closed release-keyed set of them.
+const recordingFormatContentTypes = (code) => {
+  const entry = formatRegistry.formats?.[code]
+  const declared =
+    entry?.contentTypes ??
+    (typeof entry?.contentType === 'string' ? [entry.contentType] : undefined)
+  if (
+    typeof entry?.title !== 'string' ||
+    entry.status !== 'active' ||
+    !uniqueNonemptyStrings(declared) ||
+    declared.some(
+      (mediaType) => !Object.hasOwn(formatRegistry.mediaTypes ?? {}, mediaType),
+    )
+  ) {
+    throw new Error(`Recording format ${code} is incomplete.`)
+  }
+  return declared
+}
 const isMobileOwned = (measurement) =>
   measurement.owner === undefined || measurement.owner === 'mobile'
 
@@ -58,7 +82,6 @@ const mobileMeasurements = measurements.filter(isMobileOwned)
 if (
   semanticCorpus.schemaVersion !== 0 ||
   semanticCorpus.fhirVersion !== '4.0.1' ||
-  semanticCorpus.version !== catalog.version ||
   !Array.isArray(semanticCorpus.vectors) ||
   semanticCorpus.vectors.length !== mobileMeasurements.length
 ) {
@@ -282,7 +305,14 @@ if (
   throw new Error('Sleep-stage terminology contract is incomplete.')
 }
 
-if (packageGraph.fhirVersion !== '4.0.1' || catalog.fhirVersion !== '4.0.1') {
+if (
+  packageGraph.schemaVersion !== 0 ||
+  typeof packageGraph.version !== 'string' ||
+  packageGraph.version.length === 0 ||
+  packageGraph.fhirVersion !== '4.0.1' ||
+  catalog.schemaVersion !== 0 ||
+  catalog.fhirVersion !== '4.0.1'
+) {
   throw new Error(
     'The TypeScript package consumes FHIR R4 (4.0.1) catalogs only.',
   )
@@ -295,11 +325,11 @@ for (const consumedCatalog of [
   sensorKitAdapter,
 ]) {
   if (
-    consumedCatalog.fhirVersion !== '4.0.1' ||
-    consumedCatalog.version !== packageGraph.version
+    consumedCatalog.schemaVersion !== 0 ||
+    consumedCatalog.fhirVersion !== '4.0.1'
   ) {
     throw new Error(
-      'Every consumed IG catalog must target the same FHIR R4 release.',
+      'Every consumed IG catalog must use the supported schema and target FHIR R4.',
     )
   }
 }
@@ -427,6 +457,7 @@ const providerPackageCanonicals = selectEntries(packageCanonicals, [
 ])
 
 if (
+  profileClaims.schemaVersion !== 0 ||
   profileClaims.fhirVersion !== '4.0.1' ||
   profileClaims.observationAdapterClaim?.cardinality !== 2 ||
   profileClaims.observationAdapterClaim?.inheritedProfilesAreNotDeclared !==
@@ -595,12 +626,6 @@ const healthKitClinicalRecordAdmission =
   healthKitAdapter.clinicalRecordAdmission
 const healthKitClinicalFhirRepresentation =
   healthKitClinicalRecordAdmission?.fhirRepresentation
-const healthKitClinicalFhirReleases =
-  healthKitClinicalRecordAdmission?.admittedFHIRReleases
-const healthKitClinicalContentTypes =
-  healthKitClinicalFhirRepresentation?.contentTypeByRelease
-const healthKitClinicalFormat =
-  formatRegistry.formats?.[healthKitClinicalRecordAdmission?.payloadFormat]
 const healthKitApplicationDeviceIdentity =
   healthKitAdapter.applicationDeviceIdentity
 const healthKitBundleIdentifier =
@@ -614,16 +639,16 @@ if (
   healthKitClinicalRecordAdmission.profile !==
     profiles['healthkit-clinical-record-document'] ||
   typeof healthKitClinicalRecordAdmission.payloadFormat !== 'string' ||
-  healthKitClinicalFormat?.status !== 'active' ||
   typeof healthKitClinicalRecordAdmission.sourceFHIRReleaseField !== 'string' ||
   healthKitClinicalRecordAdmission.sourceFHIRReleaseField.trim() === '' ||
-  JSON.stringify(healthKitClinicalFhirReleases) !==
-    JSON.stringify(['dstu2', 'r4']) ||
+  !uniqueNonemptyStrings(
+    healthKitClinicalRecordAdmission.admittedFHIRReleases,
+  ) ||
   !uniqueNonemptyStrings(
     healthKitClinicalRecordAdmission.rejectedFHIRReleases,
   ) ||
   healthKitClinicalRecordAdmission.rejectedFHIRReleases.some((release) =>
-    healthKitClinicalFhirReleases.includes(release),
+    healthKitClinicalRecordAdmission.admittedFHIRReleases.includes(release),
   ) ||
   typeof healthKitClinicalRecordAdmission.rule !== 'string' ||
   healthKitClinicalRecordAdmission.rule.trim() === '' ||
@@ -633,19 +658,16 @@ if (
   Object.keys(healthKitClinicalFhirRepresentation).sort().join(',') !==
     'contentTypeByRelease,resourceType' ||
   healthKitClinicalFhirRepresentation.resourceType !== 'DocumentReference' ||
-  typeof healthKitClinicalContentTypes !== 'object' ||
-  healthKitClinicalContentTypes === null ||
-  Array.isArray(healthKitClinicalContentTypes) ||
-  JSON.stringify(Object.keys(healthKitClinicalContentTypes).sort()) !==
-    JSON.stringify([...healthKitClinicalFhirReleases].sort()) ||
-  !uniqueNonemptyStrings(Object.values(healthKitClinicalContentTypes)) ||
-  !uniqueNonemptyStrings(healthKitClinicalFormat.contentTypes) ||
-  JSON.stringify(healthKitClinicalFormat.contentTypes) !==
-    JSON.stringify(
-      healthKitClinicalFhirReleases.map(
-        (release) => healthKitClinicalContentTypes[release],
-      ),
-    )
+  !exactSet(
+    Object.keys(healthKitClinicalFhirRepresentation.contentTypeByRelease ?? {}),
+    healthKitClinicalRecordAdmission.admittedFHIRReleases,
+  ) ||
+  !exactSet(
+    Object.values(
+      healthKitClinicalFhirRepresentation.contentTypeByRelease ?? {},
+    ),
+    recordingFormatContentTypes(healthKitClinicalRecordAdmission.payloadFormat),
+  )
 ) {
   throw new Error(
     'HealthKit clinical-record FHIR admission must remain complete and closed.',
@@ -726,8 +748,8 @@ if (
 
 const expectedConnectedProviders = ['google-health-api', 'oura', 'withings']
 if (
+  providerAdapter.schemaVersion !== 0 ||
   providerAdapter.fhirVersion !== '4.0.1' ||
-  providerAdapter.version !== packageGraph.version ||
   providerAdapter.packageId !== 'org.grovealliance.fhir.providers' ||
   providerAdapter.canonical !== packageCanonicals['providers'] ||
   providerAdapter.adapterProfile !== profiles['providers-observation'] ||
@@ -1186,20 +1208,22 @@ if (
 }
 
 if (
+  formatRegistry.schemaVersion !== 0 ||
   formatRegistry.fhirVersion !== '4.0.1' ||
-  formatRegistry.version !== packageGraph.version ||
   typeof formatRegistry.codeSystem !== 'string' ||
   typeof formatRegistry.valueSet !== 'string' ||
   Object.keys(formatRegistry.formats ?? {}).length === 0 ||
   Object.hasOwn(formatRegistry.formats ?? {}, 'fhir-resource-array') ||
-  Object.hasOwn(formatRegistry.formats ?? {}, 'fhir-r4-resource') ||
-  formatRegistry.formats?.['fhir-collection-bundle']?.contentType !==
-    'application/fhir+json' ||
-  !uniqueNonemptyStrings(
-    formatRegistry.formats?.['fhir-resource']?.contentTypes,
-  ) ||
-  formatRegistry.formats?.['provider-recording']?.contentType !==
-    'application/json'
+  !exactSet(recordingFormatContentTypes('fhir-collection-bundle'), [
+    'application/fhir+json',
+  ]) ||
+  !exactSet(recordingFormatContentTypes('fhir-resource'), [
+    'application/fhir+json; fhirVersion=1.0',
+    'application/fhir+json; fhirVersion=4.0',
+  ]) ||
+  !exactSet(recordingFormatContentTypes('provider-recording'), [
+    'application/json',
+  ])
 ) {
   throw new Error('Recording format registry is incomplete.')
 }
@@ -1208,29 +1232,15 @@ if (
 const recordingFormatRegistry = {
   codeSystem: formatRegistry.codeSystem,
   valueSet: formatRegistry.valueSet,
-  version: formatRegistry.version,
   formats: Object.fromEntries(
-    Object.entries(formatRegistry.formats).map(([code, entry]) => {
-      const hasContentType = typeof entry.contentType === 'string'
-      const hasContentTypes = uniqueNonemptyStrings(entry.contentTypes)
-      if (
-        typeof entry.title !== 'string' ||
-        hasContentType === hasContentTypes ||
-        entry.status !== 'active'
-      ) {
-        throw new Error(`Recording format ${code} is incomplete.`)
-      }
-      return [
-        code,
-        {
-          title: entry.title,
-          ...(hasContentType ?
-            { contentType: entry.contentType }
-          : { contentTypes: entry.contentTypes }),
-          status: entry.status,
-        },
-      ]
-    }),
+    Object.entries(formatRegistry.formats).map(([code, entry]) => [
+      code,
+      {
+        title: entry.title,
+        contentTypes: recordingFormatContentTypes(code),
+        status: entry.status,
+      },
+    ]),
   ),
 }
 
@@ -1283,24 +1293,47 @@ const protocolIdentifierRoles = new Set(
 const identityVectors = exchangeProtocol.testVectors?.identities
 const invalidIdentityVectors = exchangeProtocol.testVectors?.invalidIdentities
 const providerCodes = new Set(providerAdapter.providers.map(({ id }) => id))
-const providerIdentityKinds = new Set([
-  'provider-record',
-  'provider-output',
-  'provider-artifact',
-])
-const genericSourceIdentityKinds = new Set([
-  'source-record',
-  'source-output',
-  'source-artifact',
-])
+// A kind's coordinate family is written in its components: the first names the adapter
+// space, and only source-record coordinates carry a native record id.
+const identityKindsCoordinatedBy = (adapterComponent) =>
+  new Set(
+    (protocolIdentityKinds ?? [])
+      .filter(
+        ({ components }) =>
+          Array.isArray(components) &&
+          components[0] === adapterComponent &&
+          components.includes('native-record-id'),
+      )
+      .map(({ kind }) => kind),
+  )
+const providerIdentityKinds = identityKindsCoordinatedBy('provider-code')
+const genericSourceIdentityKinds = identityKindsCoordinatedBy('adapter-id')
 const sourceOutputVector = identityVectors?.find(
   ({ id }) => id === 'multi-output-sample',
 )
 const sourceContextVector = identityVectors?.find(
   ({ id }) => id === 'healthkit-medication-source-context',
 )
-const opaqueIdentityValue =
-  /^v0:[A-Za-z0-9._-]+:[1-9][0-9]*:[A-Za-z0-9_-]{43}$/u
+// Every persisted identity prefix is the contract's own revision token, never a literal here.
+const identityValuePrefix = (valueForm, marker) => {
+  const expected = `${marker}${String(exchangeProtocol.protocolVersion)}:`
+  if (typeof valueForm !== 'string' || !valueForm.startsWith(expected)) {
+    throw new Error(
+      `Identity value form must open with ${expected} at protocol version ${String(exchangeProtocol.protocolVersion)}.`,
+    )
+  }
+  return expected
+}
+const opaqueValuePrefix = identityValuePrefix(
+  exchangeProtocol.opaqueIdentity?.valueForm,
+  'v',
+)
+identityValuePrefix(exchangeProtocol.event?.bundleIdentifier?.valueForm, 'e')
+identityValuePrefix(exchangeProtocol.entryIdentity?.entryNode?.valueForm, 'n')
+const opaqueIdentityValue = new RegExp(
+  `^${opaqueValuePrefix}[A-Za-z0-9._-]+:[1-9][0-9]*:[A-Za-z0-9_-]{43}$`,
+  'u',
+)
 const retractionTargetRules =
   exchangeProtocol.lifecycle?.retraction?.targetRoles
 const retractionTargetEntries =
@@ -1334,12 +1367,6 @@ const documentProfileClaimRows = [
   profileClaims.providerRecordingDocumentClaim,
   profileClaims.sensorKitRecordingDocumentClaim,
 ]
-const exactSet = (left, right) =>
-  Array.isArray(left) &&
-  Array.isArray(right) &&
-  left.length === right.length &&
-  new Set(left).size === left.length &&
-  left.every((value) => right.includes(value))
 const activeOutputResourceTypes = [
   'Observation',
   'DocumentReference',
@@ -1360,26 +1387,27 @@ const activeDeviceClaims = profileClaims.activeDeviceClaims
 const activeQuestionnaireResponseClaim =
   profileClaims.activeQuestionnaireResponseClaim
 const expectedReferencePaths = [
-  ['Observation', 'subject', ['Patient']],
-  ['Observation', 'device', ['Device']],
-  ['Observation', 'specimen', ['Specimen']],
-  ['Observation', 'focus', ['Location']],
-  ['Observation', 'hasMember', ['Observation']],
+  ['Observation', 'subject', false, ['Patient']],
+  ['Observation', 'device', false, ['Device']],
+  ['Observation', 'specimen', false, ['Specimen']],
+  ['Observation', 'focus', true, ['Location']],
+  ['Observation', 'hasMember', true, ['Observation']],
   [
     'Observation',
     'derivedFrom',
+    true,
     ['Observation', 'DocumentReference', 'QuestionnaireResponse'],
   ],
-  ['DocumentReference', 'subject', ['Patient']],
-  ['QuestionnaireResponse', 'subject', ['Patient']],
-  ['Specimen', 'subject', ['Patient']],
-  ['MedicationAdministration', 'subject', ['Patient']],
-  ['MedicationStatement', 'subject', ['Patient']],
-  ['VisionPrescription', 'patient', ['Patient']],
-  ['ResearchSubject', 'individual', ['Patient']],
-  ['ResearchSubject', 'study', ['ResearchStudy']],
-  ['ResearchStudy', 'protocol', ['PlanDefinition']],
-  ['Device', 'parent', ['Device']],
+  ['DocumentReference', 'subject', false, ['Patient']],
+  ['QuestionnaireResponse', 'subject', false, ['Patient']],
+  ['Specimen', 'subject', false, ['Patient']],
+  ['MedicationAdministration', 'subject', false, ['Patient']],
+  ['MedicationStatement', 'subject', false, ['Patient']],
+  ['VisionPrescription', 'patient', false, ['Patient']],
+  ['ResearchSubject', 'individual', false, ['Patient']],
+  ['ResearchSubject', 'study', false, ['ResearchStudy']],
+  ['ResearchStudy', 'protocol', true, ['PlanDefinition']],
+  ['Device', 'parent', false, ['Device']],
 ]
 const expectedExtensionTargets = [
   [
@@ -1392,19 +1420,25 @@ const expectedExtensionTargets = [
   ],
 ]
 const referencePaths = exchangeProtocol.referencePolicy?.paths?.map(
-  ({ resourceType, path, targetTypes }) => [resourceType, path, targetTypes],
+  ({ resourceType, path, repeating, targetTypes }) => [
+    resourceType,
+    path,
+    repeating,
+    targetTypes,
+  ],
 )
 const extensionTargets =
   exchangeProtocol.referencePolicy?.extensionTargets?.map(
     ({ url, targetTypes }) => [url, targetTypes],
   )
+const expectedPatientReservedSystems = Object.values(
+  exchangeProtocol.codeSystems ?? {},
+)
+// The protocol's registry is the closed rule surface; the corpus only exercises part of it.
 const exchangeRuleDiagnostics = Object.fromEntries(
-  (exchangeCorpus.cases ?? []).map(({ expectedRule }) => [
-    expectedRule?.code,
-    {
-      reason: expectedRule?.reason,
-      severity: expectedRule?.severity,
-    },
+  (exchangeProtocol.producerDiagnostics ?? []).map(({ code, reason }) => [
+    code,
+    { reason, severity: 'error' },
   ]),
 )
 const exchangeRuleRows = exchangeCorpus.cases?.map(
@@ -1412,9 +1446,7 @@ const exchangeRuleRows = exchangeCorpus.cases?.map(
 )
 if (
   exchangeProtocol.schemaVersion !== 0 ||
-  exchangeProtocol.version !== packageGraph.version ||
   exchangeProtocol.protocolVersion !== 0 ||
-  exchangeProtocol.releaseVersion !== packageGraph.version ||
   exchangeProtocol.fhirVersion !== '4.0.1' ||
   exchangeProtocol.profiles?.activeBundle !==
     profiles['grove-mobile-exchange-bundle'] ||
@@ -1506,25 +1538,31 @@ if (
   activeQuestionnaireResponseClaim.profiles?.length !== 1 ||
   !uniqueNonemptyStrings(activeQuestionnaireResponseClaim.profiles) ||
   JSON.stringify(referencePaths) !== JSON.stringify(expectedReferencePaths) ||
+  !exactSet(
+    exchangeProtocol.referencePolicy?.identifierOnlyPatient?.reservedSystems,
+    expectedPatientReservedSystems,
+  ) ||
+  typeof exchangeProtocol.referencePolicy?.identifierOnlyPatient?.systemRule !==
+    'string' ||
+  typeof exchangeProtocol.referencePolicy?.identifierOnlyPatient?.valueRule !==
+    'string' ||
   JSON.stringify(extensionTargets) !==
     JSON.stringify(expectedExtensionTargets) ||
   typeof exchangeProtocol.referencePolicy?.literalClosure !== 'string' ||
   typeof exchangeProtocol.referencePolicy?.declaredType !== 'string' ||
   typeof exchangeProtocol.referencePolicy?.governedShape !== 'string' ||
   exchangeCorpus.schemaVersion !== 0 ||
+  !uniqueNonemptyStrings(Object.keys(exchangeRuleDiagnostics)) ||
+  !Object.hasOwn(exchangeRuleDiagnostics, 'mobile-exchange.unclassified') ||
+  Object.values(exchangeRuleDiagnostics).some(
+    ({ reason }) => typeof reason !== 'string' || reason.length === 0,
+  ) ||
   !Array.isArray(exchangeRuleRows) ||
-  exchangeRuleRows.length !== 34 ||
-  Object.keys(exchangeRuleDiagnostics).length !==
-    new Set(exchangeRuleRows.map(({ code }) => code)).size ||
+  exchangeRuleRows.length === 0 ||
   exchangeRuleRows.some(
     (rule) =>
-      typeof rule?.code !== 'string' ||
-      !rule.code.startsWith('mobile-') ||
-      typeof rule.reason !== 'string' ||
-      rule.reason.length === 0 ||
-      typeof rule.location !== 'string' ||
+      typeof rule?.location !== 'string' ||
       rule.location.length === 0 ||
-      rule.severity !== 'error' ||
       exchangeRuleDiagnostics[rule.code]?.reason !== rule.reason ||
       exchangeRuleDiagnostics[rule.code]?.severity !== rule.severity,
   ) ||
@@ -1630,12 +1668,8 @@ const adapterProfiledCapabilities = capabilities.measurements?.filter(
 )
 const capabilityKeys = capabilities.measurements?.map((entry) => entry.key)
 const capabilityStatuses = new Set(Object.keys(capabilities.statuses ?? {}))
-if (capabilities.igVersion !== catalog.version) {
-  throw new Error(
-    `Capability matrix declares IG version ${String(capabilities.igVersion)} against catalog ${String(catalog.version)}.`,
-  )
-}
 if (
+  capabilities.schemaVersion !== 0 ||
   !Array.isArray(capabilityKeys) ||
   new Set(capabilityKeys).size !== capabilityKeys.length ||
   capabilities.measurements.some(
@@ -1718,37 +1752,43 @@ if (
     'Capability matrix adapter-profiled rows must match the IG profile claims.',
   )
 }
+const catalogMeasurementIds = new Set(measurements.map(({ id }) => id))
+const catalogBackedStatuses = ['implemented', 'platform-exclusive']
+const strandedCapabilities = capabilities.measurements.filter(
+  (entry) =>
+    catalogBackedStatuses.includes(entry.status) &&
+    !catalogMeasurementIds.has(entry.key),
+)
+if (strandedCapabilities.length > 0) {
+  throw new Error(
+    `Capability matrix keeps rows the IG catalog no longer defines: ${strandedCapabilities
+      .map(({ key }) => key)
+      .join(', ')}.`,
+  )
+}
 for (const normative of measurements) {
   const capability = capabilities.measurements.find(
     (entry) => entry.key === normative.id,
   )
-  if (!isMobileOwned(normative)) {
-    if (
-      capability !== undefined &&
-      (capability.status !== 'platform-exclusive' ||
-        capability.profile !== normative.profile)
-    ) {
-      throw new Error(
-        `Owner-exclusive capability ${normative.id} must retain its exact platform-exclusive contract.`,
-      )
-    }
-    continue
-  }
-  const admitted = sharedAdmittedMeasurements.has(normative.id)
+  const ownerExclusive = !isMobileOwned(normative)
+  // Owner-exclusive measurements need not be inventoried; a row that exists must be exact.
+  if (capability === undefined && ownerExclusive) continue
+  const expectedStatus =
+    ownerExclusive ? 'platform-exclusive'
+    : sharedAdmittedMeasurements.has(normative.id) ? 'implemented'
+    : 'profiled-not-admitted'
   if (
-    capability === undefined ||
-    capability.status !==
-      (admitted ? 'implemented' : 'profiled-not-admitted') ||
+    capability?.status !== expectedStatus ||
     capability.profile !== normative.profile ||
     capability.effective !== normative.effective ||
     capability.code?.system !== normative.code.system ||
     capability.code?.code !== normative.code.code ||
-    (normative.quantity !== null &&
+    (normative.quantity != null &&
       capability.unit?.code !== normative.quantity.code) ||
     !Array.isArray(capability.sources)
   ) {
     throw new Error(
-      `Implemented capability ${String(capability?.key ?? normative.id)} does not match the shared IG catalog.`,
+      `Capability ${String(capability?.key ?? normative.id)} does not match the IG catalog contract.`,
     )
   }
 }
@@ -1814,12 +1854,19 @@ for (const value of Object.values(generated)) {
   }
 }
 
+const withoutReleaseMetadata = (value) =>
+  Object.fromEntries(
+    Object.entries(value).filter(
+      ([key]) => key !== 'version' && key !== 'releaseVersion',
+    ),
+  )
+
 const unformattedOutputs = renderMeasurementCatalogSources({
   adapterMeasurementCatalog,
   adapterSourceMarkerClaims,
   effectiveCanonicalization,
   effectiveCanonicalizationVectors: semanticEffectiveCanonicalization.vectors,
-  exchangeProtocol,
+  exchangeProtocol: withoutReleaseMetadata(exchangeProtocol),
   exchangeRuleDiagnostics,
   healthConnectDataOriginApplication,
   healthKitApplicationDeviceIdentity,
@@ -1827,8 +1874,8 @@ const unformattedOutputs = renderMeasurementCatalogSources({
   mobilePackageMetadata,
   mobileProfiles,
   packageGraph,
-  profileClaims,
-  providerAdapter,
+  profileClaims: withoutReleaseMetadata(profileClaims),
+  providerAdapter: withoutReleaseMetadata(providerAdapter),
   providerScalarOutputDiscriminators,
   providerPackageCanonicals,
   providerPackageMetadata,

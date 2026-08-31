@@ -76,7 +76,7 @@ const fail = (label, value, expectation) => {
   throw new Error(`${label} ${JSON.stringify(value)} ${expectation}.`)
 }
 
-/** A release-owned FHIR type name that is safe to derive TypeScript identifiers from. */
+/** A contract-owned FHIR type name that is safe to derive TypeScript identifiers from. */
 export function fhirTypeName(value, label = 'FHIR type name') {
   if (
     typeof value !== 'string' ||
@@ -363,7 +363,7 @@ const validateStructure = (
 }
 
 /**
- * Rejects a malformed or code-generating package AST before any release-owned string reaches a
+ * Rejects a malformed or code-generating package AST before any contract-owned string reaches a
  * TypeScript template. Rendering still quotes property/table keys; this gate protects the few
  * positions that must be identifiers and catches generator-name collisions deterministically.
  */

@@ -224,7 +224,9 @@ try {
       },
       attachment: {
         kind: 'embedded',
-        contentType: 'application/json',
+        contentType:
+          provider.groveRecordingFormatRegistry.formats['provider-recording']
+            .contentTypes[0],
         title: 'Authorized minimized provider recording',
         format: 'provider-recording',
         payloadAssertion: 'caller-authorized-opaque-payload',

@@ -7,7 +7,7 @@
 //
 
 import { Buffer } from 'node:buffer'
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { argv, stdout } from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -22,7 +22,8 @@ const {
   buildQuestionnaire,
   buildQuestionnaireResponse,
   groveExchangeProtocol,
-  groveFhirContractVersion,
+  groveMobilePackageMetadata,
+  groveRecordingFormatRegistry,
   parseAbsoluteUri,
   parseCanonical,
   parseFhirInstant,
@@ -101,11 +102,12 @@ const packageBySource = new Map(
   packageGraph.packages.map((entry) => [entry.source, entry]),
 )
 if (
+  packageGraph.schemaVersion !== 0 ||
   packageGraph.fhirVersion !== '4.0.1' ||
-  packageGraph.version !== groveFhirContractVersion
+  packageGraph.version !== groveMobilePackageMetadata.version
 ) {
   throw new Error(
-    'The synchronized package graph must match the generated R4 contract version.',
+    'The synchronized package graph must use the supported schema, target FHIR R4, and match the generated package coordinates.',
   )
 }
 const conformancePackages = conformancePackageSources.map((source) => {
@@ -501,7 +503,12 @@ const recordingBundle = ({ provider, sourceType }, index) =>
       },
       attachment: {
         kind: 'embedded',
-        contentType: unwrap(parseMediaType('application/json')),
+        contentType: unwrap(
+          parseMediaType(
+            groveRecordingFormatRegistry.formats['provider-recording']
+              .contentTypes[0],
+          ),
+        ),
         title: 'Authorized minimized provider recording',
         format: 'provider-recording',
         payloadAssertion: 'caller-authorized-opaque-payload',
@@ -868,6 +875,7 @@ if (invalid.length > 0) {
 
 await mkdir(resourceRoot, { recursive: true })
 await mkdir(resolve(fixtureRoot, 'mobile-exchange'), { recursive: true })
+const staleFixtureFiles = []
 for (const directory of ['resources', 'mobile-exchange']) {
   const expected = new Set(
     [...serialized.keys()]
@@ -879,13 +887,16 @@ for (const directory of ['resources', 'mobile-exchange']) {
       (name.endsWith('.json') || name.endsWith('.json.license')) &&
       !expected.has(name),
   )
-  if (check && stale.length > 0) {
-    throw new Error(
-      `Unexpected conformance fixtures: ${stale.map((name) => `${directory}/${name}`).join(', ')}`,
-    )
-  }
+  staleFixtureFiles.push(...stale.map((name) => `${directory}/${name}`))
+}
+if (check && staleFixtureFiles.length > 0) {
+  throw new Error(
+    `Conformance fixture directory contains stale generated files: ${staleFixtureFiles.join(', ')}`,
+  )
+}
+if (!check) {
   await Promise.all(
-    stale.map((name) => rm(resolve(fixtureRoot, directory, name))),
+    staleFixtureFiles.map((relative) => unlink(resolve(fixtureRoot, relative))),
   )
 }
 for (const [relative, value] of serialized) {

@@ -113,6 +113,13 @@
               {
                 "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-retraction-target-role",
                 "valueCode": "primary-output"
+              },
+              {
+                "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-retraction-target-native-identifier",
+                "valueIdentifier": {
+                  "system": "https://study.example.org/fhir/NamingSystem/native-record/health-connect/1f5c58aa-6ec6-4e79-a682-829a9debd3f5",
+                  "value": "record-heart-001"
+                }
               }
             ],
             "type": "Observation",

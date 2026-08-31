@@ -675,17 +675,6 @@ const newObjectRefinements = () => ({
   primitiveScalars: [],
 })
 
-/**
- * The constraints that apply to an object, as the release states applicability.
- *
- * A constraint is declared once on the element that owns it, and every element it governs names
- * it in `condition`. Reading both means a rule stated at the resource root still reaches the
- * backbone it actually constrains — Observation.component.dataAbsentReason names obs-6 that way.
- *
- * This is sound only for a constraint whose expression is relative to the object it lands on.
- * Every entry in IMPLEMENTED_CONSTRAINTS satisfies that; a constraint that navigates from an
- * ancestor must not be added here without restricting it to its declaring path.
- */
 const SKIPPED_CONSTRAINTS = new Map()
 
 /** Generic constraints every element carries; not a gap worth reporting. */
@@ -1178,7 +1167,19 @@ async function main(argv) {
   const skipped = [...SKIPPED_CONSTRAINTS.entries()]
     .map(([path, keys]) => [path, [...keys].sort()])
     .sort(([a], [b]) => a.localeCompare(b))
+  const resourceTypeCodes = [
+    ...new Set([
+      ...ordered.filter((name) => structures.get(name)?.kind === 'resource'),
+      ...context.abstractResources,
+    ]),
+  ].sort()
+  const resourceTypeExport =
+    `\n/** Every resourceType code the release publishes, abstract types included. */\n` +
+    `export const resourceTypeCodes = [\n` +
+    resourceTypeCodes.map((name) => `  ${JSON.stringify(name)},`).join('\n') +
+    `\n] as const\n`
   const skippedExport =
+    resourceTypeExport +
     `\n/** Exact pinned release material and generated closure behind this module. */\n` +
     `export const STRUCTURAL_SCHEMA_SOURCE = {\n` +
     `  packageId: ${JSON.stringify(release.packageId)},\n` +

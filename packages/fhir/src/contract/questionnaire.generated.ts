@@ -9,8 +9,6 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.6.0' as const
-
 export const groveFhirVersion = '4.0.1' as const
 
 const groveQuestionnairePackageMetadataValue = {

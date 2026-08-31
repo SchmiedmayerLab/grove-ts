@@ -11,8 +11,6 @@
 
 import { deepFreeze } from '../core/index.js'
 
-export const groveFhirContractVersion = '0.6.0' as const
-
 export const groveFhirVersion = '4.0.1' as const
 
 const groveProviderPackageMetadataValue = {
@@ -521,7 +519,6 @@ const providerAdapterCatalogValue = {
     'https://grovealliance.org/fhir/catalog/schemas/catalog-contracts.schema.json',
   schemaVersion: 0,
   fhirVersion: '4.0.1',
-  version: '0.6.0',
   packageId: 'org.grovealliance.fhir.providers',
   canonical: 'https://grovealliance.org/fhir/providers',
   adapterProfile:
@@ -568,15 +565,7 @@ const providerAdapterCatalogValue = {
   },
   conversionProvenanceProfile:
     'https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance',
-  statusVocabulary: [
-    'supported',
-    'mapped-standard',
-    'platform-exclusive',
-    'unmodeled',
-    'deferred',
-    'intentionally-unsupported',
-  ],
-  statusDefinitions: {
+  statusVocabulary: {
     supported:
       'The Grove FHIR contracts define an exact conversion to every semantic profile listed for the source element, whether the profile is shared or provider-owned.',
     'mapped-standard':

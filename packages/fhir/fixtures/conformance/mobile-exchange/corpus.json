@@ -103,6 +103,23 @@
       }
     },
     {
+      "id": "misnumbered-entry-node-ordinal",
+      "base": "mobile-exchange",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/entry/0/extension/0/valueIdentifier/value",
+          "value": "n0:patient:1:qN9xaTdoz-LfvONC7FgEUNMz06zyWhfzD0khPhtjVig"
+        }
+      ],
+      "expectedRule": {
+        "code": "mobile-exchange.entry-node-ordinal",
+        "reason": "An entry-node ordinal is the zero-based position of its entry among the entries sharing that node-role, in Bundle entry order.",
+        "location": "Bundle.entry[0].extension.valueIdentifier.value",
+        "severity": "error"
+      }
+    },
+    {
       "id": "missing-source-output-identity",
       "base": "mobile-exchange",
       "patch": [{ "op": "remove", "path": "/entry/2/resource/identifier/1" }],
@@ -653,6 +670,30 @@
         "code": "mobile-support.connected",
         "reason": "Every supporting resource must be connected to an output or the lifecycle Provenance.",
         "location": "Bundle.entry",
+        "severity": "error"
+      }
+    },
+    {
+      "id": "retraction-native-identifier-uses-grove-role",
+      "base": "mobile-retraction",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/entry/0/resource/target/0/extension/1/valueIdentifier/type",
+          "value": {
+            "coding": [
+              {
+                "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                "code": "source-record"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedRule": {
+        "code": "mobile-retraction.native-record-identifier",
+        "reason": "An optional retraction native record identifier carries one complete Identifier in the adapter's own absolute native key space and never a Grove identifier-role coding.",
+        "location": "Provenance.target[0].extension.valueIdentifier.type",
         "severity": "error"
       }
     }

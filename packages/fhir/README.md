@@ -15,13 +15,29 @@ SPDX-License-Identifier: MIT
 The package targets FHIR R4 4.0.1 only.
 It has no Firebase dependency and does not fetch health data, authenticate with providers, persist resources, or define transport behavior.
 
-The contract version exposed by generated metadata is the Grove FHIR implementation-guide version.
-The monorepo keeps its `0.0.0` source placeholders until the lockstep release workflow injects the selected npm release version.
+Generated package metadata retains the exact SemVer coordinates required by FHIR package manifests. Runtime compatibility is determined by the generated Grove FHIR contracts, not by an exported implementation-guide release number.
+The monorepo keeps its `0.0.0` source placeholders until the lockstep npm release workflow injects the selected package version.
+
+### Migrating from 0.1.x
+
+This release replaces the entire hand-written 0.1.x surface.
+Nothing is carried forward under its old name, and every published 0.1.x export is gone.
+
+Import the generated, contract-derived replacements from the entry point that owns them: the root for validated primitives, the bounded R4 closure, and Questionnaire support; `/r4` for the resource schemas and graph parsers; `/mobile` for the shared measurement contract and deterministic identity; `/providers` for the closed connected-provider builders; `/questionnaire` for the instrument pair; and `/zod/r4` or `/zod/r4b` for the generated base-release schemas.
+Coverage only grew: every resource type the 0.1.x line validated has a generated schema here, alongside the rest of R4 and R4B.
+
+The 0.1.x line is superseded and should be deprecated on the registry once this release publishes:
+
+```sh
+npm deprecate '@schmiedmayerlab/grove-fhir@<0.2.0' \
+  'Superseded by the generated Grove FHIR contracts; see the Migrating from 0.1.x section of the README.'
+```
 
 ## New to FHIR?
 
 FHIR is a standard for exchanging health data as JSON documents called resources.
-This package builds four of them: an `Observation` for each measurement, a `Device` for the thing that recorded it, a `Provenance` saying where the record came from, and a `Bundle` holding the set together.
+A measurement bundle holds four of them: an `Observation` for each measurement, a `Device` for the thing that recorded it, a `Provenance` saying where the record came from, and a `Bundle` holding the set together.
+The package also builds `DocumentReference` graphs for preserved source recordings and `Questionnaire`/`QuestionnaireResponse` pairs.
 
 If those words are unfamiliar, read the _New to FHIR_ page of the Grove Mobile implementation guide
 (`https://grovealliance.org/fhir/mobile`) first.
@@ -155,7 +171,7 @@ Four conventions are visible in that call and hold throughout the package:
   This is why the example parses its literals instead of passing raw strings.
 - **You supply governed identity inputs; the package derives the graph.**
   The deployment owns the key, key-epoch-specific Identifier systems, producer instance, monotonic event sequence, account pseudonym, source-native id, and all event times.
-  Source and output identifiers use the Grove v0 domain-separated HMAC contract; internal `urn:uuid` links use UUIDv5 over the selected complete Identifier pair.
+  Source and output identifiers use the Grove domain-separated HMAC contract; internal `urn:uuid` links use UUIDv5 over the selected complete Identifier pair.
   An exact retry reuses the event sequence, `occurred`, `recorded`, `assembled`, and payload. A changed source revision or payload is a new event with a new sequence.
 - **Results are frozen plain JSON.**
   Serialize them, store them, send them; there are no classes and no hidden state.
@@ -409,6 +425,9 @@ contains one retraction Provenance plus its immutable assembler application and
 optional host snapshots. It never emits `entered-in-error`, a FHIR DELETE, or a
 receiver retention instruction.
 
+A target may carry the adapter's own record key alongside its Grove identity through the optional `nativeIdentifier` field.
+It is emitted verbatim as a target-carried native record Identifier, must use an absolute system, and never carries a Grove identifier-role coding.
+
 Receivers resolve complete Identifier pairs and apply their own idempotent,
 atomic lifecycle policy. `parseProviderRetractionInput(unknown)` is the strict
 JavaScript boundary and rejects unknown fields, unsupported target/type pairs,
@@ -432,6 +451,8 @@ import {
 The builders own the exact Grove profile declarations, Semantic Versioning
 algorithm extension, and electronic completion-mode extension. Answer values
 are an exactly-one `value[x]` union in TypeScript and in the runtime schema.
+The Grove profiles fix both subjects to `Patient`, so `subjectTypes` is required and is exactly `['Patient']`, and a response requires one `Patient`-typed `subject`.
+Both builders and both parsers enforce this, as does the exchange-graph validator for every mandatory governed subject.
 The pair preflight checks the exact `url|version`, global link identity,
 response nesting, answer types, inline options, repeats, response text,
 conditional enablement, and required enabled items for completed or amended
@@ -458,6 +479,10 @@ code points to match the IG companion validator.
 
 This package does not extract Questionnaire answers into Observations. That is
 a separate, explicitly configured clinical mapping operation.
+
+One Grove Questionnaire element is deliberately deferred.
+`grove-questionnaire-writer-context` is `0..1 MS` on the Grove QuestionnaireResponse profile and states the capturing application and host, but the Grove FHIR catalogs do not publish it, so this package cannot project its canonical or its sub-extension contract without hand-copying the implementation guide.
+Until the catalog carries it, a writer context supplied through the builder's `extensions` pass-through reaches consumers with only generic FHIR extension shape checking, and neither the builder nor the parser validates its sub-extensions.
 
 ## Entry points
 
@@ -500,11 +525,11 @@ import {
 
 Each generated package-metadata value is bounded to that entry point's
 applicable IG package and includes its exact package id, canonical, dependency
-list, FHIR release, and IG contract version. The root exposes only the shared
-`groveFhirVersion` and `groveFhirContractVersion`; it does not expose the full
-internal adapter package graph.
+list, FHIR release, and package SemVer coordinate. The root exposes the shared
+`groveFhirVersion` and the Mobile package coordinates; it does not expose the
+full internal adapter package graph or a release-number compatibility gate.
 
-There is no generic Sensor producer entry point in this release. The admitted
+There is no generic Sensor producer entry point. The admitted
 raw-recording facade owns exact Sensor + Provider profile claims and
 provider identity, so presenting it as source-neutral would weaken the closed
 adapter contract. A future Sensor producer must expose its own evidenced,
@@ -661,11 +686,16 @@ Synchronized IG catalogs and the Mobile semantic corpus retain the exact upstrea
 ### Regenerating
 
 ```sh
-npm run generate:zod   # rewrite the generated schemas for both releases
-npm run check:zod      # fail if either is stale
+npm run generate:zod       # rewrite the generated schemas for both releases
+npm run check:zod          # fail if either is stale
+npm run generate:catalog   # reproject the Grove contracts a pin bump changed
+npm run check:catalog      # fail if the projected contracts are stale
+npm run generate:fixtures  # rebuild the conformance corpus from the public API
+npm run check:fixtures     # fail if any emitted resource has drifted
 ```
 
-`check:zod` runs as part of `typecheck`, so a stale schema fails the build the same way a stale catalog does.
+`check:zod` and `check:catalog` run as part of `typecheck`, so a stale schema or
+catalog fails the build the same way a stale fixture does.
 
 ## Development conformance
 
@@ -697,8 +727,9 @@ corresponding GitHub archive consumed by generation. Fetching verifies that
 archive before extraction and binds both values in its cache marker;
 catalog, corpus, generated TypeScript, or emitted-resource drift fails CI.
 For any future contract update, refresh both the immutable commit and archive
-digest, regenerate from a clean checkout, and run unit, package, browser,
-structural, and official validator checks. The validator steps use failure-independent conditions so a
+digest, rerun every generator in [Regenerating](#regenerating) from a clean
+checkout, and run unit, package, browser, structural, and official validator
+checks. The validator steps use failure-independent conditions so a
 browser failure cannot suppress their evidence.
 
 ## License

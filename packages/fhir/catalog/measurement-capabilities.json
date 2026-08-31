@@ -1,6 +1,5 @@
 {
   "schemaVersion": 0,
-  "igVersion": "0.6.0",
   "canonicalBase": "https://grovealliance.org/fhir",
   "recordConversion": {
     "input": "One connected-provider source record with a non-empty unique subset of the catalog-admitted outputs actually present.",
@@ -10,11 +9,11 @@
     "fetchBoundary": "Provider clients, authentication, pagination, webhooks, and raw response models remain outside grove-fhir."
   },
   "statuses": {
-    "implemented": "A closed public builder emits resources conforming to the listed v0.6.0 profile.",
+    "implemented": "A closed public builder emits resources conforming to the listed profile.",
     "implemented-recording": "The closed native-recording builder emits the exact Sensor + Provider DocumentReference graph for this catalogued provider source token.",
     "profiled-not-admitted": "The shared profile exists, but this adapter facade has no supported provider source.",
-    "adapter-profiled": "Version 0.6.0 defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Provider facade.",
-    "planned-shared": "The concept is shared by multiple sources but has no admitted v0.6.0 Grove builder.",
+    "adapter-profiled": "The relevant Grove FHIR Implementation Guide defines an adapter-owned or standard-plus-adapter profile claim; it is intentionally not a shared Mobile profile and is outside this Provider facade.",
+    "planned-shared": "The concept is shared by multiple sources but has no admitted Grove builder.",
     "adapter-specific": "The semantics are source-specific and must not be collapsed into a shared concept.",
     "sensor-ig": "The concept belongs to the Sensor and Waveform contract.",
     "not-in-scope": "The source exposes the record, but it is not a mobile measurement admitted by this package.",
@@ -58,7 +57,7 @@
       },
       "effective": "dateTime",
       "sources": ["healthkit", "health-connect"],
-      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement in v0.6.0."
+      "reason": "None of the Google Health API, Oura, or Withings mappings admits this shared measurement."
     },
     {
       "key": "basal-energy",
@@ -1474,7 +1473,7 @@
       },
       "effective": "dateTime",
       "sources": ["healthkit"],
-      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact v0.6.0 claim; a one-source shared Mobile wrapper is prohibited."
+      "reason": "FHIR R4 BMI plus the HealthKit adapter profile is the exact claim; a one-source shared Mobile wrapper is prohibited."
     },
     {
       "key": "blood-glucose",
@@ -1797,7 +1796,7 @@
       "status": "platform-exclusive",
       "profile": "withings-extracellular-water-mass",
       "code": {
-        "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
         "code": "extracellular-water-mass",
         "display": "Extracellular water mass"
       },
@@ -1814,7 +1813,7 @@
       "status": "platform-exclusive",
       "profile": "withings-intracellular-water-mass",
       "code": {
-        "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
+        "system": "https://grovealliance.org/fhir/withings/CodeSystem/withings-measurement",
         "code": "intracellular-water-mass",
         "display": "Intracellular water mass"
       },
@@ -1840,23 +1839,6 @@
         "display": "kg"
       },
       "effective": "dateTime",
-      "owner": "withings",
-      "sources": ["withings"]
-    },
-    {
-      "key": "sleeping-heart-rate-average",
-      "status": "platform-exclusive",
-      "profile": "withings-sleeping-heart-rate-average",
-      "code": {
-        "system": "https://grovealliance.org/fhir/providers/CodeSystem/provider-measurement",
-        "code": "sleeping-heart-rate-average",
-        "display": "Sleeping heart rate average"
-      },
-      "unit": {
-        "code": "/min",
-        "display": "beats/minute"
-      },
-      "effective": "Period",
       "owner": "withings",
       "sources": ["withings"]
     },

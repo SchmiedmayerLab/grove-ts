@@ -7,85 +7,61 @@
 //
 
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 import { stdout } from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 const packageName = '@schmiedmayerlab/grove-fhir'
-const [root, mobile, provider, provenance, questionnaire, r4] =
-  await Promise.all([
-    import(packageName),
-    import(`${packageName}/mobile`),
-    import(`${packageName}/providers`),
-    import(`${packageName}/provenance`),
-    import(`${packageName}/questionnaire`),
-    import(`${packageName}/r4`),
-  ])
+const [root, mobile, provider, questionnaire, r4] = await Promise.all([
+  import(packageName),
+  import(`${packageName}/mobile`),
+  import(`${packageName}/providers`),
+  import(`${packageName}/questionnaire`),
+  import(`${packageName}/r4`),
+])
 
-const providerExports = [
-  'buildProviderMeasurementBundle',
-  'buildProviderRecordingBundle',
-  'buildProviderRetractionBundle',
-  'healthKitApplicationDeviceIdentity',
-  'providerRawOutputDiscriminators',
-  'providerRawOutputRoles',
-  'providerScalarOutputDiscriminators',
-  'providerScalarOutputRoles',
-]
-const internalGraphExports = [
-  'deriveConformanceVectorOpaqueIdentifier',
-  'groveFhirPackageCanonicals',
-  'groveFhirPackageGraph',
-  'groveFhirProfileCanonicals',
-  'groveFhirProfileClaims',
-  'groveFhirSourceRef',
-]
+// The packed tarball must expose exactly the surface the source test locks.
+const exportSurface = JSON.parse(
+  await readFile(
+    resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      '../test/export-surface.json',
+    ),
+    'utf8',
+  ),
+)
 
-for (const name of providerExports) {
-  assert.equal(
-    name in root,
-    false,
-    `${name} leaked through the root entry point`,
+for (const [name, entryPoint] of [
+  ['.', root],
+  ['./r4', r4],
+  ['./mobile', mobile],
+  ['./providers', provider],
+  ['./questionnaire', questionnaire],
+]) {
+  assert.deepEqual(
+    Object.keys(entryPoint).sort((left, right) => left.localeCompare(right)),
+    exportSurface[name],
+    `The packed ${name} entry point does not expose the recorded surface`,
   )
-  assert.equal(
-    name in mobile,
-    false,
-    `${name} leaked through the source-neutral Mobile entry point`,
-  )
-  assert.equal(
-    name in provenance,
-    false,
-    `${name} leaked through the source-neutral Provenance entry point`,
-  )
-  assert.equal(
-    name in provider,
-    true,
-    `${name} is missing from the Provider entry point`,
-  )
-}
-
-for (const name of internalGraphExports) {
-  for (const [label, entryPoint] of [
-    ['root', root],
-    ['Mobile', mobile],
-    ['Provider', provider],
-    ['Provenance', provenance],
-    ['Questionnaire', questionnaire],
-  ]) {
-    assert.equal(
-      name in entryPoint,
-      false,
-      `${name} leaked through the ${label} entry point`,
-    )
-  }
 }
 
 assert.equal(typeof mobile.canonicalizeMobileEffectiveInstant, 'function')
 assert.equal(root.groveFhirVersion, '4.0.1')
-assert.equal(root.groveFhirContractVersion, '0.6.0')
+assert.equal('groveFhirContractVersion' in root, false)
+assert.equal(root.groveExchangeProtocol.schemaVersion, 0)
 assert.equal(root.groveExchangeProtocol.protocolVersion, 0)
-assert.equal(root.groveMobileContract.version, '0.6.0')
+assert.equal('version' in root.groveExchangeProtocol, false)
+assert.equal('releaseVersion' in root.groveExchangeProtocol, false)
+assert.equal('version' in root.groveMobileContract, false)
+assert.equal('version' in root.groveRecordingFormatRegistry, false)
 assert.equal(
   mobile.groveMobilePackageMetadata.packageId,
   'org.grovealliance.fhir.mobile',
+)
+assert.equal(
+  root.parseSemVer(mobile.groveMobilePackageMetadata.version).ok,
+  true,
 )
 assert.equal(
   provider.groveProviderPackageMetadata.packageId,
@@ -102,7 +78,6 @@ assert.equal(typeof r4.parseGroveMobileRetractionBundle, 'function')
 assert.equal(typeof provider.parseProviderRetractionInput, 'function')
 assert.equal(typeof provider.providerOutputCoordinates, 'function')
 assert.equal(typeof provider.providerOutputRole, 'function')
-assert.equal(typeof provenance.parseProvenance, 'function')
 assert.equal(typeof questionnaire.buildQuestionnaire, 'function')
 
 stdout.write('Verified all Grove FHIR package entry points.\n')
