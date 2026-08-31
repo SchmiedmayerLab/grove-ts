@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** Exact profile claims and adapter-specific resource semantics. */
-
 import { sha1 } from '@noble/hashes/legacy.js'
 import type { z } from 'zod'
 import {
@@ -18,7 +16,6 @@ import {
   identifiersOf,
   type UnknownRecord,
 } from './graph-schema-utils.js'
-import { groveMobileContract } from '../mobile/contract.js'
 import {
   adapterSourceMarkerClaims,
   groveProfileClaims,
@@ -27,28 +24,34 @@ import {
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
 } from '../contract/providers.generated.js'
+import { decodeCanonicalBase64 } from '../core/index.js'
+import { groveMobileContract } from '../mobile/contract.js'
 
 const SHA1_BASE64 = /^[A-Za-z\d+/]{26}[AEIMQUYcgkosw048]=$/u
 
+// FHIR's base64Binary lexical space admits whitespace; the payload itself must still be canonical.
 const decodeFhirBase64 = (value: unknown): Uint8Array | undefined => {
   if (typeof value !== 'string') return undefined
   const packed = value.replaceAll(/[ \t\n\r]/gu, '')
-  if (packed.length === 0 || packed.length % 4 !== 0) return undefined
-  try {
-    const decoded = atob(packed)
-    const bytes = new Uint8Array(decoded.length)
-    for (let index = 0; index < decoded.length; index += 1) {
-      bytes[index] = decoded.charCodeAt(index)
-    }
-    return bytes
-  } catch {
-    return undefined
-  }
+  return packed.length === 0 ? undefined : decodeCanonicalBase64(packed)
 }
 
 const bytesEqual = (left: Uint8Array, right: Uint8Array): boolean =>
   left.length === right.length &&
   left.every((value, index) => value === right[index])
+
+type RecordingFormats = typeof groveMobileContract.recordingFormats.formats
+
+const isRecordingFormatCode = (code: unknown): code is keyof RecordingFormats =>
+  typeof code === 'string' &&
+  Object.hasOwn(groveMobileContract.recordingFormats.formats, code)
+
+const recordingFormat = (
+  code: unknown,
+): RecordingFormats[keyof RecordingFormats] | undefined =>
+  isRecordingFormatCode(code) ?
+    groveMobileContract.recordingFormats.formats[code]
+  : undefined
 
 interface ExactProfileClaim {
   readonly cardinality: number
@@ -329,53 +332,40 @@ const validateRecordingDocument = (
       )
     }
   }
-  const formats = groveMobileContract.recordingFormats.formats as Readonly<
-    Record<
-      string,
-      {
-        readonly contentType?: string
-        readonly contentTypes?: readonly string[]
-        readonly status: string
-      }
-    >
-  >
-  const definition =
-    typeof format?.code === 'string' ? formats[format.code] : undefined
-  const admittedContentTypes =
-    definition?.contentTypes ??
-    (definition?.contentType === undefined ? [] : [definition.contentType])
-  const attachmentContentType =
-    typeof attachment?.contentType === 'string' ?
-      attachment.contentType
-    : undefined
+  const definition = recordingFormat(format?.code)
+  const formatContentTypes: readonly string[] = definition?.contentTypes ?? []
   if (
     format?.system !== groveMobileContract.recordingFormats.codeSystem ||
     format.version !== undefined ||
     definition?.status !== 'active' ||
-    attachmentContentType === undefined ||
-    !admittedContentTypes.includes(attachmentContentType)
+    typeof attachment?.contentType !== 'string' ||
+    !formatContentTypes.includes(attachment.contentType)
   ) {
     addIssue(
       context,
       'mobile-recording-document.format',
       [...path, 'content', 0, 'format'],
-      'Recording format and content type must match the active Grove registry entry; release-coupled Coding.version is not carried in an instance.',
+      'Recording format and content type must match the active Grove registry entry; Coding.version is not permitted.',
     )
   }
-  if (
-    claim === groveProfileClaims.healthKitClinicalRecordDocumentClaim &&
-    (format?.code !== healthKitClinicalRecordAdmission.payloadFormat ||
-      !Object.values(
-        healthKitClinicalRecordAdmission.fhirRepresentation
-          .contentTypeByRelease,
-      ).some((contentType) => contentType === attachmentContentType))
-  ) {
-    addIssue(
-      context,
-      'healthkit-clinical-record.fhir-release',
-      [...path, 'content', 0],
-      'A HealthKit clinical-record document must use the FHIR resource format and one catalog-admitted versioned FHIR JSON media type.',
+  if (claim === groveProfileClaims.healthKitClinicalRecordDocumentClaim) {
+    const representation = healthKitClinicalRecordAdmission.fhirRepresentation
+    const admittedContentTypes: readonly string[] = Object.values(
+      representation.contentTypeByRelease,
     )
+    if (
+      resource.resourceType !== representation.resourceType ||
+      format?.code !== healthKitClinicalRecordAdmission.payloadFormat ||
+      typeof attachment?.contentType !== 'string' ||
+      !admittedContentTypes.includes(attachment.contentType)
+    ) {
+      addIssue(
+        context,
+        'healthkit-clinical.fhir-representation',
+        [...path, 'content', 0, 'attachment', 'contentType'],
+        'A HealthKit clinical-record document must declare the admitted payload format and the exact media type of its source FHIR release.',
+      )
+    }
   }
 }
 

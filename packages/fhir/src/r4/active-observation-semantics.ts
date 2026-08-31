@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** Catalog-driven Observation profile and result semantics. */
-
 import type { z } from 'zod'
 import {
   addIssue,
@@ -16,80 +14,23 @@ import {
   codingCountForSystem,
   type UnknownRecord,
 } from './graph-schema-utils.js'
+import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
+import { compareFhirDateTimes } from '../core/primitives.js'
 import { groveMobileContract } from '../mobile/contract.js'
 import {
-  groveProfileClaims,
-  sharedMobileMeasurementCatalog,
-} from '../contract/measurement-catalog.generated.js'
-import {
-  adapterMeasurementCatalog,
-  groveProviderProfileCanonicals,
-  providerAdapterCatalog,
-} from '../contract/providers.generated.js'
-import { compareFhirDateTimes } from '../zod/support.js'
-
-interface MeasurementDefinition {
-  readonly id: string
-  readonly profile: string
-  readonly owner?: string
-  readonly code: Readonly<{ system: string; code: string }>
-  readonly requiredCodings?: ReadonlyArray<
-    Readonly<{
-      system: string
-      code: string
-    }>
-  >
-  readonly category?: Readonly<{ system: string; code: string }>
-  readonly effective: 'Period' | 'dateTime' | 'dateTime-or-Period'
-  readonly method?: Readonly<{ code: string }>
-  readonly methodChoice?: readonly string[]
-  readonly valueKind:
-    'codeableConcept' | 'components' | 'dateTime' | 'grouping' | 'quantity'
-  readonly quantity?: Readonly<{
-    system: string
-    code: string
-    unit: string
-    valueDomain?: Readonly<{
-      minimum: Readonly<{ value: number; inclusive: boolean }>
-      maximum?: Readonly<{ value: number; inclusive: boolean }>
-      integerOnly: boolean
-    }>
-  }> | null
-  readonly resultCodeSystem?: string
-  readonly allowedValues?: readonly string[]
-  readonly components?: ReadonlyArray<
-    Readonly<{
-      id: string
-      system: string
-      code: string
-      cardinality?: string
-      quantity: Readonly<{ system: string; code: string; unit: string }>
-    }>
-  >
-}
-
-const ADAPTER_MEASUREMENT_DEFINITIONS =
-  adapterMeasurementCatalog as unknown as Readonly<
-    Record<string, Readonly<Record<string, MeasurementDefinition>>>
-  >
-
-const MEASUREMENT_DEFINITIONS: readonly MeasurementDefinition[] = [
-  ...(Object.values(
-    sharedMobileMeasurementCatalog,
-  ) as readonly MeasurementDefinition[]),
-  ...Object.values(ADAPTER_MEASUREMENT_DEFINITIONS).flatMap((owner) =>
-    Object.values(owner),
-  ),
-]
-
-const PROFILE_CANONICALS = groveProviderProfileCanonicals as Readonly<
-  Record<string, string>
->
+  ALL_MEASUREMENT_DEFINITIONS,
+  PROVIDER_ROWS,
+  profileCanonical,
+  providerObservationProfiles,
+  violatesQuantityDomain,
+  type MeasurementDefinition,
+} from '../providers/measurement-definition.js'
 
 const MEASUREMENT_BY_PROFILE: ReadonlyMap<string, MeasurementDefinition> =
   new Map(
-    MEASUREMENT_DEFINITIONS.flatMap((definition) => {
-      const canonical = PROFILE_CANONICALS[definition.profile]
+    ALL_MEASUREMENT_DEFINITIONS.flatMap((definition) => {
+      const canonical = profileCanonical(definition.profile)
       return canonical === undefined ? [] : [[canonical, definition] as const]
     }),
   )
@@ -114,18 +55,6 @@ const SENSORKIT_HYBRID_PROFILES: ReadonlySet<string> = new Set(
   groveProfileClaims.sensorKitHybridObservationClaims.profiles,
 )
 
-interface ProviderContractRow {
-  readonly id: string
-  readonly measurementOwner: string
-  readonly observationProfile: string
-}
-
-const PROVIDER_ROWS =
-  providerAdapterCatalog.providers as unknown as readonly ProviderContractRow[]
-const PROVIDER_OBSERVATION_PROFILES: ReadonlySet<string> = new Set(
-  PROVIDER_ROWS.map(({ observationProfile }) => observationProfile),
-)
-
 const hasExactProviderObservationClaim = (
   observation: UnknownRecord,
   match: MeasurementDefinition | null,
@@ -144,8 +73,7 @@ const hasExactProviderObservationClaim = (
     directProfiles.includes(providerAdapterCatalog.adapterProfile) ||
     directProfiles.some(
       (profile) =>
-        typeof profile === 'string' &&
-        PROVIDER_OBSERVATION_PROFILES.has(profile),
+        typeof profile === 'string' && providerObservationProfiles.has(profile),
     ) ||
     (match?.owner !== undefined &&
       PROVIDER_ROWS.some(
@@ -158,7 +86,7 @@ const hasExactProviderObservationClaim = (
 
   const providerCode = asRecord(providerMarkers[0])?.valueCode
   const provider = PROVIDER_ROWS.find(({ id }) => id === providerCode)
-  const semanticProfile = PROFILE_CANONICALS[match.profile]
+  const semanticProfile = profileCanonical(match.profile)
   if (
     provider === undefined ||
     semanticProfile === undefined ||
@@ -251,7 +179,7 @@ const validateObservationCodes = (
   path: ReadonlyArray<number | string>,
 ): void => {
   const requiredCodings = match.requiredCodings ?? []
-  const admittedPrimaryCodes = new Set([
+  const admittedPrimaryCodes: ReadonlySet<string> = new Set<string>([
     match.code.code,
     ...requiredCodings
       .filter(({ system }) => system === match.code.system)
@@ -398,7 +326,7 @@ const validateObservationMethod = (
       )
     }
   } else if (match.methodChoice !== undefined) {
-    const admittedMethods = match.methodChoice
+    const admittedMethods: readonly string[] = match.methodChoice
     const coding = asRecord(observation.method)?.coding
     const admitted =
       Array.isArray(coding) ?
@@ -431,36 +359,25 @@ const validateQuantityValueDomain = (
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ): void => {
-  const domain = match.quantity?.valueDomain
-  if (typeof value !== 'number' || domain === undefined) return
-  const belowMinimum =
-    value < domain.minimum.value ||
-    (!domain.minimum.inclusive && value === domain.minimum.value)
-  const aboveMaximum =
-    domain.maximum !== undefined &&
-    (value > domain.maximum.value ||
-      (!domain.maximum.inclusive && value === domain.maximum.value))
-  if (
-    belowMinimum ||
-    aboveMaximum ||
-    (domain.integerOnly && !Number.isInteger(value))
-  ) {
-    addIssue(
-      context,
-      `mobile-${match.id}.value-domain`,
-      [...path, 'valueQuantity', 'value'],
-      `A Grove Mobile ${match.id} result must satisfy its catalog-owned value domain.`,
-    )
-  }
+  if (typeof value !== 'number' || !violatesQuantityDomain(value, match)) return
+  addIssue(
+    context,
+    'mobile-output.quantity-value-domain',
+    [...path, 'valueQuantity', 'value'],
+    `A Grove Mobile ${match.id} result must satisfy its catalog-owned value domain.`,
+  )
 }
 
-const validateStepCountPeriod = (
+const POSITIVE_PERIOD_CONSTRAINT = 'grove-step-count-period-1'
+
+const validatePositivePeriod = (
   observation: UnknownRecord,
   match: MeasurementDefinition,
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ): void => {
-  if (match.id !== 'step-count') return
+  const obeys: readonly string[] = match.obeys ?? []
+  if (!obeys.includes(POSITIVE_PERIOD_CONSTRAINT)) return
   const period = asRecord(observation.effectivePeriod)
   if (
     typeof period?.start === 'string' &&
@@ -469,9 +386,9 @@ const validateStepCountPeriod = (
   ) {
     addIssue(
       context,
-      'mobile-step-count.nonzero-period',
+      `mobile-${match.id}.nonzero-period`,
       [...path, 'effectivePeriod'],
-      'A Grove Mobile step-count period must have nonzero duration.',
+      `A Grove Mobile ${match.id} period must have nonzero duration.`,
     )
   }
 }
@@ -500,7 +417,7 @@ const validateQuantityResult = (
     )
   }
   validateQuantityValueDomain(valueQuantity?.value, match, context, path)
-  validateStepCountPeriod(observation, match, context, path)
+  validatePositivePeriod(observation, match, context, path)
 }
 
 const validateCodeableConceptResult = (
@@ -511,7 +428,9 @@ const validateCodeableConceptResult = (
 ): void => {
   const result = asRecord(observation.valueCodeableConcept)
   const codings = Array.isArray(result?.coding) ? result.coding : []
-  const allowedValues = new Set(match.allowedValues ?? [])
+  const allowedValues: ReadonlySet<string> = new Set<string>(
+    match.allowedValues ?? [],
+  )
   const admitted = codings.filter((candidate) => {
     const coding = asRecord(candidate)
     return (
@@ -600,6 +519,11 @@ const validateComponentResult = (
         asRecord(components[matchedIndex])
       )
     const quantity = asRecord(matching?.valueQuantity)
+    const componentQuantity = definition.quantity
+    const unitClause =
+      componentQuantity === undefined ? '' : (
+        ` in fixed UCUM ${componentQuantity.code}`
+      )
     const optional = definition.cardinality === '0..1'
     if (
       matchingIndexes.length > 1 ||
@@ -609,18 +533,19 @@ const validateComponentResult = (
       (matching !== undefined &&
         codingCountForSystem(matching.code, definition.system) !== 1) ||
       (matching !== undefined &&
+        componentQuantity !== undefined &&
         (typeof quantity?.value !== 'number' ||
           !Number.isFinite(quantity.value) ||
           quantity.comparator !== undefined ||
-          quantity.system !== definition.quantity.system ||
-          quantity.code !== definition.quantity.code ||
-          quantity.unit !== definition.quantity.unit))
+          quantity.system !== componentQuantity.system ||
+          quantity.code !== componentQuantity.code ||
+          quantity.unit !== componentQuantity.unit))
     ) {
       addIssue(
         context,
         `mobile-${match.id}.${definition.id}`,
         [...path, 'component'],
-        `A Grove Mobile ${match.id} panel admits at most one distinct finite ${definition.id} component in fixed UCUM ${definition.quantity.code}${optional ? '' : ' and requires it'}.`,
+        `A Grove Mobile ${match.id} panel admits at most one distinct finite ${definition.id} component${unitClause}${optional ? '' : ' and requires it'}.`,
       )
     }
     if (matchedIndex !== undefined) matchedComponentIndexes.add(matchedIndex)

@@ -7,7 +7,12 @@
 //
 
 import { type z } from 'zod'
-import { decodeGroveRuleDiagnostic, groveRuleIssue } from './diagnostics.js'
+import {
+  groveRuleIssue,
+  groveRuleIssueFromParameters,
+  type GroveExchangeRuleCode,
+} from './diagnostics.js'
+import { asRecord } from './graph-schema-utils.js'
 import {
   groveMobileExchangeBundleSchema,
   groveMobileRetractionBundleSchema,
@@ -40,81 +45,36 @@ import type {
 import {
   cloneJsonValue,
   deepFreeze,
-  err,
   issues,
-  type IssueCode,
   ok,
+  zodIssuePath,
+  zodIssueToIssue,
   type Issue,
   type Result,
 } from '../core/index.js'
 
-const LOCAL_MOBILE_RULE = /^(mobile-[a-z\d.-]+): (.+)$/su
-
-const issuePath = (entry: z.core.$ZodIssue): ReadonlyArray<string | number> =>
-  entry.path.map((component) =>
-    typeof component === 'symbol' ?
-      (component.description ?? component.toString())
-    : component,
-  )
-
-const normalizeIssue = (entry: z.core.$ZodIssue): Issue => {
-  const path = issuePath(entry)
-  const diagnostic = decodeGroveRuleDiagnostic(entry.message)
-  if (diagnostic !== undefined) {
-    return {
-      severity: diagnostic.severity,
-      code: diagnostic.code,
-      path,
-      message: diagnostic.reason,
-      reason: diagnostic.reason,
-      location: diagnostic.location,
-    }
-  }
-  const localRule = LOCAL_MOBILE_RULE.exec(entry.message)
-  if (localRule !== null) {
-    return {
-      severity: 'error',
-      code: localRule[1] as IssueCode,
-      path,
-      message: entry.message,
-    }
-  }
-  return {
-    severity: 'error',
-    code: 'schema-invalid',
-    path,
-    message: entry.message,
-  }
-}
+const normalizeIssue = (entry: z.core.$ZodIssue): Issue =>
+  groveRuleIssueFromParameters(
+    entry.code === 'custom' ? entry.params : undefined,
+    zodIssuePath(entry),
+    entry.message,
+  ) ?? zodIssueToIssue(entry)
 
 // The schema decides the parsed type; a caller-chosen T would make the cast below a lie.
 const parseSnapshotWith = <T>(
   schema: z.ZodType<T>,
   snapshot: unknown,
 ): Result<T> => {
-  try {
-    const result = schema.safeParse(snapshot)
-    if (!result.success) {
-      return issues(result.error.issues.map(normalizeIssue))
-    }
-    return ok(deepFreeze(result.data) as T)
-  } catch {
-    return err(
-      'schema-invalid',
-      'FHIR JSON validation could not safely inspect the supplied value.',
-    )
-  }
+  const result = schema.safeParse(snapshot)
+  return result.success ?
+      ok(deepFreeze(result.data) as T)
+    : issues(result.error.issues.map(normalizeIssue))
 }
 
 const parseWith = <T>(schema: z.ZodType<T>, input: unknown): Result<T> => {
   const snapshot = cloneJsonValue(input)
   return snapshot.ok ? parseSnapshotWith(schema, snapshot.value) : snapshot
 }
-
-const entryResource = (entry: unknown): unknown =>
-  typeof entry === 'object' && entry !== null && 'resource' in entry ?
-    (entry as { readonly resource?: unknown }).resource
-  : undefined
 
 export const parseObservation = (input: unknown): Result<Observation> =>
   parseWith(observationSchema, input)
@@ -136,214 +96,133 @@ export const parseR4CollectionBundle = (
   input: unknown,
 ): Result<R4CollectionBundle> => parseWith(r4CollectionBundleSchema, input)
 
-export const parseGroveMobileExchangeBundle = (
+const entryResource = (entry: unknown): unknown => asRecord(entry)?.resource
+
+const ofType =
+  (resourceType: string, rejects: (resource: unknown) => boolean) =>
+  (resource: unknown): boolean =>
+    asRecord(resource)?.resourceType === resourceType && rejects(resource)
+
+interface EntryRulePrecheck {
+  readonly code: GroveExchangeRuleCode
+  readonly path: readonly string[]
+  readonly rejects: (resource: unknown) => boolean
+}
+
+// The base R4 union rejects an unadmitted entry before the graph refinements run, so
+// these rules report first to keep their exact corpus diagnostic.
+const ACTIVE_ENTRY_PRECHECKS: readonly EntryRulePrecheck[] = [
+  {
+    code: 'mobile-exchange.entry-resource-type',
+    path: ['resource', 'resourceType'],
+    rejects: (resource) => !isAdmittedActiveEntryResource(resource),
+  },
+  {
+    code: 'mobile-exchange.contained-resource-prohibited',
+    path: ['resource', 'contained'],
+    rejects: hasProhibitedContainedResource,
+  },
+  {
+    code: 'mobile-output.semantic-profile',
+    path: ['resource', 'meta', 'profile'],
+    rejects: ofType(
+      'Observation',
+      (resource) => !hasAdmittedMobileObservationProfile(resource),
+    ),
+  },
+  {
+    code: 'mobile-output.adapter-only-profile',
+    path: ['resource', 'meta', 'profile'],
+    rejects: (resource) => !hasAdmittedAdapterOnlyOutputProfile(resource),
+  },
+  {
+    code: 'mobile-output.document-profile',
+    path: ['resource', 'meta', 'profile'],
+    rejects: ofType(
+      'DocumentReference',
+      (resource) => !hasAdmittedActiveDocumentReferenceProfile(resource),
+    ),
+  },
+  {
+    code: 'mobile-support.device-profile',
+    path: ['resource', 'meta', 'profile'],
+    rejects: ofType(
+      'Device',
+      (resource) => !hasAdmittedActiveDeviceProfile(resource),
+    ),
+  },
+  {
+    code: 'mobile-exchange.provenance-profile',
+    path: ['resource', 'meta', 'profile'],
+    rejects: ofType(
+      'Provenance',
+      (resource) => !hasAdmittedActiveProvenanceProfile(resource),
+    ),
+  },
+]
+
+const RETRACTION_ENTRY_PRECHECKS: readonly EntryRulePrecheck[] = [
+  {
+    code: 'mobile-retraction.no-clinical-copy',
+    path: ['resource'],
+    rejects: (resource) => {
+      const resourceType = asRecord(resource)?.resourceType
+      return (
+        typeof resourceType === 'string' &&
+        !['Device', 'Provenance'].includes(resourceType)
+      )
+    },
+  },
+  {
+    code: 'mobile-exchange.contained-resource-prohibited',
+    path: ['resource', 'contained'],
+    rejects: hasProhibitedContainedResource,
+  },
+]
+
+const entryRuleIssue = (
+  snapshot: unknown,
+  prechecks: readonly EntryRulePrecheck[],
+): Issue | undefined => {
+  const entries = asRecord(snapshot)?.entry
+  if (!Array.isArray(entries)) return undefined
+  for (const { code, path, rejects } of prechecks) {
+    const index = entries.findIndex((entry) => rejects(entryResource(entry)))
+    if (index !== -1) return groveRuleIssue(code, ['entry', index, ...path])
+  }
+  return undefined
+}
+
+const parseGraphBundle = <T>(
+  schema: z.ZodType<T>,
+  prechecks: readonly EntryRulePrecheck[],
   input: unknown,
-): Result<GroveMobileExchangeBundle> => {
+): Result<T> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  input = snapshot.value
-  const entries =
-    typeof input === 'object' && input !== null && 'entry' in input ?
-      (input as { readonly entry?: unknown }).entry
-    : undefined
-  if (Array.isArray(entries)) {
-    const invalidResourceTypeIndex = entries.findIndex(
-      (entry) => !isAdmittedActiveEntryResource(entryResource(entry)),
-    )
-    if (invalidResourceTypeIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-exchange.entry-resource-type', [
-          'entry',
-          invalidResourceTypeIndex,
-          'resource',
-          'resourceType',
-        ]),
-      ])
-    }
-    const containedIndex = entries.findIndex((entry) =>
-      hasProhibitedContainedResource(entryResource(entry)),
-    )
-    if (containedIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-exchange.contained-resource-prohibited', [
-          'entry',
-          containedIndex,
-          'resource',
-          'contained',
-        ]),
-      ])
-    }
-    const invalidIndex = entries.findIndex((entry) => {
-      if (
-        typeof entry !== 'object' ||
-        entry === null ||
-        !('resource' in entry)
-      ) {
-        return false
-      }
-      const resource = (entry as { readonly resource?: unknown }).resource
-      return (
-        typeof resource === 'object' &&
-        resource !== null &&
-        'resourceType' in resource &&
-        (resource as { readonly resourceType?: unknown }).resourceType ===
-          'Observation' &&
-        !hasAdmittedMobileObservationProfile(resource)
-      )
-    })
-    if (invalidIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-output.semantic-profile', [
-          'entry',
-          invalidIndex,
-          'resource',
-          'meta',
-          'profile',
-        ]),
-      ])
-    }
-    const invalidAdapterOnlyIndex = entries.findIndex((entry) => {
-      if (
-        typeof entry !== 'object' ||
-        entry === null ||
-        !('resource' in entry)
-      ) {
-        return false
-      }
-      return !hasAdmittedAdapterOnlyOutputProfile(
-        (entry as { readonly resource?: unknown }).resource,
-      )
-    })
-    if (invalidAdapterOnlyIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-output.adapter-only-profile', [
-          'entry',
-          invalidAdapterOnlyIndex,
-          'resource',
-          'meta',
-          'profile',
-        ]),
-      ])
-    }
-    const invalidDocumentIndex = entries.findIndex((entry) => {
-      const resource = entryResource(entry)
-      return (
-        typeof resource === 'object' &&
-        resource !== null &&
-        'resourceType' in resource &&
-        (resource as { readonly resourceType?: unknown }).resourceType ===
-          'DocumentReference' &&
-        !hasAdmittedActiveDocumentReferenceProfile(resource)
-      )
-    })
-    if (invalidDocumentIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-output.document-profile', [
-          'entry',
-          invalidDocumentIndex,
-          'resource',
-          'meta',
-          'profile',
-        ]),
-      ])
-    }
-    const invalidDeviceIndex = entries.findIndex((entry) => {
-      const resource = entryResource(entry)
-      return (
-        typeof resource === 'object' &&
-        resource !== null &&
-        'resourceType' in resource &&
-        (resource as { readonly resourceType?: unknown }).resourceType ===
-          'Device' &&
-        !hasAdmittedActiveDeviceProfile(resource)
-      )
-    })
-    if (invalidDeviceIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-support.device-profile', [
-          'entry',
-          invalidDeviceIndex,
-          'resource',
-          'meta',
-          'profile',
-        ]),
-      ])
-    }
-    const invalidProvenanceIndex = entries.findIndex((entry) => {
-      const resource = entryResource(entry)
-      return (
-        typeof resource === 'object' &&
-        resource !== null &&
-        'resourceType' in resource &&
-        (resource as { readonly resourceType?: unknown }).resourceType ===
-          'Provenance' &&
-        !hasAdmittedActiveProvenanceProfile(resource)
-      )
-    })
-    if (invalidProvenanceIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-exchange.provenance-profile', [
-          'entry',
-          invalidProvenanceIndex,
-          'resource',
-          'meta',
-          'profile',
-        ]),
-      ])
-    }
-  }
-  return parseSnapshotWith(groveMobileExchangeBundleSchema, input)
+  const early = entryRuleIssue(snapshot.value, prechecks)
+  return early === undefined ?
+      parseSnapshotWith(schema, snapshot.value)
+    : issues([early])
 }
+
+export const parseGroveMobileExchangeBundle = (
+  input: unknown,
+): Result<GroveMobileExchangeBundle> =>
+  parseGraphBundle(
+    groveMobileExchangeBundleSchema,
+    ACTIVE_ENTRY_PRECHECKS,
+    input,
+  )
 
 export const parseGroveMobileRetractionBundle = (
   input: unknown,
-): Result<GroveMobileRetractionBundle> => {
-  const snapshot = cloneJsonValue(input)
-  if (!snapshot.ok) return snapshot
-  input = snapshot.value
-  const entries =
-    typeof input === 'object' && input !== null && 'entry' in input ?
-      (input as { readonly entry?: unknown }).entry
-    : undefined
-  if (Array.isArray(entries)) {
-    const invalidIndex = entries.findIndex((entry) => {
-      const resource = entryResource(entry)
-      return (
-        typeof resource === 'object' &&
-        resource !== null &&
-        'resourceType' in resource &&
-        !['Device', 'Provenance'].includes(
-          String(
-            (resource as { readonly resourceType?: unknown }).resourceType,
-          ),
-        )
-      )
-    })
-    if (invalidIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-retraction.no-clinical-copy', [
-          'entry',
-          invalidIndex,
-          'resource',
-        ]),
-      ])
-    }
-    const containedIndex = entries.findIndex((entry) =>
-      hasProhibitedContainedResource(entryResource(entry)),
-    )
-    if (containedIndex !== -1) {
-      return issues([
-        groveRuleIssue('mobile-exchange.contained-resource-prohibited', [
-          'entry',
-          containedIndex,
-          'resource',
-          'contained',
-        ]),
-      ])
-    }
-  }
-  return parseSnapshotWith(groveMobileRetractionBundleSchema, input)
-}
+): Result<GroveMobileRetractionBundle> =>
+  parseGraphBundle(
+    groveMobileRetractionBundleSchema,
+    RETRACTION_ENTRY_PRECHECKS,
+    input,
+  )
 
 export const parseSupportedR4Resource = (
   input: unknown,

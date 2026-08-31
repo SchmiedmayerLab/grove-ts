@@ -6,15 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** FHIR graph identity, reference, coding, and diagnostic utilities. */
-
 /* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 fixes lifecycle and participant canonicals to HTTP. */
 
 import type { z } from 'zod'
-import { encodeGroveRuleDiagnostic } from './diagnostics.js'
+import { groveRuleParameters, groveRuleReason } from './diagnostics.js'
+import { healthKitApplicationDeviceIdentity } from '../contract/providers.generated.js'
 import { parseAbsoluteUri } from '../core/index.js'
 import { groveMobileContract } from '../mobile/contract.js'
-import { healthKitApplicationDeviceIdentity } from '../contract/providers.generated.js'
 
 export type UnknownRecord = Readonly<Record<string, unknown>>
 
@@ -37,9 +35,9 @@ export const completeIdentifier = (
 
 const LOWERCASE_UUID_V5 =
   /^urn:uuid:[\da-f]{8}-[\da-f]{4}-5[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u
-const ENTRY_NODE_PARTS = /^n0:([a-z][a-z\d-]*):(0|[1-9]\d*):[A-Za-z\d_-]{43}$/u
-const LOGICAL_PATIENT_RESERVED_SYSTEMS = new Set<string>(
-  groveMobileContract.referencePolicy.identifierOnlyPatient.reservedSystems,
+const ENTRY_NODE_PARTS = new RegExp(
+  `^${groveMobileContract.identity.valuePrefixes.entryNode}([a-z][a-z\\d-]*):(0|[1-9]\\d*):[A-Za-z\\d_-]{43}$`,
+  'u',
 )
 
 export const isLowercaseUuidV5 = (value: string): boolean =>
@@ -214,11 +212,6 @@ export const locatedReferences = (
   ]
 }
 
-export const referenceTypeMatches = (
-  declared: unknown,
-  actual: string,
-): boolean => declared === actual
-
 const internalReferenceTarget = (
   reference: unknown,
   resourcesByFullUrl: ReadonlyMap<string, UnknownRecord>,
@@ -263,13 +256,49 @@ const validateGovernedReferenceShape = (
   const hasLiteral =
     typeof value?.reference === 'string' && value.reference.trim() !== ''
   const hasIdentifier = value?.identifier !== undefined
+  const identifier = asRecord(value?.identifier)
+  const patientOnly = allowedTypes.size === 1 && allowedTypes.has('Patient')
+  const reservedPatientSystems: ReadonlySet<string> = new Set(
+    groveMobileContract.referencePolicy.identifierOnlyPatient.reservedSystems,
+  )
+  const declaredType = value?.type
+  if (
+    !hasLiteral &&
+    hasIdentifier &&
+    patientOnly &&
+    typeof identifier?.system === 'string' &&
+    reservedPatientSystems.has(identifier.system)
+  ) {
+    addIssue(
+      context,
+      'mobile-exchange.logical-patient-reference',
+      [...path, 'identifier', 'system'],
+      'An identifier-only Patient Reference cannot use a protocol-reserved system.',
+      `${location}.identifier.system`,
+    )
+    return
+  }
+  if (
+    !hasLiteral &&
+    hasIdentifier &&
+    patientOnly &&
+    groveIdentifierRoles(identifier).length > 0
+  ) {
+    addIssue(
+      context,
+      'mobile-exchange.logical-patient-reference',
+      [...path, 'identifier', 'type'],
+      'An identifier-only Patient Reference cannot carry a Grove identifier role.',
+      `${location}.identifier.type`,
+    )
+    return
+  }
   const validLogical =
     !hasLiteral &&
-    completeIdentifier(value?.identifier) &&
-    parseAbsoluteUri(value.identifier.system).ok &&
-    typeof value.type === 'string' &&
-    allowedTypes.has(value.type)
-  const patientOnly = allowedTypes.size === 1 && allowedTypes.has('Patient')
+    completeIdentifier(identifier) &&
+    parseAbsoluteUri(identifier.system).ok &&
+    typeof declaredType === 'string' &&
+    allowedTypes.has(declaredType)
   if (hasLiteral && hasIdentifier) {
     addIssue(
       context,
@@ -296,39 +325,21 @@ const validateGovernedReferenceShape = (
       'A governed Reference requires exactly one resolving literal or identifier-only logical shape.',
       location,
     )
-  } else if (validLogical && patientOnly) {
-    const identifier = asRecord(value.identifier)
-    if (
-      typeof identifier?.system === 'string' &&
-      LOGICAL_PATIENT_RESERVED_SYSTEMS.has(identifier.system)
-    ) {
-      addIssue(
-        context,
-        'mobile-exchange.logical-patient-reference',
-        [...path, 'identifier', 'system'],
-        'A logical Patient identifier cannot use a protocol-reserved code-system URI.',
-        `${location}.identifier.system`,
-      )
-    }
-    const type = asRecord(identifier?.type)
-    const coding = Array.isArray(type?.coding) ? type.coding : []
-    if (
-      coding.some(
-        (candidate) =>
-          asRecord(candidate)?.system ===
-          groveMobileContract.systems.identifierRole,
-      )
-    ) {
-      addIssue(
-        context,
-        'mobile-exchange.logical-patient-reference',
-        [...path, 'identifier', 'type'],
-        'A logical Patient identifier cannot carry a Grove identifier role.',
-        `${location}.identifier.type`,
-      )
-    }
   }
 }
+
+// The reference-policy catalog states admitted targets, not cardinality. Every Grove
+// profile binding one of these paths to Patient also binds it 1..1, so an absent
+// subject is a contract violation the governed-reference check must report.
+const MANDATORY_REFERENCE_PATHS: ReadonlySet<string> = new Set([
+  'DocumentReference.subject',
+  'MedicationAdministration.subject',
+  'MedicationStatement.subject',
+  'Observation.subject',
+  'QuestionnaireResponse.subject',
+  'Specimen.subject',
+  'VisionPrescription.patient',
+])
 
 const validateProfilePathReferenceTargets = (
   resource: UnknownRecord,
@@ -340,6 +351,20 @@ const validateProfilePathReferenceTargets = (
     if (rule.resourceType !== resource.resourceType) continue
     const references = resource[rule.path]
     const values = Array.isArray(references) ? references : [references]
+    const ruleLocation = `${rule.resourceType}.${rule.path}`
+    if (
+      values.every((reference) => reference === undefined) &&
+      MANDATORY_REFERENCE_PATHS.has(ruleLocation)
+    ) {
+      addIssue(
+        context,
+        'mobile-exchange.reference-shape',
+        [...path, rule.path],
+        `${ruleLocation} is mandatory and requires one governed Reference.`,
+        ruleLocation,
+      )
+      continue
+    }
     for (const [index, reference] of values.entries()) {
       if (reference === undefined) continue
       const targetTypes = new Set(rule.targetTypes)
@@ -350,7 +375,7 @@ const validateProfilePathReferenceTargets = (
       ]
       const referenceIndex =
         Array.isArray(references) ? `[${String(index)}]` : ''
-      const referenceLocation = `${String(resource.resourceType)}.${rule.path}${referenceIndex}`
+      const referenceLocation = `${ruleLocation}${referenceIndex}`
       validateGovernedReferenceShape(
         reference,
         targetTypes,
@@ -466,6 +491,7 @@ export const addIssue = (
   context.addIssue({
     code: 'custom',
     path: [...path],
-    message: encodeGroveRuleDiagnostic(code, path, message, location),
+    message: groveRuleReason(code) ?? message,
+    params: groveRuleParameters(code, path, location),
   })
 }

@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** Append-only retraction graph and logical-target semantics. */
-
 import type { z } from 'zod'
 import {
   validateAssemblerAgent,
@@ -21,6 +19,7 @@ import {
   codingCountForSystem,
   codingExists,
   completeIdentifier,
+  groveIdentifierRoles,
   identifierRole,
   type UnknownRecord,
 } from './graph-schema-utils.js'
@@ -169,7 +168,7 @@ const validateRetractionTargetIdentity = (
       context,
       'mobile-retraction.opaque-target',
       ['entry', 'resource', 'target', index, 'identifier'],
-      'Each target requires the exact typed canonical v0 HMAC Identifier previously emitted.',
+      'Each target requires the exact typed canonical Grove HMAC Identifier previously emitted.',
     )
   }
 }
@@ -191,6 +190,37 @@ const recordDistinctTarget = (
     )
   }
   keys.add(pair)
+}
+
+// The native key space belongs to the adapter, so Grove proves only that it is complete,
+// absolute, singular, and never dressed up as one of Grove's own identity roles.
+const validateRetractionTargetNativeIdentifier = (
+  reference: UnknownRecord | undefined,
+  index: number,
+  context: z.core.$RefinementCtx,
+): void => {
+  const extensions =
+    Array.isArray(reference?.extension) ? reference.extension : []
+  const matches = extensions.filter(
+    (extension) =>
+      asRecord(extension)?.url ===
+      groveMobileContract.extensions.retractionTargetNativeIdentifier,
+  )
+  if (matches.length === 0) return
+  const native = asRecord(matches[0])?.valueIdentifier
+  if (
+    matches.length !== 1 ||
+    !completeIdentifier(native) ||
+    !parseAbsoluteUri(native.system).ok ||
+    groveIdentifierRoles(native).length > 0
+  ) {
+    addIssue(
+      context,
+      'mobile-retraction.native-record-identifier',
+      ['entry', 'resource', 'target', index, 'extension'],
+      "A target carries at most one native record Identifier, complete in the adapter's own absolute key space and free of any Grove identifier-role coding.",
+    )
+  }
 }
 
 const validateRetractionTargetType = (
@@ -246,6 +276,7 @@ const validateRetractionTarget = (
   )
   recordDistinctTarget(identifier, index, keys, context)
   validateRetractionTargetType(reference, role, targetRule, index, context)
+  validateRetractionTargetNativeIdentifier(reference, index, context)
 }
 
 const validateRetractionTargets = (

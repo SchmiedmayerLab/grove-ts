@@ -93,8 +93,6 @@ export const resolvableReferenceSchema: z.ZodType<Reference> =
     },
   )
 
-export const referenceSchema: z.ZodType<Reference> = resolvableReferenceSchema
-
 /** The Element a primitive carries its id and extensions in. */
 export const primitiveElementSchema: typeof elementSchema = elementSchema
 

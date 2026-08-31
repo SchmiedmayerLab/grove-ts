@@ -90,44 +90,27 @@ export type R4CollectionBundle = ReadonlyDeep<
   }
 >
 
-/** Grove-profiled event graph with complete event and entry identity. */
-export type GroveMobileExchangeBundle = ReadonlyDeep<
+/** One Bundle entry whose deterministic fullUrl and admitted resource are both present. */
+type GraphEntry<Resource> = Omit<BundleEntry, 'fullUrl' | 'resource'> & {
+  readonly fullUrl: string
+  readonly resource: Resource
+}
+
+type GraphBundle<Resource> = ReadonlyDeep<
   Omit<R4CollectionBundle, 'entry' | 'identifier' | 'timestamp'> & {
     readonly identifier: Identifier
     readonly timestamp: string
     readonly entry: readonly [
-      Omit<BundleEntry, 'fullUrl' | 'resource'> & {
-        readonly fullUrl: string
-        readonly resource: GraphResource
-      },
-      ...Array<
-        Omit<BundleEntry, 'fullUrl' | 'resource'> & {
-          readonly fullUrl: string
-          readonly resource: GraphResource
-        }
-      >,
+      GraphEntry<Resource>,
+      ...Array<GraphEntry<Resource>>,
     ]
   }
 >
 
+/** Grove-profiled event graph with complete event and entry identity. */
+export type GroveMobileExchangeBundle = GraphBundle<GraphResource>
+
 /** Grove-profiled retraction assertion containing Provenance and optional Device agents only. */
-export type GroveMobileRetractionBundle = ReadonlyDeep<
-  Omit<R4CollectionBundle, 'entry' | 'identifier' | 'timestamp'> & {
-    readonly identifier: Identifier
-    readonly timestamp: string
-    readonly entry: readonly [
-      Omit<BundleEntry, 'fullUrl' | 'resource'> & {
-        readonly fullUrl: string
-        readonly resource: Device | Provenance
-      },
-      ...Array<
-        Omit<BundleEntry, 'fullUrl' | 'resource'> & {
-          readonly fullUrl: string
-          readonly resource: Device | Provenance
-        }
-      >,
-    ]
-  }
->
+export type GroveMobileRetractionBundle = GraphBundle<Device | Provenance>
 
 export type SupportedR4Resource = R4CollectionBundle | GraphResource

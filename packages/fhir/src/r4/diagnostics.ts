@@ -6,19 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { Issue } from '../core/index.js'
 import { groveExchangeRuleDiagnostics } from '../contract/measurement-catalog.generated.js'
-
-const ENCODED_RULE_PREFIX = 'grove-producer-rule:'
+import type { Issue } from '../core/index.js'
 
 export type GroveExchangeRuleCode = keyof typeof groveExchangeRuleDiagnostics
-
-export interface GroveExchangeRuleDiagnostic {
-  readonly code: GroveExchangeRuleCode
-  readonly reason: string
-  readonly location: string
-  readonly severity: 'error'
-}
 
 const entryIndex = (
   path: ReadonlyArray<number | string>,
@@ -28,140 +19,153 @@ const entryIndex = (
   return typeof candidate === 'number' ? candidate : undefined
 }
 
+type LocationPath = ReadonlyArray<number | string>
+
+const bundleEntry = (path: LocationPath): string =>
+  `Bundle.entry[${entryIndex(path) ?? 0}]`
+const provenanceTarget = (
+  path: LocationPath,
+  ordinalOffset: number,
+): string => {
+  const ordinal = path.at(ordinalOffset)
+  return `Provenance.target[${typeof ordinal === 'number' ? String(ordinal) : '0'}]`
+}
+const fixed = (location: string) => (): string => location
+
 /**
  * Stable FHIR-facing locations for producer rules. Array ordinals remain dynamic,
  * while logical resource paths intentionally avoid leaking parser-internal paths.
+ * `groveRuleLocation` indexes this table by the registry, so a newly registered rule
+ * fails to compile until it names its location. A rule this package implements ahead
+ * of the pinned registry may be named here, so registering it costs no edit.
  */
+const groveRuleLocations = {
+  'healthkit-clinical.fhir-representation': (path) =>
+    `${bundleEntry(path)}.resource.content[0].attachment.contentType`,
+  'healthkit-ecg.output-graph': (path) => `${bundleEntry(path)}.resource`,
+  'mobile-device.recording-device-dual-identity': fixed('Device.identifier'),
+  'mobile-exchange.collection-entry-operation': fixed('Bundle.entry'),
+  'mobile-exchange.contained-resource-prohibited': (path) =>
+    `${bundleEntry(path)}.resource.contained`,
+  'mobile-exchange.deterministic-full-url': (path) =>
+    `${bundleEntry(path)}.fullUrl`,
+  'mobile-exchange.entry-node-digest': (path) =>
+    `${bundleEntry(path)}.extension.valueIdentifier.value`,
+  'mobile-exchange.entry-node-key': bundleEntry,
+  'mobile-exchange.entry-node-ordinal': (path) =>
+    `${bundleEntry(path)}.extension.valueIdentifier.value`,
+  'mobile-exchange.entry-resource-type': (path) =>
+    `${bundleEntry(path)}.resource.resourceType`,
+  'mobile-exchange.event-identity': fixed('Bundle.identifier.value'),
+  'mobile-exchange.identity-system-role': fixed('Bundle'),
+  'mobile-exchange.lifecycle-coding': fixed('Provenance.activity.coding'),
+  'mobile-exchange.logical-patient-reference': fixed('Observation.subject'),
+  'mobile-exchange.logical-source-entity': fixed('Provenance.entity[0].what'),
+  'mobile-exchange.provenance-profile': fixed('Provenance.meta.profile'),
+  'mobile-exchange.reference-declared-type': fixed('Observation.subject.type'),
+  'mobile-exchange.reference-shape': fixed('Observation.subject'),
+  'mobile-exchange.reference-target-type': fixed(
+    'Observation.subject.reference',
+  ),
+  'mobile-exchange.resolved-reference': (path) =>
+    `${bundleEntry(path)}.resource.subject.reference`,
+  'mobile-exchange.single-source-entity': fixed('Provenance.entity'),
+  'mobile-exchange.transform-provenance': fixed('Bundle.entry'),
+  'mobile-exchange.unclassified': fixed('Bundle'),
+  'mobile-output.adapter-only-profile': fixed('Specimen.meta.profile'),
+  'mobile-output.document-profile': fixed('DocumentReference.meta.profile'),
+  'mobile-output.fixed-quantity-unit': (path) =>
+    `${bundleEntry(path)}.resource.valueQuantity.code`,
+  'mobile-output.hybrid-companion': (path) =>
+    `${bundleEntry(path)}.resource.meta.profile`,
+  'mobile-output.quantity-value-domain': (path) =>
+    `${bundleEntry(path)}.resource.valueQuantity.value`,
+  'mobile-output.semantic-profile': fixed('Observation.meta.profile'),
+  'mobile-output.source-output-required': (path) =>
+    `${bundleEntry(path)}.resource.identifier`,
+  'mobile-retraction.logical-target': (path) => provenanceTarget(path, -1),
+  'mobile-retraction.native-record-identifier': (path) =>
+    `${provenanceTarget(path, -2)}.extension.valueIdentifier.type`,
+  'mobile-retraction.no-clinical-copy': (path) =>
+    `${bundleEntry(path)}.resource`,
+  'mobile-retraction.opaque-target': (path) =>
+    `${provenanceTarget(path, -2)}.identifier.value`,
+  'mobile-retraction.role-target-type': (path) =>
+    `${provenanceTarget(path, -2)}.type`,
+  'mobile-retraction.target-role': (path) =>
+    `${provenanceTarget(path, -2)}.extension`,
+  'mobile-support.connected': fixed('Bundle.entry'),
+  'mobile-support.device-profile': fixed('Device.meta.profile'),
+  'mobile-support.questionnaire-response-profile': fixed(
+    'QuestionnaireResponse.meta.profile',
+  ),
+  'sensor-recording-document.identity-and-content': fixed(
+    'DocumentReference.identifier',
+  ),
+} satisfies Readonly<Record<string, (path: LocationPath) => string>>
+
 const groveRuleLocation = (
   code: GroveExchangeRuleCode,
-  path: ReadonlyArray<number | string>,
-): string => {
-  const index = entryIndex(path)
-  const bundleEntry = `Bundle.entry[${index ?? 0}]`
-  switch (code) {
-    case 'mobile-exchange.entry-node-key':
-      return bundleEntry
-    case 'mobile-exchange.deterministic-full-url':
-      return `${bundleEntry}.fullUrl`
-    case 'mobile-exchange.resolved-reference':
-      return `${bundleEntry}.resource.subject.reference`
-    case 'mobile-output.fixed-quantity-unit':
-      return `${bundleEntry}.resource.valueQuantity.code`
-    case 'mobile-exchange.event-identity':
-      return 'Bundle.identifier.value'
-    case 'mobile-exchange.entry-node-digest':
-      return `${bundleEntry}.extension.valueIdentifier.value`
-    case 'mobile-output.source-output-required':
-      return `${bundleEntry}.resource.identifier`
-    case 'mobile-exchange.identity-system-role':
-      return 'Bundle'
-    case 'mobile-exchange.transform-provenance':
-      return 'Bundle.entry'
-    case 'mobile-retraction.logical-target':
-      return `Provenance.target[${typeof path.at(-1) === 'number' ? String(path.at(-1)) : '0'}]`
-    case 'mobile-retraction.target-role':
-      return `Provenance.target[${typeof path.at(-2) === 'number' ? String(path.at(-2)) : '0'}].extension`
-    case 'mobile-retraction.opaque-target':
-      return `Provenance.target[${typeof path.at(-2) === 'number' ? String(path.at(-2)) : '0'}].identifier.value`
-    case 'mobile-retraction.no-clinical-copy':
-      return `${bundleEntry}.resource`
-    case 'mobile-exchange.lifecycle-coding':
-      return 'Provenance.activity.coding'
-    case 'mobile-output.semantic-profile':
-      return 'Observation.meta.profile'
-    case 'mobile-exchange.reference-target-type':
-      return 'Observation.subject.reference'
-    case 'mobile-exchange.reference-declared-type':
-      return 'Observation.subject.type'
-    case 'mobile-exchange.logical-source-entity':
-      return 'Provenance.entity[0].what'
-    case 'mobile-retraction.role-target-type':
-      return `Provenance.target[${typeof path.at(-2) === 'number' ? String(path.at(-2)) : '0'}].type`
-    case 'mobile-exchange.single-source-entity':
-      return 'Provenance.entity'
-    case 'mobile-exchange.reference-shape':
-    case 'mobile-exchange.logical-patient-reference':
-      return 'Observation.subject'
-    case 'mobile-exchange.entry-resource-type':
-      return `${bundleEntry}.resource.resourceType`
-    case 'mobile-output.adapter-only-profile':
-      return 'Specimen.meta.profile'
-    case 'mobile-exchange.contained-resource-prohibited':
-      return `${bundleEntry}.resource.contained`
-    case 'mobile-output.document-profile':
-      return 'DocumentReference.meta.profile'
-    case 'mobile-support.device-profile':
-      return 'Device.meta.profile'
-    case 'mobile-exchange.provenance-profile':
-      return 'Provenance.meta.profile'
-    case 'mobile-support.connected':
-      return 'Bundle.entry'
-  }
-}
+  path: LocationPath,
+): string => groveRuleLocations[code](path)
 
 const isGroveExchangeRuleCode = (code: string): code is GroveExchangeRuleCode =>
   Object.hasOwn(groveExchangeRuleDiagnostics, code)
 
-const groveRuleDiagnostic = (
-  code: GroveExchangeRuleCode,
-  location: string,
-): GroveExchangeRuleDiagnostic => ({
-  code,
-  reason: groveExchangeRuleDiagnostics[code].reason,
-  location,
-  severity: groveExchangeRuleDiagnostics[code].severity,
-})
+// Producer rules are namespaced; anything else is a base schema failure, not a rule.
+const isProducerRuleCode = (code: string): code is `${string}.${string}` =>
+  code.includes('.')
 
-export const encodeGroveRuleDiagnostic = (
+/** Registered normative reason, or undefined for a rule this package names locally. */
+export const groveRuleReason = (code: string): string | undefined =>
+  isGroveExchangeRuleCode(code) ?
+    groveExchangeRuleDiagnostics[code].reason
+  : undefined
+
+/** Structured producer-rule payload a Grove refinement attaches to its zod issue. */
+export const groveRuleParameters = (
   code: string,
   path: ReadonlyArray<number | string>,
-  fallbackMessage: string,
   location?: string,
-): string =>
+): Readonly<Record<string, unknown>> =>
   isGroveExchangeRuleCode(code) ?
-    `${ENCODED_RULE_PREFIX}${JSON.stringify(groveRuleDiagnostic(code, location ?? groveRuleLocation(code, path)))}`
-  : `${code}: ${fallbackMessage}`
-
-export const decodeGroveRuleDiagnostic = (
-  message: string,
-): GroveExchangeRuleDiagnostic | undefined => {
-  if (!message.startsWith(ENCODED_RULE_PREFIX)) return undefined
-  try {
-    const candidate = JSON.parse(message.slice(ENCODED_RULE_PREFIX.length)) as {
-      readonly code?: unknown
-      readonly reason?: unknown
-      readonly location?: unknown
-      readonly severity?: unknown
+    {
+      groveRuleCode: code,
+      groveRuleLocation: location ?? groveRuleLocation(code, path),
     }
-    if (
-      typeof candidate.code !== 'string' ||
-      !isGroveExchangeRuleCode(candidate.code) ||
-      candidate.reason !==
-        groveExchangeRuleDiagnostics[candidate.code].reason ||
-      candidate.severity !==
-        groveExchangeRuleDiagnostics[candidate.code].severity ||
-      typeof candidate.location !== 'string' ||
-      candidate.location.length === 0
-    ) {
-      return undefined
-    }
-    return candidate as GroveExchangeRuleDiagnostic
-  } catch {
-    return undefined
-  }
-}
+  : { groveRuleCode: code }
 
 export const groveRuleIssue = (
   code: GroveExchangeRuleCode,
   path: ReadonlyArray<number | string>,
-): Issue => {
-  const diagnostic = groveRuleDiagnostic(code, groveRuleLocation(code, path))
+): Issue => ({
+  severity: groveExchangeRuleDiagnostics[code].severity,
+  code,
+  path,
+  message: groveExchangeRuleDiagnostics[code].reason,
+  reason: groveExchangeRuleDiagnostics[code].reason,
+  location: groveRuleLocation(code, path),
+})
+
+/** Rebuilds the producer-rule Issue a refinement recorded on its zod issue params. */
+export const groveRuleIssueFromParameters = (
+  parameters: Readonly<Record<string, unknown>> | undefined,
+  path: ReadonlyArray<number | string>,
+  message: string,
+): Issue | undefined => {
+  const code = parameters?.groveRuleCode
+  if (typeof code !== 'string' || !isProducerRuleCode(code)) return undefined
+  if (!isGroveExchangeRuleCode(code)) {
+    return { severity: 'error', code, path, message }
+  }
+  const location = parameters?.groveRuleLocation
   return {
-    severity: diagnostic.severity,
-    code: diagnostic.code,
+    severity: groveExchangeRuleDiagnostics[code].severity,
+    code,
     path,
-    message: diagnostic.reason,
-    reason: diagnostic.reason,
-    location: diagnostic.location,
+    message: groveExchangeRuleDiagnostics[code].reason,
+    reason: groveExchangeRuleDiagnostics[code].reason,
+    location:
+      typeof location === 'string' ? location : groveRuleLocation(code, path),
   }
 }

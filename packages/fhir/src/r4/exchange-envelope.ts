@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** Deterministic Bundle envelope, entry identity, and reference validation. */
-
 import type { z } from 'zod'
 import {
   OPAQUE_IDENTIFIER_ROLES,
@@ -24,7 +22,6 @@ import {
   locatedGroveIdentifiers,
   locatedReferences,
   parseEntryNodeParts,
-  referenceTypeMatches,
   selectedBusinessKey,
   type UnknownRecord,
   validateProfileReferenceTargets,
@@ -55,6 +52,8 @@ interface EnvelopeState {
   readonly keyPairs: Set<string>
   readonly internalLogicalReferences: Set<string>
   readonly resourcesByFullUrl: Map<string, UnknownRecord>
+  /** Ordinal each entry-node entry owes the graph, counted over Bundle order alone. */
+  readonly entryNodeOrdinals: ReadonlyMap<number, string>
 }
 
 interface ValidatedEntryKey {
@@ -161,6 +160,45 @@ const validateEntryTransport = (
   return entry.fullUrl
 }
 
+// A self-consistent ordinal hides inside its own digest, so the graph counts the
+// entries sharing each node role itself and never reads the ordinal it is checking.
+const entryNodeOrdinals = (
+  entries: readonly UnknownRecord[],
+): ReadonlyMap<number, string> => {
+  const counts = new Map<string, number>()
+  const ordinals = new Map<number, string>()
+  for (const [index, entry] of entries.entries()) {
+    const key = entryKey(entry)
+    if (!completeIdentifier(key) || identifierRole(key) !== 'entry-node') {
+      continue
+    }
+    const role = parseEntryNodeParts(key.value)?.[1]
+    if (role === undefined) continue
+    const ordinal = counts.get(role) ?? 0
+    ordinals.set(index, String(ordinal))
+    counts.set(role, ordinal + 1)
+  }
+  return ordinals
+}
+
+const validateEntryNodeOrdinal = (
+  key: CompleteIdentifier,
+  expected: string | undefined,
+  index: number,
+  context: z.core.$RefinementCtx,
+): void => {
+  const written = parseEntryNodeParts(key.value)?.[2]
+  if (written === undefined || expected === undefined || written === expected) {
+    return
+  }
+  addIssue(
+    context,
+    'mobile-exchange.entry-node-ordinal',
+    ['entry', index, 'extension'],
+    `This entry is number ${expected} among the entries sharing its node role, so its entry-node ordinal cannot be ${written}.`,
+  )
+}
+
 const validateEntryNodeDigest = (
   key: CompleteIdentifier,
   event: CompleteIdentifier,
@@ -196,6 +234,7 @@ const validateEntryKeyValue = (
   role: string | undefined,
   event: CompleteIdentifier,
   index: number,
+  state: EnvelopeState,
   context: z.core.$RefinementCtx,
 ): void => {
   if (role === undefined) {
@@ -207,6 +246,12 @@ const validateEntryKeyValue = (
     )
   } else if (role === 'entry-node') {
     validateEntryNodeDigest(key, event, index, context)
+    validateEntryNodeOrdinal(
+      key,
+      state.entryNodeOrdinals.get(index),
+      index,
+      context,
+    )
   } else if (
     !OPAQUE_IDENTIFIER_ROLES.has(role) ||
     !isOpaqueIdentityValue(key.value)
@@ -215,7 +260,7 @@ const validateEntryKeyValue = (
       context,
       'mobile-exchange.opaque-entry-key',
       ['entry', index, 'extension'],
-      'Business entry keys require a closed role and canonical v0 HMAC value.',
+      'Business entry keys require a closed role and canonical Grove HMAC value.',
     )
   }
 }
@@ -248,7 +293,7 @@ const validateEntryKey = (
   }
   state.keyPairs.add(pair)
   const role = identifierRole(key)
-  validateEntryKeyValue(key, role, event, index, context)
+  validateEntryKeyValue(key, role, event, index, state, context)
   return { identifier: key, role }
 }
 
@@ -313,7 +358,7 @@ const resourceIdentityRoleCounts = (
         context,
         'mobile-exchange.opaque-resource-identity',
         ['entry', index, 'resource', 'identifier'],
-        'A typed resource identity must be one complete canonical v0 HMAC Identifier.',
+        'A typed resource identity must be one complete canonical Grove HMAC Identifier.',
       )
     }
   }
@@ -497,8 +542,7 @@ const validateLocatedReference = (
     )?.resourceType
     if (
       located.type !== undefined &&
-      (typeof targetType !== 'string' ||
-        !referenceTypeMatches(located.type, targetType))
+      (typeof targetType !== 'string' || located.type !== targetType)
     ) {
       addIssue(
         context,
@@ -585,6 +629,7 @@ export const validateExchangeEnvelope = (
     keyPairs: new Set(),
     internalLogicalReferences: new Set(),
     resourcesByFullUrl: new Map(),
+    entryNodeOrdinals: entryNodeOrdinals(entries),
   }
   const active = requiredProfile === groveMobileContract.profiles.exchangeBundle
   for (const [index, entry] of entries.entries()) {

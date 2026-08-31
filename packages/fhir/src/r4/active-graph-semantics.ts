@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** Active exchange-envelope and cross-resource measurement semantics. */
-
 import type { z } from 'zod'
 import { validateMobileObservationSemantics } from './active-observation-semantics.js'
 import {
@@ -31,13 +29,13 @@ import {
   type UnknownRecord,
 } from './graph-schema-utils.js'
 import type { R4CollectionBundle } from './types.js'
-import { parseAbsoluteUri } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
-import { isOpaqueIdentityValue } from '../mobile/identity.js'
 import {
   groveProfileClaims,
   healthConnectDataOriginApplication,
 } from '../contract/measurement-catalog.generated.js'
+import { parseAbsoluteUri } from '../core/index.js'
+import { groveMobileContract } from '../mobile/contract.js'
+import { isOpaqueIdentityValue } from '../mobile/identity.js'
 
 export { hasAdmittedMobileObservationProfile } from './active-observation-semantics.js'
 export { validateExchangeEnvelope, type ValidatedEnvelope }

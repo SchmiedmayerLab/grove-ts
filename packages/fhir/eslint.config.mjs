@@ -11,13 +11,6 @@ import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
 export default [
   ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
   {
-    files: ['src/**/*.ts'],
-    rules: {
-      // FHIR's recursive schema graph intentionally mirrors the specification.
-      'import-x/no-cycle': 'off',
-    },
-  },
-  {
     files: ['src/extract/*.ts', 'test/extract*.test.ts'],
     rules: {
       // These are canonical FHIR system identifiers, which are `http` URIs by definition rather

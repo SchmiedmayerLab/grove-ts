@@ -36,7 +36,6 @@ export {
   primitiveElementSchema,
   provenanceSchema,
   quantitySchema,
-  referenceSchema,
   resolvableReferenceSchema,
   r4CollectionBundleSchema,
   sampledDataSchema,
