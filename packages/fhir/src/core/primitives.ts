@@ -188,15 +188,70 @@ const parseInstantParts = (value: unknown): InstantParts | undefined => {
   }
 }
 
-const compareFractions = (left: string, right: string): -1 | 0 | 1 => {
-  const digits = Math.max(left.length, right.length)
-  for (let index = 0; index < digits; index += 1) {
-    const leftDigit = left[index] ?? '0'
-    const rightDigit = right[index] ?? '0'
-    if (leftDigit < rightDigit) return -1
-    if (leftDigit > rightDigit) return 1
+interface ComparableFhirDateTime {
+  readonly epochSecond: number
+  /** Leap seconds sort after the preceding second and before the next POSIX second. */
+  readonly phase: 0 | 1
+  readonly fraction: string
+}
+
+const FHIR_TIMESTAMP =
+  /^(?<prefix>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:)(?<second>[0-5]\d|60)(?:\.(?<fraction>\d+))?(?<offset>Z|[+-]\d{2}:\d{2})$/u
+const FHIR_PARTIAL_DATE = /^\d{4}(?:-\d{2}(?:-\d{2})?)?$/u
+
+const comparableFhirDateTime = (
+  value: string,
+): ComparableFhirDateTime | undefined => {
+  const timestamp = FHIR_TIMESTAMP.exec(value)?.groups
+  if (timestamp !== undefined) {
+    const leap = timestamp.second === '60'
+    const parsed = Date.parse(
+      `${timestamp.prefix}${leap ? '59' : timestamp.second}${timestamp.offset}`,
+    )
+    if (!Number.isFinite(parsed)) return undefined
+    return {
+      epochSecond: parsed / 1000 + (leap ? 1 : 0),
+      phase: leap ? 0 : 1,
+      fraction: timestamp.fraction ?? '',
+    }
   }
-  return 0
+  if (!FHIR_PARTIAL_DATE.test(value)) return undefined
+  let suffix = ''
+  if (value.length === 4) suffix = '-01-01'
+  else if (value.length === 7) suffix = '-01'
+  const parsed = Date.parse(`${value}${suffix}T00:00:00Z`)
+  return Number.isFinite(parsed) ?
+      { epochSecond: parsed / 1000, phase: 1, fraction: '' }
+    : undefined
+}
+
+const compareFraction = (left: string, right: string): -1 | 0 | 1 => {
+  const width = Math.max(left.length, right.length)
+  const normalizedLeft = left.padEnd(width, '0')
+  const normalizedRight = right.padEnd(width, '0')
+  if (normalizedLeft === normalizedRight) return 0
+  return normalizedLeft < normalizedRight ? -1 : 1
+}
+
+/**
+ * Compares FHIR dateTime values without JavaScript Date's millisecond truncation.
+ *
+ * Partial values resolve to the start of the period they name, matching Grove's contract-defined
+ * ordering policy. Leap seconds retain their distinct position before the following POSIX second.
+ * `undefined` means an endpoint is malformed; primitive validation reports that defect separately.
+ */
+export const compareFhirDateTimes = (
+  left: string,
+  right: string,
+): -1 | 0 | 1 | undefined => {
+  const first = comparableFhirDateTime(left)
+  const second = comparableFhirDateTime(right)
+  if (first === undefined || second === undefined) return undefined
+  if (first.epochSecond !== second.epochSecond) {
+    return first.epochSecond < second.epochSecond ? -1 : 1
+  }
+  if (first.phase !== second.phase) return first.phase < second.phase ? -1 : 1
+  return compareFraction(first.fraction, second.fraction)
 }
 
 export const parseAbsoluteUri = (value: unknown): Result<AbsoluteUri> => {
@@ -250,19 +305,20 @@ export const parseFhirInstant = (value: unknown): Result<FhirInstant> => {
   return ok(value as FhirInstant)
 }
 
-/** Compares two fully validated FHIR instants without losing sub-millisecond precision. */
+/** Compares two fully validated FHIR instants under the one contract ordering policy. */
 export const compareFhirInstants = (
   left: unknown,
   right: unknown,
 ): Result<-1 | 0 | 1> => {
-  const leftParts = parseInstantParts(left)
-  const rightParts = parseInstantParts(right)
-  if (leftParts === undefined || rightParts === undefined) {
-    return err('invalid-date-time', 'Expected two valid FHIR instants.')
-  }
-  if (leftParts.epochSecond < rightParts.epochSecond) return ok(-1)
-  if (leftParts.epochSecond > rightParts.epochSecond) return ok(1)
-  return ok(compareFractions(leftParts.fraction, rightParts.fraction))
+  const leftInstant = parseFhirInstant(left)
+  const rightInstant = parseFhirInstant(right)
+  const ordering =
+    leftInstant.ok && rightInstant.ok ?
+      compareFhirDateTimes(leftInstant.value, rightInstant.value)
+    : undefined
+  return ordering === undefined ?
+      err('invalid-date-time', 'Expected two valid FHIR instants.')
+    : ok(ordering)
 }
 
 export const parsePatientReference = (
@@ -330,7 +386,7 @@ export const parseSemVer = (value: unknown): Result<SemVer> => {
  * The three primitives share one lexical space: a year, a year and month, a calendar day, or a
  * full timestamp with an offset. A value stated to lower precision resolves to the start of the
  * period it names, in UTC, because a FHIR `date` carries no offset to resolve it against — the
- * same reading `fhirDateTimeToEpoch` uses for ordering.
+ * same reading `compareFhirDateTimes` uses for ordering.
  *
  * `Date` holds milliseconds, so a value stating more digits is truncated rather than rounded: a
  * truncated instant still falls inside the second it was recorded in.
