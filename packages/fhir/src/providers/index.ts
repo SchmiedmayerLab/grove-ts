@@ -19,7 +19,6 @@ export {
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
   groveProviderPackageMetadata,
-  groveFhirContractVersion,
   groveFhirVersion,
   type AdapterMeasurementCatalog,
   type HealthKitApplicationDeviceIdentity,
@@ -53,6 +52,7 @@ export {
 export type {
   ProviderRetractionInput,
   ProviderRetractionTargetInput,
+  ProviderRetractionTargetNativeIdentifierInput,
   RetractionTargetRole,
 } from './retraction.js'
 export type { DeviceSnapshotRole } from './identity.js'

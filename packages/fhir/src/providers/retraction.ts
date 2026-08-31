@@ -8,12 +8,6 @@
 
 import { z } from 'zod'
 import {
-  providerAdapterCatalog,
-  providerRawOutputRoles,
-  providerScalarOutputDiscriminators,
-  providerScalarOutputRoles,
-} from '../contract/providers.generated.js'
-import {
   concept,
   deduplicateIdentifiedEntries,
   identifiedEntry,
@@ -35,12 +29,12 @@ import {
   PROVIDER_RECORDING_OUTPUT_ROLE,
   SYSTEMS,
 } from './profiles.js'
+import { absoluteUriSchema } from './provider-input-schemas.js'
 import {
   applicationDeviceSchema,
   deploymentIdentitySchema,
   fhirIdSchema,
   nonBlankStringSchema,
-  normalizeZodIssue,
   primitiveInstantSchema,
   providerScopeIdentifierIssues,
   providerScopeIdentifierSchema,
@@ -49,11 +43,19 @@ import type {
   ConnectedProvider,
   ProviderScopeIdentifierInput,
 } from './types.js'
+import { type groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
+import {
+  providerAdapterCatalog,
+  providerRawOutputRoles,
+  providerScalarOutputDiscriminators,
+  providerScalarOutputRoles,
+} from '../contract/providers.generated.js'
 import {
   cloneJsonValue,
   deepFreeze,
-  err,
   issues,
+  zodIssueToIssue,
+  type AbsoluteUri,
   type FhirId,
   type FhirInstant,
   type Issue,
@@ -66,7 +68,6 @@ import {
   deriveOpaqueIdentifier,
   validateDeploymentIdentity,
 } from '../mobile/identity.js'
-import { type groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import type {
   ApplicationDeviceInput,
   CompleteIdentifierInput,
@@ -80,28 +81,42 @@ import {
 export type RetractionTargetRole =
   keyof typeof groveExchangeProtocol.lifecycle.retraction.targetRoles
 
+/**
+ * The adapter's own record key for one retracted target, carried verbatim.
+ *
+ * It never participates in Grove identity and carries no Grove identifier-role coding.
+ */
+export interface ProviderRetractionTargetNativeIdentifierInput {
+  readonly system: AbsoluteUri
+  readonly value: string
+}
+
+interface ProviderRetractionTargetCommon {
+  readonly nativeIdentifier?: ProviderRetractionTargetNativeIdentifierInput
+}
+
 export type ProviderRetractionTargetInput =
-  | {
+  | (ProviderRetractionTargetCommon & {
       readonly role: 'primary-output'
       readonly resourceType: 'Observation'
       /** Exact closed output role used when the active Observation was emitted. */
       readonly outputRole: string
       /** Exact closed discriminator paired with the output role in the catalog. */
       readonly outputDiscriminator: string
-    }
-  | {
+    })
+  | (ProviderRetractionTargetCommon & {
       readonly role: 'source-artifact'
       readonly resourceType: 'DocumentReference'
       readonly formatCode: 'provider-recording'
       readonly partIndex: '0'
-    }
-  | {
+    })
+  | (ProviderRetractionTargetCommon & {
       readonly role: 'device-snapshot'
       readonly resourceType: 'Device'
       readonly priorEventSequence: string
       readonly deviceRole: DeviceSnapshotRole
       readonly sourceDeviceToken: string
-    }
+    })
 
 export interface ProviderRetractionInput<
   Provider extends ConnectedProvider = ConnectedProvider,
@@ -148,18 +163,27 @@ const comparePositiveDecimals = (left: string, right: string): -1 | 0 | 1 => {
   return left < right ? -1 : 1
 }
 
+const nativeIdentifierSchema = z
+  .strictObject({
+    system: absoluteUriSchema,
+    value: nonBlankStringSchema,
+  })
+  .optional()
+
 const retractionTargetSchema = z.discriminatedUnion('role', [
   z.strictObject({
     role: z.literal('primary-output'),
     resourceType: z.literal('Observation'),
     outputRole: nonBlankStringSchema,
     outputDiscriminator: nonBlankStringSchema,
+    nativeIdentifier: nativeIdentifierSchema,
   }),
   z.strictObject({
     role: z.literal('source-artifact'),
     resourceType: z.literal('DocumentReference'),
     formatCode: z.literal('provider-recording'),
     partIndex: z.literal('0'),
+    nativeIdentifier: nativeIdentifierSchema,
   }),
   z.strictObject({
     role: z.literal('device-snapshot'),
@@ -167,6 +191,7 @@ const retractionTargetSchema = z.discriminatedUnion('role', [
     priorEventSequence: z.string().regex(POSITIVE_DECIMAL),
     deviceRole: z.enum(['application', 'host', 'recording-device']),
     sourceDeviceToken: nonBlankStringSchema,
+    nativeIdentifier: nativeIdentifierSchema,
   }),
 ])
 
@@ -304,16 +329,8 @@ export const parseProviderRetractionInput = (
 ): Result<ProviderRetractionInput> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  let parsed: ReturnType<typeof retractionInputSchema.safeParse>
-  try {
-    parsed = retractionInputSchema.safeParse(snapshot.value)
-  } catch {
-    return err(
-      'schema-invalid',
-      'Provider retraction input validation could not safely inspect the supplied value.',
-    )
-  }
-  if (!parsed.success) return issues(parsed.error.issues.map(normalizeZodIssue))
+  const parsed = retractionInputSchema.safeParse(snapshot.value)
+  if (!parsed.success) return issues(parsed.error.issues.map(zodIssueToIssue))
   const value = parsed.data as unknown as ProviderRetractionInput
   const findings = validateInput(value)
   if (findings.length > 0) return issues(findings)
@@ -367,31 +384,53 @@ const compareCanonicalText = (left: string, right: string): -1 | 0 | 1 => {
   return left < right ? -1 : 1
 }
 
+interface TargetRoleExtension {
+  readonly url: string
+  readonly valueCode: RetractionTargetRole
+}
+
+interface TargetNativeIdentifierExtension {
+  readonly url: string
+  readonly valueIdentifier: ProviderRetractionTargetNativeIdentifierInput
+}
+
+interface TargetReference {
+  readonly extension:
+    | readonly [TargetRoleExtension]
+    | readonly [TargetRoleExtension, TargetNativeIdentifierExtension]
+  readonly identifier: ReturnType<typeof identifier>
+  readonly type: string
+}
+
+const nativeIdentifierOf = (
+  target: TargetReference,
+): ProviderRetractionTargetNativeIdentifierInput | undefined =>
+  target.extension[1]?.valueIdentifier
+
 const compareTargetReferences = (
-  left: {
-    readonly extension: readonly [{ readonly valueCode: RetractionTargetRole }]
-    readonly identifier: ReturnType<typeof identifier>
-    readonly type: string
-  },
-  right: {
-    readonly extension: readonly [{ readonly valueCode: RetractionTargetRole }]
-    readonly identifier: ReturnType<typeof identifier>
-    readonly type: string
-  },
-): number =>
-  compareCanonicalText(
-    left.extension[0].valueCode,
-    right.extension[0].valueCode,
-  ) ||
-  compareCanonicalText(left.type, right.type) ||
-  compareCanonicalText(
-    left.identifier.system ?? '',
-    right.identifier.system ?? '',
-  ) ||
-  compareCanonicalText(
-    left.identifier.value ?? '',
-    right.identifier.value ?? '',
+  left: TargetReference,
+  right: TargetReference,
+): number => {
+  const leftNative = nativeIdentifierOf(left)
+  const rightNative = nativeIdentifierOf(right)
+  return (
+    compareCanonicalText(
+      left.extension[0].valueCode,
+      right.extension[0].valueCode,
+    ) ||
+    compareCanonicalText(left.type, right.type) ||
+    compareCanonicalText(
+      left.identifier.system ?? '',
+      right.identifier.system ?? '',
+    ) ||
+    compareCanonicalText(
+      left.identifier.value ?? '',
+      right.identifier.value ?? '',
+    ) ||
+    compareCanonicalText(leftNative?.system ?? '', rightNative?.system ?? '') ||
+    compareCanonicalText(leftNative?.value ?? '', rightNative?.value ?? '')
   )
+}
 
 /**
  * Builds one append-only source-retraction assertion.
@@ -440,23 +479,25 @@ export const buildProviderRetractionBundle = (
       )
   if (hostIdentity !== undefined && !hostIdentity.ok) return hostIdentity
 
-  const targetReferences: Array<{
-    readonly extension: readonly [
-      { readonly url: string; readonly valueCode: RetractionTargetRole },
-    ]
-    readonly identifier: ReturnType<typeof identifier>
-    readonly type: string
-  }> = []
+  const targetReferences: TargetReference[] = []
   for (const target of validated.targets) {
     const targetIdentifier = deriveTargetIdentifier(validated, target)
     if (!targetIdentifier.ok) return targetIdentifier
+    const role: TargetRoleExtension = {
+      url: EXTENSIONS.retractionTargetRole,
+      valueCode: target.role,
+    }
     targetReferences.push({
-      extension: [
-        {
-          url: EXTENSIONS.retractionTargetRole,
-          valueCode: target.role,
-        },
-      ],
+      extension:
+        target.nativeIdentifier === undefined ?
+          [role]
+        : [
+            role,
+            {
+              url: EXTENSIONS.retractionTargetNativeIdentifier,
+              valueIdentifier: target.nativeIdentifier,
+            },
+          ],
       type: target.resourceType,
       identifier: identifier(targetIdentifier.value),
     })

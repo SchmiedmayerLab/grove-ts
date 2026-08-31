@@ -9,12 +9,6 @@
 import { sha1 } from '@noble/hashes/legacy.js'
 import { z } from 'zod'
 import {
-  groveRecordingFormatRegistry,
-  providerAdapterCatalog,
-  providerRawOutputRoles,
-  type ProviderRecordingFormat,
-} from '../contract/providers.generated.js'
-import {
   assemblerAgent,
   coding,
   deduplicateIdentifiedEntries,
@@ -29,9 +23,9 @@ import {
 } from './graph.js'
 import {
   deriveApplicationEntryIdentity,
-  deriveDeviceSnapshotEntryIdentity,
   deriveProviderIdentities,
   deriveWriterRecordIdentifier,
+  resolveHostIdentity,
 } from './identity.js'
 import {
   EXTENSIONS,
@@ -47,7 +41,6 @@ import {
   governedSourceIdentifierIssues,
   governedSourceIdentifierSchema,
   nonBlankStringSchema,
-  normalizeZodIssue,
   primitiveInstantSchema,
   providerPatientReferenceSchema,
   providerScopeIdentifierIssues,
@@ -62,13 +55,21 @@ import type {
   Sha1Base64,
 } from './types.js'
 import {
+  groveRecordingFormatRegistry,
+  providerAdapterCatalog,
+  providerRawOutputRoles,
+  type ProviderRecordingFormat,
+} from '../contract/providers.generated.js'
+import {
   cloneJsonValue,
   deepFreeze,
   err,
   issues,
   ok,
-  parseAbsoluteUri,
+  decodeCanonicalBase64,
+  encodeBase64,
   parseFhirInstant,
+  zodIssueToIssue,
   type Issue,
   type Result,
 } from '../core/index.js'
@@ -79,61 +80,18 @@ import {
   type GroveMobileExchangeBundle,
 } from '../r4/index.js'
 
-const BASE64_ALPHABET =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 const BASE64 = /^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{2}==|[A-Za-z\d+/]{3}=)?$/u
 const MEDIA_TYPE = /^[A-Za-z\d!#$&^_.+-]+\/[A-Za-z\d!#$&^_.+-]+$/u
 
-const encodeBase64 = (bytes: Uint8Array): string => {
-  let output = ''
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-  for (let index = 0; index < bytes.length; index += 3) {
-    const first = view.getUint8(index)
-    const second = bytes[index + 1]
-    const third = bytes[index + 2]
-    const block = (first << 16) | ((second ?? 0) << 8) | (third ?? 0)
-    output += BASE64_ALPHABET.charAt((block >>> 18) & 63)
-    output += BASE64_ALPHABET.charAt((block >>> 12) & 63)
-    output +=
-      second === undefined ? '=' : BASE64_ALPHABET.charAt((block >>> 6) & 63)
-    output += third === undefined ? '=' : BASE64_ALPHABET.charAt(block & 63)
-  }
-  return output
-}
-
-const decodeBase64 = (value: string): Uint8Array => {
-  let padding = 0
-  if (value.endsWith('==')) padding = 2
-  else if (value.endsWith('=')) padding = 1
-  const bytes = new Uint8Array((value.length / 4) * 3 - padding)
-  let outputIndex = 0
-  for (let index = 0; index < value.length; index += 4) {
-    const first = BASE64_ALPHABET.indexOf(value.charAt(index))
-    const second = BASE64_ALPHABET.indexOf(value.charAt(index + 1))
-    const thirdCharacter = value.charAt(index + 2)
-    const fourthCharacter = value.charAt(index + 3)
-    const third =
-      thirdCharacter === '=' ? 0 : BASE64_ALPHABET.indexOf(thirdCharacter)
-    const fourth =
-      fourthCharacter === '=' ? 0 : BASE64_ALPHABET.indexOf(fourthCharacter)
-    const block = (first << 18) | (second << 12) | (third << 6) | fourth
-    bytes[outputIndex++] = block >>> 16
-    if (thirdCharacter !== '=') bytes[outputIndex++] = block >>> 8
-    if (fourthCharacter !== '=') bytes[outputIndex++] = block
-  }
-  return bytes
-}
-
-const decodeCanonicalBase64 = (value: string): Uint8Array | undefined => {
-  if (value.length === 0 || !BASE64.test(value)) return undefined
-  const bytes = decodeBase64(value)
-  return encodeBase64(bytes) === value ? bytes : undefined
-}
+const decodeRecordingBase64 = (value: string): Uint8Array | undefined =>
+  value.length === 0 || !BASE64.test(value) ?
+    undefined
+  : decodeCanonicalBase64(value)
 
 export const parseCanonicalBase64 = (
   value: unknown,
 ): Result<CanonicalBase64> => {
-  if (typeof value !== 'string' || decodeCanonicalBase64(value) === undefined) {
+  if (typeof value !== 'string' || decodeRecordingBase64(value) === undefined) {
     return err(
       'invalid-code',
       'Expected non-empty, canonically padded RFC 4648 base64.',
@@ -155,7 +113,7 @@ export const parseSha1Base64 = (value: unknown): Result<Sha1Base64> => {
   if (typeof value !== 'string') {
     return err('invalid-code', 'Expected a base64-encoded SHA-1 digest.')
   }
-  const decoded = decodeCanonicalBase64(value)
+  const decoded = decodeRecordingBase64(value)
   if (decoded?.length !== 20) {
     return err(
       'invalid-code',
@@ -303,16 +261,8 @@ export const parseProviderRecordingBundleInput = (
 ): Result<ProviderRecordingBundleInput> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  let parsed: ReturnType<typeof recordingBundleInputSchema.safeParse>
-  try {
-    parsed = recordingBundleInputSchema.safeParse(snapshot.value)
-  } catch {
-    return err(
-      'schema-invalid',
-      'Provider recording input validation could not safely inspect the supplied value.',
-    )
-  }
-  if (!parsed.success) return issues(parsed.error.issues.map(normalizeZodIssue))
+  const parsed = recordingBundleInputSchema.safeParse(snapshot.value)
+  if (!parsed.success) return issues(parsed.error.issues.map(zodIssueToIssue))
 
   const findings: Issue[] = []
   findings.push(
@@ -382,50 +332,40 @@ export const parseProviderRecordingBundleInput = (
     }
   }
 
-  const declaredFormat =
+  const declaredContentTypes: readonly string[] =
     groveRecordingFormatRegistry.formats[parsed.data.attachment.format]
-  if (parsed.data.attachment.contentType !== declaredFormat.contentType) {
+      .contentTypes
+  if (!declaredContentTypes.includes(parsed.data.attachment.contentType)) {
     findings.push({
       severity: 'error',
       code: 'value-mismatch',
       path: ['attachment', 'contentType'],
-      message: `Recording contentType must be ${declaredFormat.contentType} for the declared ${parsed.data.attachment.format} registry format.`,
+      message: `Recording contentType must be one of ${declaredContentTypes.join(', ')} for the declared ${parsed.data.attachment.format} registry format.`,
     })
   }
 
   if (findings.length === 0) {
-    const providerScopeSystem = parseAbsoluteUri(
-      parsed.data.source.providerScopeIdentifier.system,
-    )
-    if (!providerScopeSystem.ok) {
-      findings.push(...providerScopeSystem.issues)
-    } else {
-      const identity = deriveProviderIdentities({
-        provider: parsed.data.source.adapter.provider,
-        providerScopeIdentifier: {
-          system: providerScopeSystem.value,
-          value: parsed.data.source.providerScopeIdentifier.value,
-          assurance: parsed.data.source.providerScopeIdentifier.assurance,
+    const identity = deriveProviderIdentities({
+      provider: parsed.data.source.adapter.provider,
+      providerScopeIdentifier: parsed.data.source.providerScopeIdentifier,
+      sourceType: parsed.data.source.sourceType,
+      sourceNativeId: parsed.data.source.sourceNativeId,
+      outputs: [
+        {
+          kind: 'provider-output',
+          outputRole: PROVIDER_RECORDING_OUTPUT_ROLE,
+          outputDiscriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
         },
-        sourceType: parsed.data.source.sourceType,
-        sourceNativeId: parsed.data.source.sourceNativeId,
-        outputs: [
-          {
-            kind: 'provider-output',
-            outputRole: PROVIDER_RECORDING_OUTPUT_ROLE,
-            outputDiscriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
-          },
-          {
-            kind: 'provider-artifact',
-            formatCode: parsed.data.attachment.format,
-            partIndex: '0',
-          },
-        ],
-        eventSequence: parsed.data.eventSequence,
-        deployment: parsed.data.deploymentIdentity,
-      })
-      if (!identity.ok) findings.push(...identity.issues)
-    }
+        {
+          kind: 'provider-artifact',
+          formatCode: parsed.data.attachment.format,
+          partIndex: '0',
+        },
+      ],
+      eventSequence: parsed.data.eventSequence,
+      deployment: parsed.data.deploymentIdentity,
+    })
+    if (!identity.ok) findings.push(...identity.issues)
   }
 
   if (findings.length > 0) return issues(findings)
@@ -499,38 +439,24 @@ const resolveRecordingGraphIdentities = (
     input.application,
   )
   if (!application.ok) return application
-  const applicationHost =
-    input.application.host === undefined ?
-      undefined
-    : deriveDeviceSnapshotEntryIdentity(
-        input.deploymentIdentity,
-        connected.value.event,
-        input.application.host.sourceDeviceToken,
-        'host',
-        input.application.host.id,
-      )
-  if (applicationHost !== undefined && !applicationHost.ok) {
-    return applicationHost
-  }
+  const applicationHost = resolveHostIdentity(
+    input.application,
+    input.deploymentIdentity,
+    connected.value.event,
+  )
+  if (!applicationHost.ok) return applicationHost
   const dataOrigin = deriveApplicationEntryIdentity(
     input.deploymentIdentity,
     connected.value.event,
     input.source.dataOrigin,
   )
   if (!dataOrigin.ok) return dataOrigin
-  const dataOriginHost =
-    input.source.dataOrigin.host === undefined ?
-      undefined
-    : deriveDeviceSnapshotEntryIdentity(
-        input.deploymentIdentity,
-        connected.value.event,
-        input.source.dataOrigin.host.sourceDeviceToken,
-        'host',
-        input.source.dataOrigin.host.id,
-      )
-  if (dataOriginHost !== undefined && !dataOriginHost.ok) {
-    return dataOriginHost
-  }
+  const dataOriginHost = resolveHostIdentity(
+    input.source.dataOrigin,
+    input.deploymentIdentity,
+    connected.value.event,
+  )
+  if (!dataOriginHost.ok) return dataOriginHost
 
   const writerRecord =
     input.source.writerRecord === undefined ?
@@ -550,10 +476,10 @@ const resolveRecordingGraphIdentities = (
     provenance: provenance.value,
     application: application.value,
     dataOrigin: dataOrigin.value,
-    ...(applicationHost === undefined ?
+    ...(applicationHost.value === undefined ?
       {}
     : { applicationHost: applicationHost.value }),
-    ...(dataOriginHost === undefined ?
+    ...(dataOriginHost.value === undefined ?
       {}
     : { dataOriginHost: dataOriginHost.value }),
     ...(writerRecord === undefined ? {} : { writerRecord: writerRecord.value }),
@@ -577,7 +503,9 @@ const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
       ...(input.title === undefined ? {} : { title: input.title }),
     }
   }
-  const validatedBytes = decodeBase64(input.dataBase64)
+  // The parser already proved this is canonical base64, so decoding cannot fail.
+  const validatedBytes =
+    decodeCanonicalBase64(input.dataBase64) ?? new Uint8Array()
   return {
     contentType: input.contentType,
     data: input.dataBase64,

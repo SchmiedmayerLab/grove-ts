@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
+import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
 import type {
   AdapterMeasurementCatalog,
   ProviderRawOutputRoles,
   ProviderScalarOutputRoles,
 } from '../contract/providers.generated.js'
 import type { AbsoluteUri, FhirId, FhirInstant } from '../core/index.js'
-import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
 import type {
   ApplicationDeviceInput,
   CompleteIdentifierInput,

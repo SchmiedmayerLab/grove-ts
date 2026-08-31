@@ -74,6 +74,7 @@ type GroveExtensions = Readonly<{
   providerSourceType: string
   entryNodeKey: string
   retractionTargetRole: string
+  retractionTargetNativeIdentifier: string
   researchStudy: string
   writerRecordVersion: string
 }>
@@ -86,6 +87,8 @@ export const EXTENSIONS: GroveExtensions = {
   providerSourceType: `${groveProviderPackageCanonicals.providers}/StructureDefinition/provider-source-type`,
   entryNodeKey: groveMobileContract.extensions.entryNodeKey,
   retractionTargetRole: groveMobileContract.extensions.retractionTargetRole,
+  retractionTargetNativeIdentifier:
+    groveMobileContract.extensions.retractionTargetNativeIdentifier,
   researchStudy:
     'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',
   writerRecordVersion:

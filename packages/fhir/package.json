@@ -27,10 +27,6 @@
       "types": "./dist/questionnaire/index.d.ts",
       "default": "./dist/questionnaire/index.js"
     },
-    "./provenance": {
-      "types": "./dist/provenance/index.d.ts",
-      "default": "./dist/provenance/index.js"
-    },
     "./zod/r4": {
       "types": "./dist/zod/r4/index.d.ts",
       "default": "./dist/zod/r4/index.js"

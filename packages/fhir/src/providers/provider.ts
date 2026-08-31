@@ -8,14 +8,14 @@
 
 import { z } from 'zod'
 import {
-  providerRecordEffectiveRules,
-  providerScalarOutputDiscriminators,
-  providerScalarOutputRoles,
-} from '../contract/providers.generated.js'
-import { deriveProviderIdentities } from './identity.js'
+  deriveProviderIdentities,
+  type ProviderIdentities,
+} from './identity.js'
 import {
   connectedProviderExclusiveDefinitions,
-  type ProviderMeasurementDefinition,
+  sharedMeasurementDefinition,
+  violatesQuantityDomain,
+  type MeasurementDefinition,
 } from './measurement-definition.js'
 import {
   absoluteUriSchema,
@@ -42,27 +42,28 @@ import type {
   NormalizedProviderRecord,
 } from './types.js'
 import {
-  cloneJsonValue,
-  compareFhirInstants,
-  deepFreeze,
-  err,
-  issues,
-  ok,
-  parseAbsoluteUri,
-  type Issue,
-  type Result,
-} from '../core/index.js'
-import {
   sharedMobileMeasurementCatalog,
   type SharedMobileMeasurementKind,
 } from '../contract/measurement-catalog.generated.js'
+import {
+  providerRecordEffectiveRules,
+  providerScalarOutputDiscriminators,
+  providerScalarOutputRoles,
+} from '../contract/providers.generated.js'
+import {
+  cloneJsonValue,
+  compareFhirInstants,
+  deepFreeze,
+  issues,
+  mapResult,
+  ok,
+  zodIssueToIssue,
+  type Issue,
+  type Result,
+} from '../core/index.js'
 import type {
-  ChoiceQuantityMeasurementKind,
-  InstantCodedMeasurementKind,
-  InstantQuantityMeasurementKind,
+  MeasurementKindsWhere,
   MobileMeasurement,
-  PeriodCodedMeasurementKind,
-  PeriodQuantityMeasurementKind,
 } from '../mobile/types.js'
 
 type ParsedProviderMeasurement =
@@ -146,51 +147,56 @@ const periodEffectiveSchema = z
     { message: 'A measurement Period must not end before it starts.' },
   )
 
-const measurementKindsWhere = <Kind extends SharedMobileMeasurementKind>(
-  valueKind: 'codeableConcept' | 'quantity',
-  effective: 'Period' | 'dateTime' | 'dateTime-or-Period',
-  excluded?: SharedMobileMeasurementKind,
-): [Kind, ...Kind[]] =>
-  (
+// The value arguments decide the kinds, so a swapped pair cannot compile into a lie.
+const measurementKindsWhere = <
+  ValueKind extends 'codeableConcept' | 'quantity',
+  Effective extends 'Period' | 'dateTime' | 'dateTime-or-Period',
+  Excluded extends SharedMobileMeasurementKind = never,
+>(
+  valueKind: ValueKind,
+  effective: Effective,
+  excluded?: Excluded,
+): [
+  Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>,
+  ...Array<Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>>,
+] => {
+  const excludedKind: string | undefined = excluded
+  return (
     Object.keys(sharedMobileMeasurementCatalog) as SharedMobileMeasurementKind[]
   ).filter((kind) => {
     const definition = sharedMobileMeasurementCatalog[kind]
     return (
       definition.valueKind === valueKind &&
       definition.effective === effective &&
-      kind !== excluded
+      kind !== excludedKind
     )
-  }) as [Kind, ...Kind[]]
+  }) as [
+    Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>,
+    ...Array<Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>>,
+  ]
+}
 
 const instantQuantityMeasurementSchema = z.strictObject({
-  kind: z.enum(
-    measurementKindsWhere<InstantQuantityMeasurementKind>(
-      'quantity',
-      'dateTime',
-    ),
-  ),
+  kind: z.enum(measurementKindsWhere('quantity', 'dateTime')),
   value: z.number(),
   effective: instantEffectiveSchema,
 })
 
 const periodQuantityMeasurementSchema = z.strictObject({
-  kind: z.enum(
-    measurementKindsWhere<PeriodQuantityMeasurementKind>('quantity', 'Period'),
-  ),
+  kind: z.enum(measurementKindsWhere('quantity', 'Period')),
   value: z.number(),
   effective: periodEffectiveSchema,
 })
 
-const choiceQuantityMeasurementKinds =
-  measurementKindsWhere<ChoiceQuantityMeasurementKind>(
-    'quantity',
-    'dateTime-or-Period',
-  )
+const choiceQuantityMeasurementKinds = measurementKindsWhere(
+  'quantity',
+  'dateTime-or-Period',
+)
 const choiceQuantityMeasurementKindSet: ReadonlySet<string> = new Set(
   choiceQuantityMeasurementKinds,
 )
 const choiceQuantityMeasurementSchema = z.strictObject({
-  kind: z.custom<ChoiceQuantityMeasurementKind>(
+  kind: z.custom<(typeof choiceQuantityMeasurementKinds)[number]>(
     (value) =>
       typeof value === 'string' && choiceQuantityMeasurementKindSet.has(value),
     { message: 'Expected a catalog measurement with choice effective[x].' },
@@ -200,23 +206,14 @@ const choiceQuantityMeasurementSchema = z.strictObject({
 })
 
 const instantCodedMeasurementSchema = z.strictObject({
-  kind: z.enum(
-    measurementKindsWhere<InstantCodedMeasurementKind>(
-      'codeableConcept',
-      'dateTime',
-    ),
-  ),
+  kind: z.enum(measurementKindsWhere('codeableConcept', 'dateTime')),
   value: nonBlankStringSchema,
   effective: instantEffectiveSchema,
 })
 
 const periodCodedMeasurementSchema = z.strictObject({
   kind: z.enum(
-    measurementKindsWhere<PeriodCodedMeasurementKind>(
-      'codeableConcept',
-      'Period',
-      'sleep-stage',
-    ),
+    measurementKindsWhere('codeableConcept', 'Period', 'sleep-stage'),
   ),
   value: nonBlankStringSchema,
   effective: periodEffectiveSchema,
@@ -272,21 +269,10 @@ const measurementSchema: z.ZodType<ParsedProviderMeasurement> = z.union([
   sleepStageMeasurementSchema,
   exclusiveQuantityMeasurementSchema,
   exclusiveCodedMeasurementSchema,
-]) as unknown as z.ZodType<ParsedProviderMeasurement>
-
-interface NumericBoundary {
-  readonly value: number
-  readonly inclusive: boolean
-}
-
-const violatesMinimum = (value: number, boundary: NumericBoundary): boolean =>
-  value < boundary.value || (!boundary.inclusive && value === boundary.value)
-
-const violatesMaximum = (value: number, boundary: NumericBoundary): boolean =>
-  value > boundary.value || (!boundary.inclusive && value === boundary.value)
+])
 
 const effectiveKindMatches = (
-  definition: ProviderMeasurementDefinition,
+  definition: MeasurementDefinition,
   effectiveKind: 'date-time' | 'period',
 ): boolean =>
   definition.effective === 'dateTime-or-Period' ||
@@ -295,7 +281,7 @@ const effectiveKindMatches = (
 
 const violatesRequiredPeriodOrdering = (
   measurement: z.infer<typeof measurementSchema>,
-  definition: ProviderMeasurementDefinition,
+  definition: MeasurementDefinition,
 ): boolean => {
   if (
     measurement.effective.kind !== 'period' ||
@@ -310,30 +296,14 @@ const violatesRequiredPeriodOrdering = (
   return !ordering.ok || ordering.value !== -1
 }
 
-const violatesQuantityDomain = (
-  value: number,
-  definition: ProviderMeasurementDefinition,
-): boolean => {
-  const domain = definition.quantity?.valueDomain
-  if (domain === undefined) return false
-  return (
-    violatesMinimum(value, domain.minimum) ||
-    (domain.maximum !== undefined && violatesMaximum(value, domain.maximum)) ||
-    (domain.integerOnly && !Number.isInteger(value))
-  )
-}
-
 const refineMeasurement = (
   measurement: z.infer<typeof measurementSchema>,
   path: ReadonlyArray<number | string>,
   context: z.core.$RefinementCtx,
 ) => {
   const measurementDefinition =
-    (
-      sharedMobileMeasurementCatalog as unknown as Readonly<
-        Record<string, ProviderMeasurementDefinition>
-      >
-    )[measurement.kind] ?? exclusiveDefinitions[measurement.kind]
+    sharedMeasurementDefinition(measurement.kind) ??
+    exclusiveDefinitions[measurement.kind]
   if (measurementDefinition === undefined) {
     context.addIssue({
       code: 'custom',
@@ -358,10 +328,12 @@ const refineMeasurement = (
       message: `The ${measurement.kind} Period must satisfy its catalog-owned nonzero-duration rule.`,
     })
   }
+  const allowedValues: readonly string[] | undefined =
+    measurementDefinition.allowedValues
   if (
     'value' in measurement &&
     typeof measurement.value === 'string' &&
-    measurementDefinition.allowedValues?.includes(measurement.value) !== true
+    allowedValues?.includes(measurement.value) !== true
   ) {
     context.addIssue({
       code: 'custom',
@@ -443,17 +415,6 @@ const providerMeasurementBundleInputSchema = z
       .optional(),
   })
   .superRefine(refineMeasurements)
-
-export const normalizeZodIssue = (entry: z.core.$ZodIssue): Issue => ({
-  severity: 'error',
-  code: 'schema-invalid',
-  path: entry.path.map((component) =>
-    typeof component === 'symbol' ?
-      (component.description ?? component.toString())
-    : component,
-  ),
-  message: entry.message,
-})
 
 const providerSourceMapping = (
   provider: ConnectedProvider,
@@ -691,16 +652,8 @@ export const parseNormalizedProviderRecord = (
 ): Result<NormalizedProviderRecord> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  let result: ReturnType<typeof normalizedProviderRecordSchema.safeParse>
-  try {
-    result = normalizedProviderRecordSchema.safeParse(snapshot.value)
-  } catch {
-    return err(
-      'schema-invalid',
-      'Provider record validation could not safely inspect the supplied value.',
-    )
-  }
-  if (!result.success) return issues(result.error.issues.map(normalizeZodIssue))
+  const result = normalizedProviderRecordSchema.safeParse(snapshot.value)
+  if (!result.success) return issues(result.error.issues.map(zodIssueToIssue))
   const mappingIssues = recordMappingIssues(result.data)
   if (mappingIssues.length > 0) return issues(mappingIssues)
   return ok(
@@ -708,22 +661,20 @@ export const parseNormalizedProviderRecord = (
   )
 }
 
-/** Strict runtime boundary for the complete deterministic graph input. */
-export const parseProviderMeasurementBundleInput = (
+/** The validated graph input together with the identities its derivation proved. */
+export interface ParsedProviderMeasurementBundle {
+  readonly input: ProviderMeasurementBundleInput
+  readonly identities: ProviderIdentities
+}
+
+/** Strict runtime boundary that also derives the graph identities exactly once. */
+export const parseProviderMeasurementBundle = (
   input: unknown,
-): Result<ProviderMeasurementBundleInput> => {
+): Result<ParsedProviderMeasurementBundle> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  let result: ReturnType<typeof providerMeasurementBundleInputSchema.safeParse>
-  try {
-    result = providerMeasurementBundleInputSchema.safeParse(snapshot.value)
-  } catch {
-    return err(
-      'schema-invalid',
-      'Provider graph input validation could not safely inspect the supplied value.',
-    )
-  }
-  if (!result.success) return issues(result.error.issues.map(normalizeZodIssue))
+  const result = providerMeasurementBundleInputSchema.safeParse(snapshot.value)
+  if (!result.success) return issues(result.error.issues.map(zodIssueToIssue))
   const disclosureIssues = governedSourceIdentifierIssues(
     result.data.nativeIdentifierDisclosure,
     result.data.source.sourceNativeId,
@@ -766,10 +717,11 @@ export const parseProviderMeasurementBundleInput = (
       },
     ])
   }
-  const outputCoordinates = result.data.measurements.map(({ kind }) =>
+  const sorted = sortMeasurements(result.data)
+  const outputCoordinates = sorted.measurements.map(({ kind }) =>
     providerOutputCoordinates(
-      result.data.source.adapter.provider,
-      result.data.source.sourceType,
+      sorted.source.adapter.provider,
+      sorted.source.sourceType,
       kind,
     ),
   )
@@ -788,19 +740,11 @@ export const parseProviderMeasurementBundleInput = (
       },
     ])
   }
-  const providerScopeSystem = parseAbsoluteUri(
-    result.data.source.providerScopeIdentifier.system,
-  )
-  if (!providerScopeSystem.ok) return providerScopeSystem
-  const identity = deriveProviderIdentities({
-    provider: result.data.source.adapter.provider,
-    providerScopeIdentifier: {
-      system: providerScopeSystem.value,
-      value: result.data.source.providerScopeIdentifier.value,
-      assurance: result.data.source.providerScopeIdentifier.assurance,
-    },
-    sourceType: result.data.source.sourceType,
-    sourceNativeId: result.data.source.sourceNativeId,
+  const identities = deriveProviderIdentities({
+    provider: sorted.source.adapter.provider,
+    providerScopeIdentifier: sorted.source.providerScopeIdentifier,
+    sourceType: sorted.source.sourceType,
+    sourceNativeId: sorted.source.sourceNativeId,
     outputs: definedOutputCoordinates.map(
       ({ outputRole, outputDiscriminator }) => ({
         kind: 'provider-output' as const,
@@ -808,11 +752,18 @@ export const parseProviderMeasurementBundleInput = (
         outputDiscriminator,
       }),
     ),
-    eventSequence: result.data.eventSequence,
-    deployment: result.data.deploymentIdentity,
+    eventSequence: sorted.eventSequence,
+    deployment: sorted.deploymentIdentity,
   })
-  if (!identity.ok) return identity
-  return ok(
-    deepFreeze(sortMeasurements(result.data)) as ProviderMeasurementBundleInput,
-  )
+  if (!identities.ok) return identities
+  return ok({
+    input: deepFreeze(sorted) as ProviderMeasurementBundleInput,
+    identities: identities.value,
+  })
 }
+
+/** Strict runtime boundary for the complete deterministic graph input. */
+export const parseProviderMeasurementBundleInput = (
+  input: unknown,
+): Result<ProviderMeasurementBundleInput> =>
+  mapResult(parseProviderMeasurementBundle(input), ({ input: value }) => value)
