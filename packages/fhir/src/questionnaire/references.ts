@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-/** Closed QuestionnaireResponse reference targets and literal/logical shapes. */
-
 import { isR4ResourceType } from './r4-resource-types.js'
 import { parseAbsoluteUri } from '../core/index.js'
 
@@ -21,6 +19,9 @@ const asRecord = (value: unknown): UnknownRecord | undefined =>
 const FHIR_ID = /^[A-Za-z\d\-.]{1,64}$/u
 const TYPED_LITERAL_REFERENCE =
   /(?:^|\/)([A-Z][A-Za-z\d]*)\/([A-Za-z\d\-.]{1,64})(?:\/_history\/[A-Za-z\d\-.]{1,64})?$/u
+
+export const QUESTIONNAIRE_RESPONSE_SUBJECT_TYPES: ReadonlySet<string> =
+  new Set(['Patient'])
 
 export const QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES: ReadonlySet<string> = new Set(
   [

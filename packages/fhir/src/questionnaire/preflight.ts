@@ -11,6 +11,7 @@ import {
   extensionsFor,
   firstExtensionValue,
   QUESTIONNAIRE_EXTENSIONS,
+  QUESTIONNAIRE_SYSTEMS,
   validateQuestionnaireContract,
 } from './contract.js'
 import {
@@ -46,16 +47,11 @@ import {
   type Result,
 } from '../core/index.js'
 
-/* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 canonicals are normative HTTP URIs. */
-
 const completedStatuses = new Set(['amended', 'completed'])
-const VERSION_ALGORITHM =
-  'http://hl7.org/fhir/StructureDefinition/artifact-versionAlgorithm'
-const VERSION_ALGORITHM_SYSTEM = 'http://hl7.org/fhir/version-algorithm'
-const COMPLETION_MODE =
-  'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode'
-const PARTICIPATION_MODE =
-  'http://terminology.hl7.org/CodeSystem/v3-ParticipationMode'
+const VERSION_ALGORITHM = QUESTIONNAIRE_EXTENSIONS.versionAlgorithm
+const VERSION_ALGORITHM_SYSTEM = QUESTIONNAIRE_SYSTEMS.versionAlgorithm
+const COMPLETION_MODE = QUESTIONNAIRE_EXTENSIONS.completionMode
+const PARTICIPATION_MODE = QUESTIONNAIRE_SYSTEMS.participationMode
 
 const validateQuestionnaireEnvelope = (
   questionnaire: QuestionnairePair['questionnaire'],
@@ -423,7 +419,6 @@ export const preflightQuestionnairePair = (
     : prefixed(questionnaire.issues, 'questionnaire')),
     ...(response.ok ? [] : prefixed(response.issues, 'response')),
   ]
-  if (parseFailures.length > 0) return issues(parseFailures)
   if (!questionnaire.ok || !response.ok) return issues(parseFailures)
 
   const failures: Issue[] = [

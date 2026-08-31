@@ -6,13 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { Issue } from '../core/index.js'
+import { issue, type Issue } from '../core/index.js'
 
-export const issue = (
-  code: Issue['code'],
-  path: Issue['path'],
-  message: string,
-): Issue => ({ severity: 'error', code, path, message })
+export { issue }
 
 export const warning = (
   code: Issue['code'],

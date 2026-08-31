@@ -14,8 +14,12 @@ import {
   type R4TemporalKind,
 } from './temporal.js'
 import type { QuestionnaireItemInput } from './types.js'
-import type { Issue } from '../core/index.js'
+import { issue, type Issue } from '../core/index.js'
 import type { Extension } from '../r4/index.js'
+
+/* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 canonicals are normative HTTP URIs. */
+
+export { issue }
 
 export const QUESTIONNAIRE_EXTENSIONS = {
   calculatedExpression:
@@ -50,6 +54,16 @@ export const QUESTIONNAIRE_EXTENSIONS = {
   unitValueSet:
     'http://hl7.org/fhir/StructureDefinition/questionnaire-unitValueSet',
   variable: 'http://hl7.org/fhir/StructureDefinition/variable',
+  versionAlgorithm:
+    'http://hl7.org/fhir/StructureDefinition/artifact-versionAlgorithm',
+  completionMode:
+    'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode',
+} as const
+
+export const QUESTIONNAIRE_SYSTEMS = {
+  versionAlgorithm: 'http://hl7.org/fhir/version-algorithm',
+  participationMode:
+    'http://terminology.hl7.org/CodeSystem/v3-ParticipationMode',
 } as const
 
 export interface ExtensionElement {
@@ -151,12 +165,6 @@ export const populatedQuestionnaireAnswerKey = (
   questionnaireAnswerValueKeys.find(
     (key) => Reflect.get(value, key) !== undefined,
   )
-
-export const issue = (
-  code: Issue['code'],
-  path: Issue['path'],
-  message: string,
-): Issue => ({ severity: 'error', code, path, message })
 
 export const extensionsFor = (
   element: ExtensionElement,

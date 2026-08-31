@@ -7,7 +7,6 @@
 //
 
 import { type z } from 'zod'
-import { groveQuestionnaireProfileCanonicals } from '../contract/questionnaire.generated.js'
 import {
   extensionValue,
   extensionsFor,
@@ -15,10 +14,15 @@ import {
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
 import {
+  QUESTIONNAIRE_EXTENSIONS,
+  QUESTIONNAIRE_SYSTEMS,
+} from './questionnaire-extensions.js'
+import {
   isExactQuestionnaireUrl,
   isQuestionnaireResponseReference,
   QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES,
   QUESTIONNAIRE_RESPONSE_SOURCE_TYPES,
+  QUESTIONNAIRE_RESPONSE_SUBJECT_TYPES,
 } from './references.js'
 import { questionnaireResponseSchema, questionnaireSchema } from './schemas.js'
 import type {
@@ -27,29 +31,26 @@ import type {
   QuestionnaireItemInput,
   QuestionnaireResponseItemInput,
 } from './types.js'
+import { groveQuestionnaireProfileCanonicals } from '../contract/questionnaire.generated.js'
 import {
   cloneJsonValue,
   deepFreeze,
-  err,
+  issue,
   issues,
   ok,
   parseAbsoluteUri,
   parseCanonical,
   parseSemVer,
+  zodIssueToIssue,
   type Issue,
   type Result,
 } from '../core/index.js'
 import type { Extension } from '../r4/index.js'
 
-/* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 canonicals are normative HTTP URIs. */
-
-const VERSION_ALGORITHM =
-  'http://hl7.org/fhir/StructureDefinition/artifact-versionAlgorithm'
-const VERSION_ALGORITHM_SYSTEM = 'http://hl7.org/fhir/version-algorithm'
-const COMPLETION_MODE =
-  'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode'
-const PARTICIPATION_MODE =
-  'http://terminology.hl7.org/CodeSystem/v3-ParticipationMode'
+const VERSION_ALGORITHM = QUESTIONNAIRE_EXTENSIONS.versionAlgorithm
+const VERSION_ALGORITHM_SYSTEM = QUESTIONNAIRE_SYSTEMS.versionAlgorithm
+const COMPLETION_MODE = QUESTIONNAIRE_EXTENSIONS.completionMode
+const PARTICIPATION_MODE = QUESTIONNAIRE_SYSTEMS.participationMode
 
 const extensionValueKeys = [
   'valueBoolean',
@@ -73,12 +74,6 @@ const extensionValueKeys = [
   'valueUrl',
 ] as const
 
-const issue = (
-  code: Issue['code'],
-  path: Issue['path'],
-  message: string,
-): Issue => ({ severity: 'error', code, path, message })
-
 const objectPart = (value: unknown, property: string): unknown =>
   typeof value === 'object' && value !== null ?
     Reflect.get(value, property)
@@ -97,17 +92,6 @@ export const isExactQuestionnaireCanonical = (value: unknown): boolean => {
     parseSemVer(version).ok
   )
 }
-
-const normalizeIssue = (entry: z.core.$ZodIssue): Issue => ({
-  severity: 'error',
-  code: 'schema-invalid',
-  path: entry.path.map((component) =>
-    typeof component === 'symbol' ?
-      (component.description ?? component.toString())
-    : component,
-  ),
-  message: entry.message,
-})
 
 const exactProfileIssues = (
   resource: {
@@ -218,6 +202,16 @@ const questionnaireContractIssues = (
       ),
     )
   }
+  const subjectTypes = questionnaire.subjectType ?? []
+  if (subjectTypes.length !== 1 || subjectTypes[0] !== 'Patient') {
+    failures.push(
+      issue(
+        'value-mismatch',
+        ['subjectType'],
+        'Questionnaire.subjectType is fixed to exactly Patient.',
+      ),
+    )
+  }
   const algorithms = extensionsFor(
     { extension: questionnaire.extension ?? [] },
     VERSION_ALGORITHM,
@@ -280,8 +274,17 @@ const responseContractIssues = (
       ),
     )
   }
+  if (response.subject === undefined) {
+    failures.push(
+      issue(
+        'missing-required',
+        ['subject'],
+        'QuestionnaireResponse.subject is mandatory and references exactly one Patient.',
+      ),
+    )
+  }
   for (const [field, reference, allowedTypes] of [
-    ['subject', response.subject, undefined],
+    ['subject', response.subject, QUESTIONNAIRE_RESPONSE_SUBJECT_TYPES],
     ['author', response.author, QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES],
     ['source', response.source, QUESTIONNAIRE_RESPONSE_SOURCE_TYPES],
   ] as const) {
@@ -339,16 +342,9 @@ const responseContractIssues = (
 const parseWith = <T>(schema: z.ZodType<T>, input: unknown): Result<T> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  try {
-    const result = schema.safeParse(snapshot.value)
-    if (!result.success) return issues(result.error.issues.map(normalizeIssue))
-    return ok(deepFreeze(result.data) as T)
-  } catch {
-    return err(
-      'schema-invalid',
-      'Questionnaire JSON validation could not safely inspect the supplied value.',
-    )
-  }
+  const result = schema.safeParse(snapshot.value)
+  if (!result.success) return issues(result.error.issues.map(zodIssueToIssue))
+  return ok(deepFreeze(result.data) as T)
 }
 
 export const parseQuestionnaire = (

@@ -30,6 +30,7 @@ import type { Extension } from '../r4/index.js'
 
 export {
   QUESTIONNAIRE_EXTENSIONS,
+  QUESTIONNAIRE_SYSTEMS,
   boundIsOrdered,
   expectedQuestionnaireAnswerKeys,
   extensionValue,

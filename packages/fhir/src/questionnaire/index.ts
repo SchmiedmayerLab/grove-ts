@@ -8,7 +8,6 @@
 
 export { buildQuestionnaire, buildQuestionnaireResponse } from './builder.js'
 export {
-  groveFhirContractVersion,
   groveFhirVersion,
   groveQuestionnairePackageMetadata,
 } from '../contract/questionnaire.generated.js'

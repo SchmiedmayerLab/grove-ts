@@ -10,7 +10,6 @@ import type {
   QuestionnaireItem as R4QuestionnaireItem,
   QuestionnaireResponseItem as R4QuestionnaireResponseItem,
   QuestionnaireResponseItemAnswer as R4QuestionnaireResponseItemAnswer,
-  Resource as R4Resource,
 } from 'fhir/r4.js'
 import { z } from 'zod'
 import { isR4ResourceType } from './r4-resource-types.js'
@@ -31,7 +30,7 @@ import {
   metaSchema,
   primitiveElementSchema,
   quantitySchema,
-  referenceSchema,
+  resolvableReferenceSchema,
 } from '../r4/schemas.js'
 
 const primitiveMetadata = primitiveElementSchema.optional()
@@ -103,12 +102,13 @@ const answerQuantitySchema = quantitySchema.refine(
   'Quantity answer values cannot be empty.',
 )
 
+// A contained resource keeps the issuer's own shape; only its type code and id are Grove's.
 const containedResourceSchema = z.looseObject({
   resourceType: z
     .string()
     .refine(isR4ResourceType, 'Unknown contained R4 ResourceType code.'),
   id: z.string().regex(/^[A-Za-z\d\-.]{1,64}$/u),
-}) as unknown as z.ZodType<R4Resource>
+})
 
 const resourceFields = {
   id: z.string().optional(),
@@ -411,8 +411,8 @@ const questionnaireResponseSchemaValue = z.strictObject({
   resourceType: z.literal('QuestionnaireResponse'),
   ...resourceFields,
   identifier: identifierSchema,
-  basedOn: z.array(referenceSchema).optional(),
-  partOf: z.array(referenceSchema).optional(),
+  basedOn: z.array(resolvableReferenceSchema).optional(),
+  partOf: z.array(resolvableReferenceSchema).optional(),
   questionnaire: z.string().min(1),
   _questionnaire: primitiveMetadata,
   status: z.enum([
@@ -423,12 +423,12 @@ const questionnaireResponseSchemaValue = z.strictObject({
     'stopped',
   ]),
   _status: primitiveMetadata,
-  subject: referenceSchema.optional(),
-  encounter: referenceSchema.optional(),
+  subject: resolvableReferenceSchema.optional(),
+  encounter: resolvableReferenceSchema.optional(),
   authored: r4InstantSchema,
   _authored: primitiveMetadata,
-  author: referenceSchema.optional(),
-  source: referenceSchema.optional(),
+  author: resolvableReferenceSchema.optional(),
+  source: resolvableReferenceSchema.optional(),
   item: z.array(questionnaireResponseItemSchema).optional(),
 })
 export const questionnaireResponseSchema: z.ZodType<GroveQuestionnaireResponse> =
@@ -541,7 +541,7 @@ export const questionnaireBuilderInputSchema: z.ZodType = z.strictObject({
   name: z.string().optional(),
   title: z.string().optional(),
   status: z.enum(['draft', 'active', 'retired', 'unknown']),
-  subjectTypes: z.array(z.string()).optional(),
+  subjectTypes: z.tuple([z.literal('Patient')]),
   date: z.string().optional(),
   description: z.string().optional(),
   purpose: z.string().optional(),
@@ -589,13 +589,13 @@ const builderReferenceSchema = (type: z.ZodType<string>): z.ZodType =>
     }),
   ])
 
-const subjectReferenceInputSchema = builderReferenceSchema(
-  z.string().refine(isR4ResourceType, 'Expected a FHIR R4 ResourceType code.'),
-)
+// The Grove profile fixes the response subject to Patient, so the shape boundary states it.
+const subjectReferenceInputSchema = builderReferenceSchema(z.literal('Patient'))
 // The shape boundary admits every R4 type so semantic validation can report
 // the field-specific author/source target rule alongside other input issues.
-const authorReferenceInputSchema = subjectReferenceInputSchema
-const sourceReferenceInputSchema = subjectReferenceInputSchema
+const actorReferenceInputSchema = builderReferenceSchema(
+  z.string().refine(isR4ResourceType, 'Expected a FHIR R4 ResourceType code.'),
+)
 
 /** Strict runtime boundary for the public QuestionnaireResponse builder input. */
 export const questionnaireResponseBuilderInputSchema: z.ZodType =
@@ -610,10 +610,10 @@ export const questionnaireResponseBuilderInputSchema: z.ZodType =
       'entered-in-error',
       'stopped',
     ]),
-    subject: subjectReferenceInputSchema.optional(),
+    subject: subjectReferenceInputSchema,
     authored: z.string(),
-    author: authorReferenceInputSchema.optional(),
-    source: sourceReferenceInputSchema.optional(),
+    author: actorReferenceInputSchema.optional(),
+    source: actorReferenceInputSchema.optional(),
     extensions: z.array(extensionSchema).optional(),
     items: z.array(questionnaireResponseBuilderItemSchema).optional(),
   })

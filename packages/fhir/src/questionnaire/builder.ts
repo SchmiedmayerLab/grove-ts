@@ -7,18 +7,21 @@
 //
 
 import type { z } from 'zod'
-import { groveQuestionnaireProfileCanonicals } from '../contract/questionnaire.generated.js'
 import {
   validateQuestionnaireContract,
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
 import { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
-import { isR4ResourceType } from './r4-resource-types.js'
+import {
+  QUESTIONNAIRE_EXTENSIONS,
+  QUESTIONNAIRE_SYSTEMS,
+} from './questionnaire-extensions.js'
 import {
   isExactQuestionnaireUrl,
   isQuestionnaireResponseBuilderReference,
   QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES,
   QUESTIONNAIRE_RESPONSE_SOURCE_TYPES,
+  QUESTIONNAIRE_RESPONSE_SUBJECT_TYPES,
 } from './references.js'
 import {
   questionnaireBuilderInputSchema,
@@ -30,59 +33,32 @@ import type {
   QuestionnaireInput,
   QuestionnaireResponseInput,
 } from './types.js'
+import { groveQuestionnaireProfileCanonicals } from '../contract/questionnaire.generated.js'
 import {
   cloneJsonValue,
-  err,
+  issue,
   issues,
   parseAbsoluteUri,
   parseCanonical,
   parseFhirId,
   parseFhirInstant,
   parseSemVer,
+  zodIssueToIssue,
   type Issue,
   type Result,
 } from '../core/index.js'
 
-/* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 canonicals are normative HTTP URIs. */
-
-const VERSION_ALGORITHM =
-  'http://hl7.org/fhir/StructureDefinition/artifact-versionAlgorithm'
-const VERSION_ALGORITHM_SYSTEM = 'http://hl7.org/fhir/version-algorithm'
-const COMPLETION_MODE =
-  'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode'
-const PARTICIPATION_MODE =
-  'http://terminology.hl7.org/CodeSystem/v3-ParticipationMode'
-const issue = (
-  code: Issue['code'],
-  path: Issue['path'],
-  message: string,
-): Issue => ({ severity: 'error', code, path, message })
-
-const schemaIssue = (entry: z.core.$ZodIssue): Issue => ({
-  severity: 'error',
-  code: 'schema-invalid',
-  path: entry.path.map((component) =>
-    typeof component === 'symbol' ?
-      (component.description ?? component.toString())
-    : component,
-  ),
-  message: entry.message,
-})
-
+const VERSION_ALGORITHM = QUESTIONNAIRE_EXTENSIONS.versionAlgorithm
+const VERSION_ALGORITHM_SYSTEM = QUESTIONNAIRE_SYSTEMS.versionAlgorithm
+const COMPLETION_MODE = QUESTIONNAIRE_EXTENSIONS.completionMode
+const PARTICIPATION_MODE = QUESTIONNAIRE_SYSTEMS.participationMode
 const parseBuilderInput = <T>(schema: z.ZodType, input: unknown): Result<T> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  try {
-    const parsed = schema.safeParse(snapshot.value)
-    return parsed.success ?
-        ({ ok: true, value: parsed.data as T, warnings: [] } as const)
-      : issues(parsed.error.issues.map(schemaIssue))
-  } catch {
-    return err(
-      'schema-invalid',
-      'Questionnaire builder input could not be safely inspected.',
-    )
-  }
+  const parsed = schema.safeParse(snapshot.value)
+  return parsed.success ?
+      ({ ok: true, value: parsed.data as T, warnings: [] } as const)
+    : issues(parsed.error.issues.map(zodIssueToIssue))
 }
 
 const extensionCount = (
@@ -120,28 +96,6 @@ const validateQuestionnaireInput = (
   if (input.date !== undefined && !parseFhirInstant(input.date).ok) {
     failures.push(
       issue('invalid-date-time', ['date'], 'Questionnaire.date is invalid.'),
-    )
-  }
-  if (input.subjectTypes?.some((entry) => entry.trim() === '') === true) {
-    failures.push(
-      issue(
-        'missing-required',
-        ['subjectTypes'],
-        'Questionnaire.subjectTypes cannot contain empty resource type codes.',
-      ),
-    )
-  }
-  if (
-    input.subjectTypes?.some(
-      (entry) => entry.trim() !== '' && !isR4ResourceType(entry),
-    ) === true
-  ) {
-    failures.push(
-      issue(
-        'invalid-code',
-        ['subjectTypes'],
-        'Questionnaire.subjectTypes contains an unknown R4 ResourceType code.',
-      ),
     )
   }
   if (extensionCount(input.extensions, VERSION_ALGORITHM) > 0) {
@@ -193,9 +147,7 @@ export const buildQuestionnaire = (
       {}
     : { title: validatedInput.title }),
     status: validatedInput.status,
-    ...(validatedInput.subjectTypes === undefined ?
-      {}
-    : { subjectType: validatedInput.subjectTypes }),
+    subjectType: validatedInput.subjectTypes,
     ...(validatedInput.date === undefined ? {} : { date: validatedInput.date }),
     ...(validatedInput.description === undefined ?
       {}
@@ -253,19 +205,8 @@ const validateResponseInput = (
       issue('invalid-identifier', ['id'], 'Response.id is invalid.'),
     )
   }
-  if (
-    input.subject !== undefined &&
-    !isQuestionnaireResponseBuilderReference(input.subject)
-  ) {
-    failures.push(
-      issue(
-        'invalid-reference',
-        ['subject'],
-        'Response.subject requires one typed literal or identifier-only logical R4 Reference.',
-      ),
-    )
-  }
   for (const [field, reference, allowedTypes] of [
+    ['subject', input.subject, QUESTIONNAIRE_RESPONSE_SUBJECT_TYPES],
     ['author', input.author, QUESTIONNAIRE_RESPONSE_AUTHOR_TYPES],
     ['source', input.source, QUESTIONNAIRE_RESPONSE_SOURCE_TYPES],
   ] as const) {
@@ -330,9 +271,7 @@ export const buildQuestionnaireResponse = (
     identifier: validatedInput.identifier,
     questionnaire: validatedInput.questionnaire,
     status: validatedInput.status,
-    ...(validatedInput.subject === undefined ?
-      {}
-    : { subject: validatedInput.subject }),
+    subject: validatedInput.subject,
     authored: validatedInput.authored,
     ...(validatedInput.author === undefined ?
       {}

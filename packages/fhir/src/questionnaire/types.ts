@@ -153,7 +153,8 @@ export interface QuestionnaireInput {
   readonly name?: string
   readonly title?: string
   readonly status: Questionnaire['status']
-  readonly subjectTypes?: readonly R4ResourceType[]
+  /** Fixed by the Grove Questionnaire profile to exactly `Patient`. */
+  readonly subjectTypes: readonly ['Patient']
   readonly date?: FhirInstant
   readonly description?: string
   readonly purpose?: string
@@ -178,9 +179,9 @@ type TypedQuestionnaireResponseReference<ResourceType extends R4ResourceType> =
       identifier: QuestionnaireResponseIdentifierInput
     }>
 
-/** Any typed literal or identifier-only logical R4 subject Reference. */
+/** Typed literal or identifier-only logical Patient Reference. */
 export type QuestionnaireResponseSubjectInput =
-  TypedQuestionnaireResponseReference<R4ResourceType>
+  TypedQuestionnaireResponseReference<'Patient'>
 
 export type QuestionnaireResponseAuthorInput =
   TypedQuestionnaireResponseReference<
@@ -203,7 +204,7 @@ export interface QuestionnaireResponseInput {
   readonly questionnaire: Canonical
   readonly identifier: QuestionnaireResponseIdentifierInput
   readonly status: QuestionnaireResponse['status']
-  readonly subject?: QuestionnaireResponseSubjectInput
+  readonly subject: QuestionnaireResponseSubjectInput
   readonly authored: FhirInstant
   readonly author?: QuestionnaireResponseAuthorInput
   readonly source?: QuestionnaireResponseSourceInput
