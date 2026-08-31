@@ -7,10 +7,12 @@
 //
 
 import { expectTypeOf } from 'expect-type'
+import * as mobileContract from '../src/contract/measurement-catalog.generated.js'
 import {
   parseAbsoluteUri,
   parseFhirId,
   parseFhirInstant,
+  parseSemVer,
   type FhirInstant,
   type Result,
 } from '../src/core/index.js'
@@ -21,14 +23,12 @@ import {
   createEntryIdentity,
   deriveEntryFullUrl,
   encodeLengthFramedUtf8,
-  groveFhirContractVersion,
   groveFhirVersion,
   groveMobilePackageMetadata,
   mobileEffectiveCanonicalizationVectors,
   sharedMobileMeasurementCatalog,
   type MobileMeasurement,
 } from '../src/mobile/index.js'
-import * as mobileContract from '../src/contract/measurement-catalog.generated.js'
 
 const unwrap = <T>(result: Result<T>): T => {
   if (!result.ok) throw new Error(result.issues[0]?.message)
@@ -41,14 +41,19 @@ const instant = (value: string): FhirInstant => unwrap(parseFhirInstant(value))
 describe('source-neutral Mobile contract', () => {
   it('exports only source-neutral data, types, identity, and time contracts', () => {
     expect(groveFhirVersion).toBe('4.0.1')
-    expect(groveFhirContractVersion).toBe('0.6.0')
     expect(groveMobilePackageMetadata.packageId).toBe(
       'org.grovealliance.fhir.mobile',
     )
+    expect(parseSemVer(groveMobilePackageMetadata.version).ok).toBe(true)
     expect(Object.isFrozen(groveMobilePackageMetadata)).toBe(true)
+    expect(mobile.groveExchangeProtocol.schemaVersion).toBe(0)
     expect(mobile.groveExchangeProtocol.protocolVersion).toBe(0)
-    expect(mobile.groveMobileContract.version).toBe('0.6.0')
+    expect(mobile.groveExchangeProtocol).not.toHaveProperty('version')
+    expect(mobile.groveExchangeProtocol).not.toHaveProperty('releaseVersion')
+    expect(mobile.groveMobileContract).not.toHaveProperty('version')
+    expect(mobile.groveRecordingFormatRegistry).not.toHaveProperty('version')
     expect(Object.isFrozen(mobile.groveMobileContract)).toBe(true)
+    expect('groveFhirContractVersion' in mobile).toBe(false)
     expect('groveFhirExchangeIdentity' in mobile).toBe(false)
     expect('buildProviderMeasurementBundle' in mobile).toBe(false)
     expect('providerAdapterCatalog' in mobile).toBe(false)

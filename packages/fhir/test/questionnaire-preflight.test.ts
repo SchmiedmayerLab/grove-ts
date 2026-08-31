@@ -81,19 +81,16 @@ describe('Questionnaire pair preflight', () => {
   })
 
   it('requires the typed response subject to be admitted by Questionnaire.subjectType', () => {
-    const mismatched = buildQuestionnaireResponse({
-      ...responseInput(),
+    const result = preflightQuestionnairePair(questionnaire, {
+      ...response,
       subject: { type: 'Observation', reference: 'Observation/example' },
     })
-    expect(mismatched.ok).toBe(true)
-    if (!mismatched.ok) return
-    const result = preflightQuestionnairePair(questionnaire, mismatched.value)
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.issues).toContainEqual(
         expect.objectContaining({
-          code: 'value-mismatch',
-          path: ['response', 'subject', 'type'],
+          code: 'invalid-reference',
+          path: ['response', 'subject'],
         }),
       )
     }

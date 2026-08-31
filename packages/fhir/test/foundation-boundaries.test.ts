@@ -23,7 +23,7 @@ import {
   observationSchema,
   periodSchema,
   provenanceSchema,
-  referenceSchema,
+  resolvableReferenceSchema,
   sampledDataSchema,
 } from '../src/r4/index.js'
 
@@ -358,7 +358,7 @@ describe('bounded R4 schema invariants', () => {
       }).success,
     ).toBe(true)
     expect(
-      referenceSchema.safeParse({
+      resolvableReferenceSchema.safeParse({
         // FHIR R4 Reference.type is a URI naming the resource definition.
         type: 'http://hl7.org/fhir/StructureDefinition/Patient',
         identifier: {
@@ -368,7 +368,8 @@ describe('bounded R4 schema invariants', () => {
       }).success,
     ).toBe(true)
     expect(
-      referenceSchema.safeParse({ display: 'missing identity' }).success,
+      resolvableReferenceSchema.safeParse({ display: 'missing identity' })
+        .success,
     ).toBe(false)
 
     const provenance = {

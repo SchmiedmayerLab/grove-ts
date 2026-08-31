@@ -10,17 +10,22 @@ import { readFileSync } from 'node:fs'
 import { expectTypeOf } from 'expect-type'
 import { assert, property, uint8Array } from 'fast-check'
 import {
-  parseAbsoluteUri,
-  parseFhirId,
-  parseFhirInstant,
-  parseGroveMobileExchangeBundle,
-  parsePositiveInteger,
-  type FhirInstant,
-  type Result,
-} from '../src/index.js'
+  deploymentIdentity,
+  instant,
+  patient,
+  unwrap,
+  uri,
+} from './provider-test-support.js'
 import { adapterSourceMarkerClaims } from '../src/contract/measurement-catalog.generated.js'
 import {
+  parseFhirId,
+  parseGroveMobileExchangeBundle,
+  parsePositiveInteger,
+  type Result,
+} from '../src/index.js'
+import {
   buildProviderRecordingBundle,
+  groveRecordingFormatRegistry,
   healthKitClinicalRecordAdmission,
   providerRawOutputRoles,
   encodeRecordingBytes,
@@ -34,61 +39,11 @@ import {
   type ConnectedRawProvider,
 } from '../src/providers/index.js'
 
-const unwrap = <T>(result: Result<T>): T => {
-  if (!result.ok) {
-    throw new Error(result.issues.map((issue) => issue.message).join('\n'))
-  }
-  return result.value
-}
-
-const uri = (value: string) => unwrap(parseAbsoluteUri(value))
-const instant = (value: string): FhirInstant => unwrap(parseFhirInstant(value))
 const converter: ApplicationDeviceInput = {
   sourceDeviceToken: 'converter-instance-7f3a',
   name: 'Grove converter',
   version: '0.0.0',
 }
-const patient = {
-  type: 'Patient',
-  identifier: {
-    system: uri('https://example.org/deployments/patient-pseudonyms'),
-    value: 'patient-example',
-    assurance: 'deployment-scoped-pseudonym',
-  },
-} as const
-
-const deploymentIdentity = {
-  opaqueIdentifierSystems: {
-    'source-record': uri('https://example.org/identity/source-record/test/1'),
-    'source-output': uri('https://example.org/identity/source-output/test/1'),
-    'writer-record': uri('https://example.org/identity/writer-record/test/1'),
-    'provider-record': uri(
-      'https://example.org/identity/provider-record/test/1',
-    ),
-    'provider-output': uri(
-      'https://example.org/identity/provider-output/test/1',
-    ),
-    'source-artifact': uri(
-      'https://example.org/identity/source-artifact/test/1',
-    ),
-    'provider-artifact': uri(
-      'https://example.org/identity/provider-artifact/test/1',
-    ),
-    'source-context': uri('https://example.org/identity/source-context/test/1'),
-    'recording-device': uri(
-      'https://example.org/identity/recording-device/test/1',
-    ),
-    'device-snapshot': uri(
-      'https://example.org/identity/device-snapshot/test/1',
-    ),
-  },
-  eventIdentifierSystem: uri('https://example.org/identity/event'),
-  entryNodeIdentifierSystem: uri('https://example.org/identity/entry-node'),
-  keyId: 'test-key',
-  keyEpoch: '1',
-  secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
-  producerInstance: '1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
-} as const
 
 const rawInput = (
   provider: ConnectedRawProvider,
@@ -118,7 +73,12 @@ const rawInput = (
     },
     attachment: {
       kind: 'embedded',
-      contentType: unwrap(parseMediaType('application/json')),
+      contentType: unwrap(
+        parseMediaType(
+          groveRecordingFormatRegistry.formats['provider-recording']
+            .contentTypes[0],
+        ),
+      ),
       title: 'Authorized minimized provider recording',
       format: 'provider-recording',
       payloadAssertion: 'caller-authorized-opaque-payload',
@@ -454,51 +414,41 @@ describe('Provider native recording graph', () => {
         'clinical DocumentReference',
       )
     }
-    const clinicalContentIn = (candidate: unknown): Record<string, unknown> => {
-      const content = clinicalDocumentIn(candidate).content
-      if (!Array.isArray(content) || content.length !== 1) {
-        throw new Error('Expected one clinical DocumentReference.content item.')
-      }
-      return mutableObject(content[0], 'clinical content')
-    }
-    const dstu2 = structuredClone(bundle)
-    mutableObject(
-      clinicalContentIn(dstu2).attachment,
-      'clinical attachment',
-    ).contentType = representation.contentTypeByRelease.dstu2
-    expect(parseGroveMobileExchangeBundle(dstu2).ok).toBe(true)
-
+    const contentOf = (candidate: Record<string, unknown>) =>
+      mutableObject(
+        Array.isArray(candidate.content) ? candidate.content[0] : undefined,
+        'clinical content',
+      )
     const invalidRepresentations = [
       (candidate: Record<string, unknown>) => {
-        mutableObject(candidate.attachment, 'clinical attachment').contentType =
-          'application/fhir+json'
+        mutableObject(
+          contentOf(candidate).attachment,
+          'attachment',
+        ).contentType = 'application/fhir+json'
       },
       (candidate: Record<string, unknown>) => {
-        mutableObject(candidate.attachment, 'clinical attachment').contentType =
-          'application/fhir+json; fhirVersion=5.0'
-      },
-      (candidate: Record<string, unknown>) => {
-        mutableObject(candidate.format, 'clinical format').code =
-          'native-recording'
-      },
-      (candidate: Record<string, unknown>) => {
-        Reflect.deleteProperty(
-          mutableObject(candidate.attachment, 'clinical attachment'),
-          'contentType',
-        )
+        mutableObject(contentOf(candidate).format, 'format').code =
+          'fhir-collection-bundle'
       },
     ]
     for (const mutate of invalidRepresentations) {
       const candidate = structuredClone(bundle)
-      mutate(clinicalContentIn(candidate))
+      mutate(clinicalDocumentIn(candidate))
       const result = parseGroveMobileExchangeBundle(candidate)
       expect(result.ok).toBe(false)
       if (result.ok) continue
-      expect(
-        result.issues.some((issue) =>
-          issue.message.includes('healthkit-clinical-record.fhir-release'),
-        ),
-      ).toBe(true)
+      expect(result.issues.map(({ code }) => code)).toContain(
+        'healthkit-clinical.fhir-representation',
+      )
+    }
+
+    for (const release of healthKitClinicalRecordAdmission.admittedFHIRReleases) {
+      const candidate = structuredClone(bundle)
+      mutableObject(
+        contentOf(clinicalDocumentIn(candidate)).attachment,
+        'attachment',
+      ).contentType = representation.contentTypeByRelease[release]
+      expect(parseGroveMobileExchangeBundle(candidate).ok).toBe(true)
     }
   })
 
@@ -519,7 +469,9 @@ describe('Provider native recording graph', () => {
     expect(documentEntry.resource.content).toEqual([
       {
         attachment: {
-          contentType: 'application/json',
+          contentType:
+            groveRecordingFormatRegistry.formats['provider-recording']
+              .contentTypes[0],
           data: 'AQID',
           size: 3,
           hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
@@ -593,7 +545,7 @@ describe('Provider native recording graph', () => {
       },
     },
     {
-      name: 'release-coupled recording registry version',
+      name: 'unexpected recording registry version',
       mutate: (document: MutableJsonObject) => {
         const content = document.content
         if (!Array.isArray(content)) throw new Error('Expected content.')
@@ -601,7 +553,7 @@ describe('Provider native recording graph', () => {
           mutableObject(content[0], 'content').format,
           'content.format',
         )
-        format.version = '0.5.0'
+        format.version = '1.2.3'
       },
     },
     {
@@ -613,7 +565,7 @@ describe('Provider native recording graph', () => {
           mutableObject(content[0], 'content').attachment,
           'content.attachment',
         )
-        attachment.contentType = 'text/plain'
+        attachment.contentType = 'application/octet-stream'
       },
     },
     {
@@ -800,7 +752,12 @@ describe('Provider native recording graph', () => {
       ...input,
       attachment: {
         kind: 'external',
-        contentType: unwrap(parseMediaType('application/json')),
+        contentType: unwrap(
+          parseMediaType(
+            groveRecordingFormatRegistry.formats['provider-recording']
+              .contentTypes[0],
+          ),
+        ),
         title: 'Authorized minimized Oura recording',
         format: 'provider-recording',
         payloadAssertion: 'verified-sanitized-input',
@@ -927,7 +884,9 @@ describe('Provider native recording graph', () => {
     const input = rawInput('oura', 'heartrate')
     const external = {
       kind: 'external',
-      contentType: 'application/json',
+      contentType:
+        groveRecordingFormatRegistry.formats['provider-recording']
+          .contentTypes[0],
       title: 'Authorized recording',
       format: 'provider-recording',
       payloadAssertion: 'caller-authorized-opaque-payload',

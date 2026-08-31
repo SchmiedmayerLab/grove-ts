@@ -20,6 +20,7 @@ import {
   patientSchema,
   positiveIntSchema,
   instantSchema,
+  questionnaireSchema,
   resourceSchema,
   unsignedIntSchema,
   visionPrescriptionSchema,
@@ -142,8 +143,36 @@ describe('generated Zod schemas', () => {
   })
 
   it('validates a recursive backbone to its full depth', () => {
-    // Questionnaire.item.item is a contentReference back to Questionnaire.item; a nested item
-    // with a bad linkId must still be rejected rather than passing as an open record.
+    // Questionnaire.item.item is a contentReference back to Questionnaire.item, so a
+    // depth-2 item must obey the same rules as a depth-1 one rather than pass as an
+    // open record.
+    const nested = (depthTwo: Record<string, unknown>) => ({
+      resourceType: 'Questionnaire',
+      status: 'active',
+      item: [
+        {
+          linkId: 'outer',
+          type: 'group',
+          item: [depthTwo],
+        },
+      ],
+    })
+
+    expect(
+      questionnaireSchema.parse(nested({ linkId: 'inner', type: 'string' })),
+    ).toBeTruthy()
+    expect(() =>
+      questionnaireSchema.parse(nested({ type: 'string' })),
+    ).toThrow()
+    expect(() =>
+      questionnaireSchema.parse(nested({ linkId: 42, type: 'string' })),
+    ).toThrow()
+    expect(() =>
+      questionnaireSchema.parse(nested({ linkId: 'inner', type: 'unknown' })),
+    ).toThrow()
+  })
+
+  it('rejects a DocumentReference status outside the required binding', () => {
     const document = {
       resourceType: 'DocumentReference',
       status: 'current',

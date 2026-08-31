@@ -21,7 +21,9 @@ import {
   buildQuestionnaireResponse,
   parseCanonical,
   preflightQuestionnairePair,
+  type QuestionnaireItemInput,
 } from '../src/index.js'
+import { evaluateEnableWhen } from '../src/questionnaire/preflight-answer-validation.js'
 
 describe('Questionnaire pair preflight', () => {
   it('returns non-blocking warnings for warning target constraints', () => {
@@ -208,6 +210,20 @@ describe('Questionnaire pair preflight', () => {
       ],
     )
     expect(result.ok).toBe(true)
+  })
+
+  it('matches any repeated answer for != and treats no answers as false', () => {
+    const dependent = {
+      linkId: 'dependent',
+      text: 'Dependent',
+      type: 'string',
+      enableWhen: [{ question: 'source', operator: '!=', answerInteger: 5 }],
+    } as const satisfies QuestionnaireItemInput
+
+    expect(evaluateEnableWhen(dependent, new Map([['source', [5, 6]]]))).toBe(
+      true,
+    )
+    expect(evaluateEnableWhen(dependent, new Map())).toBe(false)
   })
 
   it('compares Coding and Quantity enableWhen values semantically', () => {

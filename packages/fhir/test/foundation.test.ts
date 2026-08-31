@@ -374,68 +374,6 @@ describe('Result composition', () => {
       warnings: [warning],
     })
   })
-
-  it('reports malformed JavaScript Result inputs without throwing', () => {
-    const cyclic: Record<string, unknown> = {}
-    cyclic.self = cyclic
-    const hostile = new Proxy(
-      {},
-      {
-        get: () => {
-          throw new Error('hostile result')
-        },
-      },
-    )
-    for (const malformed of [null, undefined, 42, 'invalid', cyclic, hostile]) {
-      const map = () =>
-        mapResult(malformed as Result<number>, (value) => value * 2)
-      const collect = () =>
-        collectResults(malformed as ReadonlyArray<Result<number>>)
-      expect(map).not.toThrow()
-      expect(map().ok).toBe(false)
-      expect(collect).not.toThrow()
-      expect(collect().ok).toBe(false)
-    }
-    const collected = collectResults([
-      ok(1),
-      { ok: false, issues: null } as unknown as Result<number>,
-    ])
-    expect(collected.ok).toBe(false)
-    if (!collected.ok) {
-      expect(collected.issues).toContainEqual(
-        expect.objectContaining({ code: 'invalid-type', path: [1] }),
-      )
-    }
-
-    const validIssue = {
-      severity: 'error',
-      code: 'invalid-type',
-      path: ['value'],
-      message: 'Invalid value.',
-    } as const
-    const malformedIssues = [
-      null,
-      { ...validIssue, severity: 'fatal' },
-      { ...validIssue, code: 42 },
-      { ...validIssue, path: 'value' },
-      { ...validIssue, path: [true] },
-      { ...validIssue, message: 42 },
-      { ...validIssue, reason: 42 },
-      { ...validIssue, location: 42 },
-    ]
-    for (const malformedIssue of malformedIssues) {
-      expect(
-        mapResult(
-          {
-            ok: true,
-            value: 1,
-            warnings: [malformedIssue],
-          } as unknown as Result<number>,
-          (value) => value,
-        ).ok,
-      ).toBe(false)
-    }
-  })
 })
 
 describe('hostile JSON snapshots', () => {

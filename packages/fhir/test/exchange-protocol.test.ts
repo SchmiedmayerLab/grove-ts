@@ -106,7 +106,7 @@ const deriveVectorIdentity = <Kind extends GroveOpaqueIdentityKind>(
     components,
   )
 
-describe('Grove exchange protocol v0 identity', () => {
+describe('Grove exchange protocol identity', () => {
   it('fails closed without throwing at every untyped identity boundary', () => {
     const invalidValues = [null, undefined, 42, 'wrong-shape', Symbol('x')]
     for (const invalid of invalidValues) {
@@ -148,6 +148,54 @@ describe('Grove exchange protocol v0 identity', () => {
     cyclic.self = cyclic
     expect(() => validateDeploymentIdentity(cyclic as never)).not.toThrow()
     expect(validateDeploymentIdentity(cyclic as never).ok).toBe(false)
+  })
+
+  it('keeps a reused deployment handle immune to mutation', () => {
+    const validated = unwrap(validateDeploymentIdentity(runtimeDeployment))
+    const components: GroveOpaqueIdentityComponents['source-record'] = [
+      'healthkit',
+      'HKQuantityTypeIdentifierHeartRate',
+      'https://study.example.org/fhir/NamingSystem/participant',
+      'participant-1',
+      'native-1',
+    ]
+    const before = unwrap(
+      deriveOpaqueIdentifier(validated, 'source-record', components),
+    )
+    const event = unwrap(deriveEventIdentifier(validated, '1'))
+
+    const mutable = validated as {
+      identity: { keyId: string }
+      secret?: Uint8Array
+    }
+    expect(mutable.secret).toBeUndefined()
+    for (const mutate of [
+      () => {
+        mutable.identity.keyId = 'TAMPERED'
+      },
+      () => {
+        mutable.identity = { keyId: 'TAMPERED' }
+      },
+      () => {
+        mutable.secret = new Uint8Array(32)
+      },
+    ]) {
+      try {
+        mutate()
+      } catch {
+        // A frozen handle rejects the write; a sloppy-mode caller silently keeps the original.
+      }
+    }
+
+    expect(validated.identity.keyId).toBe(runtimeDeployment.keyId)
+    expect(
+      deriveOpaqueIdentifier(validated, 'source-record', components),
+    ).toEqual({ ok: true, value: before })
+    expect(deriveEventIdentifier(validated, '1')).toEqual({
+      ok: true,
+      value: event,
+    })
+    expect(validateDeploymentIdentity(validated.identity).ok).toBe(true)
   })
 
   it.each(identityVectors)(
@@ -504,7 +552,7 @@ describe('Grove exchange protocol v0 identity', () => {
     expect(
       deriveEntryNodeIdentifier(runtimeDeployment, event, 'Uppercase', '0').ok,
     ).toBe(false)
-    expect(isEventIdentityValue(42 as never)).toBe(false)
+    expect(isEventIdentityValue(42)).toBe(false)
     expect(isEventIdentityValue('e0:not-a-uuid:1')).toBe(false)
     expect(containsIsolatedSurrogate(42 as never)).toBe(true)
   })

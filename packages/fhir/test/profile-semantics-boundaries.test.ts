@@ -6,7 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { z } from 'zod'
+import { type z } from 'zod'
+import {
+  expectRule as expectRuleIssue,
+  refinementIssues,
+} from './rule-test-support.js'
 import {
   adapterSourceMarkerClaims,
   groveProfileClaims,
@@ -15,7 +19,7 @@ import {
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
 } from '../src/contract/providers.generated.js'
-import { decodeGroveRuleDiagnostic } from '../src/r4/diagnostics.js'
+import { groveMobileContract } from '../src/mobile/contract.js'
 import {
   hasAdmittedActiveDeviceProfile,
   hasAdmittedActiveDocumentReferenceProfile,
@@ -23,36 +27,32 @@ import {
   validateProfiledResource,
 } from '../src/r4/profile-semantics.js'
 
+const refineProfiles =
+  (roles: ReadonlyMap<string, number> = new Map()) =>
+  (value: unknown, context: z.core.$RefinementCtx): void => {
+    validateProfiledResource(value, roles, context, ['resource'])
+  }
+
 const messagesFor = (
   resource: unknown,
   roles: ReadonlyMap<string, number> = new Map(),
-): readonly string[] => {
-  const result = z
-    .unknown()
-    .superRefine((value, context) => {
-      validateProfiledResource(value, roles, context, ['resource'])
-    })
-    .safeParse(resource)
-  return result.success ? [] : result.error.issues.map(({ message }) => message)
-}
+): readonly string[] =>
+  refinementIssues(refineProfiles(roles), resource).map(
+    ({ message }) => message,
+  )
+
+const codesFor = (
+  resource: unknown,
+  roles?: ReadonlyMap<string, number>,
+): readonly string[] =>
+  refinementIssues(refineProfiles(roles), resource).map(({ code }) => code)
 
 const expectRule = (
   resource: unknown,
   code: string,
   roles?: ReadonlyMap<string, number>,
 ): void => {
-  const expectedCode = code.replaceAll('\\', '')
-  expect(
-    messagesFor(resource, roles).some((message) => {
-      const fallbackSeparator = message.indexOf(': ')
-      const actualCode =
-        decodeGroveRuleDiagnostic(message)?.code ??
-        (fallbackSeparator === -1 ? message : (
-          message.slice(0, fallbackSeparator)
-        ))
-      return actualCode === expectedCode
-    }),
-  ).toBe(true)
+  expectRuleIssue(refineProfiles(roles), resource, code)
 }
 
 const roles = (...values: readonly string[]): ReadonlyMap<string, number> =>
@@ -85,7 +85,7 @@ describe('profile-specific resource semantic boundaries', () => {
     ]) {
       const device = { resourceType: 'Device', meta: { profile } }
       expect(hasAdmittedActiveDeviceProfile(device)).toBe(false)
-      expectRule(device, 'mobile-support\\.device-profile')
+      expectRule(device, 'mobile-support.device-profile')
     }
     expect(
       hasAdmittedActiveDocumentReferenceProfile({ resourceType: 'Patient' }),
@@ -110,12 +110,12 @@ describe('profile-specific resource semantic boundaries', () => {
     }
     expectRule(
       recording,
-      'mobile-support\\.device-profile',
+      'mobile-support.device-profile',
       roles('recording-device'),
     )
     expectRule(
       recording,
-      'mobile-recording-device\\.identities',
+      'mobile-recording-device.identities',
       roles('recording-device', 'device-snapshot'),
     )
 
@@ -125,7 +125,7 @@ describe('profile-specific resource semantic boundaries', () => {
         meta: { profile: [hostProfile] },
         identifier: [],
       },
-      'mobile-host-device\\.identity',
+      'mobile-host-device.identity',
       roles('device-snapshot'),
     )
   })
@@ -184,7 +184,7 @@ describe('profile-specific resource semantic boundaries', () => {
       mutate(candidate)
       expectRule(
         candidate,
-        'healthkit-application-device\\.bundle-identifier',
+        'healthkit-application-device.bundle-identifier',
         roles('device-snapshot'),
       )
     }
@@ -204,17 +204,17 @@ describe('profile-specific resource semantic boundaries', () => {
 
     expectRule(
       { ...document, meta: { profile: ['https://example.org/unknown'] } },
-      'mobile-output\\.document-profile',
+      'mobile-output.document-profile',
     )
-    expectRule(document, 'mobile-recording-document\\.identities')
+    expectRule(document, 'mobile-recording-document.identities')
     expectRule(
       document,
-      'mobile-recording-document\\.identity-roles',
+      'mobile-recording-document.identity-roles',
       roles('source-record', 'source-output', 'source-artifact', 'unexpected'),
     )
     expectRule(
       document,
-      'mobile-recording-document\\.identity-roles',
+      'mobile-recording-document.identity-roles',
       new Map([
         ['source-record', 1],
         ['source-output', 1],
@@ -224,15 +224,11 @@ describe('profile-specific resource semantic boundaries', () => {
     )
     expectRule(
       document,
-      'mobile-recording-document\\.required-metadata',
+      'mobile-recording-document.required-metadata',
       requiredRoles,
     )
-    expectRule(
-      document,
-      'mobile-recording-document\\.attachment',
-      requiredRoles,
-    )
-    expectRule(document, 'mobile-recording-document\\.format', requiredRoles)
+    expectRule(document, 'mobile-recording-document.attachment', requiredRoles)
+    expectRule(document, 'mobile-recording-document.format', requiredRoles)
   })
 
   it('fails closed for malformed embedded recording data and registry metadata', () => {
@@ -271,7 +267,7 @@ describe('profile-specific resource semantic boundaries', () => {
       content.attachment.data = data
       expectRule(
         candidate,
-        'mobile-recording-document\\.embedded-integrity',
+        'mobile-recording-document.embedded-integrity',
         requiredRoles,
       )
     }
@@ -283,11 +279,7 @@ describe('profile-specific resource semantic boundaries', () => {
       system: 'https://example.org/wrong',
       code: 'unknown',
     }
-    expectRule(
-      invalidFormat,
-      'mobile-recording-document\\.format',
-      requiredRoles,
-    )
+    expectRule(invalidFormat, 'mobile-recording-document.format', requiredRoles)
   })
 
   it('requires the exact QuestionnaireResponse profile', () => {
@@ -301,7 +293,7 @@ describe('profile-specific resource semantic boundaries', () => {
     ).toEqual([])
     expectRule(
       { resourceType: 'QuestionnaireResponse', meta: { profile: [] } },
-      'mobile-support\\.questionnaire-response-profile',
+      'mobile-support.questionnaire-response-profile',
     )
   })
 
@@ -320,16 +312,16 @@ describe('profile-specific resource semantic boundaries', () => {
     expect(hasAdmittedAdapterOnlyOutputProfile({})).toBe(true)
     expect(messagesFor({})).toEqual([])
     expect(hasAdmittedAdapterOnlyOutputProfile(specimen)).toBe(true)
-    expectRule(specimen, 'mobile-output\\.adapter-only-profile', requiredRoles)
+    expectRule(specimen, 'mobile-output.adapter-only-profile', requiredRoles)
     expectRule(
       { ...specimen, meta: { profile: ['https://example.org/unknown'] } },
-      'mobile-output\\.adapter-only-profile',
+      'mobile-output.adapter-only-profile',
       requiredRoles,
     )
-    expectRule(specimen, 'mobile-output\\.adapter-only-profile', new Map())
+    expectRule(specimen, 'mobile-output.adapter-only-profile', new Map())
     expectRule(
       specimen,
-      'mobile-output\\.adapter-only-profile',
+      'mobile-output.adapter-only-profile',
       roles(...claim.requiredIdentifierRoles, 'unexpected'),
     )
 
@@ -351,7 +343,7 @@ describe('profile-specific resource semantic boundaries', () => {
     }
     expectRule(
       healthKitResource,
-      'mobile-exchange\\.adapter-source-marker',
+      'mobile-exchange.adapter-source-marker',
       roles(...healthKitClaim.requiredIdentifierRoles),
     )
 
@@ -360,29 +352,38 @@ describe('profile-specific resource semantic boundaries', () => {
       meta: { profile: ['https://example.org/neutral'] },
       extension: [{ url: marker.url, valueCode: 'owned-marker' }],
     }
-    expectRule(neutral, 'mobile-exchange\\.adapter-source-marker')
+    expectRule(neutral, 'mobile-exchange.adapter-source-marker')
   })
 
-  it('validates the versioned FHIR media type on clinical documents', () => {
+  it('admits only the release-versioned media types on clinical documents', () => {
     const claim = groveProfileClaims.healthKitClinicalRecordDocumentClaim
-    const document = {
+    const representation = healthKitClinicalRecordAdmission.fhirRepresentation
+    const clinicalDocument = (contentType: string) => ({
       resourceType: 'DocumentReference',
       meta: { profile: claim.profiles },
       content: [
         {
+          attachment: { contentType },
           format: {
-            system:
-              'https://grovealliance.org/fhir/sensor/CodeSystem/grove-recording-format',
+            system: groveMobileContract.recordingFormats.codeSystem,
             code: healthKitClinicalRecordAdmission.payloadFormat,
           },
-          attachment: { contentType: 'application/fhir+json' },
         },
       ],
+    })
+    const clinicalRoles = roles(...claim.requiredIdentifierRoles)
+
+    for (const contentType of Object.values(
+      representation.contentTypeByRelease,
+    )) {
+      expect(
+        codesFor(clinicalDocument(contentType), clinicalRoles),
+      ).not.toContain('healthkit-clinical.fhir-representation')
     }
     expectRule(
-      document,
-      'healthkit-clinical-record\\.fhir-release',
-      roles(...claim.requiredIdentifierRoles),
+      clinicalDocument('application/fhir+json'),
+      'healthkit-clinical.fhir-representation',
+      clinicalRoles,
     )
   })
 })

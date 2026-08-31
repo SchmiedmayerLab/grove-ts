@@ -28,6 +28,12 @@ import {
 } from '../src/index.js'
 /* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 canonicals are normative HTTP URIs. */
 
+const withoutSubject = (value: object): unknown => {
+  const copy = { ...value }
+  Reflect.deleteProperty(copy, 'subject')
+  return copy
+}
+
 describe('Questionnaire R4 builders', () => {
   it('stamps the exact Grove profiles and owned extensions', () => {
     expect(questionnaire.meta?.profile).toEqual([
@@ -579,20 +585,42 @@ describe('Questionnaire R4 builders', () => {
     ).toBe(false)
   })
 
-  it('enforces R4 ResourceType subject codes and signed integer bounds', () => {
-    expect(
-      buildQuestionnaire({
-        ...questionnaireInput,
-        subjectTypes: ['Banana'],
-      } as unknown as QuestionnaireInput).ok,
-    ).toBe(false)
-    expect(
-      parseQuestionnaire({
-        ...questionnaire,
-        subjectType: ['Banana'],
-      }).ok,
-    ).toBe(false)
+  it('requires the profile-fixed Patient subjectType and response subject', () => {
+    for (const subjectTypes of [
+      undefined,
+      [],
+      ['Banana'],
+      ['Group'],
+      ['Patient', 'Group'],
+    ]) {
+      expect(
+        buildQuestionnaire({
+          ...questionnaireInput,
+          subjectTypes,
+        } as unknown as QuestionnaireInput).ok,
+      ).toBe(false)
+    }
+    for (const subjectType of [undefined, ['Banana'], ['Group'], []]) {
+      expect(parseQuestionnaire({ ...questionnaire, subjectType }).ok).toBe(
+        false,
+      )
+    }
 
+    expect(
+      buildQuestionnaireResponse(
+        withoutSubject(responseInput()) as QuestionnaireResponseInput,
+      ).ok,
+    ).toBe(false)
+    expect(
+      buildQuestionnaireResponse({
+        ...responseInput(),
+        subject: { type: 'Group', reference: 'Group/example' },
+      } as unknown as QuestionnaireResponseInput).ok,
+    ).toBe(false)
+    expect(parseQuestionnaireResponse(withoutSubject(response)).ok).toBe(false)
+  })
+
+  it('enforces signed integer bounds', () => {
     for (const valueInteger of [2_147_483_648, -2_147_483_649]) {
       expect(
         preflightItems(

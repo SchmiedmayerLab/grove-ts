@@ -46,8 +46,8 @@ describe('generated schemas against the published conformance fixtures', () => {
       const schema = schemaFor(
         (resource as { resourceType: string }).resourceType,
       )
-      if (!schema) continue
-      expect(() => schema.parse(resource)).not.toThrow()
+      expect(schema).toBeDefined()
+      expect(() => schema?.parse(resource)).not.toThrow()
     }
   })
 })

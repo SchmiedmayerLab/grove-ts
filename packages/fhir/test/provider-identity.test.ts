@@ -20,7 +20,11 @@ import {
   study,
   uri,
 } from './provider-test-support.js'
-import { sharedMobileMeasurementCatalog } from '../src/mobile/index.js'
+import { parseUrnUuid } from '../src/core/index.js'
+import {
+  groveMobileContract,
+  sharedMobileMeasurementCatalog,
+} from '../src/mobile/index.js'
 import {
   buildProviderMeasurementBundle,
   parseProviderMeasurementBundleInput,
@@ -502,7 +506,7 @@ describe('Provider R4 graph builder', () => {
     const observation = resources(result).find(
       (resource) => resource.resourceType === 'Observation',
     )
-    expect(observation?.device?.reference).toMatch(/^urn:uuid:/u)
+    expect(parseUrnUuid(observation?.device?.reference).ok).toBe(true)
     expect(
       observation?.extension?.some(
         ({ url }) =>
@@ -514,9 +518,7 @@ describe('Provider R4 graph builder', () => {
       ({ resource }) =>
         resource.resourceType === 'Device' &&
         resource.meta?.profile?.some(
-          (profile) =>
-            profile ===
-            'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-host-device',
+          (profile) => profile === groveMobileContract.profiles.hostDevice,
         ),
     )
     expect(hostEntries).toHaveLength(3)
@@ -525,13 +527,12 @@ describe('Provider R4 graph builder', () => {
         applicationDevice.resourceType !== 'Device' ||
         !applicationDevice.meta?.profile?.some(
           (profile) =>
-            profile ===
-            'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device',
+            profile === groveMobileContract.profiles.applicationDevice,
         )
       ) {
         continue
       }
-      expect(applicationDevice.parent?.reference).toMatch(/^urn:uuid:/u)
+      expect(parseUrnUuid(applicationDevice.parent?.reference).ok).toBe(true)
       expect(
         hostEntries.some(
           ({ fullUrl }) => fullUrl === applicationDevice.parent?.reference,

@@ -9,6 +9,7 @@
 /* eslint-disable sonarjs/no-clear-text-protocols -- The FHIR R4 lifecycle and terminology canonicals are normative HTTP URIs. */
 
 import { readFileSync } from 'node:fs'
+import { adapterSourceMarkerClaims } from '../src/contract/measurement-catalog.generated.js'
 import {
   parseGroveMobileExchangeBundle,
   parseGroveMobileRetractionBundle,
@@ -53,6 +54,13 @@ const bases = {
   'mobile-retraction': fixture('retraction-bundle.json'),
 } as const
 const corpus = fixture('corpus.json') as ExchangeCorpus
+
+const healthKitSourceMarkerUrl = adapterSourceMarkerClaims.find(
+  ({ adapter }) => adapter === 'healthkit',
+)?.markers[0]?.url
+if (healthKitSourceMarkerUrl === undefined) {
+  throw new Error('Missing HealthKit source marker.')
+}
 
 const pointerComponents = (pointer: string): string[] =>
   pointer
@@ -152,6 +160,50 @@ describe('shared Grove Mobile exchange corpus', () => {
     expect(parseGroveMobileExchangeBundle(input).ok).toBe(true)
   })
 
+  it.each([
+    { entry: 2, resourceType: 'Observation' },
+    { entry: 4, resourceType: 'QuestionnaireResponse' },
+  ])('rejects a $resourceType with no subject at all', ({ entry }) => {
+    const input = patched(bases['mobile-exchange'], [
+      { op: 'remove', path: `/entry/${String(entry)}/resource/subject` },
+    ])
+    const result = parseGroveMobileExchangeBundle(input)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(
+      result.issues.find(
+        ({ code }) => code === 'mobile-exchange.reference-shape',
+      )?.location,
+    ).toBe(
+      `${String((bases['mobile-exchange'] as { entry: Array<{ resource: { resourceType: string } }> }).entry[entry]?.resource.resourceType)}.subject`,
+    )
+  })
+
+  it('counts entry-node ordinals over the Bundle, never over the value itself', () => {
+    const key = (
+      bases['mobile-exchange'] as {
+        entry: Array<{
+          extension: Array<{ valueIdentifier: { value: string } }>
+        }>
+      }
+    ).entry[0]?.extension[0]?.valueIdentifier.value
+    expect(key).toMatch(/^n0:patient:0:/u)
+    // A self-consistent misnumbering: role and ordinal still agree with the digest.
+    const misnumbered = patched(bases['mobile-exchange'], [
+      {
+        op: 'replace',
+        path: '/entry/0/extension/0/valueIdentifier/value',
+        value: 'n0:patient:1:qN9xaTdoz-LfvONC7FgEUNMz06zyWhfzD0khPhtjVig',
+      },
+    ])
+    const result = parseGroveMobileExchangeBundle(misnumbered)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    const codes = result.issues.map(({ code }) => code)
+    expect(codes).toContain('mobile-exchange.entry-node-ordinal')
+    expect(codes).not.toContain('mobile-exchange.entry-node-digest')
+  })
+
   it('reports the actual unresolved reference path instead of assuming subject', () => {
     const input = patched(bases['mobile-exchange'], [
       {
@@ -220,7 +272,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         op: 'add',
         path: '/entry/2/resource/extension/1',
         value: {
-          url: 'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-source-type-extension',
+          url: healthKitSourceMarkerUrl,
           valueCode: 'HKQuantityTypeIdentifierHeartRate',
         },
       },
@@ -228,11 +280,9 @@ describe('shared Grove Mobile exchange corpus', () => {
     const result = parseGroveMobileExchangeBundle(input)
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(
-        result.issues.some(({ message }) =>
-          message.includes('mobile-exchange.adapter-source-marker'),
-        ),
-      ).toBe(true)
+      expect(result.issues.map(({ code }) => code)).toContain(
+        'mobile-exchange.adapter-source-marker',
+      )
     }
   })
 
@@ -254,11 +304,9 @@ describe('shared Grove Mobile exchange corpus', () => {
     const result = parseGroveMobileExchangeBundle(input)
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(
-        result.issues.some(({ message }) =>
-          message.includes('mobile-exchange.adapter-source-marker'),
-        ),
-      ).toBe(true)
+      expect(result.issues.map(({ code }) => code)).toContain(
+        'mobile-exchange.adapter-source-marker',
+      )
     }
   })
 
@@ -322,11 +370,9 @@ describe('shared Grove Mobile exchange corpus', () => {
     const result = parseGroveMobileExchangeBundle(literalDataOrigin)
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(
-        result.issues.some(({ message }) =>
-          message.includes('health-connect.data-origin-application'),
-        ),
-      ).toBe(true)
+      expect(result.issues.map(({ code }) => code)).toContain(
+        'health-connect.data-origin-application',
+      )
     }
   })
 
@@ -360,6 +406,7 @@ describe('shared Grove Mobile exchange corpus', () => {
   it.each([
     {
       name: 'missing quantity value',
+      expectedCode: 'mobile-output.fixed-quantity-unit',
       patch: [
         {
           op: 'remove' as const,
@@ -369,6 +416,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'impossible effective calendar date',
+      expectedCode: 'schema-invalid',
       patch: [
         {
           op: 'replace' as const,
@@ -379,6 +427,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated primary clinical coding',
+      expectedCode: 'mobile-heart-rate.code',
       patch: [
         {
           op: 'add' as const,
@@ -389,6 +438,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated category coding',
+      expectedCode: 'mobile-heart-rate.category',
       patch: [
         {
           op: 'add' as const,
@@ -403,6 +453,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'unprofiled Device snapshot',
+      expectedCode: 'mobile-support.device-profile',
       patch: [
         {
           op: 'remove' as const,
@@ -412,6 +463,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'Device snapshot with an additional arbitrary profile',
+      expectedCode: 'mobile-support.device-profile',
       patch: [
         {
           op: 'add' as const,
@@ -422,6 +474,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'empty contained array in an active graph',
+      expectedCode: 'mobile-exchange.contained-resource-prohibited',
       patch: [
         {
           op: 'add' as const,
@@ -432,6 +485,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'HealthKit application Device without its product identifier',
+      expectedCode: 'healthkit-application-device.bundle-identifier',
       patch: [
         {
           op: 'replace' as const,
@@ -443,6 +497,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'application Device with an extra identity role',
+      expectedCode: 'mobile-support.device-profile',
       patch: [
         {
           op: 'add' as const,
@@ -466,6 +521,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'relative reference to another Bundle entry',
+      expectedCode: 'mobile-exchange.resolved-reference',
       patch: [
         {
           op: 'replace' as const,
@@ -476,6 +532,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated active exchange profile claim',
+      expectedCode: 'mobile-exchange.profile',
       patch: [
         {
           op: 'add' as const,
@@ -487,6 +544,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'simultaneous active and retraction profile claims',
+      expectedCode: 'mobile-exchange.profile',
       patch: [
         {
           op: 'add' as const,
@@ -498,6 +556,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated semantic Observation profile claim',
+      expectedCode: 'mobile-output.semantic-profile',
       patch: [
         {
           op: 'add' as const,
@@ -509,6 +568,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'adapter output profile under source-neutral Provenance',
+      expectedCode: 'mobile-output.semantic-profile',
       patch: [
         {
           op: 'add' as const,
@@ -520,6 +580,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'adapter Provenance targeting a source-neutral output',
+      expectedCode: 'mobile-exchange.adapter-provenance-graph',
       patch: [
         {
           op: 'replace' as const,
@@ -531,6 +592,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated transform lifecycle coding',
+      expectedCode: 'mobile-exchange.lifecycle-coding',
       patch: [
         {
           op: 'add' as const,
@@ -544,6 +606,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'different ISO lifecycle coding beside transform',
+      expectedCode: 'mobile-exchange.lifecycle-coding',
       patch: [
         {
           op: 'add' as const,
@@ -557,6 +620,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'different Grove lifecycle coding in active event',
+      expectedCode: 'mobile-exchange.lifecycle-coding',
       patch: [
         {
           op: 'add' as const,
@@ -569,16 +633,19 @@ describe('shared Grove Mobile exchange corpus', () => {
         },
       ],
     },
-  ])('rejects adversarial $name input', ({ patch }) => {
-    expect(
-      parseGroveMobileExchangeBundle(patched(bases['mobile-exchange'], patch))
-        .ok,
-    ).toBe(false)
+  ])('rejects adversarial $name input', ({ patch, expectedCode }) => {
+    const result = parseGroveMobileExchangeBundle(
+      patched(bases['mobile-exchange'], patch),
+    )
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues.map(({ code }) => code)).toContain(expectedCode)
   })
 
   it.each([
     {
       name: 'different Grove lifecycle coding beside retraction',
+      expectedCode: 'mobile-exchange.lifecycle-coding',
       value: {
         system:
           'https://grovealliance.org/fhir/mobile/CodeSystem/grove-lifecycle-event',
@@ -587,23 +654,21 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'ISO lifecycle coding in retraction event',
+      expectedCode: 'mobile-exchange.lifecycle-coding',
       value: {
         system: 'http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle',
         code: 'originate',
       },
     },
-  ])('rejects adversarial retraction $name', ({ value }) => {
-    expect(
-      parseGroveMobileRetractionBundle(
-        patched(bases['mobile-retraction'], [
-          {
-            op: 'add',
-            path: '/entry/0/resource/activity/coding/1',
-            value,
-          },
-        ]),
-      ).ok,
-    ).toBe(false)
+  ])('rejects adversarial retraction $name', ({ value, expectedCode }) => {
+    const result = parseGroveMobileRetractionBundle(
+      patched(bases['mobile-retraction'], [
+        { op: 'add', path: '/entry/0/resource/activity/coding/1', value },
+      ]),
+    )
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues.map(({ code }) => code)).toContain(expectedCode)
   })
 
   it('rejects even an empty contained array in a retraction graph', () => {

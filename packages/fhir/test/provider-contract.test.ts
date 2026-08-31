@@ -100,11 +100,9 @@ describe('Exchange entry identity', () => {
     const parsed = parseGroveMobileExchangeBundle(invalidBundle)
     expect(parsed.ok).toBe(false)
     if (!parsed.ok) {
-      expect(
-        parsed.issues.some(({ message }) =>
-          message.includes('mobile-body-fat-percentage.value-domain'),
-        ),
-      ).toBe(true)
+      expect(parsed.issues.map(({ code }) => code)).toContain(
+        'mobile-output.quantity-value-domain',
+      )
     }
   })
 

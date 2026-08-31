@@ -6,32 +6,51 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { groveExchangeRuleDiagnostics } from '../src/contract/measurement-catalog.generated.js'
 import {
-  decodeGroveRuleDiagnostic,
-  encodeGroveRuleDiagnostic,
+  groveExchangeProtocol,
+  groveExchangeRuleDiagnostics,
+} from '../src/contract/measurement-catalog.generated.js'
+import {
   groveRuleIssue,
+  groveRuleIssueFromParameters,
+  groveRuleParameters,
+  groveRuleReason,
   type GroveExchangeRuleCode,
 } from '../src/r4/diagnostics.js'
+
+const byText = (left: string, right: string): number =>
+  left.localeCompare(right)
 
 const ruleCodes = Object.keys(
   groveExchangeRuleDiagnostics,
 ) as GroveExchangeRuleCode[]
 
 describe('stable Grove rule diagnostics', () => {
+  it('registers exactly the protocol producer diagnostics', () => {
+    expect([...ruleCodes].sort(byText)).toEqual(
+      groveExchangeProtocol.producerDiagnostics
+        .map(({ code }) => code)
+        .sort(byText),
+    )
+  })
+
   it.each(ruleCodes)(
     'round-trips %s with its public reason and location',
     (code) => {
       const path = ['entry', 3, 'resource', 'target', 2, 'extension', 0]
       const issue = groveRuleIssue(code, path)
-      const encoded = encodeGroveRuleDiagnostic(code, path, 'fallback')
 
-      expect(decodeGroveRuleDiagnostic(encoded)).toEqual({
-        code,
-        reason: groveExchangeRuleDiagnostics[code].reason,
-        location: issue.location,
-        severity: groveExchangeRuleDiagnostics[code].severity,
-      })
+      expect(
+        groveRuleIssueFromParameters(
+          groveRuleParameters(code, path),
+          path,
+          'fallback',
+        ),
+      ).toEqual(issue)
+      expect(issue.reason).toBe(groveExchangeRuleDiagnostics[code].reason)
+      expect(groveRuleReason(code)).toBe(
+        groveExchangeRuleDiagnostics[code].reason,
+      )
     },
   )
 
@@ -41,30 +60,36 @@ describe('stable Grove rule diagnostics', () => {
     ).toBe('Provenance.target[0]')
   })
 
-  it('rejects malformed or forged encoded diagnostics', () => {
-    const code = ruleCodes[0]
-    if (code === undefined) throw new Error('The rule catalog is empty.')
-    const valid = encodeGroveRuleDiagnostic(code, [], 'fallback')
-    const prefix = valid.slice(0, valid.indexOf('{'))
-    const reason = groveExchangeRuleDiagnostics[code].reason
-    const cases = [
-      'not encoded',
-      `${prefix}{`,
-      `${prefix}${JSON.stringify({ code: 42, reason, location: 'Bundle', severity: 'error' })}`,
-      `${prefix}${JSON.stringify({ code: 'unknown', reason, location: 'Bundle', severity: 'error' })}`,
-      `${prefix}${JSON.stringify({ code, reason: 'forged', location: 'Bundle', severity: 'error' })}`,
-      `${prefix}${JSON.stringify({ code, reason, location: '', severity: 'error' })}`,
-      `${prefix}${JSON.stringify({ code, reason, location: 42, severity: 'error' })}`,
-      `${prefix}${JSON.stringify({ code, reason, location: 'Bundle', severity: 'warning' })}`,
-    ]
+  it('carries a locally named rule without a registered reason or location', () => {
+    const parameters = groveRuleParameters('mobile-step-count.nonzero-period', [
+      'entry',
+      0,
+    ])
 
-    for (const candidate of cases) {
-      expect(decodeGroveRuleDiagnostic(candidate)).toBeUndefined()
-    }
+    expect(groveRuleReason('mobile-step-count.nonzero-period')).toBeUndefined()
+    expect(parameters).toEqual({
+      groveRuleCode: 'mobile-step-count.nonzero-period',
+    })
     expect(
-      decodeGroveRuleDiagnostic(
-        encodeGroveRuleDiagnostic('unknown', [], 'fallback'),
-      ),
-    ).toBeUndefined()
+      groveRuleIssueFromParameters(parameters, ['entry', 0], 'local message'),
+    ).toEqual({
+      severity: 'error',
+      code: 'mobile-step-count.nonzero-period',
+      path: ['entry', 0],
+      message: 'local message',
+    })
+  })
+
+  it('ignores issue parameters that name no producer rule', () => {
+    for (const parameters of [
+      undefined,
+      {},
+      { groveRuleCode: 42 },
+      { groveRuleCode: 'undotted' },
+    ]) {
+      expect(
+        groveRuleIssueFromParameters(parameters, [], 'message'),
+      ).toBeUndefined()
+    }
   })
 })

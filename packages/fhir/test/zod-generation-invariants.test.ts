@@ -472,7 +472,10 @@ const UNCHECKED_KEYS: Readonly<Record<string, readonly string[]>> = {
 }
 
 const source = (release: string): string =>
-  readFileSync(join(process.cwd(), 'src/zod', release, 'schemas.ts'), 'utf8')
+  readFileSync(
+    join(process.cwd(), 'src/zod', release, 'schemas.generated.ts'),
+    'utf8',
+  )
 
 describe.each(RELEASES)('generated %s schemas', (release) => {
   const text = source(release)

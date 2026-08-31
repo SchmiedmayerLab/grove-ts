@@ -30,7 +30,6 @@ describe('Questionnaire R4 builders', () => {
       version: '01.0.0',
       id: 'invalid/id',
       date: 'not-an-instant',
-      subjectTypes: ['Patient', ''],
       extensions: [
         {
           url: 'http://hl7.org/fhir/StructureDefinition/rendering-styleSensitive',

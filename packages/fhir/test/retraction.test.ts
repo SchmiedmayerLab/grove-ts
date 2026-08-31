@@ -12,12 +12,16 @@ import {
   type FhirInstant,
   type Result,
 } from '../src/core/index.js'
-import type { DeploymentIdentityInput } from '../src/mobile/index.js'
+import {
+  groveMobileContract,
+  type DeploymentIdentityInput,
+} from '../src/mobile/index.js'
 import {
   buildProviderMeasurementBundle,
   buildProviderRecordingBundle,
   buildProviderRetractionBundle,
   encodeRecordingBytes,
+  groveRecordingFormatRegistry,
   parseMediaType,
   parseProviderRetractionInput,
   providerOutputCoordinates,
@@ -110,7 +114,7 @@ const activeInput = {
   application: {
     sourceDeviceToken: 'converter-build-42',
     name: 'Grove converter',
-    version: '0.6.0',
+    version: '1.2.3',
     build: '42',
   },
   eventSequence: '100',
@@ -275,7 +279,12 @@ describe('Provider source-record retraction', () => {
       },
       attachment: {
         kind: 'embedded',
-        contentType: unwrap(parseMediaType('application/json')),
+        contentType: unwrap(
+          parseMediaType(
+            groveRecordingFormatRegistry.formats['provider-recording']
+              .contentTypes[0],
+          ),
+        ),
         title: 'Authorized minimized provider recording',
         format: 'provider-recording',
         payloadAssertion: 'verified-sanitized-input',
@@ -365,9 +374,7 @@ describe('Provider source-record retraction', () => {
       ({ resource }) =>
         resource.resourceType === 'Device' &&
         resource.meta?.profile?.some(
-          (profile) =>
-            profile ===
-            'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-device',
+          (profile) => profile === groveMobileContract.profiles.recordingDevice,
         ),
     )?.resource
     if (device?.resourceType !== 'Device') {
@@ -437,6 +444,79 @@ describe('Provider source-record retraction', () => {
         ],
       }).ok,
     ).toBe(false)
+  })
+
+  it('carries the adapter native record identifier on its target', () => {
+    const nativeIdentifier = {
+      system: uri('https://study.example.org/fhir/NamingSystem/native-record'),
+      value: 'record-heart-001',
+    }
+    const retraction = unwrap(
+      buildProviderRetractionBundle({
+        ...retractionInput,
+        targets: [{ ...retractionInput.targets[0], nativeIdentifier }],
+      }),
+    )
+    const provenance = retraction.entry.find(
+      ({ resource }) => resource.resourceType === 'Provenance',
+    )?.resource
+    if (provenance?.resourceType !== 'Provenance') {
+      throw new Error('The retraction graph did not contain Provenance.')
+    }
+    expect(provenance.target[0]?.extension).toEqual([
+      {
+        url: groveMobileContract.extensions.retractionTargetRole,
+        valueCode: 'primary-output',
+      },
+      {
+        url: groveMobileContract.extensions.retractionTargetNativeIdentifier,
+        valueIdentifier: nativeIdentifier,
+      },
+    ])
+
+    const groveRoleCoding = {
+      ...retraction,
+      entry: retraction.entry.map((entry) =>
+        entry.resource.resourceType === 'Provenance' ?
+          {
+            ...entry,
+            resource: {
+              ...entry.resource,
+              target: [
+                {
+                  ...entry.resource.target[0],
+                  extension: [
+                    entry.resource.target[0]?.extension?.[0],
+                    {
+                      url: groveMobileContract.extensions
+                        .retractionTargetNativeIdentifier,
+                      valueIdentifier: {
+                        ...nativeIdentifier,
+                        type: {
+                          coding: [
+                            {
+                              system:
+                                groveMobileContract.systems.identifierRole,
+                              code: 'source-record',
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          }
+        : entry,
+      ),
+    }
+    const result = parseGroveMobileRetractionBundle(groveRoleCoding)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues.map(({ code }) => code)).toContain(
+      'mobile-retraction.native-record-identifier',
+    )
   })
 
   it('emits retraction targets in a deterministic canonical order', () => {
