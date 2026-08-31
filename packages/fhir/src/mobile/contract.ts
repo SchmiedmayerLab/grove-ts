@@ -16,7 +16,6 @@ import { deepFreeze } from '../core/index.js'
 
 export interface GroveMobileProtocolContract {
   readonly canonical: string
-  readonly version: string
   readonly fhirVersion: string
   readonly protocolVersion: number
   readonly profiles: Readonly<{
@@ -32,6 +31,7 @@ export interface GroveMobileProtocolContract {
   readonly extensions: Readonly<{
     entryNodeKey: string
     retractionTargetRole: string
+    retractionTargetNativeIdentifier: string
   }>
   readonly systems: Readonly<{
     identifierRole: string
@@ -44,6 +44,11 @@ export interface GroveMobileProtocolContract {
     fullUrlNamespace: string
     opaqueIdentifierRoles: readonly string[]
     resourceIdentifierPriority: readonly string[]
+    valuePrefixes: Readonly<{
+      opaque: string
+      event: string
+      entryNode: string
+    }>
   }>
   readonly lifecycle: Readonly<{
     sourceRecordRetracted: string
@@ -55,9 +60,20 @@ export interface GroveMobileProtocolContract {
   readonly recordingFormats: typeof groveRecordingFormatRegistry
 }
 
+// Each identity value form opens with its revision token, so the contract owns every
+// persisted prefix and a renumbered revision reaches this package by regeneration alone.
+const valuePrefix = (valueForm: string): string =>
+  `${valueForm.slice(0, valueForm.indexOf(':'))}:`
+
+// Canonicals the implementation guide owns that the pinned catalog release does not yet
+// publish. The catalog spread overrides each one the moment a re-pin carries it.
+const unpinnedExtensionCanonicals = {
+  retractionTargetNativeIdentifier:
+    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-retraction-target-native-identifier',
+} as const
+
 const groveMobileContractValue: GroveMobileProtocolContract = {
   canonical: groveMobilePackageMetadata.canonical,
-  version: groveMobilePackageMetadata.version,
   fhirVersion: groveMobilePackageMetadata.fhirVersion,
   protocolVersion: groveExchangeProtocol.protocolVersion,
   profiles: {
@@ -71,12 +87,24 @@ const groveMobileContractValue: GroveMobileProtocolContract = {
     retractionBundle: groveExchangeProtocol.profiles.retractionBundle,
     retractionProvenance: groveExchangeProtocol.profiles.retractionProvenance,
   },
-  extensions: groveExchangeProtocol.extensions,
+  extensions: {
+    ...unpinnedExtensionCanonicals,
+    ...groveExchangeProtocol.extensions,
+  },
   systems: groveExchangeProtocol.codeSystems,
   identity: {
     domain: groveExchangeProtocol.opaqueIdentity.domain,
     entryNodeDomain: groveExchangeProtocol.entryIdentity.entryNode.domain,
     fullUrlNamespace: groveExchangeProtocol.entryIdentity.fullUrl.namespace,
+    valuePrefixes: {
+      opaque: valuePrefix(groveExchangeProtocol.opaqueIdentity.valueForm),
+      event: valuePrefix(
+        groveExchangeProtocol.event.bundleIdentifier.valueForm,
+      ),
+      entryNode: valuePrefix(
+        groveExchangeProtocol.entryIdentity.entryNode.valueForm,
+      ),
+    },
     opaqueIdentifierRoles: [
       ...new Set(
         groveExchangeProtocol.opaqueIdentity.identityKinds.map(
@@ -100,7 +128,7 @@ const groveMobileContractValue: GroveMobileProtocolContract = {
   recordingFormats: groveRecordingFormatRegistry,
 }
 
-/** Runtime constants projected from the pinned Grove protocol catalog. */
+/** Runtime constants projected from the generated Grove FHIR protocol catalog. */
 export const groveMobileContract: GroveMobileProtocolContract = deepFreeze(
   groveMobileContractValue,
 )

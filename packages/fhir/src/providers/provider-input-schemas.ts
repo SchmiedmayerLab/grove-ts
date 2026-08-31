@@ -7,26 +7,30 @@
 //
 
 import { z } from 'zod'
-import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import { SYSTEMS } from './profiles.js'
 import type {
   ProviderPatientReferenceInput,
   ProviderResearchStudyReferenceInput,
 } from './types.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import {
   parseAbsoluteUri,
+  parseFhirId,
   parseFhirInstant,
+  type AbsoluteUri,
+  type FhirId,
   type FhirInstant,
   type Issue,
 } from '../core/index.js'
-import { containsIsolatedSurrogate } from '../mobile/identity.js'
-import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
+import {
+  containsIsolatedSurrogate,
+  validateDeploymentIdentity,
+} from '../mobile/identity.js'
 import { canonicalizeMobileEffectiveInstant } from '../mobile/time.js'
 import type {
   ApplicationDeviceInput,
   DeploymentIdentityInput,
   GatewayApplicationInput,
-  GroveOpaqueIdentityKind,
   RecordingDeviceInput,
 } from '../mobile/types.js'
 
@@ -67,18 +71,18 @@ const fhirCodeSchema = nonBlankStringSchema.refine(
   'Expected a FHIR code with no leading, trailing, consecutive, or control whitespace.',
 )
 
-export const absoluteUriSchema: z.ZodString = z
-  .string()
-  .refine((value) => parseAbsoluteUri(value).ok, {
-    message: 'Expected an absolute ASCII RFC 3986 URI.',
-  })
+// The parser is the proof, so the schema carries the brand the input contract promises.
+export const absoluteUriSchema: z.ZodType<AbsoluteUri> = z.custom<AbsoluteUri>(
+  (value) => parseAbsoluteUri(value).ok,
+  { message: 'Expected an absolute ASCII RFC 3986 URI.' },
+)
 
 const identifierInputSchemaValue = z.strictObject({
   system: absoluteUriSchema,
   value: nonBlankStringSchema,
 })
 export const identifierInputSchema: z.ZodObject<
-  { system: z.ZodString; value: z.ZodString },
+  { system: z.ZodType<AbsoluteUri>; value: z.ZodString },
   z.core.$strict
 > = identifierInputSchemaValue
 
@@ -86,7 +90,7 @@ export type ProviderScopeAssurance =
   'deployment-scoped-account-pseudonym' | 'documented-global-key-space'
 
 export const providerScopeIdentifierSchema: z.ZodType<{
-  readonly system: string
+  readonly system: AbsoluteUri
   readonly value: string
   readonly assurance: ProviderScopeAssurance
 }> = identifierInputSchema.extend({
@@ -227,40 +231,34 @@ const providerPatientReferenceSchemaValue = z.strictObject({
   }),
 })
 export const providerPatientReferenceSchema: z.ZodType<ProviderPatientReferenceInput> =
-  providerPatientReferenceSchemaValue as unknown as z.ZodType<ProviderPatientReferenceInput>
+  providerPatientReferenceSchemaValue
 
 const providerResearchStudyReferenceSchemaValue = z.strictObject({
   type: z.literal('ResearchStudy'),
   identifier: identifierInputSchema,
 })
 export const providerResearchStudyReferenceSchema: z.ZodType<ProviderResearchStudyReferenceInput> =
-  providerResearchStudyReferenceSchemaValue as unknown as z.ZodType<ProviderResearchStudyReferenceInput>
+  providerResearchStudyReferenceSchemaValue
 
-const opaqueIdentifierSystemShape = Object.fromEntries(
-  groveExchangeProtocol.opaqueIdentity.identityKinds.map(({ kind }) => [
-    kind,
-    absoluteUriSchema,
-  ]),
-) as Record<GroveOpaqueIdentityKind, z.ZodString>
+// One validator owns the deployment contract; a second field-level copy only diverges.
+export const deploymentIdentitySchema: z.ZodType<DeploymentIdentityInput> = z
+  .custom<DeploymentIdentityInput>()
+  .superRefine((value, context) => {
+    const validated = validateDeploymentIdentity(value)
+    if (validated.ok) return
+    for (const issue of validated.issues) {
+      context.addIssue({
+        code: 'custom',
+        path: [...issue.path],
+        message: issue.message,
+      })
+    }
+  })
 
-const deploymentIdentitySchemaValue = z.strictObject({
-  opaqueIdentifierSystems: z.strictObject(opaqueIdentifierSystemShape),
-  eventIdentifierSystem: absoluteUriSchema,
-  entryNodeIdentifierSystem: absoluteUriSchema,
-  keyId: z.string().regex(/^[A-Za-z0-9._-]+$/u),
-  keyEpoch: z.string().regex(/^[1-9]\d*$/u),
-  secretBase64Url: z.string().regex(/^[A-Za-z0-9_-]+$/u),
-  producerInstance: z
-    .string()
-    .regex(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
-    ),
-})
-export const deploymentIdentitySchema: z.ZodType<DeploymentIdentityInput> =
-  deploymentIdentitySchemaValue as unknown as z.ZodType<DeploymentIdentityInput>
-
-const fhirIdSchemaValue = z.string().regex(/^[A-Za-z0-9\-.]{1,64}$/u)
-export const fhirIdSchema: z.ZodString = fhirIdSchemaValue
+export const fhirIdSchema: z.ZodType<FhirId> = z.custom<FhirId>(
+  (value) => parseFhirId(value).ok,
+  { message: 'Expected a FHIR id of 1 to 64 unreserved characters.' },
+)
 
 const hostDeviceSchema = z.strictObject({
   sourceDeviceToken: nonBlankStringSchema,
@@ -281,7 +279,7 @@ const applicationDeviceSchemaValue = z.strictObject({
   host: hostDeviceSchema.optional(),
 })
 export const applicationDeviceSchema: z.ZodType<ApplicationDeviceInput> =
-  applicationDeviceSchemaValue as unknown as z.ZodType<ApplicationDeviceInput>
+  applicationDeviceSchemaValue
 
 const recordingDeviceBase = {
   stableUnitToken: nonBlankStringSchema,
@@ -292,28 +290,30 @@ const recordingDeviceBase = {
   modelNumber: nonBlankStringSchema.optional(),
 } as const
 
+const recordingDeviceSchemaValue = z.discriminatedUnion('identityScope', [
+  z.strictObject({
+    ...recordingDeviceBase,
+    identityScope: z.literal('deployment-scoped'),
+  }),
+  z.strictObject({
+    ...recordingDeviceBase,
+    identityScope: z.literal('authorized-hardware'),
+    disclosureAuthorization: z.literal('authorized-for-exchange'),
+  }),
+])
 export const recordingDeviceSchema: z.ZodType<RecordingDeviceInput> =
-  z.discriminatedUnion('identityScope', [
-    z.strictObject({
-      ...recordingDeviceBase,
-      identityScope: z.literal('deployment-scoped'),
-    }),
-    z.strictObject({
-      ...recordingDeviceBase,
-      identityScope: z.literal('authorized-hardware'),
-      disclosureAuthorization: z.literal('authorized-for-exchange'),
-    }),
-  ]) as unknown as z.ZodType<RecordingDeviceInput>
+  recordingDeviceSchemaValue
 
+const gatewayApplicationSchemaValue = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal('converter-application'),
+    roleAssurance: z.literal('mediated-or-routed-measurement'),
+  }),
+  z.strictObject({
+    kind: z.literal('distinct-application'),
+    roleAssurance: z.literal('mediated-or-routed-measurement'),
+    application: applicationDeviceSchema,
+  }),
+])
 export const gatewayApplicationSchema: z.ZodType<GatewayApplicationInput> =
-  z.discriminatedUnion('kind', [
-    z.strictObject({
-      kind: z.literal('converter-application'),
-      roleAssurance: z.literal('mediated-or-routed-measurement'),
-    }),
-    z.strictObject({
-      kind: z.literal('distinct-application'),
-      roleAssurance: z.literal('mediated-or-routed-measurement'),
-      application: applicationDeviceSchema,
-    }),
-  ])
+  gatewayApplicationSchemaValue

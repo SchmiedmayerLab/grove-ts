@@ -6,6 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
+import type {
+  ConnectedProvider,
+  ProviderScopeIdentifierInput,
+} from './types.js'
+import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
 import {
   providerAdapterCatalog,
   providerRawOutputDiscriminators,
@@ -13,10 +18,6 @@ import {
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
 } from '../contract/providers.generated.js'
-import type {
-  ConnectedProvider,
-  ProviderScopeIdentifierInput,
-} from './types.js'
 import {
   cloneJsonValue,
   deepFreeze,
@@ -27,6 +28,7 @@ import {
   type JsonValue,
   type Result,
 } from '../core/index.js'
+import { groveMobileContract } from '../mobile/contract.js'
 import {
   createEntryIdentity,
   deriveEntryNodeIdentifier,
@@ -34,11 +36,12 @@ import {
   deriveOpaqueIdentifier,
   isEventIdentityValue,
   validateDeploymentIdentity,
+  type DeploymentIdentitySource,
 } from '../mobile/identity.js'
-import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
 import type {
   ApplicationDeviceInput,
   CompleteIdentifierInput,
+  HostDeviceInput,
   DeploymentIdentityInput,
   IdentifiedEntryIdentityInput,
   RecordingDeviceInput,
@@ -75,7 +78,7 @@ const snapshotObject = (input: unknown): Result<JsonObject> => {
 
 /** Derives an immutable event-scoped Device snapshot identity. */
 export const deriveDeviceSnapshotEntryIdentity = (
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   event: CompleteIdentifierInput,
   sourceDeviceToken: string,
   role: DeviceSnapshotRole,
@@ -92,11 +95,13 @@ export const deriveDeviceSnapshotEntryIdentity = (
     typeof sourceDeviceToken !== 'string' ||
     sourceDeviceToken.trim() === '' ||
     !deviceSnapshotRoles.has(role) ||
-    eventSystem !== safeDeployment.value.eventIdentifierSystem ||
+    eventSystem !== safeDeployment.value.identity.eventIdentifierSystem ||
     eventRole !== 'event' ||
     typeof eventValue !== 'string' ||
     !isEventIdentityValue(eventValue) ||
-    !eventValue.startsWith(`e0:${safeDeployment.value.producerInstance}:`)
+    !eventValue.startsWith(
+      `${groveMobileContract.identity.valuePrefixes.event}${safeDeployment.value.identity.producerInstance}:`,
+    )
   ) {
     return err(
       'invalid-identifier',
@@ -112,9 +117,25 @@ export const deriveDeviceSnapshotEntryIdentity = (
   return createEntryIdentity(identifier.value, id)
 }
 
+/** Derives the optional host snapshot identity an application declares, if any. */
+export const resolveHostIdentity = (
+  application: { readonly host?: HostDeviceInput | undefined },
+  deployment: DeploymentIdentitySource,
+  event: CompleteIdentifierInput,
+): Result<IdentifiedEntryIdentityInput | undefined> =>
+  application.host === undefined ?
+    ok(undefined)
+  : deriveDeviceSnapshotEntryIdentity(
+      deployment,
+      event,
+      application.host.sourceDeviceToken,
+      'host',
+      application.host.id,
+    )
+
 /** Derives an immutable event-scoped application Device snapshot identity. */
 export const deriveApplicationEntryIdentity = (
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   event: CompleteIdentifierInput,
   input: ApplicationDeviceInput,
 ): Result<IdentifiedEntryIdentityInput> => {
@@ -148,7 +169,7 @@ export interface RecordingDeviceGraphIdentity {
 
 /** Derives a stable per-unit recording Device identity from admitted instance evidence. */
 export const deriveRecordingDeviceEntryIdentity = (
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   event: CompleteIdentifierInput,
   adapterId: string,
   input: RecordingDeviceInput,
@@ -206,7 +227,7 @@ export const deriveRecordingDeviceEntryIdentity = (
 
 /** Optional writer-record lineage identity for a logical record assigned by an application. */
 export const deriveWriterRecordIdentifier = (
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   writerApplication: CompleteIdentifierInput,
   writerRecordId: string,
 ): Result<CompleteIdentifierInput> => {
@@ -402,6 +423,7 @@ const providerSourceComponents = (
 ]
 
 interface AdmittedProviderSelector {
+  readonly row: (typeof providerAdapterCatalog.providers)[number]
   readonly provider: ConnectedProvider
   readonly sourceType: string
 }
@@ -409,15 +431,16 @@ interface AdmittedProviderSelector {
 const admittedProviderSelector = (
   provider: JsonValue | undefined,
   sourceType: JsonValue | undefined,
-): AdmittedProviderSelector | undefined =>
-  (
-    typeof provider === 'string' &&
-    providerCodes.has(provider) &&
-    typeof sourceType === 'string' &&
-    admittedProviderSource(provider, sourceType)
-  ) ?
-    { provider: provider as ConnectedProvider, sourceType }
-  : undefined
+): AdmittedProviderSelector | undefined => {
+  const row = providerAdapterCatalog.providers.find(({ id }) => id === provider)
+  return (
+      row !== undefined &&
+        typeof sourceType === 'string' &&
+        admittedProviderSource(row.id, sourceType)
+    ) ?
+      { row, provider: row.id, sourceType }
+    : undefined
+}
 
 const providerOutputsAreAdmitted = (
   provider: ConnectedProvider,
@@ -448,7 +471,7 @@ export const deriveProviderIdentities = (
       ['outputs'],
     )
   }
-  const { provider, sourceType } = selector
+  const { row: providerRow, provider, sourceType } = selector
   const parsedOutputs = rawOutputs.map(providerOutputIdentity)
   const provenanceNodeRole = value.provenanceNodeRole
   if (
@@ -475,16 +498,6 @@ export const deriveProviderIdentities = (
       ['providerScopeIdentifier', 'system'],
     )
   }
-  const providerRow = providerAdapterCatalog.providers.find(
-    ({ id }) => id === provider,
-  )
-  if (providerRow === undefined) {
-    return err(
-      'unsupported-measurement',
-      'Provider identity selectors must match one exact pinned provider catalog row.',
-      ['provider'],
-    )
-  }
   const expectedAssurance = providerRow.providerScopeMode
   if (
     typeof providerScope?.value !== 'string' ||
@@ -493,6 +506,7 @@ export const deriveProviderIdentities = (
     sourceType.trim() === '' ||
     typeof value.sourceNativeId !== 'string' ||
     value.sourceNativeId.trim() === '' ||
+    typeof value.eventSequence !== 'string' ||
     (provenanceNodeRole !== undefined &&
       !isProvenanceNodeRole(provenanceNodeRole))
   ) {
@@ -501,8 +515,6 @@ export const deriveProviderIdentities = (
       'Provider identity inputs must be complete canonical values.',
     )
   }
-  const normalizedProvenanceNodeRole =
-    isProvenanceNodeRole(provenanceNodeRole) ? provenanceNodeRole : undefined
   const outputKeys = typedOutputs.map((output) => JSON.stringify(output))
   if (new Set(outputKeys).size !== outputKeys.length) {
     return err(
@@ -524,12 +536,9 @@ export const deriveProviderIdentities = (
     sourceType,
     sourceNativeId: value.sourceNativeId,
     outputs: typedOutputs,
-    eventSequence:
-      typeof value.eventSequence === 'string' ? value.eventSequence : '',
-    deployment: deployment.value,
-    ...(normalizedProvenanceNodeRole === undefined ?
-      {}
-    : { provenanceNodeRole: normalizedProvenanceNodeRole }),
+    eventSequence: value.eventSequence,
+    deployment: deployment.value.identity,
+    ...(provenanceNodeRole === undefined ? {} : { provenanceNodeRole }),
   }
   const source = providerSourceComponents(normalizedInput)
   const sourceRecord = deriveOpaqueIdentifier(

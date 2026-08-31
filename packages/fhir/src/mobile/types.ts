@@ -21,7 +21,7 @@ type OpaqueIdentityDefinition =
   (typeof import('../contract/measurement-catalog.generated.js').groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
 
 /** Kinds whose catalog definition declares the given value kind and effective. */
-type MeasurementKindsWhere<
+export type MeasurementKindsWhere<
   ValueKind extends string,
   Effective extends string,
 > = {
@@ -123,14 +123,14 @@ export type SleepStage = SharedCatalog['sleep-stage']['allowedValues'][number]
 export interface SleepStageSourceCodingInput {
   readonly system: AbsoluteUri
   readonly code: string
-  readonly display?: string
+  readonly display?: string | undefined
 }
 
 export interface SleepStageMeasurement {
   readonly kind: 'sleep-stage'
   readonly stage: SleepStage
   /** Source-native stage retained when it is more precise than the shared stage. */
-  readonly sourceStageCoding?: SleepStageSourceCodingInput
+  readonly sourceStageCoding?: SleepStageSourceCodingInput | undefined
   readonly effective: PeriodEffectiveTime
 }
 
@@ -138,15 +138,15 @@ export interface SleepStageMeasurement {
 export interface CompleteIdentifierInput {
   readonly system: AbsoluteUri
   readonly value: string
-  /** Grove role carried in Identifier.type for deployment-owned v0 identities. */
+  /** Grove role carried in Identifier.type for deployment-owned identities. */
   readonly role?: GroveIdentifierRole
 }
 
-/** Closed roles used to distinguish deployment-owned v0 identifier key spaces. */
+/** Closed roles used to distinguish deployment-owned identifier key spaces. */
 export type GroveIdentifierRole =
   OpaqueIdentityDefinition['identifierRole'] | 'entry-node' | 'event'
 
-/** Closed HMAC domains from the Grove exchange protocol. */
+/** Closed HMAC domains from the Grove FHIR exchange protocol. */
 export type GroveOpaqueIdentityKind = OpaqueIdentityDefinition['kind']
 
 export type GroveOpaqueIdentitySystems = Readonly<
@@ -195,22 +195,22 @@ export interface IdentifiedEntryIdentityInput extends ResourceIdentityInput {
 export interface ApplicationDeviceInput {
   /** Deployment-governed token for this source application/build; never emitted in clear. */
   readonly sourceDeviceToken: string
-  readonly id?: FhirId
+  readonly id?: FhirId | undefined
   readonly name: string
-  readonly version?: string
-  readonly build?: string
-  readonly manufacturer?: string
+  readonly version?: string | undefined
+  readonly build?: string | undefined
+  readonly manufacturer?: string | undefined
   /** Optional immutable snapshot of the hardware/OS hosting this application. */
-  readonly host?: HostDeviceInput
+  readonly host?: HostDeviceInput | undefined
 }
 
 export interface HostDeviceInput {
   /** Event-time source token for this host snapshot; never emitted in clear. */
   readonly sourceDeviceToken: string
-  readonly id?: FhirId
-  readonly name?: string
-  readonly manufacturer?: string
-  readonly modelNumber?: string
+  readonly id?: FhirId | undefined
+  readonly name?: string | undefined
+  readonly manufacturer?: string | undefined
+  readonly modelNumber?: string | undefined
   readonly operatingSystemVersion: string
 }
 
@@ -219,10 +219,10 @@ interface RecordingDeviceBaseInput {
   readonly stableUnitToken: string
   /** Complete logical subject identity used only in the HMAC preimage. */
   readonly subjectIdentifier: CompleteIdentifierInput
-  readonly id?: FhirId
-  readonly name?: string
-  readonly manufacturer?: string
-  readonly modelNumber?: string
+  readonly id?: FhirId | undefined
+  readonly name?: string | undefined
+  readonly manufacturer?: string | undefined
+  readonly modelNumber?: string | undefined
 }
 
 /** Recording-device identity must declare its privacy/disclosure scope. */

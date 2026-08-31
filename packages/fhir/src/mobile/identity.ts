@@ -10,7 +10,6 @@ import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { v5 as uuidV5 } from 'uuid'
 import { groveMobileContract } from './contract.js'
-import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import type {
   CompleteIdentifierInput,
   DeploymentIdentityInput,
@@ -18,10 +17,15 @@ import type {
   GroveOpaqueIdentityKind,
   IdentifiedEntryIdentityInput,
 } from './types.js'
+import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import {
   cloneJsonValue,
+  decodeCanonicalBase64,
   deepFreeze,
+  encodeBase64,
   err,
+  mapResult,
   ok,
   parseAbsoluteUri,
   parseFhirId,
@@ -31,7 +35,6 @@ import {
   type Result,
   type UrnUuid,
 } from '../core/index.js'
-import { providerAdapterCatalog } from '../contract/providers.generated.js'
 
 const ASCII_TOKEN = /^[A-Za-z\d._-]+$/u
 const POSITIVE_DECIMAL = /^[1-9]\d*$/u
@@ -39,26 +42,47 @@ const UNSIGNED_DECIMAL = /^(?:0|[1-9]\d*)$/u
 const LOWERCASE_ROLE = /^[a-z][a-z\d-]*$/u
 const CANONICAL_PRODUCER_UUID =
   /^[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u
-const OPAQUE_VALUE = /^v0:[A-Za-z\d._-]+:[1-9]\d*:[A-Za-z\d_-]{43}$/u
-const EVENT_VALUE =
-  /^e0:[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}:[1-9]\d*$/u
-const ENTRY_NODE_VALUE = /^n0:[a-z][a-z\d-]*:(?:0|[1-9]\d*):[A-Za-z\d_-]{43}$/u
-const BASE64_URL = /^[A-Za-z\d_-]+$/u
+const {
+  opaque: OPAQUE_PREFIX,
+  event: EVENT_PREFIX,
+  entryNode: ENTRY_NODE_PREFIX,
+} = groveMobileContract.identity.valuePrefixes
+const OPAQUE_VALUE = new RegExp(
+  `^${OPAQUE_PREFIX}[A-Za-z\\d._-]+:[1-9]\\d*:[A-Za-z\\d_-]{43}$`,
+  'u',
+)
+const EVENT_VALUE = new RegExp(
+  `^${EVENT_PREFIX}[\\da-f]{8}-[\\da-f]{4}-[1-5][\\da-f]{3}-[89ab][\\da-f]{3}-[\\da-f]{12}:[1-9]\\d*$`,
+  'u',
+)
+const ENTRY_NODE_VALUE = new RegExp(
+  `^${ENTRY_NODE_PREFIX}[a-z][a-z\\d-]*:(?:0|[1-9]\\d*):[A-Za-z\\d_-]{43}$`,
+  'u',
+)
 const MINIMUM_HMAC_KEY_BYTES = 32
 
 const PROVIDER_CODES: ReadonlySet<string> = new Set(
   providerAdapterCatalog.providers.map(({ id }) => id),
 )
-const PROVIDER_IDENTITY_KINDS: ReadonlySet<string> = new Set([
-  'provider-record',
-  'provider-output',
-  'provider-artifact',
-])
-const GENERIC_SOURCE_IDENTITY_KINDS: ReadonlySet<string> = new Set([
-  'source-record',
-  'source-output',
-  'source-artifact',
-])
+// A kind's coordinate family is written in its components: the first names the adapter
+// space, and only source-record coordinates carry a native record id.
+const identityKindsCoordinatedBy = (
+  adapterComponent: string,
+): ReadonlySet<string> =>
+  new Set(
+    groveExchangeProtocol.opaqueIdentity.identityKinds
+      .filter(
+        ({ components }) =>
+          components[0] === adapterComponent &&
+          (components as readonly string[]).includes('native-record-id'),
+      )
+      .map(({ kind }) => kind),
+  )
+
+const PROVIDER_IDENTITY_KINDS: ReadonlySet<string> =
+  identityKindsCoordinatedBy('provider-code')
+const GENERIC_SOURCE_IDENTITY_KINDS: ReadonlySet<string> =
+  identityKindsCoordinatedBy('adapter-id')
 
 const identityKinds = groveExchangeProtocol.opaqueIdentity.identityKinds.map(
   ({ kind }) => kind,
@@ -93,7 +117,7 @@ type StringComponentTuple<Components extends readonly string[]> = Readonly<{
   [Index in keyof Components]: string
 }>
 
-/** Exact ordered component tuples projected from the pinned protocol catalog. */
+/** Exact ordered component tuples projected from the Grove FHIR protocol catalog. */
 export type GroveOpaqueIdentityComponents = Readonly<{
   [Kind in GroveOpaqueIdentityKind]: StringComponentTuple<
     Extract<OpaqueIdentityDefinition, { readonly kind: Kind }>['components']
@@ -186,52 +210,11 @@ export const encodeLengthFramedUtf8 = (
   }
 }
 
-const base64UrlWithoutPadding = (bytes: Uint8Array): string => {
-  const alphabet =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-  let result = ''
-  for (let index = 0; index < bytes.length; index += 3) {
-    const first = bytes[index] ?? 0
-    const second = bytes[index + 1]
-    const third = bytes[index + 2]
-    const block = (first << 16) | ((second ?? 0) << 8) | (third ?? 0)
-    result += alphabet.charAt((block >>> 18) & 63)
-    result += alphabet.charAt((block >>> 12) & 63)
-    if (second !== undefined) result += alphabet.charAt((block >>> 6) & 63)
-    if (third !== undefined) result += alphabet.charAt(block & 63)
-  }
-  return result
-}
+const base64UrlWithoutPadding = (bytes: Uint8Array): string =>
+  encodeBase64(bytes, { urlSafe: true })
 
-const decodeBase64UrlWithoutPadding = (
-  value: string,
-): Uint8Array | undefined => {
-  if (
-    typeof value !== 'string' ||
-    !BASE64_URL.test(value) ||
-    value.length % 4 === 1
-  ) {
-    return undefined
-  }
-  const alphabet =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-  const bytes: number[] = []
-  let accumulator = 0
-  let bits = 0
-  for (const character of value) {
-    const digit = alphabet.indexOf(character)
-    if (digit < 0) return undefined
-    accumulator = (accumulator << 6) | digit
-    bits += 6
-    if (bits >= 8) {
-      bits -= 8
-      bytes.push((accumulator >>> bits) & 0xff)
-    }
-  }
-  if (bits > 0 && (accumulator & ((1 << bits) - 1)) !== 0) return undefined
-  const decoded = Uint8Array.from(bytes)
-  return base64UrlWithoutPadding(decoded) === value ? decoded : undefined
-}
+const decodeBase64UrlWithoutPadding = (value: string): Uint8Array | undefined =>
+  decodeCanonicalBase64(value, { urlSafe: true })
 
 const isPublicConformanceKey = (key: Uint8Array): boolean =>
   key.length === 32 && key.every((value, index) => value === index)
@@ -246,10 +229,37 @@ const DEPLOYMENT_IDENTITY_KEYS = [
   'secretBase64Url',
 ] as const
 
+/** Deployment material proven complete once; its decoded HMAC secret stays module-private. */
+export interface ValidatedDeploymentIdentity {
+  readonly identity: DeploymentIdentityInput
+}
+
+/** Raw deployment configuration, or material `validateDeploymentIdentity` already proved. */
+export type DeploymentIdentitySource =
+  DeploymentIdentityInput | ValidatedDeploymentIdentity
+
+interface ResolvedDeployment {
+  readonly handle: ValidatedDeploymentIdentity
+  readonly identity: DeploymentIdentityInput
+  readonly secret: Uint8Array
+}
+
+// Membership is the proof, and only frozen material is admitted: a handle a caller holds
+// can be neither forged nor edited afterwards, so reuse cannot smuggle in new material.
+const publiclyValidatedDeployments = new WeakSet<ValidatedDeploymentIdentity>()
+const deploymentSecrets = new WeakMap<ValidatedDeploymentIdentity, Uint8Array>()
+
+const isPubliclyValidated = (
+  source: unknown,
+): source is ValidatedDeploymentIdentity =>
+  typeof source === 'object' &&
+  source !== null &&
+  publiclyValidatedDeployments.has(source as ValidatedDeploymentIdentity)
+
 const validateDeploymentIdentityInternal = (
   input: unknown,
   allowPublicConformanceKey: boolean,
-): Result<DeploymentIdentityInput> => {
+): Result<ResolvedDeployment> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
   if (
@@ -347,7 +357,10 @@ const validateDeploymentIdentityInternal = (
       ['producerInstance'],
     )
   }
-  const secret = decodeBase64UrlWithoutPadding(candidate.secretBase64Url)
+  const secret =
+    typeof candidate.secretBase64Url === 'string' ?
+      decodeBase64UrlWithoutPadding(candidate.secretBase64Url)
+    : undefined
   if (secret === undefined || secret.byteLength < MINIMUM_HMAC_KEY_BYTES) {
     return err(
       'invalid-identifier',
@@ -362,17 +375,35 @@ const validateDeploymentIdentityInternal = (
       ['secretBase64Url'],
     )
   }
-  return ok(candidate)
+  const identity = deepFreeze(candidate) as DeploymentIdentityInput
+  const handle: ValidatedDeploymentIdentity = Object.freeze({ identity })
+  deploymentSecrets.set(handle, secret)
+  // Only publicly validated material is reusable; the conformance seam revalidates.
+  if (!allowPublicConformanceKey) publiclyValidatedDeployments.add(handle)
+  return ok({ handle, identity, secret })
+}
+
+const resolveDeployment = (
+  source: unknown,
+  allowPublicConformanceKey: boolean,
+): Result<ResolvedDeployment> => {
+  if (isPubliclyValidated(source)) {
+    const secret = deploymentSecrets.get(source)
+    if (secret !== undefined) {
+      return ok({ handle: source, identity: source.identity, secret })
+    }
+  }
+  return validateDeploymentIdentityInternal(source, allowPublicConformanceKey)
 }
 
 /** Validates deployment identity material for every public production/runtime operation. */
 export const validateDeploymentIdentity = (
   input: unknown,
-): Result<DeploymentIdentityInput> =>
-  validateDeploymentIdentityInternal(input, false)
+): Result<ValidatedDeploymentIdentity> =>
+  mapResult(resolveDeployment(input, false), ({ handle }) => handle)
 
 const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   identityKind: Kind,
   components: GroveOpaqueIdentityComponents[Kind],
   allowPublicConformanceKey: boolean,
@@ -383,14 +414,11 @@ const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
   ) {
     return err(
       'invalid-code',
-      'Identity kind is not part of the closed Grove v0 identity contract.',
+      'Identity kind is not part of the closed Grove identity contract.',
       ['identityKind'],
     )
   }
-  const validated = validateDeploymentIdentityInternal(
-    deployment,
-    allowPublicConformanceKey,
-  )
+  const validated = resolveDeployment(deployment, allowPublicConformanceKey)
   if (!validated.ok) return validated
   const componentSnapshot = cloneJsonValue(components)
   if (!componentSnapshot.ok) return componentSnapshot
@@ -448,24 +476,18 @@ const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
     ...componentSnapshot.value,
   ])
   if (!preimage.ok) return preimage
-  const secret = decodeBase64UrlWithoutPadding(validated.value.secretBase64Url)
-  if (secret === undefined) {
-    return err(
-      'invalid-identifier',
-      'Identity secret is not canonical base64url.',
-    )
-  }
+  const { identity, secret } = validated.value
   const digest = hmac(sha256, secret, preimage.value)
   return ok({
-    system: validated.value.opaqueIdentifierSystems[identityKind],
-    value: `v0:${validated.value.keyId}:${validated.value.keyEpoch}:${base64UrlWithoutPadding(digest)}`,
+    system: identity.opaqueIdentifierSystems[identityKind],
+    value: `${OPAQUE_PREFIX}${identity.keyId}:${identity.keyEpoch}:${base64UrlWithoutPadding(digest)}`,
     role: identifierRoleByKind[identityKind],
   })
 }
 
-/** Derives one deployment-owned, role-typed Grove v0 HMAC Identifier. */
+/** Derives one deployment-owned, role-typed Grove HMAC Identifier. */
 export const deriveOpaqueIdentifier = <Kind extends GroveOpaqueIdentityKind>(
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   identityKind: Kind,
   components: GroveOpaqueIdentityComponents[Kind],
 ): Result<CompleteIdentifierInput> =>
@@ -506,10 +528,10 @@ export const deriveConformanceVectorOpaqueIdentifier = <
 
 /** Creates the sole event business Identifier for one immutable exchange assertion. */
 export const deriveEventIdentifier = (
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   sequence: string,
 ): Result<CompleteIdentifierInput> => {
-  const validated = validateDeploymentIdentity(deployment)
+  const validated = resolveDeployment(deployment, false)
   if (!validated.ok) return validated
   if (typeof sequence !== 'string' || !POSITIVE_DECIMAL.test(sequence)) {
     return err(
@@ -519,13 +541,13 @@ export const deriveEventIdentifier = (
     )
   }
   return ok({
-    system: validated.value.eventIdentifierSystem,
-    value: `e0:${validated.value.producerInstance}:${sequence}`,
+    system: validated.value.identity.eventIdentifierSystem,
+    value: `${EVENT_PREFIX}${validated.value.identity.producerInstance}:${sequence}`,
     role: 'event',
   })
 }
 
-/** Creates an unkeyed, event-scoped graph-node Identifier for a resource without business ID. */
+/** Derives the event-scoped node value a resource without a business Identifier is keyed by. */
 export const deriveEntryNodeValue = (
   eventSystem: string,
   eventValue: string,
@@ -567,18 +589,18 @@ export const deriveEntryNodeValue = (
   ])
   if (!preimage.ok) return preimage
   return ok(
-    `n0:${role}:${ordinal}:${base64UrlWithoutPadding(sha256(preimage.value))}`,
+    `${ENTRY_NODE_PREFIX}${role}:${ordinal}:${base64UrlWithoutPadding(sha256(preimage.value))}`,
   )
 }
 
 /** Creates an unkeyed, event-scoped graph-node Identifier for a resource without business ID. */
 export const deriveEntryNodeIdentifier = (
-  deployment: DeploymentIdentityInput,
+  deployment: DeploymentIdentitySource,
   event: CompleteIdentifierInput,
   role: string,
   ordinal: string,
 ): Result<CompleteIdentifierInput> => {
-  const validated = validateDeploymentIdentity(deployment)
+  const validated = resolveDeployment(deployment, false)
   if (!validated.ok) return validated
   const eventSnapshot = cloneJsonValue(event)
   if (
@@ -595,11 +617,13 @@ export const deriveEntryNodeIdentifier = (
   }
   const eventValue = eventSnapshot.value as unknown as CompleteIdentifierInput
   if (
-    eventValue.system !== validated.value.eventIdentifierSystem ||
+    eventValue.system !== validated.value.identity.eventIdentifierSystem ||
     eventValue.role !== 'event' ||
     typeof eventValue.value !== 'string' ||
     !EVENT_VALUE.test(eventValue.value) ||
-    !eventValue.value.startsWith(`e0:${validated.value.producerInstance}:`)
+    !eventValue.value.startsWith(
+      `${EVENT_PREFIX}${validated.value.identity.producerInstance}:`,
+    )
   ) {
     return err(
       'invalid-identifier',
@@ -615,7 +639,7 @@ export const deriveEntryNodeIdentifier = (
   )
   if (!value.ok) return value
   return ok({
-    system: validated.value.entryNodeIdentifierSystem,
+    system: validated.value.identity.entryNodeIdentifierSystem,
     value: value.value,
     role: 'entry-node',
   })
@@ -626,15 +650,15 @@ const hasCanonicalSha256DigestSuffix = (value: string): boolean => {
   return decodeBase64UrlWithoutPadding(digest)?.length === 32
 }
 
-export const isOpaqueIdentityValue = (value: string): boolean =>
+export const isOpaqueIdentityValue = (value: unknown): boolean =>
   typeof value === 'string' &&
   OPAQUE_VALUE.test(value) &&
   hasCanonicalSha256DigestSuffix(value)
 
-export const isEventIdentityValue = (value: string): boolean =>
+export const isEventIdentityValue = (value: unknown): boolean =>
   typeof value === 'string' && EVENT_VALUE.test(value)
 
-export const isEntryNodeIdentityValue = (value: string): boolean =>
+export const isEntryNodeIdentityValue = (value: unknown): boolean =>
   typeof value === 'string' &&
   ENTRY_NODE_VALUE.test(value) &&
   hasCanonicalSha256DigestSuffix(value)

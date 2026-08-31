@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import {
   assemblerAgent,
   coding,
@@ -24,27 +23,35 @@ import {
 } from './graph.js'
 import {
   deriveApplicationEntryIdentity,
-  deriveDeviceSnapshotEntryIdentity,
-  deriveProviderIdentities,
   deriveRecordingDeviceEntryIdentity,
   deriveWriterRecordIdentifier,
+  resolveHostIdentity,
+  type ProviderIdentities,
   type RecordingDeviceGraphIdentity,
 } from './identity.js'
 import {
   providerMeasurementDefinition,
   providerMeasurementProfile,
   providerObservationProfile,
-  type ProviderMeasurementDefinition,
+  type MeasurementDefinition,
 } from './measurement-definition.js'
 import { EXTENSIONS, PROFILES, SYSTEMS } from './profiles.js'
-import {
-  providerOutputCoordinates,
-  type ProviderOutputCoordinates,
-  parseProviderMeasurementBundleInput,
-} from './provider.js'
+import { parseProviderMeasurementBundle } from './provider.js'
 import type { ProviderMeasurementBundleInput } from './types.js'
-import { issues, ok, type Result, type UrnUuid } from '../core/index.js'
-import { createEntryIdentity } from '../mobile/identity.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
+import {
+  collectResults,
+  issues,
+  ok,
+  type Issue,
+  type Result,
+  type UrnUuid,
+} from '../core/index.js'
+import {
+  createEntryIdentity,
+  validateDeploymentIdentity,
+  type DeploymentIdentitySource,
+} from '../mobile/identity.js'
 import type {
   CompleteIdentifierInput,
   IdentifiedEntryIdentityInput,
@@ -94,7 +101,7 @@ type ProviderGraphResource = Parameters<typeof identifiedEntry>[1]
 const definitionFor = (
   input: ProviderMeasurementBundleInput,
   kind: ConnectedMeasurement['kind'],
-): ProviderMeasurementDefinition => {
+): MeasurementDefinition => {
   const definition = providerMeasurementDefinition(
     input.source.adapter.provider,
     kind,
@@ -107,7 +114,7 @@ const definitionFor = (
   return definition
 }
 
-const categoryFor = (definition: ProviderMeasurementDefinition) => {
+const categoryFor = (definition: MeasurementDefinition) => {
   if (definition.category === undefined) return undefined
   return [
     concept(
@@ -383,7 +390,7 @@ const makeProvenance = (
 
 const optionalRecordingDeviceIdentity = (
   input: ProviderMeasurementBundleInput['source']['recordingDevice'],
-  deployment: ProviderMeasurementBundleInput['deploymentIdentity'],
+  deployment: DeploymentIdentitySource,
   event: CompleteIdentifierInput,
   adapterId: string,
 ): Result<RecordingDeviceGraphIdentity | undefined> =>
@@ -396,25 +403,10 @@ type ResolvedGatewayIdentity = Pick<
   'distinctGatewayApplication' | 'distinctGatewayHost' | 'gatewayReference'
 >
 
-const resolveHostIdentity = (
-  application: ProviderMeasurementBundleInput['application'],
-  deployment: ProviderMeasurementBundleInput['deploymentIdentity'],
-  event: CompleteIdentifierInput,
-): Result<IdentifiedEntryIdentityInput | undefined> =>
-  application.host === undefined ?
-    ok(undefined)
-  : deriveDeviceSnapshotEntryIdentity(
-      deployment,
-      event,
-      application.host.sourceDeviceToken,
-      'host',
-      application.host.id,
-    )
-
 const resolveGatewayIdentity = (
   input: ProviderMeasurementBundleInput['gatewayApplication'],
   converter: IdentifiedEntryIdentityInput,
-  deployment: ProviderMeasurementBundleInput['deploymentIdentity'],
+  deployment: DeploymentIdentitySource,
   event: CompleteIdentifierInput,
 ): Result<ResolvedGatewayIdentity> => {
   if (input === undefined) return ok({})
@@ -436,138 +428,116 @@ const resolveGatewayIdentity = (
   })
 }
 
-const resolveProviderOutputCoordinates = (
+const missingAggregationIssues = (
   input: ProviderMeasurementBundleInput,
-): Result<readonly ProviderOutputCoordinates[]> => {
-  for (const [index, measurement] of input.measurements.entries()) {
-    if (missingAggregationMethod(input, measurement.kind)) {
-      return issues([
+): readonly Issue[] =>
+  input.measurements.flatMap((measurement, index) =>
+    missingAggregationMethod(input, measurement.kind) ?
+      [
         {
-          severity: 'error',
-          code: 'unsupported-measurement',
+          severity: 'error' as const,
+          code: 'unsupported-measurement' as const,
           path: ['measurements', index],
           message:
             `${input.source.adapter.provider}/${input.source.sourceType} declares no aggregation ` +
             `for ${measurement.kind}, so its Observation would omit the method its profile requires.`,
         },
-      ])
-    }
-  }
-  const outputCoordinates = input.measurements.map(({ kind }) =>
-    providerOutputCoordinates(
-      input.source.adapter.provider,
-      input.source.sourceType,
-      kind,
-    ),
+      ]
+    : [],
   )
-  if (outputCoordinates.some((coordinates) => coordinates === undefined)) {
-    return issues([
-      {
-        severity: 'error',
-        code: 'unsupported-measurement',
-        path: ['measurements'],
-        message: 'No catalog-owned Provider output role exists.',
-      },
-    ])
-  }
-  return ok(outputCoordinates as readonly ProviderOutputCoordinates[])
+
+// One output identity is derived per measurement, so a length mismatch is a builder defect
+// rather than a caller error; it is still reported instead of thrown.
+const misalignedIdentities = (path: ReadonlyArray<string | number>) =>
+  issues([
+    {
+      severity: 'error' as const,
+      code: 'value-mismatch' as const,
+      path,
+      message:
+        'Provider output identities do not align with the measurements they were derived from.',
+    },
+  ])
+
+const zipMeasurements = <Value>(
+  input: ProviderMeasurementBundleInput,
+  values: readonly Value[],
+): ReadonlyArray<readonly [ConnectedMeasurement, Value]> | undefined => {
+  const pairs = input.measurements.flatMap((measurement, index) => {
+    const value = values[index]
+    return value === undefined ? [] : [[measurement, value] as const]
+  })
+  return pairs.length === values.length ? pairs : undefined
 }
 
 const resolveObservationIdentities = (
   input: ProviderMeasurementBundleInput,
   outputs: readonly CompleteIdentifierInput[],
 ): Result<readonly IdentifiedEntryIdentityInput[]> => {
-  const observations: IdentifiedEntryIdentityInput[] = []
-  for (const [index, output] of outputs.entries()) {
-    const measurement = input.measurements[index]
-    if (measurement === undefined) {
-      return issues([
-        {
-          severity: 'error',
-          code: 'value-mismatch',
-          path: ['measurements'],
-          message: 'Provider output identities are incomplete.',
-        },
-      ])
-    }
-    const observation = createEntryIdentity(
-      output,
-      input.repositoryIds?.observations?.[measurement.kind],
-    )
-    if (!observation.ok) return observation
-    observations.push(observation.value)
-  }
-  return ok(observations)
+  const pairs = zipMeasurements(input, outputs)
+  if (pairs === undefined) return misalignedIdentities(['measurements'])
+  return collectResults(
+    pairs.map(([measurement, output]) =>
+      createEntryIdentity(
+        output,
+        input.repositoryIds?.observations?.[measurement.kind],
+      ),
+    ),
+  )
 }
 
 const resolveGraphIdentities = (
   input: ProviderMeasurementBundleInput,
+  connected: ProviderIdentities,
 ): Result<ResolvedGraphIdentities> => {
-  const outputCoordinates = resolveProviderOutputCoordinates(input)
-  if (!outputCoordinates.ok) return outputCoordinates
-  const connected = deriveProviderIdentities({
-    provider: input.source.adapter.provider,
-    providerScopeIdentifier: input.source.providerScopeIdentifier,
-    sourceType: input.source.sourceType,
-    sourceNativeId: input.source.sourceNativeId,
-    outputs: outputCoordinates.value.map(
-      ({ outputRole, outputDiscriminator }) => ({
-        kind: 'provider-output' as const,
-        outputRole,
-        outputDiscriminator,
-      }),
-    ),
-    eventSequence: input.eventSequence,
-    deployment: input.deploymentIdentity,
-  })
-  if (!connected.ok) return connected
+  const aggregation = missingAggregationIssues(input)
+  if (aggregation.length > 0) return issues(aggregation)
+  const deployment = validateDeploymentIdentity(input.deploymentIdentity)
+  if (!deployment.ok) return deployment
 
-  const observations = resolveObservationIdentities(
-    input,
-    connected.value.outputs,
-  )
+  const observations = resolveObservationIdentities(input, connected.outputs)
   if (!observations.ok) return observations
   const provenance = createEntryIdentity(
-    connected.value.provenanceNode,
+    connected.provenanceNode,
     input.repositoryIds?.provenance,
   )
   if (!provenance.ok) return provenance
   const application = deriveApplicationEntryIdentity(
-    input.deploymentIdentity,
-    connected.value.event,
+    deployment.value,
+    connected.event,
     input.application,
   )
   if (!application.ok) return application
   const applicationHost = resolveHostIdentity(
     input.application,
-    input.deploymentIdentity,
-    connected.value.event,
+    deployment.value,
+    connected.event,
   )
   if (!applicationHost.ok) return applicationHost
   const gateway = resolveGatewayIdentity(
     input.gatewayApplication,
     application.value,
-    input.deploymentIdentity,
-    connected.value.event,
+    deployment.value,
+    connected.event,
   )
   if (!gateway.ok) return gateway
   const dataOrigin = deriveApplicationEntryIdentity(
-    input.deploymentIdentity,
-    connected.value.event,
+    deployment.value,
+    connected.event,
     input.source.dataOrigin,
   )
   if (!dataOrigin.ok) return dataOrigin
   const dataOriginHost = resolveHostIdentity(
     input.source.dataOrigin,
-    input.deploymentIdentity,
-    connected.value.event,
+    deployment.value,
+    connected.event,
   )
   if (!dataOriginHost.ok) return dataOriginHost
 
   const recordingDevice = optionalRecordingDeviceIdentity(
     input.source.recordingDevice,
-    input.deploymentIdentity,
-    connected.value.event,
+    deployment.value,
+    connected.event,
     input.source.adapter.provider,
   )
   if (!recordingDevice.ok) return recordingDevice
@@ -576,15 +546,15 @@ const resolveGraphIdentities = (
     input.source.writerRecord === undefined ?
       undefined
     : deriveWriterRecordIdentifier(
-        input.deploymentIdentity,
+        deployment.value,
         input.source.writerRecord.applicationIdentifier,
         input.source.writerRecord.nativeRecordId,
       )
   if (writerRecord !== undefined && !writerRecord.ok) return writerRecord
 
   const resolved: ResolvedGraphIdentities = {
-    sourceRecord: connected.value.sourceRecord,
-    event: connected.value.event,
+    sourceRecord: connected.sourceRecord,
+    event: connected.event,
     observations: observations.value,
     provenance: provenance.value,
     application: application.value,
@@ -608,20 +578,10 @@ const buildProviderObservationEntries = (
   input: ProviderMeasurementBundleInput,
   identities: ResolvedGraphIdentities,
 ): Result<readonly ProviderGraphEntry[]> => {
-  const entries: ProviderGraphEntry[] = []
-  for (const [index, measurement] of input.measurements.entries()) {
-    const identity = identities.observations[index]
-    if (identity === undefined) {
-      return issues([
-        {
-          severity: 'error',
-          code: 'value-mismatch',
-          path: ['measurements', index],
-          message: 'Provider output identities are incomplete.',
-        },
-      ])
-    }
-    entries.push(
+  const pairs = zipMeasurements(input, identities.observations)
+  if (pairs === undefined) return misalignedIdentities(['measurements'])
+  return ok(
+    pairs.map(([measurement, identity]) =>
       identifiedEntry(
         identity,
         makeObservation(
@@ -632,9 +592,8 @@ const buildProviderObservationEntries = (
           aggregationMethodFor(input, measurement.kind),
         ),
       ),
-    )
-  }
-  return ok(entries)
+    ),
+  )
 }
 
 const optionalIdentifiedEntry = (
@@ -767,11 +726,11 @@ const buildProviderGraphEntries = (
 export const buildProviderMeasurementBundle = (
   input: ProviderMeasurementBundleInput,
 ): Result<GroveMobileExchangeBundle> => {
-  const parsed = parseProviderMeasurementBundleInput(input)
+  const parsed = parseProviderMeasurementBundle(input)
   if (!parsed.ok) return parsed
-  const validatedInput = parsed.value
+  const { input: validatedInput, identities: connected } = parsed.value
 
-  const identities = resolveGraphIdentities(validatedInput)
+  const identities = resolveGraphIdentities(validatedInput, connected)
   if (!identities.ok) return identities
 
   const entry = buildProviderGraphEntries(validatedInput, identities.value)

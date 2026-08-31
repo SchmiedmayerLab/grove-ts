@@ -25,7 +25,6 @@ export type { GroveMobileProtocolContract } from './contract.js'
 export {
   groveExchangeProtocol,
   groveProfileClaims,
-  groveFhirContractVersion,
   groveFhirVersion,
   groveMobilePackageMetadata,
   groveMobileProfileCanonicals,
