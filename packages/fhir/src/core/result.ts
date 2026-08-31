@@ -6,7 +6,15 @@
 // SPDX-License-Identifier: MIT
 //
 
+import type { z } from 'zod'
+
 export type IssueSeverity = 'error' | 'warning'
+
+/**
+ * Namespaced producer-rule identifier. The registry that names them lives above core,
+ * so this states only the contract's `namespace.rule` grammar.
+ */
+type GroveProducerRuleCode = `${string}.${string}`
 
 export type IssueCode =
   | 'duplicate-identifier'
@@ -23,7 +31,7 @@ export type IssueCode =
   | 'schema-invalid'
   | 'unsupported-measurement'
   | 'value-mismatch'
-  | `mobile-${string}`
+  | GroveProducerRuleCode
 
 export interface Issue {
   readonly severity: IssueSeverity
@@ -62,92 +70,49 @@ export const issues = <T = never>(entries: readonly Issue[]): Result<T> => ({
   issues: entries,
 })
 
-type InspectedResult<T> =
-  | {
-      readonly ok: true
-      readonly value: T
-      readonly warnings: readonly Issue[]
-    }
-  | { readonly ok: false; readonly issues: readonly Issue[] }
+export const issue = (
+  code: IssueCode,
+  path: Issue['path'],
+  message: string,
+): Issue => ({ severity: 'error', code, path, message })
 
-const isIssue = (value: unknown): value is Issue => {
-  if (typeof value !== 'object' || value === null) return false
-  const candidate = value as Partial<Issue>
-  return (
-    ['error', 'warning'].includes(String(candidate.severity)) &&
-    typeof candidate.code === 'string' &&
-    Array.isArray(candidate.path) &&
-    candidate.path.every(
-      (component) =>
-        typeof component === 'string' || typeof component === 'number',
-    ) &&
-    typeof candidate.message === 'string' &&
-    (candidate.reason === undefined || typeof candidate.reason === 'string') &&
-    (candidate.location === undefined || typeof candidate.location === 'string')
+/** A zod path with symbol keys rendered as the text a caller can act on. */
+export const zodIssuePath = (
+  entry: z.core.$ZodIssue,
+): ReadonlyArray<string | number> =>
+  entry.path.map((component) =>
+    typeof component === 'symbol' ?
+      (component.description ?? component.toString())
+    : component,
   )
-}
 
-const inspectResult = <T>(value: unknown): InspectedResult<T> | undefined => {
-  try {
-    if (typeof value !== 'object' || value === null) return undefined
-    const candidate = value as {
-      readonly ok?: unknown
-      readonly value?: T
-      readonly warnings?: unknown
-      readonly issues?: unknown
-    }
-    if (candidate.ok === true) {
-      const warnings = candidate.warnings ?? []
-      return Array.isArray(warnings) && warnings.every(isIssue) ?
-          { ok: true, value: candidate.value as T, warnings }
-        : undefined
-    }
-    return (
-        candidate.ok === false &&
-          Array.isArray(candidate.issues) &&
-          candidate.issues.every(isIssue)
-      ) ?
-        { ok: false, issues: candidate.issues }
-      : undefined
-  } catch {
-    return undefined
-  }
-}
-
-const invalidResult = <T>(
-  path: ReadonlyArray<string | number> = [],
-): Result<T> =>
-  err('invalid-type', 'Expected a well-formed Grove Result value.', path)
+/** A base schema failure as a Grove Issue; producer rules carry their own code. */
+export const zodIssueToIssue = (entry: z.core.$ZodIssue): Issue => ({
+  severity: 'error',
+  code: 'schema-invalid',
+  path: zodIssuePath(entry),
+  message: entry.message,
+})
 
 export const mapResult = <T, U>(
   result: Result<T>,
   transform: (value: T) => U,
-): Result<U> => {
-  const inspected = inspectResult<T>(result)
-  if (inspected === undefined) return invalidResult()
-  return inspected.ok ?
-      ok(transform(inspected.value), inspected.warnings)
-    : inspected
-}
+): Result<U> =>
+  result.ok ? ok(transform(result.value), result.warnings ?? []) : result
 
 export const collectResults = <T>(
   results: ReadonlyArray<Result<T>>,
 ): Result<readonly T[]> => {
-  if (!Array.isArray(results)) return invalidResult()
   const values: T[] = []
   const failures: Issue[] = []
   const warnings: Issue[] = []
 
-  for (const [index, result] of results.entries()) {
-    const inspected = inspectResult<T>(result)
-    if (inspected === undefined) {
-      const invalid = invalidResult<T>([index])
-      if (!invalid.ok) failures.push(...invalid.issues)
-    } else if (inspected.ok) {
-      values.push(inspected.value)
-      warnings.push(...inspected.warnings)
+  for (const result of results) {
+    if (result.ok) {
+      values.push(result.value)
+      warnings.push(...(result.warnings ?? []))
     } else {
-      failures.push(...inspected.issues)
+      failures.push(...result.issues)
     }
   }
 

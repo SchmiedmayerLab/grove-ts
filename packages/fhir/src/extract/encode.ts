@@ -95,8 +95,8 @@ export const toFhirReference = (
 /**
  * Bytes as the FHIR `base64Binary` that carries them.
  *
- * Unpadded and unwrapped: the lexical form admits whitespace, but a value written without it is
- * what every producer emits and what `decodeBase64Binary` reads back unchanged.
+ * Unwrapped: the lexical form admits whitespace, but a value written without it is what every
+ * producer emits and what `decodeBase64Binary` reads back unchanged.
  */
 export const encodeBase64Binary = (bytes: Uint8Array): string => {
   let binary = ''

@@ -6,6 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
+export {
+  decodeCanonicalBase64,
+  encodeBase64,
+  type Base64Options,
+} from './base64.js'
 export { deepFreeze, type ReadonlyDeep } from './freeze.js'
 export { cloneJsonValue, type JsonValue } from './json.js'
 export {
@@ -38,9 +43,12 @@ export {
 export {
   collectResults,
   err,
+  issue,
   issues,
   mapResult,
   ok,
+  zodIssuePath,
+  zodIssueToIssue,
   type Issue,
   type IssueCode,
   type IssueSeverity,
