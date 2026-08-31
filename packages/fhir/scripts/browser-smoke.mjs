@@ -248,6 +248,7 @@ try {
       url: 'https://example.org/Questionnaire/browser',
       version: '1.0.0',
       status: 'active',
+      subjectTypes: ['Patient'],
       items: [
         {
           linkId: 'ready',
@@ -264,6 +265,7 @@ try {
         value: 'browser-1',
       },
       status: 'completed',
+      subject: { type: 'Patient', reference: 'Patient/browser' },
       authored: '2026-08-20T12:00:00Z',
       items: [
         {
