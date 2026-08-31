@@ -36,7 +36,7 @@ export {
   type GroveRecordingFormat,
   type ProviderRecordingFormat,
   type SharedMobileMeasurementKind,
-} from './measurement-catalog.generated.js'
+} from '../contract/measurement-catalog.generated.js'
 export { canonicalizeMobileEffectiveInstant } from './time.js'
 export type {
   ApplicationDeviceInput,

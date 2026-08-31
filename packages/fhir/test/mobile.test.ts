@@ -28,7 +28,7 @@ import {
   sharedMobileMeasurementCatalog,
   type MobileMeasurement,
 } from '../src/mobile/index.js'
-import * as mobileContract from '../src/mobile/measurement-catalog.generated.js'
+import * as mobileContract from '../src/contract/measurement-catalog.generated.js'
 
 const unwrap = <T>(result: Result<T>): T => {
   if (!result.ok) throw new Error(result.issues[0]?.message)

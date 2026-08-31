@@ -24,14 +24,11 @@ const config = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   collectCoverage: false,
-  // The generated schemas are excluded: an uncovered branch there is a FHIR type no example
-  // happened to use, not untested logic. What guards them is regeneration parity (`check:zod`),
-  // the pinned generation invariants, and validation against both releases' published examples.
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/zod/r4/schemas.ts',
-    '!src/zod/r4b/schemas.ts',
-  ],
+  // Generated files are excluded: an uncovered branch there is a FHIR type no example happened
+  // to use, not untested logic. What guards them is regeneration parity (`check:zod`,
+  // `check:catalog`), the pinned generation invariants, and validation against both releases'
+  // published examples.
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.generated.ts'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'json-summary', 'lcov'],
   coverageThreshold: {

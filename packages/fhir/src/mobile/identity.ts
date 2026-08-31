@@ -10,7 +10,7 @@ import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { v5 as uuidV5 } from 'uuid'
 import { groveMobileContract } from './contract.js'
-import { groveExchangeProtocol } from './measurement-catalog.generated.js'
+import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import type {
   CompleteIdentifierInput,
   DeploymentIdentityInput,
@@ -31,7 +31,7 @@ import {
   type Result,
   type UrnUuid,
 } from '../core/index.js'
-import { providerAdapterCatalog } from '../providers/contract.generated.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
 
 const ASCII_TOKEN = /^[A-Za-z\d._-]+$/u
 const POSITIVE_DECIMAL = /^[1-9]\d*$/u

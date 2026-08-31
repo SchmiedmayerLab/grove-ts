@@ -10,11 +10,11 @@ import { z } from 'zod'
 import {
   adapterSourceMarkerClaims,
   groveProfileClaims,
-} from '../src/mobile/measurement-catalog.generated.js'
+} from '../src/contract/measurement-catalog.generated.js'
 import {
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
-} from '../src/providers/contract.generated.js'
+} from '../src/contract/providers.generated.js'
 import { decodeGroveRuleDiagnostic } from '../src/r4/diagnostics.js'
 import {
   hasAdmittedActiveDeviceProfile,

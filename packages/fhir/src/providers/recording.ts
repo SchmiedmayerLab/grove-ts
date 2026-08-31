@@ -13,7 +13,7 @@ import {
   providerAdapterCatalog,
   providerRawOutputRoles,
   type ProviderRecordingFormat,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import {
   assemblerAgent,
   coding,

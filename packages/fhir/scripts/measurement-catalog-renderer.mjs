@@ -141,7 +141,7 @@ export const renderMeasurementCatalogSources = ({
     groveRecordingFormatRegistry,
     type GroveRecordingFormat,
     type ProviderRecordingFormat,
-  } from '../mobile/measurement-catalog.generated.js'
+  } from './measurement-catalog.generated.js'
 
   export type ProviderScalarOutputRoles = typeof providerScalarOutputRoles
 

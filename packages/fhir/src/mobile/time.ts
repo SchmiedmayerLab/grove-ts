@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { mobileEffectiveCanonicalization } from './measurement-catalog.generated.js'
+import { mobileEffectiveCanonicalization } from '../contract/measurement-catalog.generated.js'
 import {
   err,
   parseFhirInstant,

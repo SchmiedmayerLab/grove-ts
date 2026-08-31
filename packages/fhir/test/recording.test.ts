@@ -18,7 +18,7 @@ import {
   type FhirInstant,
   type Result,
 } from '../src/index.js'
-import { adapterSourceMarkerClaims } from '../src/mobile/measurement-catalog.generated.js'
+import { adapterSourceMarkerClaims } from '../src/contract/measurement-catalog.generated.js'
 import {
   buildProviderRecordingBundle,
   healthKitClinicalRecordAdmission,

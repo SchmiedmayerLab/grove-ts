@@ -29,7 +29,7 @@ export {
   type ProviderRecordEffectiveRules,
   type ProviderScalarOutputDiscriminators,
   type ProviderScalarOutputRoles,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 export {
   parseProviderMeasurementBundleInput,
   parseNormalizedProviderRecord,

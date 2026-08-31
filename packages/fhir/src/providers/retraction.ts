@@ -12,7 +12,7 @@ import {
   providerRawOutputRoles,
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import {
   concept,
   deduplicateIdentifiedEntries,
@@ -66,7 +66,7 @@ import {
   deriveOpaqueIdentifier,
   validateDeploymentIdentity,
 } from '../mobile/identity.js'
-import { type groveExchangeProtocol } from '../mobile/measurement-catalog.generated.js'
+import { type groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import type {
   ApplicationDeviceInput,
   CompleteIdentifierInput,

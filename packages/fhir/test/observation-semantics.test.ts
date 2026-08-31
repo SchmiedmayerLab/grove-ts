@@ -12,11 +12,11 @@ import { z } from 'zod'
 import {
   groveProfileClaims,
   sharedMobileMeasurementCatalog,
-} from '../src/mobile/measurement-catalog.generated.js'
+} from '../src/contract/measurement-catalog.generated.js'
 import {
   adapterMeasurementCatalog,
   groveProviderProfileCanonicals,
-} from '../src/providers/contract.generated.js'
+} from '../src/contract/providers.generated.js'
 import {
   hasAdmittedMobileObservationProfile,
   validateMobileObservationSemantics,

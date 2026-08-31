@@ -1093,7 +1093,7 @@ const HEADER = `//
 `
 
 const outputPathFor = (releaseKey) =>
-  resolve(PACKAGE_ROOT, 'src/zod', releaseKey, 'schemas.ts')
+  resolve(PACKAGE_ROOT, 'src/zod', releaseKey, 'schemas.generated.ts')
 
 async function main(argv) {
   const releaseKey = argv[argv.indexOf('--release') + 1]
@@ -1227,7 +1227,7 @@ ${body}${skippedExport}`
     parser: 'typescript',
   })
   const outputDir = resolve(PACKAGE_ROOT, 'src/zod', releaseKey)
-  const outputPath = join(outputDir, 'schemas.ts')
+  const outputPath = join(outputDir, 'schemas.generated.ts')
   if (check) {
     const current =
       existsSync(outputPath) ? await readFile(outputPath, 'utf8') : ''

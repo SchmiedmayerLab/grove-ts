@@ -14,7 +14,7 @@ import type { z } from 'zod'
 import { encodeGroveRuleDiagnostic } from './diagnostics.js'
 import { parseAbsoluteUri } from '../core/index.js'
 import { groveMobileContract } from '../mobile/contract.js'
-import { healthKitApplicationDeviceIdentity } from '../providers/contract.generated.js'
+import { healthKitApplicationDeviceIdentity } from '../contract/providers.generated.js'
 
 export type UnknownRecord = Readonly<Record<string, unknown>>
 

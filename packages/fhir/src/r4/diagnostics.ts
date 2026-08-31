@@ -7,7 +7,7 @@
 //
 
 import type { Issue } from '../core/index.js'
-import { groveExchangeRuleDiagnostics } from '../mobile/measurement-catalog.generated.js'
+import { groveExchangeRuleDiagnostics } from '../contract/measurement-catalog.generated.js'
 
 const ENCODED_RULE_PREFIX = 'grove-producer-rule:'
 

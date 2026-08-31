@@ -10,9 +10,9 @@ import type {
   AdapterMeasurementCatalog,
   ProviderRawOutputRoles,
   ProviderScalarOutputRoles,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import type { AbsoluteUri, FhirId, FhirInstant } from '../core/index.js'
-import type { SharedMobileMeasurementKind } from '../mobile/measurement-catalog.generated.js'
+import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
 import type {
   ApplicationDeviceInput,
   CompleteIdentifierInput,
@@ -65,7 +65,7 @@ export type SupportedConnectedProviderMeasurementKind<
 > = keyof ScalarOutputRoles[Provider][SourceType] & string
 
 type ProviderContractRow<Provider extends ConnectedProvider> = Extract<
-  (typeof import('./contract.generated.js').providerAdapterCatalog)['providers'][number],
+  (typeof import('../contract/providers.generated.js').providerAdapterCatalog)['providers'][number],
   { readonly id: Provider }
 >
 
@@ -332,10 +332,10 @@ interface RecordingAttachmentBaseInput {
 }
 
 export type ProviderRecordingFormat =
-  import('./contract.generated.js').ProviderRecordingFormat
+  import('../contract/providers.generated.js').ProviderRecordingFormat
 
 export type RawPayloadAdmissionAssertion =
-  (typeof import('./contract.generated.js').providerAdapterCatalog)['rawPayloadAdmission']['allowedAssertions'][number]
+  (typeof import('../contract/providers.generated.js').providerAdapterCatalog)['rawPayloadAdmission']['allowedAssertions'][number]
 
 export interface EmbeddedRecordingAttachmentInput extends RecordingAttachmentBaseInput {
   readonly kind: 'embedded'

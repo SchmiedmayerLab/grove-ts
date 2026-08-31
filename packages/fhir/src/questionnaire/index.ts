@@ -11,7 +11,7 @@ export {
   groveFhirContractVersion,
   groveFhirVersion,
   groveQuestionnairePackageMetadata,
-} from './contract.generated.js'
+} from '../contract/questionnaire.generated.js'
 export { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
 export { preflightQuestionnairePair } from './preflight.js'
 export {

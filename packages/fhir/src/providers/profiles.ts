@@ -12,7 +12,7 @@ import {
   providerAdapterCatalog,
   groveProviderPackageCanonicals,
   groveProviderProfileCanonicals,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import { groveMobileContract } from '../mobile/contract.js'
 
 export const PROVIDER_RECORDING_OUTPUT_ROLE: 'native-recording' =

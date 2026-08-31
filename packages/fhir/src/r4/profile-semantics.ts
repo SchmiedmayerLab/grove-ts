@@ -22,11 +22,11 @@ import { groveMobileContract } from '../mobile/contract.js'
 import {
   adapterSourceMarkerClaims,
   groveProfileClaims,
-} from '../mobile/measurement-catalog.generated.js'
+} from '../contract/measurement-catalog.generated.js'
 import {
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
-} from '../providers/contract.generated.js'
+} from '../contract/providers.generated.js'
 
 const SHA1_BASE64 = /^[A-Za-z\d+/]{26}[AEIMQUYcgkosw048]=$/u
 

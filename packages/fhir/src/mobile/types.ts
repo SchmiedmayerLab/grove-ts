@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { SharedMobileMeasurementKind } from './measurement-catalog.generated.js'
+import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
 import type {
   AbsoluteUri,
   FhirId,
@@ -15,10 +15,10 @@ import type {
 } from '../core/index.js'
 
 type SharedCatalog =
-  typeof import('./measurement-catalog.generated.js').sharedMobileMeasurementCatalog
+  typeof import('../contract/measurement-catalog.generated.js').sharedMobileMeasurementCatalog
 
 type OpaqueIdentityDefinition =
-  (typeof import('./measurement-catalog.generated.js').groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
+  (typeof import('../contract/measurement-catalog.generated.js').groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
 
 /** Kinds whose catalog definition declares the given value kind and effective. */
 type MeasurementKindsWhere<

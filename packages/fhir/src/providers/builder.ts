@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { providerAdapterCatalog } from './contract.generated.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import {
   assemblerAgent,
   coding,

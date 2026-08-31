@@ -11,7 +11,7 @@ import {
   groveMobilePackageMetadata,
   groveMobileProfileCanonicals,
   groveRecordingFormatRegistry,
-} from './measurement-catalog.generated.js'
+} from '../contract/measurement-catalog.generated.js'
 import { deepFreeze } from '../core/index.js'
 
 export interface GroveMobileProtocolContract {

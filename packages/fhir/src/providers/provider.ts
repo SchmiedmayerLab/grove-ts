@@ -11,7 +11,7 @@ import {
   providerRecordEffectiveRules,
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import { deriveProviderIdentities } from './identity.js'
 import {
   connectedProviderExclusiveDefinitions,
@@ -55,7 +55,7 @@ import {
 import {
   sharedMobileMeasurementCatalog,
   type SharedMobileMeasurementKind,
-} from '../mobile/measurement-catalog.generated.js'
+} from '../contract/measurement-catalog.generated.js'
 import type {
   ChoiceQuantityMeasurementKind,
   InstantCodedMeasurementKind,

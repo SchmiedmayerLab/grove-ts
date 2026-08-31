@@ -12,7 +12,7 @@ import {
   providerRawOutputRoles,
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import type {
   ConnectedProvider,
   ProviderScopeIdentifierInput,
@@ -35,7 +35,7 @@ import {
   isEventIdentityValue,
   validateDeploymentIdentity,
 } from '../mobile/identity.js'
-import { groveProfileClaims } from '../mobile/measurement-catalog.generated.js'
+import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
 import type {
   ApplicationDeviceInput,
   CompleteIdentifierInput,

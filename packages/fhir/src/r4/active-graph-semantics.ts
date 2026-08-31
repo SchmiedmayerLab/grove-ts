@@ -37,7 +37,7 @@ import { isOpaqueIdentityValue } from '../mobile/identity.js'
 import {
   groveProfileClaims,
   healthConnectDataOriginApplication,
-} from '../mobile/measurement-catalog.generated.js'
+} from '../contract/measurement-catalog.generated.js'
 
 export { hasAdmittedMobileObservationProfile } from './active-observation-semantics.js'
 export { validateExchangeEnvelope, type ValidatedEnvelope }

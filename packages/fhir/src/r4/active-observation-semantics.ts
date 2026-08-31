@@ -20,12 +20,12 @@ import { groveMobileContract } from '../mobile/contract.js'
 import {
   groveProfileClaims,
   sharedMobileMeasurementCatalog,
-} from '../mobile/measurement-catalog.generated.js'
+} from '../contract/measurement-catalog.generated.js'
 import {
   adapterMeasurementCatalog,
   groveProviderProfileCanonicals,
   providerAdapterCatalog,
-} from '../providers/contract.generated.js'
+} from '../contract/providers.generated.js'
 import { compareFhirDateTimes } from '../zod/support.js'
 
 interface MeasurementDefinition {

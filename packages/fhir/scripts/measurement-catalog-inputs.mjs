@@ -86,12 +86,12 @@ export const loadMeasurementCatalogInputs = async (scriptUrl, arguments_) => {
     outputPaths: {
       mobile: resolve(
         packageRoot,
-        'src/mobile/measurement-catalog.generated.ts',
+        'src/contract/measurement-catalog.generated.ts',
       ),
-      provider: resolve(packageRoot, 'src/providers/contract.generated.ts'),
+      provider: resolve(packageRoot, 'src/contract/providers.generated.ts'),
       questionnaire: resolve(
         packageRoot,
-        'src/questionnaire/contract.generated.ts',
+        'src/contract/questionnaire.generated.ts',
       ),
     },
     packageGraph,

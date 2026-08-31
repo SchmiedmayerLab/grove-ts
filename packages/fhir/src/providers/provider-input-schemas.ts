@@ -7,7 +7,7 @@
 //
 
 import { z } from 'zod'
-import { providerAdapterCatalog } from './contract.generated.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import { SYSTEMS } from './profiles.js'
 import type {
   ProviderPatientReferenceInput,
@@ -20,7 +20,7 @@ import {
   type Issue,
 } from '../core/index.js'
 import { containsIsolatedSurrogate } from '../mobile/identity.js'
-import { groveExchangeProtocol } from '../mobile/measurement-catalog.generated.js'
+import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import { canonicalizeMobileEffectiveInstant } from '../mobile/time.js'
 import type {
   ApplicationDeviceInput,

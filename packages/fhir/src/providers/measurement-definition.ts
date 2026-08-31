@@ -11,9 +11,9 @@ import {
   groveProviderProfileCanonicals,
   providerAdapterCatalog,
   providerScalarOutputRoles,
-} from './contract.generated.js'
+} from '../contract/providers.generated.js'
 import type { ConnectedProvider } from './types.js'
-import { sharedMobileMeasurementCatalog } from '../mobile/measurement-catalog.generated.js'
+import { sharedMobileMeasurementCatalog } from '../contract/measurement-catalog.generated.js'
 
 export interface ProviderMeasurementDefinition {
   readonly id: string

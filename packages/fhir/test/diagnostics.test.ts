@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { groveExchangeRuleDiagnostics } from '../src/mobile/measurement-catalog.generated.js'
+import { groveExchangeRuleDiagnostics } from '../src/contract/measurement-catalog.generated.js'
 import {
   decodeGroveRuleDiagnostic,
   encodeGroveRuleDiagnostic,

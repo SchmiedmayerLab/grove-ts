@@ -7,7 +7,7 @@
 //
 
 import type { z } from 'zod'
-import { groveQuestionnaireProfileCanonicals } from './contract.generated.js'
+import { groveQuestionnaireProfileCanonicals } from '../contract/questionnaire.generated.js'
 import {
   validateQuestionnaireContract,
   validateQuestionnaireResponseItemContract,

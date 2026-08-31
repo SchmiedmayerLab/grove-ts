@@ -6,4 +6,4 @@
 // SPDX-License-Identifier: MIT
 //
 
-export * from './schemas.js'
+export * from './schemas.generated.js'
