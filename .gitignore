@@ -66,3 +66,9 @@ eslint_report.json
 
 # OS
 Thumbs.db
+
+# Grove FHIR catalogs, fetched at the pinned commit rather than vendored.
+.grove-fhir/
+
+# FHIR core packages the Zod generator downloads; a build cache, not source.
+packages/fhir/.fhir-cache/

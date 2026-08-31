@@ -1,0 +1,27 @@
+{
+  "source": {
+    "adapter": {
+      "kind": "providers",
+      "provider": "google-health-api"
+    },
+    "providerScopeIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-google-001",
+      "assurance": "deployment-scoped-account-pseudonym"
+    },
+    "sourceType": "heart-rate",
+    "sourceNativeId": "synthetic-google-heart-rate-series-001",
+    "dataOrigin": {
+      "sourceDeviceToken": "origin-instance-google-001",
+      "name": "Google Health API"
+    }
+  },
+  "attachment": {
+    "kind": "embedded",
+    "contentType": "application/json",
+    "title": "Authorized minimized Google heart-rate recording",
+    "format": "provider-recording",
+    "payloadAssertion": "caller-authorized-opaque-payload",
+    "dataBase64": "eyJzeW50aGV0aWMiOnRydWV9"
+  }
+}

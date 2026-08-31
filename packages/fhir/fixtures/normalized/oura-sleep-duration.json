@@ -1,0 +1,28 @@
+{
+  "source": {
+    "adapter": { "kind": "providers", "provider": "oura" },
+    "providerScopeIdentifier": {
+      "system": "https://example.org/provider-key-spaces",
+      "value": "oura-document-uuid-global",
+      "assurance": "documented-global-key-space"
+    },
+    "sourceType": "sleep",
+    "sourceNativeId": "synthetic-sleep-2026-08-19",
+    "recordingMethod": "automatically-recorded",
+    "dataOrigin": {
+      "sourceDeviceToken": "origin-instance-oura-001",
+      "name": "Oura"
+    }
+  },
+  "measurements": [
+    {
+      "kind": "sleep-duration",
+      "value": 7.4,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-19T22:30:00Z",
+        "end": "2026-08-20T06:20:00Z"
+      }
+    }
+  ]
+}

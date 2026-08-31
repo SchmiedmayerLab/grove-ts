@@ -1,0 +1,46 @@
+{
+  "source": {
+    "adapter": { "kind": "providers", "provider": "oura" },
+    "providerScopeIdentifier": {
+      "system": "https://example.org/provider-key-spaces",
+      "value": "oura-document-uuid-global",
+      "assurance": "documented-global-key-space"
+    },
+    "sourceType": "daily_activity",
+    "sourceNativeId": "synthetic-daily-activity-2026-08-20",
+    "recordingMethod": "automatically-recorded",
+    "dataOrigin": {
+      "sourceDeviceToken": "origin-instance-oura-001",
+      "name": "Oura"
+    }
+  },
+  "measurements": [
+    {
+      "kind": "distance",
+      "value": 6123,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-21T00:00:00Z"
+      }
+    },
+    {
+      "kind": "step-count",
+      "value": 8234,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-21T00:00:00Z"
+      }
+    },
+    {
+      "kind": "active-energy",
+      "value": 430,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-21T00:00:00Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "source": {
+    "adapter": {
+      "kind": "providers",
+      "provider": "withings"
+    },
+    "providerScopeIdentifier": {
+      "system": "https://example.org/deployments/provider-accounts",
+      "value": "pseudonym-withings-001",
+      "assurance": "deployment-scoped-account-pseudonym"
+    },
+    "sourceType": "sleepIntraday",
+    "sourceNativeId": "synthetic-withings-sleep-series-001",
+    "dataOrigin": {
+      "sourceDeviceToken": "origin-instance-withings-001",
+      "name": "Withings"
+    }
+  },
+  "attachment": {
+    "kind": "embedded",
+    "contentType": "application/json",
+    "title": "Authorized minimized Withings sleep recording",
+    "format": "provider-recording",
+    "payloadAssertion": "caller-authorized-opaque-payload",
+    "dataBase64": "eyJzeW50aGV0aWMiOnRydWV9"
+  }
+}
