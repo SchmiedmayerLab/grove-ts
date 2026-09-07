@@ -1,0 +1,322 @@
+{
+  "identifier": {
+    "type": {
+      "coding": [
+        {
+          "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+          "code": "event"
+        }
+      ]
+    },
+    "system": "https://grovealliance.org/fhir/testing/identity/event",
+    "value": "e0:33fc1b64-6b4c-4bb8-994a-82a8d72eb5dc:39"
+  },
+  "timestamp": "2026-08-20T12:03:00Z",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:d84ea885-e118-52f2-90b1-925f92afb702",
+      "resource": {
+        "resourceType": "Observation",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/withings/StructureDefinition/withings-qrs-duration",
+            "https://grovealliance.org/fhir/withings/StructureDefinition/withings-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider",
+            "valueCode": "withings"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type",
+            "valueCode": "withings/getmeas:135"
+          },
+          {
+            "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-recording-method",
+            "valueCoding": {
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-recording-method",
+              "code": "automatically-recorded"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "source-record"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/provider-record/fixture-key/1",
+            "value": "v0:fixture-key:1:9BdypFvzThLDwoZaAkXJoWLWqDNqaNic5oAhD6zAb6w"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "source-output"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/provider-output/fixture-key/1",
+            "value": "v0:fixture-key:1:YrLEi4lkIP19yRHhjL0N7US8Uho6xCZYLkZOqcq9CWY"
+          }
+        ],
+        "status": "final",
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "8633-0" }]
+        },
+        "subject": {
+          "type": "Patient",
+          "identifier": {
+            "system": "https://grovealliance.org/fhir/testing/patient-pseudonyms",
+            "value": "patient-example"
+          }
+        },
+        "effectiveDateTime": "2026-08-20T12:00:00.000Z",
+        "valueQuantity": {
+          "value": 92,
+          "unit": "ms",
+          "system": "http://unitsofmeasure.org",
+          "code": "ms"
+        }
+      },
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
+          "valueIdentifier": {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "source-output"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/provider-output/fixture-key/1",
+            "value": "v0:fixture-key:1:YrLEi4lkIP19yRHhjL0N7US8Uho6xCZYLkZOqcq9CWY"
+          }
+        }
+      ]
+    },
+    {
+      "fullUrl": "urn:uuid:41ced2c7-02a2-57ec-aed8-d996f96f0345",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v0:fixture-key:1:AtOWrf7z6ZVcyMJNO_vx-fIUBZUytKMW-PT_x0I2CiE"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Synthetic connected provider",
+            "type": "user-friendly-name"
+          }
+        ]
+      },
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
+          "valueIdentifier": {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v0:fixture-key:1:AtOWrf7z6ZVcyMJNO_vx-fIUBZUytKMW-PT_x0I2CiE"
+          }
+        }
+      ]
+    },
+    {
+      "fullUrl": "urn:uuid:a31e7d33-eec1-55a9-ba76-f7a2e115a4de",
+      "resource": {
+        "resourceType": "Device",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-application-device"
+          ]
+        },
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v0:fixture-key:1:lp2Cnde-8YMwJBqwNUzgr5t4k8z_7ybfORUJagYVpEE"
+          }
+        ],
+        "status": "active",
+        "deviceName": [
+          {
+            "name": "Grove TypeScript conformance producer",
+            "type": "user-friendly-name"
+          }
+        ],
+        "version": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "urn:iso:std:iso:11073:10101",
+                  "code": "531975",
+                  "display": "Software revision"
+                }
+              ]
+            },
+            "value": "0.0.0"
+          }
+        ]
+      },
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
+          "valueIdentifier": {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "device-snapshot"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/device-snapshot/fixture-key/1",
+            "value": "v0:fixture-key:1:lp2Cnde-8YMwJBqwNUzgr5t4k8z_7ybfORUJagYVpEE"
+          }
+        }
+      ]
+    },
+    {
+      "fullUrl": "urn:uuid:0b45d042-6862-55bd-a464-fc2679ff3020",
+      "resource": {
+        "resourceType": "Provenance",
+        "meta": {
+          "profile": [
+            "https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance"
+          ]
+        },
+        "target": [
+          { "reference": "urn:uuid:d84ea885-e118-52f2-90b1-925f92afb702" }
+        ],
+        "occurredDateTime": "2026-08-20T12:00:00Z",
+        "recorded": "2026-08-20T12:02:00Z",
+        "activity": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle",
+              "code": "transform",
+              "display": "Transform/Translate Record Lifecycle Event"
+            }
+          ],
+          "text": "Transform/Translate Record Lifecycle Event"
+        },
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler",
+                  "display": "Assembler"
+                }
+              ],
+              "text": "Assembler"
+            },
+            "who": {
+              "reference": "urn:uuid:a31e7d33-eec1-55a9-ba76-f7a2e115a4de"
+            }
+          }
+        ],
+        "entity": [
+          {
+            "role": "source",
+            "what": {
+              "identifier": {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                      "code": "source-record"
+                    }
+                  ]
+                },
+                "system": "https://grovealliance.org/fhir/testing/identity/provider-record/fixture-key/1",
+                "value": "v0:fixture-key:1:9BdypFvzThLDwoZaAkXJoWLWqDNqaNic5oAhD6zAb6w"
+              }
+            },
+            "agent": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                      "code": "enterer",
+                      "display": "Enterer"
+                    }
+                  ],
+                  "text": "Enterer"
+                },
+                "who": {
+                  "reference": "urn:uuid:41ced2c7-02a2-57ec-aed8-d996f96f0345"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "extension": [
+        {
+          "url": "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-exchange-entry-node-key",
+          "valueIdentifier": {
+            "type": {
+              "coding": [
+                {
+                  "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+                  "code": "entry-node"
+                }
+              ]
+            },
+            "system": "https://grovealliance.org/fhir/testing/identity/entry-node",
+            "value": "n0:conversion-provenance:0:8ZRVTj4Udaeytn6DxmTcyAWuzCQGrpgFIJBmH4tDES4"
+          }
+        }
+      ]
+    }
+  ],
+  "resourceType": "Bundle",
+  "meta": {
+    "profile": [
+      "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+    ]
+  },
+  "type": "collection"
+}

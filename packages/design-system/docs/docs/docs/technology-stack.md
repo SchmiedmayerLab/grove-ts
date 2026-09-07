@@ -22,7 +22,7 @@ Our choices prioritize simplicity, performance, accessibility, and developer exp
 - **[Radix UI](https://www.radix-ui.com/)** - Unstyled, accessible component primitives providing robust interaction patterns and WCAG compliance
 - **[React Hook Form](https://react-hook-form.com/)** - Performant form handling with validation
 - **[Zod](https://zod.dev/)** - TypeScript-first schema validation
-- **[TanStack Table](https://tanstack.com/table)** - Headless table utilities for DataTable component
+- **[TanStack Table](https://tanstack.com/table/latest)** - Headless table utilities for DataTable component
 - **[Firebase](https://firebase.google.com/)** - Authentication utilities and patterns
 - **[date-fns](https://date-fns.org/)** - Date manipulation and formatting
 - **[ES-Toolkit](https://es-toolkit.slash.page/)** - Modern utility library for efficient JavaScript operations
@@ -89,7 +89,7 @@ At the same time, thanks to the modular structure, you can swap out components w
 
 TanStack Table is a headless table library for React. It's a powerful and flexible solution for building data-driven tables. We use it to build our DataTable component. It enables complex features like sorting, filtering, pagination, and more.
 
-[More about TanStack Table](https://tanstack.com/table)
+[More about TanStack Table](https://tanstack.com/table/latest)
 
 ### Zod
 

@@ -17,3 +17,5 @@
 packages/design-system/docs/docs/api
 .parcel-cache
 node_modules
+
+packages/fhir/.fhir-cache/

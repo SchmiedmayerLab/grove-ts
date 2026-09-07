@@ -4,17 +4,17 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
     "declaration": true,
+    "declarationMap": true,
     "rootDir": "src",
     "outDir": "dist",
+    "isolatedDeclarations": true,
     "isolatedModules": true,
     "sourceMap": true,
-    "resolveJsonModule": true,
-    "types": ["node"],
-    "paths": {
-      "@schmiedmayerlab/grove-firebase-utils": ["../firebase-utils/src"]
-    }
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022", "DOM"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test"]
