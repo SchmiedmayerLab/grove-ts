@@ -414,7 +414,7 @@
     "vite": "^8.2.0",
     "vite-plugin-dts": "^5.0.0",
     "vite-plugin-static-copy": "^4.0.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5",
