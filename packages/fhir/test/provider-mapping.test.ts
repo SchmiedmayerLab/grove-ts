@@ -7,32 +7,38 @@
 //
 
 import {
-  baseInput,
   bloodPressureMeasurement,
+  context,
   dailyEnd,
   dateTime,
   end,
   instant,
   mutableRecord,
+  observationOf,
+  record,
   resources,
   scalarCases,
   start,
   unwrap,
 } from './provider-test-support.js'
-import { parseFhirId, parseGroveMobileExchangeBundle } from '../src/index.js'
+import {
+  parseFhirId,
+  parseExchangeGraph,
+  type ExchangeGraph,
+} from '../src/index.js'
 import {
   sharedMobileMeasurementCatalog,
   type MobileMeasurement,
 } from '../src/mobile/index.js'
 import {
   adapterMeasurementCatalog,
-  buildProviderMeasurementBundle,
+  buildProviderExchangeGraph,
   providerAdapterCatalog,
   providerRecordEffectiveRules,
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
   type ConnectedProvider,
-  type ProviderMeasurementBundleInput,
+  type NormalizedProviderRecord,
 } from '../src/providers/index.js'
 
 interface ProviderContractRow {
@@ -50,29 +56,43 @@ const providerContractRow = (provider: ConnectedProvider) => {
   return row
 }
 
+const observationMutator =
+  (built: ExchangeGraph) =>
+  (mutate: (observation: Record<string, unknown>) => void) => {
+    const bundle = structuredClone(built)
+    mutate(observationOf(bundle))
+    return parseExchangeGraph(bundle)
+  }
+
+const withMeasurements = (
+  base: NormalizedProviderRecord,
+  measurements: readonly unknown[],
+): NormalizedProviderRecord =>
+  ({ ...base, measurements }) as NormalizedProviderRecord
+
 describe('Provider R4 graph builder', () => {
   it.each(scalarCases)(
     'builds the admitted $provider/$sourceType $measurement.kind graph',
     ({ provider, sourceType, measurement }) => {
-      const result = buildProviderMeasurementBundle(
-        baseInput(provider, sourceType, measurement),
+      const result = buildProviderExchangeGraph(
+        record(provider, sourceType, measurement),
+        context(provider),
       )
       expect(result.ok).toBe(true)
       if (!result.ok) return
 
-      expect(result.value.type).toBe('collection')
-      expect(result.value.entry).toHaveLength(4)
-      expect('total' in result.value).toBe(false)
-      expect(Object.isFrozen(result.value)).toBe(true)
+      expect(result.value.graph.type).toBe('collection')
+      expect(result.value.graph.entry).toHaveLength(5)
+      expect('total' in result.value.graph).toBe(false)
+      expect(Object.isFrozen(result.value.graph)).toBe(true)
+      expect(result.value.warnings).toEqual([])
 
-      const observation = resources(result).find(
-        (resource) => resource.resourceType === 'Observation',
-      )
-      expect(observation?.meta?.profile).toEqual([
+      const observation = observationOf(result.value.graph)
+      expect(observation.meta?.profile).toEqual([
         `https://grovealliance.org/fhir/mobile/StructureDefinition/${sharedMobileMeasurementCatalog[measurement.kind].profile}`,
         providerContractRow(provider).observationProfile,
       ])
-      expect(observation?.extension).toEqual(
+      expect(observation.extension).toEqual(
         expect.arrayContaining([
           {
             url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider',
@@ -85,14 +105,16 @@ describe('Provider R4 graph builder', () => {
         ]),
       )
       expect(
-        observation?.extension?.some(
-          ({ url }) =>
-            url ===
-            'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
+        observation.extension?.some(({ url }) =>
+          url?.endsWith('observation-gatewayDevice'),
         ),
       ).toBe(false)
-      expect(observation?.code.coding).toHaveLength(1)
-      expect(observation?.id).toBeUndefined()
+      expect(observation.code.coding).toHaveLength(1)
+      expect(observation.id).toBeUndefined()
+      expect(observation.subject).toEqual({
+        type: 'Patient',
+        identifier: context().subject.identifier,
+      })
     },
   )
 
@@ -124,26 +146,25 @@ describe('Provider R4 graph builder', () => {
   ] as const)(
     'emits $provider platform-exclusive age under its exact semantic and vendor profiles',
     ({ provider, sourceType, measurement, semanticProfile, code }) => {
-      const result = buildProviderMeasurementBundle(
-        baseInput(
+      const result = buildProviderExchangeGraph(
+        record(
           provider,
           sourceType,
           measurement as unknown as MobileMeasurement,
         ),
+        context(provider),
       )
       expect(result.ok).toBe(true)
       if (!result.ok) return
-      const observation = resources(result).find(
-        (resource) => resource.resourceType === 'Observation',
-      )
-      expect(observation?.meta?.profile).toEqual([
+      const observation = observationOf(result.value.graph)
+      expect(observation.meta?.profile).toEqual([
         semanticProfile,
         providerContractRow(provider).observationProfile,
       ])
-      expect(observation?.code.coding).toEqual([
+      expect(observation.code.coding).toEqual([
         expect.objectContaining({ code }),
       ])
-      expect(observation?.valueQuantity).toEqual(
+      expect(observation.valueQuantity).toEqual(
         expect.objectContaining({
           system: 'http://unitsofmeasure.org',
           code: 'a',
@@ -153,30 +174,17 @@ describe('Provider R4 graph builder', () => {
   )
 
   it('rejects generic-parent, cross-vendor, cross-marker, and cross-owner Provider claims', () => {
-    const built = buildProviderMeasurementBundle(
-      baseInput('withings', 'getmeas:11', {
-        kind: 'heart-rate',
-        value: 64,
-        effective: { kind: 'date-time', value: dateTime },
-      }),
-    )
-    expect(built.ok).toBe(true)
-    if (!built.ok) return
-
-    const mutateObservation = (
-      mutate: (observation: Record<string, unknown>) => void,
-    ) => {
-      const bundle = structuredClone(built.value)
-      const observation = bundle.entry.find(
-        ({ resource }) => resource.resourceType === 'Observation',
-      )?.resource
-      if (observation?.resourceType !== 'Observation') {
-        throw new Error('Expected a Provider Observation.')
-      }
-      mutate(observation)
-      return parseGroveMobileExchangeBundle(bundle)
-    }
-
+    const built = unwrap(
+      buildProviderExchangeGraph(
+        record('withings', 'getmeas:11', {
+          kind: 'heart-rate',
+          value: 64,
+          effective: { kind: 'date-time', value: dateTime },
+        }),
+        context(),
+      ),
+    ).graph
+    const mutateObservation = observationMutator(built)
     expect(
       mutateObservation((observation) => {
         mutableRecord(observation.meta, 'Observation.meta').profile = [
@@ -205,24 +213,19 @@ describe('Provider R4 graph builder', () => {
         mutableRecord(marker, 'Provider marker').valueCode = 'oura'
       }).ok,
     ).toBe(false)
-
-    const crossOwner = baseInput('oura', 'daily_cardiovascular_age', {
-      kind: 'oura-cardiovascular-age',
-      value: 38,
-      effective: { kind: 'period', start, end: dailyEnd },
-    } as unknown as MobileMeasurement)
     expect(
-      buildProviderMeasurementBundle({
-        ...crossOwner,
-        measurements: [
-          {
-            kind: 'withings-vascular-age',
-            value: 45,
-            effective: { kind: 'date-time', value: dateTime },
-          },
-        ],
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+      buildProviderExchangeGraph(
+        record('oura', 'daily_cardiovascular_age', {
+          kind: 'withings-vascular-age',
+          value: 45,
+          effective: { kind: 'date-time', value: dateTime },
+        } as unknown as MobileMeasurement),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-value' }],
+    })
   })
 
   it('builds every exact provider/source/measurement mapping in the generated catalog', () => {
@@ -283,7 +286,6 @@ describe('Provider R4 graph builder', () => {
       for (const [sourceType, mappings] of Object.entries(sourceMappings)) {
         const discriminatorMappings =
           exhaustiveDiscriminators[provider as ConnectedProvider][sourceType]
-        expect(discriminatorMappings).toBeDefined()
         if (discriminatorMappings === undefined) {
           throw new Error(
             `Missing output discriminators for ${provider}/${sourceType}.`,
@@ -310,12 +312,13 @@ describe('Provider R4 graph builder', () => {
               }
             )
           expect(
-            buildProviderMeasurementBundle(
-              baseInput(
+            buildProviderExchangeGraph(
+              record(
                 provider as ConnectedProvider,
                 sourceType,
                 sourceMeasurement as MobileMeasurement,
               ),
+              context(provider as ConnectedProvider),
             ).ok,
           ).toBe(true)
           checked += 1
@@ -327,51 +330,40 @@ describe('Provider R4 graph builder', () => {
 
   it('does not invent uncatalogued physiologic or duration lower bounds', () => {
     expect(
-      buildProviderMeasurementBundle(
-        baseInput('google-health-api', 'active-energy-burned', {
+      buildProviderExchangeGraph(
+        record('google-health-api', 'active-energy-burned', {
           kind: 'active-energy',
           value: 0,
           effective: { kind: 'period', start, end: start },
         }),
+        context('google-health-api'),
       ).ok,
     ).toBe(true)
     expect(
-      buildProviderMeasurementBundle(
-        baseInput('withings', 'getmeas:9+10', {
+      buildProviderExchangeGraph(
+        record('withings', 'getmeas:9+10', {
           kind: 'blood-pressure',
           systolic: 0,
           diastolic: 0,
           effective: { kind: 'date-time', value: dateTime },
         }),
+        context(),
       ).ok,
     ).toBe(true)
   })
 
   it('rejects negative and zero-duration step-count resources at the profiled graph boundary', () => {
-    const built = buildProviderMeasurementBundle(
-      baseInput('google-health-api', 'steps', {
-        kind: 'step-count',
-        value: 42,
-        effective: { kind: 'period', start, end },
-      }),
-    )
-    expect(built.ok).toBe(true)
-    if (!built.ok) return
-
-    const mutateObservation = (
-      mutate: (observation: Record<string, unknown>) => void,
-    ) => {
-      const bundle = structuredClone(built.value)
-      const observation = bundle.entry.find(
-        ({ resource }) => resource.resourceType === 'Observation',
-      )?.resource
-      if (observation?.resourceType !== 'Observation') {
-        throw new Error('Expected a step-count Observation.')
-      }
-      mutate(observation)
-      return parseGroveMobileExchangeBundle(bundle)
-    }
-
+    const built = unwrap(
+      buildProviderExchangeGraph(
+        record('google-health-api', 'steps', {
+          kind: 'step-count',
+          value: 42,
+          effective: { kind: 'period', start, end },
+        }),
+        context('google-health-api'),
+      ),
+    ).graph
+    const mutateObservation = observationMutator(built)
     expect(
       mutateObservation((observation) => {
         mutableRecord(
@@ -392,14 +384,13 @@ describe('Provider R4 graph builder', () => {
   })
 
   it('atomically builds every present Oura daily-activity output with one complete Provenance target set', () => {
-    const dailyActivity = baseInput('oura', 'daily_activity', {
+    const base = record('oura', 'daily_activity', {
       kind: 'distance',
       value: 6_123,
       effective: { kind: 'period', start, end: dailyEnd },
     })
-    const result = buildProviderMeasurementBundle({
-      ...dailyActivity,
-      measurements: [
+    const result = buildProviderExchangeGraph(
+      withMeasurements(base, [
         {
           kind: 'distance',
           value: 6_123,
@@ -415,12 +406,12 @@ describe('Provider R4 graph builder', () => {
           value: 8_234,
           effective: { kind: 'period', start, end: dailyEnd },
         },
-      ],
-    } as ProviderMeasurementBundleInput)
+      ]),
+      context('oura'),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-
-    const observations = result.value.entry.filter(
+    const observations = result.value.graph.entry.filter(
       ({ resource }) => resource.resourceType === 'Observation',
     )
     expect(observations).toHaveLength(3)
@@ -431,15 +422,21 @@ describe('Provider R4 graph builder', () => {
       'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-active-energy',
       'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-distance',
     ])
-    const provenance = result.value.entry.find(
-      ({ resource }) => resource.resourceType === 'Provenance',
-    )?.resource
-    expect(provenance?.resourceType).toBe('Provenance')
-    if (provenance?.resourceType !== 'Provenance') return
+    expect(result.value.identifiers.outputs).toHaveLength(3)
+    const provenance = resources(result.value.graph).find(
+      (resource) => resource.resourceType === 'Provenance',
+    )
+    if (provenance?.resourceType !== 'Provenance')
+      throw new Error('No Provenance.')
     expect(provenance.target).toHaveLength(observations.length)
     expect(
       new Set(provenance.target.map(({ reference }) => reference)),
     ).toEqual(new Set(observations.map(({ fullUrl }) => fullUrl)))
+    expect(provenance.occurredPeriod).toEqual(
+      observations[0]?.resource.resourceType === 'Observation' ?
+        observations[0].resource.effectivePeriod
+      : undefined,
+    )
   })
 
   it.each([
@@ -460,15 +457,17 @@ describe('Provider R4 graph builder', () => {
           effective: { kind: 'period', start, end: dailyEnd },
         },
       } as const
-      const input = baseInput('oura', 'daily_activity', candidates[kinds[0]])
-      const result = buildProviderMeasurementBundle({
-        ...input,
-        measurements: kinds.map((kind) => candidates[kind]),
-      } as unknown as ProviderMeasurementBundleInput)
+      const result = buildProviderExchangeGraph(
+        withMeasurements(
+          record('oura', 'daily_activity', candidates[kinds[0]]),
+          kinds.map((kind) => candidates[kind]),
+        ),
+        context('oura'),
+      )
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(
-        result.value.entry.filter(
+        result.value.graph.entry.filter(
           ({ resource }) => resource.resourceType === 'Observation',
         ),
       ).toHaveLength(kinds.length)
@@ -476,28 +475,30 @@ describe('Provider R4 graph builder', () => {
   )
 
   it('requires every catalogued daily source to use one shared complete civil-day Period', () => {
-    const input = baseInput('oura', 'daily_activity', {
+    const base = record('oura', 'daily_activity', {
       kind: 'step-count',
       value: 8_234,
       effective: { kind: 'period', start, end: dailyEnd },
     })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [
+      buildProviderExchangeGraph(
+        withMeasurements(base, [
           {
             kind: 'step-count',
             value: 8_234,
             effective: { kind: 'period', start, end },
           },
-        ],
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        ]),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.effective-period-invalid' }],
+    })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [
-          input.measurements[0],
+      buildProviderExchangeGraph(
+        withMeasurements(base, [
+          base.measurements[0],
           {
             kind: 'distance',
             value: 6_123,
@@ -507,87 +508,110 @@ describe('Provider R4 graph builder', () => {
               end: instant('2026-08-22T00:00:00Z'),
             },
           },
-        ],
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        ]),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.effective-period-invalid' }],
+    })
     expect(
-      buildProviderMeasurementBundle(
-        baseInput('withings', 'getactivity:steps', {
+      buildProviderExchangeGraph(
+        record('withings', 'getactivity:steps', {
           kind: 'step-count',
           value: 8_234,
           effective: { kind: 'period', start, end },
         }),
+        context(),
       ).ok,
     ).toBe(false)
-    const daylightSavingStart = instant('2026-11-01T00:00:00-07:00')
-    const daylightSavingEnd = instant('2026-11-02T00:00:00-08:00')
     expect(
-      buildProviderMeasurementBundle(
-        baseInput('withings', 'getactivity:steps', {
+      buildProviderExchangeGraph(
+        record('withings', 'getactivity:steps', {
           kind: 'step-count',
           value: 8_234,
           effective: {
             kind: 'period',
-            start: daylightSavingStart,
-            end: daylightSavingEnd,
+            start: instant('2026-11-01T00:00:00-07:00'),
+            end: instant('2026-11-02T00:00:00-08:00'),
           },
         }),
+        context(),
       ).ok,
     ).toBe(true)
   })
 
-  it('rejects duplicate, unsupported, invalid, and non-emitted output inputs before constructing a partial graph', () => {
-    const input = baseInput('oura', 'daily_activity', {
+  it('refuses duplicate, unsupported, invalid, and misplaced repository ids before constructing a partial graph', () => {
+    const base = record('oura', 'daily_activity', {
       kind: 'step-count',
       value: 8_234,
       effective: { kind: 'period', start, end: dailyEnd },
     })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [],
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+      buildProviderExchangeGraph(withMeasurements(base, []), context('oura')),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [input.measurements[0], input.measurements[0]],
-      } as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+      buildProviderExchangeGraph(
+        withMeasurements(base, [base.measurements[0], base.measurements[0]]),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [
-          input.measurements[0],
+      buildProviderExchangeGraph(
+        withMeasurements(base, [
+          base.measurements[0],
           {
             kind: 'body-weight',
             value: 72,
             effective: { kind: 'date-time', value: dateTime },
           },
-        ],
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        ]),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-value' }],
+    })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [
+      buildProviderExchangeGraph(
+        withMeasurements(base, [
           {
             kind: 'step-count',
             value: -1,
             effective: { kind: 'period', start, end: dailyEnd },
           },
-        ],
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        ]),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-outside-domain' }],
+    })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        repositoryIds: {
-          observations: {
-            distance: unwrap(parseFhirId('not-emitted')),
+      buildProviderExchangeGraph(
+        withMeasurements(base, [
+          base.measurements[0],
+          {
+            kind: 'distance',
+            value: 6_123,
+            effective: { kind: 'period', start, end: dailyEnd },
           },
-        },
-      }).ok,
-    ).toBe(false)
+        ]),
+        context('oura', '1', {
+          repositoryIds: { 'primary-output': unwrap(parseFhirId('not-sole')) },
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [
+        { code: 'value-mismatch', path: ['repositoryIds', 'primary-output'] },
+      ],
+    })
   })
 })

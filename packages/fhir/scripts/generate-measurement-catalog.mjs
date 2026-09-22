@@ -1435,12 +1435,22 @@ const expectedPatientReservedSystems = Object.values(
   exchangeProtocol.codeSystems ?? {},
 )
 // The protocol's registry is the closed rule surface; the corpus only exercises part of it.
-const exchangeRuleDiagnostics = Object.fromEntries(
-  (exchangeProtocol.producerDiagnostics ?? []).map(({ code, reason }) => [
-    code,
-    { reason, severity: 'error' },
-  ]),
+// A row without severity is an error; every row names the side that emits it.
+const producerDiagnostics = Object.fromEntries(
+  (exchangeProtocol.producerDiagnostics ?? []).map(
+    ({ code, reason, emittedBy, severity }) => [
+      code,
+      { reason, emittedBy, severity: severity ?? 'error' },
+    ],
+  ),
 )
+const diagnosticEmitters = ['conformance-kit', 'client']
+const diagnosticSeverities = ['error', 'warning']
+// A deployment substitutes these placeholders when it names its identifier systems.
+const systemFormPlaceholders = (form) =>
+  typeof form === 'string' ? (form.match(/<[a-z-]+>/gu) ?? []) : undefined
+const studyContext = exchangeProtocol.lifecycle?.active?.studyContext
+const payloadEquality = exchangeProtocol.payload?.equality
 const exchangeRuleRows = exchangeCorpus.cases?.map(
   ({ expectedRule }) => expectedRule,
 )
@@ -1552,19 +1562,58 @@ if (
   typeof exchangeProtocol.referencePolicy?.declaredType !== 'string' ||
   typeof exchangeProtocol.referencePolicy?.governedShape !== 'string' ||
   exchangeCorpus.schemaVersion !== 0 ||
-  !uniqueNonemptyStrings(Object.keys(exchangeRuleDiagnostics)) ||
-  !Object.hasOwn(exchangeRuleDiagnostics, 'mobile-exchange.unclassified') ||
-  Object.values(exchangeRuleDiagnostics).some(
-    ({ reason }) => typeof reason !== 'string' || reason.length === 0,
+  !uniqueNonemptyStrings(Object.keys(producerDiagnostics)) ||
+  !Object.hasOwn(producerDiagnostics, 'mobile-exchange.unclassified') ||
+  !Object.hasOwn(producerDiagnostics, 'mobile-input.unclassified') ||
+  Object.values(producerDiagnostics).some(
+    ({ reason, emittedBy, severity }) =>
+      typeof reason !== 'string' ||
+      reason.length === 0 ||
+      !diagnosticEmitters.includes(emittedBy) ||
+      !diagnosticSeverities.includes(severity),
   ) ||
+  Object.entries(producerDiagnostics).some(
+    ([code, { severity }]) =>
+      (severity === 'warning') !== code.startsWith('mobile-omission.'),
+  ) ||
+  !exactSet(
+    systemFormPlaceholders(
+      exchangeProtocol.opaqueIdentity?.recommendedSystemForm,
+    ),
+    ['<deployment-root>', '<identity-kind>', '<key-id>', '<epoch>'],
+  ) ||
+  !exactSet(
+    systemFormPlaceholders(
+      exchangeProtocol.event?.bundleIdentifier?.recommendedSystemForm,
+    ),
+    ['<deployment-root>'],
+  ) ||
+  !exactSet(
+    systemFormPlaceholders(
+      exchangeProtocol.entryIdentity?.entryNode?.recommendedSystemForm,
+    ),
+    ['<deployment-root>'],
+  ) ||
+  !exactSet(studyContext?.entryNodeRoles, [
+    'patient',
+    'research-study',
+    'research-subject',
+    'plan-definition',
+  ]) ||
+  typeof studyContext?.recommendedShape !== 'string' ||
+  typeof studyContext?.subject !== 'string' ||
+  typeof studyContext?.protocol !== 'string' ||
+  typeof payloadEquality?.formatting !== 'string' ||
+  typeof payloadEquality?.decimalLexeme !== 'string' ||
+  typeof payloadEquality?.vectors !== 'string' ||
   !Array.isArray(exchangeRuleRows) ||
   exchangeRuleRows.length === 0 ||
   exchangeRuleRows.some(
     (rule) =>
       typeof rule?.location !== 'string' ||
       rule.location.length === 0 ||
-      exchangeRuleDiagnostics[rule.code]?.reason !== rule.reason ||
-      exchangeRuleDiagnostics[rule.code]?.severity !== rule.severity,
+      producerDiagnostics[rule.code]?.reason !== rule.reason ||
+      producerDiagnostics[rule.code]?.severity !== rule.severity,
   ) ||
   typeof exchangeProtocol.recordingDevice?.instanceRule !== 'string' ||
   typeof exchangeProtocol.recordingDevice?.unknownInstance !== 'string' ||
@@ -1823,7 +1872,7 @@ const generated = {
   questionnairePackageMetadata,
   providerPackageMetadata,
   exchangeProtocol,
-  exchangeRuleDiagnostics,
+  producerDiagnostics,
   profileClaims,
   packageCanonicals,
   profiles,
@@ -1867,7 +1916,7 @@ const unformattedOutputs = renderMeasurementCatalogSources({
   effectiveCanonicalization,
   effectiveCanonicalizationVectors: semanticEffectiveCanonicalization.vectors,
   exchangeProtocol: withoutReleaseMetadata(exchangeProtocol),
-  exchangeRuleDiagnostics,
+  producerDiagnostics,
   healthConnectDataOriginApplication,
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,

@@ -9,44 +9,149 @@
 import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { v5 as uuidV5 } from 'uuid'
-import { groveMobileContract } from './contract.js'
-import type {
-  CompleteIdentifierInput,
-  DeploymentIdentityInput,
-  GroveIdentifierRole,
-  GroveOpaqueIdentityKind,
-  IdentifiedEntryIdentityInput,
-} from './types.js'
 import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
-import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import {
   cloneJsonValue,
   decodeCanonicalBase64,
   deepFreeze,
   encodeBase64,
   err,
-  mapResult,
   ok,
   parseAbsoluteUri,
+  parseEntryNodeOrdinal,
+  parseEventSequence,
   parseFhirId,
+  parseKeyEpoch,
   parseUrnUuid,
+  type AbsoluteUri,
+  type EntryNodeOrdinal,
+  type EventSequence,
   type FhirId,
   type JsonValue,
+  type KeyEpoch,
   type Result,
   type UrnUuid,
 } from '../core/index.js'
 
+type OpaqueIdentityDefinition =
+  (typeof groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
+
+/** Closed HMAC identity kinds of the Grove exchange protocol. */
+export type OpaqueIdentityKind = OpaqueIdentityDefinition['kind']
+
+/** Closed roles a deployment-owned Identifier carries in Identifier.type. */
+export type GroveIdentifierRole =
+  OpaqueIdentityDefinition['identifierRole'] | 'entry-node' | 'event'
+
+/** A complete Identifier.system and Identifier.value pair; never a repository id. */
+export interface BusinessIdentifier {
+  readonly system: AbsoluteUri
+  readonly value: string
+}
+
+export interface RoledIdentifier extends BusinessIdentifier {
+  readonly role: GroveIdentifierRole
+}
+
+/** The sole business identifier of one exchange event, in the `e0:` form. */
+export type ExchangeEventIdentifier = RoledIdentifier & {
+  readonly role: 'event'
+}
+
+export type EntryNodeIdentifier = RoledIdentifier & {
+  readonly role: 'entry-node'
+}
+
+/** The coordinates of an entry whose resource carries no business identifier. */
+export interface EntryNodeKey {
+  readonly event: ExchangeEventIdentifier
+  readonly role: string
+  readonly ordinal: EntryNodeOrdinal
+}
+
+/** One deployment-owned Identifier.system for each opaque identity kind. */
+export type OpaqueIdentitySystems = Readonly<
+  Record<OpaqueIdentityKind, AbsoluteUri>
+>
+
+/** All twelve deployment-owned identifier systems of one key id and epoch. */
+export interface DeploymentIdentifierSystems {
+  readonly opaque: OpaqueIdentitySystems
+  readonly event: AbsoluteUri
+  readonly entryNode: AbsoluteUri
+}
+
+/**
+ * Deployment identity material before validation.
+ *
+ * The secret is read once by `validateOpaqueIdentityScope` and never retained in, or
+ * emitted with, FHIR.
+ */
+export interface OpaqueIdentityScopeInput {
+  readonly systems: DeploymentIdentifierSystems
+  readonly keyId: string
+  readonly keyEpoch: KeyEpoch
+  /** Canonical unpadded base64url key material containing at least 32 bytes. */
+  readonly secretBase64Url: string
+  /** Canonical lowercase RFC 4122 UUID (versions 1 through 5). */
+  readonly producerInstance: string
+}
+
+/** The validated handle that mints opaque identities; its key stays module-private. */
+export interface OpaqueIdentityScope {
+  readonly systems: DeploymentIdentifierSystems
+  readonly keyId: string
+  readonly keyEpoch: KeyEpoch
+  readonly producerInstance: string
+}
+
+/** An entry key paired with the deterministic fullUrl derived from it. */
+export interface EntryIdentity {
+  readonly identifier: RoledIdentifier
+  readonly fullUrl: UrnUuid
+  readonly id?: FhirId
+}
+
+type StringComponentTuple<Components extends readonly string[]> = Readonly<{
+  [Index in keyof Components]: string
+}>
+
+/** Exact ordered component tuples projected from the Grove FHIR protocol catalog. */
+export type OpaqueIdentityComponents = Readonly<{
+  [Kind in OpaqueIdentityKind]: StringComponentTuple<
+    Extract<OpaqueIdentityDefinition, { readonly kind: Kind }>['components']
+  >
+}>
+
 const ASCII_TOKEN = /^[A-Za-z\d._-]+$/u
-const POSITIVE_DECIMAL = /^[1-9]\d*$/u
-const UNSIGNED_DECIMAL = /^(?:0|[1-9]\d*)$/u
 const LOWERCASE_ROLE = /^[a-z][a-z\d-]*$/u
 const CANONICAL_PRODUCER_UUID =
   /^[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u
-const {
+const MINIMUM_HMAC_KEY_BYTES = 32
+
+// Each identity value form opens with its revision token, so the contract owns every
+// persisted prefix and a renumbered revision reaches this package by regeneration alone.
+const valuePrefix = (valueForm: string): string =>
+  valueForm.slice(0, valueForm.indexOf(':') + 1)
+const OPAQUE_PREFIX = valuePrefix(
+  groveExchangeProtocol.opaqueIdentity.valueForm,
+)
+const EVENT_PREFIX = valuePrefix(
+  groveExchangeProtocol.event.bundleIdentifier.valueForm,
+)
+const ENTRY_NODE_PREFIX = valuePrefix(
+  groveExchangeProtocol.entryIdentity.entryNode.valueForm,
+)
+/** The revision tokens every persisted identity value opens with. */
+export const identityValuePrefixes: Readonly<{
+  opaque: string
+  event: string
+  entryNode: string
+}> = Object.freeze({
   opaque: OPAQUE_PREFIX,
   event: EVENT_PREFIX,
   entryNode: ENTRY_NODE_PREFIX,
-} = groveMobileContract.identity.valuePrefixes
+})
 const OPAQUE_VALUE = new RegExp(
   `^${OPAQUE_PREFIX}[A-Za-z\\d._-]+:[1-9]\\d*:[A-Za-z\\d_-]{43}$`,
   'u',
@@ -59,70 +164,35 @@ const ENTRY_NODE_VALUE = new RegExp(
   `^${ENTRY_NODE_PREFIX}[a-z][a-z\\d-]*:(?:0|[1-9]\\d*):[A-Za-z\\d_-]{43}$`,
   'u',
 )
-const MINIMUM_HMAC_KEY_BYTES = 32
-
-const PROVIDER_CODES: ReadonlySet<string> = new Set(
-  providerAdapterCatalog.providers.map(({ id }) => id),
-)
-// A kind's coordinate family is written in its components: the first names the adapter
-// space, and only source-record coordinates carry a native record id.
-const identityKindsCoordinatedBy = (
-  adapterComponent: string,
-): ReadonlySet<string> =>
-  new Set(
-    groveExchangeProtocol.opaqueIdentity.identityKinds
-      .filter(
-        ({ components }) =>
-          components[0] === adapterComponent &&
-          (components as readonly string[]).includes('native-record-id'),
-      )
-      .map(({ kind }) => kind),
-  )
-
-const PROVIDER_IDENTITY_KINDS: ReadonlySet<string> =
-  identityKindsCoordinatedBy('provider-code')
-const GENERIC_SOURCE_IDENTITY_KINDS: ReadonlySet<string> =
-  identityKindsCoordinatedBy('adapter-id')
 
 const identityKinds = groveExchangeProtocol.opaqueIdentity.identityKinds.map(
   ({ kind }) => kind,
-) as readonly GroveOpaqueIdentityKind[]
+) as readonly OpaqueIdentityKind[]
 
 const identityComponentCounts = Object.fromEntries(
   groveExchangeProtocol.opaqueIdentity.identityKinds.map(
     ({ kind, components }) => [kind, components.length],
   ),
-) as Readonly<Record<GroveOpaqueIdentityKind, number>>
+) as Readonly<Record<OpaqueIdentityKind, number>>
 
-const identifierRoleByKind: Readonly<
-  Record<
-    GroveOpaqueIdentityKind,
-    Exclude<GroveIdentifierRole, 'entry-node' | 'event'>
-  >
-> = Object.fromEntries(
+const identifierRoleByKind = Object.fromEntries(
   groveExchangeProtocol.opaqueIdentity.identityKinds.map(
     ({ kind, identifierRole }) => [kind, identifierRole],
   ),
 ) as Readonly<
-  Record<
-    GroveOpaqueIdentityKind,
-    Exclude<GroveIdentifierRole, 'entry-node' | 'event'>
-  >
+  Record<OpaqueIdentityKind, OpaqueIdentityDefinition['identifierRole']>
 >
 
-type OpaqueIdentityDefinition =
-  (typeof groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
+const IDENTIFIER_ROLES: ReadonlySet<string> = new Set([
+  ...Object.values(identifierRoleByKind),
+  'entry-node',
+  'event',
+])
 
-type StringComponentTuple<Components extends readonly string[]> = Readonly<{
-  [Index in keyof Components]: string
-}>
-
-/** Exact ordered component tuples projected from the Grove FHIR protocol catalog. */
-export type GroveOpaqueIdentityComponents = Readonly<{
-  [Kind in GroveOpaqueIdentityKind]: StringComponentTuple<
-    Extract<OpaqueIdentityDefinition, { readonly kind: Kind }>['components']
-  >
-}>
+export const isGroveIdentifierRole = (
+  value: unknown,
+): value is GroveIdentifierRole =>
+  typeof value === 'string' && IDENTIFIER_ROLES.has(value)
 
 export const containsIsolatedSurrogate = (value: string): boolean => {
   if (typeof value !== 'string') return true
@@ -219,114 +289,188 @@ const decodeBase64UrlWithoutPadding = (value: string): Uint8Array | undefined =>
 const isPublicConformanceKey = (key: Uint8Array): boolean =>
   key.length === 32 && key.every((value, index) => value === index)
 
-const DEPLOYMENT_IDENTITY_KEYS = [
-  'entryNodeIdentifierSystem',
-  'eventIdentifierSystem',
-  'keyEpoch',
-  'keyId',
-  'opaqueIdentifierSystems',
-  'producerInstance',
-  'secretBase64Url',
-] as const
+const SYSTEM_FORM_PLACEHOLDER = /<([a-z-]+)>/gu
 
-/** Deployment material proven complete once; its decoded HMAC secret stays module-private. */
-export interface ValidatedDeploymentIdentity {
-  readonly identity: DeploymentIdentityInput
+const renderSystemForm = (
+  form: string,
+  values: Readonly<Record<string, string>>,
+): string =>
+  form.replaceAll(
+    SYSTEM_FORM_PLACEHOLDER,
+    (placeholder: string, name: string) => values[name] ?? placeholder,
+  )
+
+/**
+ * Names all twelve deployment identifier systems by the catalog's recommended form.
+ *
+ * The root is the deployment's own absolute URI; a deployment that already governs its
+ * own namespaces supplies them to `validateOpaqueIdentityScope` directly instead.
+ */
+export const deriveOpaqueIdentitySystems = (
+  root: AbsoluteUri,
+  keyId: string,
+  epoch: KeyEpoch,
+): Result<DeploymentIdentifierSystems> => {
+  const parsedRoot = parseAbsoluteUri(root)
+  if (!parsedRoot.ok) return parsedRoot
+  if (/[#?]/u.test(root) || root.endsWith('/')) {
+    return err(
+      'invalid-uri',
+      'A deployment root names a path without a trailing slash, query, or fragment.',
+      ['root'],
+    )
+  }
+  if (typeof keyId !== 'string' || !ASCII_TOKEN.test(keyId)) {
+    return err(
+      'invalid-identifier',
+      'Identity keyId must be a nonempty ASCII token using A-Z, a-z, 0-9, dot, underscore, or hyphen.',
+      ['keyId'],
+    )
+  }
+  const parsedEpoch = parseKeyEpoch(epoch)
+  if (!parsedEpoch.ok) return parsedEpoch
+
+  const opaque: Partial<Record<OpaqueIdentityKind, AbsoluteUri>> = {}
+  for (const kind of identityKinds) {
+    const system = parseAbsoluteUri(
+      renderSystemForm(
+        groveExchangeProtocol.opaqueIdentity.recommendedSystemForm,
+        {
+          'deployment-root': root,
+          'identity-kind': kind,
+          'key-id': keyId,
+          epoch,
+        },
+      ),
+    )
+    if (!system.ok) return system
+    opaque[kind] = system.value
+  }
+  const event = parseAbsoluteUri(
+    renderSystemForm(
+      groveExchangeProtocol.event.bundleIdentifier.recommendedSystemForm,
+      { 'deployment-root': root },
+    ),
+  )
+  if (!event.ok) return event
+  const entryNode = parseAbsoluteUri(
+    renderSystemForm(
+      groveExchangeProtocol.entryIdentity.entryNode.recommendedSystemForm,
+      { 'deployment-root': root },
+    ),
+  )
+  if (!entryNode.ok) return entryNode
+  return ok(
+    deepFreeze({
+      opaque: opaque as OpaqueIdentitySystems,
+      event: event.value,
+      entryNode: entryNode.value,
+    }),
+  )
 }
 
-/** Raw deployment configuration, or material `validateDeploymentIdentity` already proved. */
-export type DeploymentIdentitySource =
-  DeploymentIdentityInput | ValidatedDeploymentIdentity
-
-interface ResolvedDeployment {
-  readonly handle: ValidatedDeploymentIdentity
-  readonly identity: DeploymentIdentityInput
+interface ResolvedScope {
+  readonly scope: OpaqueIdentityScope
   readonly secret: Uint8Array
 }
 
 // Membership is the proof, and only frozen material is admitted: a handle a caller holds
 // can be neither forged nor edited afterwards, so reuse cannot smuggle in new material.
-const publiclyValidatedDeployments = new WeakSet<ValidatedDeploymentIdentity>()
-const deploymentSecrets = new WeakMap<ValidatedDeploymentIdentity, Uint8Array>()
+const validatedScopes = new WeakSet<OpaqueIdentityScope>()
+const scopeSecrets = new WeakMap<OpaqueIdentityScope, Uint8Array>()
 
-const isPubliclyValidated = (
-  source: unknown,
-): source is ValidatedDeploymentIdentity =>
-  typeof source === 'object' &&
-  source !== null &&
-  publiclyValidatedDeployments.has(source as ValidatedDeploymentIdentity)
+export const isOpaqueIdentityScope = (
+  value: unknown,
+): value is OpaqueIdentityScope =>
+  typeof value === 'object' &&
+  value !== null &&
+  validatedScopes.has(value as OpaqueIdentityScope)
 
-const validateDeploymentIdentityInternal = (
-  input: unknown,
-  allowPublicConformanceKey: boolean,
-): Result<ResolvedDeployment> => {
-  const snapshot = cloneJsonValue(input)
-  if (!snapshot.ok) return snapshot
+const SCOPE_INPUT_KEYS = [
+  'keyEpoch',
+  'keyId',
+  'producerInstance',
+  'secretBase64Url',
+  'systems',
+] as const
+const SYSTEM_KEYS = ['entryNode', 'event', 'opaque'] as const
+
+const hasExactKeys = (
+  record: Readonly<Record<string, JsonValue>>,
+  keys: readonly string[],
+): boolean => {
+  const present = Object.keys(record)
+  return (
+    present.length === keys.length && present.every((key) => keys.includes(key))
+  )
+}
+
+const asJsonObject = (
+  value: JsonValue | undefined,
+): Readonly<Record<string, JsonValue>> | undefined =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) ?
+    (value as Readonly<Record<string, JsonValue>>)
+  : undefined
+
+const validateSystems = (
+  value: JsonValue | undefined,
+): Result<DeploymentIdentifierSystems> => {
+  const systems = asJsonObject(value)
+  const opaque = asJsonObject(systems?.opaque)
   if (
-    typeof snapshot.value !== 'object' ||
-    snapshot.value === null ||
-    Array.isArray(snapshot.value)
+    systems === undefined ||
+    opaque === undefined ||
+    !hasExactKeys(systems, SYSTEM_KEYS)
   ) {
     return err(
       'missing-required',
-      'Deployment identity configuration must be a complete object.',
+      'Deployment identifier systems name the opaque, event, and entry-node systems and nothing else.',
+      ['systems'],
     )
   }
-  const rawCandidate = snapshot.value as Readonly<Record<string, JsonValue>>
-  const deploymentKeys = Object.keys(rawCandidate)
+  const opaqueEntries = Object.entries(opaque)
   if (
-    deploymentKeys.length !== DEPLOYMENT_IDENTITY_KEYS.length ||
-    deploymentKeys.some(
-      (key) => !(DEPLOYMENT_IDENTITY_KEYS as readonly string[]).includes(key),
-    )
-  ) {
-    return err(
-      'schema-invalid',
-      'Deployment identity configuration contains missing or unknown fields.',
-    )
-  }
-  const rawSystems = rawCandidate.opaqueIdentifierSystems
-  if (
-    typeof rawSystems !== 'object' ||
-    rawSystems === null ||
-    Array.isArray(rawSystems)
-  ) {
-    return err(
-      'missing-required',
-      'Deployment identity configuration must include its Identifier systems.',
-      ['opaqueIdentifierSystems'],
-    )
-  }
-  const candidate = rawCandidate as unknown as DeploymentIdentityInput
-  const systemEntries = Object.entries(rawSystems)
-  if (
-    systemEntries.length !== identityKinds.length ||
-    identityKinds.some((kind) => !Object.hasOwn(rawSystems, kind)) ||
-    systemEntries.some(
-      ([kind]) => !identityKinds.includes(kind as GroveOpaqueIdentityKind),
-    ) ||
-    systemEntries.some(([, system]) => !parseAbsoluteUri(system).ok) ||
-    !parseAbsoluteUri(candidate.eventIdentifierSystem).ok ||
-    !parseAbsoluteUri(candidate.entryNodeIdentifierSystem).ok
+    !hasExactKeys(opaque, identityKinds) ||
+    opaqueEntries.some(([, system]) => !parseAbsoluteUri(system).ok) ||
+    !parseAbsoluteUri(systems.event).ok ||
+    !parseAbsoluteUri(systems.entryNode).ok
   ) {
     return err(
       'invalid-uri',
-      'Every deployment identity system must be an absolute URI.',
-      ['opaqueIdentifierSystems'],
+      'Every deployment identifier system must be an absolute URI, one for each identity kind.',
+      ['systems'],
     )
   }
-  const systems = [
-    ...systemEntries.map(([, system]) => system),
-    candidate.eventIdentifierSystem,
-    candidate.entryNodeIdentifierSystem,
+  const all = [
+    ...opaqueEntries.map(([, system]) => system),
+    systems.event,
+    systems.entryNode,
   ]
-  if (new Set(systems).size !== systems.length) {
+  if (new Set(all).size !== all.length) {
     return err(
       'duplicate-identifier',
       'Each identity kind, event, and entry-node key space requires its own Identifier.system.',
-      ['opaqueIdentifierSystems'],
+      ['systems'],
     )
   }
+  return ok(systems as unknown as DeploymentIdentifierSystems)
+}
+
+const validateScopeInternal = (
+  input: unknown,
+  allowPublicConformanceKey: boolean,
+): Result<ResolvedScope> => {
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  const candidate = asJsonObject(snapshot.value)
+  if (candidate === undefined || !hasExactKeys(candidate, SCOPE_INPUT_KEYS)) {
+    return err(
+      'schema-invalid',
+      'Identity scope input contains missing or unknown fields.',
+    )
+  }
+  const systems = validateSystems(candidate.systems)
+  if (!systems.ok) return systems
   if (
     typeof candidate.keyId !== 'string' ||
     !ASCII_TOKEN.test(candidate.keyId)
@@ -337,16 +481,8 @@ const validateDeploymentIdentityInternal = (
       ['keyId'],
     )
   }
-  if (
-    typeof candidate.keyEpoch !== 'string' ||
-    !POSITIVE_DECIMAL.test(candidate.keyEpoch)
-  ) {
-    return err(
-      'invalid-identifier',
-      'Identity keyEpoch must be a canonical positive decimal string.',
-      ['keyEpoch'],
-    )
-  }
+  const keyEpoch = parseKeyEpoch(candidate.keyEpoch)
+  if (!keyEpoch.ok) return keyEpoch
   if (
     typeof candidate.producerInstance !== 'string' ||
     !CANONICAL_PRODUCER_UUID.test(candidate.producerInstance)
@@ -375,39 +511,61 @@ const validateDeploymentIdentityInternal = (
       ['secretBase64Url'],
     )
   }
-  const identity = deepFreeze(candidate) as DeploymentIdentityInput
-  const handle: ValidatedDeploymentIdentity = Object.freeze({ identity })
-  deploymentSecrets.set(handle, secret)
+  const scope: OpaqueIdentityScope = deepFreeze({
+    systems: systems.value,
+    keyId: candidate.keyId,
+    keyEpoch: keyEpoch.value,
+    producerInstance: candidate.producerInstance,
+  })
+  scopeSecrets.set(scope, secret)
   // Only publicly validated material is reusable; the conformance seam revalidates.
-  if (!allowPublicConformanceKey) publiclyValidatedDeployments.add(handle)
-  return ok({ handle, identity, secret })
+  if (!allowPublicConformanceKey) validatedScopes.add(scope)
+  return ok({ scope, secret })
 }
 
-const resolveDeployment = (
-  source: unknown,
-  allowPublicConformanceKey: boolean,
-): Result<ResolvedDeployment> => {
-  if (isPubliclyValidated(source)) {
-    const secret = deploymentSecrets.get(source)
-    if (secret !== undefined) {
-      return ok({ handle: source, identity: source.identity, secret })
-    }
+/** Validates deployment identity material once; every minting method takes the handle. */
+export const validateOpaqueIdentityScope = (
+  input: OpaqueIdentityScopeInput,
+): Result<OpaqueIdentityScope> => {
+  const resolved = validateScopeInternal(input, false)
+  return resolved.ok ? ok(resolved.value.scope) : resolved
+}
+
+const resolveScope = (scope: unknown): Result<ResolvedScope> => {
+  const secret =
+    isOpaqueIdentityScope(scope) ? scopeSecrets.get(scope) : undefined
+  if (!isOpaqueIdentityScope(scope) || secret === undefined) {
+    return err(
+      'invalid-identifier',
+      'Expected the handle validateOpaqueIdentityScope returned.',
+      ['scope'],
+    )
   }
-  return validateDeploymentIdentityInternal(source, allowPublicConformanceKey)
+  return ok({ scope, secret })
 }
 
-/** Validates deployment identity material for every public production/runtime operation. */
-export const validateDeploymentIdentity = (
-  input: unknown,
-): Result<ValidatedDeploymentIdentity> =>
-  mapResult(resolveDeployment(input, false), ({ handle }) => handle)
+/** Whether an event identifier was minted by this scope's producer instance. */
+export const isEventOfScope = (
+  scope: OpaqueIdentityScope,
+  event: unknown,
+): event is ExchangeEventIdentifier => {
+  const candidate = asJsonObject(
+    typeof event === 'object' && event !== null ? (event as JsonValue) : null,
+  )
+  return (
+    candidate?.role === 'event' &&
+    candidate.system === scope.systems.event &&
+    typeof candidate.value === 'string' &&
+    EVENT_VALUE.test(candidate.value) &&
+    candidate.value.startsWith(`${EVENT_PREFIX}${scope.producerInstance}:`)
+  )
+}
 
-const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
-  deployment: DeploymentIdentitySource,
+const deriveOpaqueIdentifierWith = <Kind extends OpaqueIdentityKind>(
+  resolved: ResolvedScope,
   identityKind: Kind,
-  components: GroveOpaqueIdentityComponents[Kind],
-  allowPublicConformanceKey: boolean,
-): Result<CompleteIdentifierInput> => {
+  components: OpaqueIdentityComponents[Kind],
+): Result<RoledIdentifier> => {
   if (
     typeof identityKind !== 'string' ||
     !Object.hasOwn(identityComponentCounts, identityKind)
@@ -418,8 +576,6 @@ const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
       ['identityKind'],
     )
   }
-  const validated = resolveDeployment(deployment, allowPublicConformanceKey)
-  if (!validated.ok) return validated
   const componentSnapshot = cloneJsonValue(components)
   if (!componentSnapshot.ok) return componentSnapshot
   if (
@@ -454,44 +610,33 @@ const deriveOpaqueIdentifierInternal = <Kind extends GroveOpaqueIdentityKind>(
       ['components', invalidComponentIndex],
     )
   }
-  const firstComponent = componentSnapshot.value[0]
-  if (
-    typeof firstComponent !== 'string' ||
-    (PROVIDER_IDENTITY_KINDS.has(identityKind) &&
-      !PROVIDER_CODES.has(firstComponent)) ||
-    (GENERIC_SOURCE_IDENTITY_KINDS.has(identityKind) &&
-      PROVIDER_CODES.has(firstComponent))
-  ) {
-    return err(
-      'invalid-code',
-      PROVIDER_IDENTITY_KINDS.has(identityKind) ?
-        'A Provider identity kind requires one exact catalog provider code as its first component.'
-      : 'Provider coordinates require the matching provider-record, provider-output, or provider-artifact identity kind.',
-      ['components', 0],
-    )
-  }
   const preimage = encodeLengthFramedUtf8([
-    groveMobileContract.identity.domain,
+    groveExchangeProtocol.opaqueIdentity.domain,
     identityKind,
     ...componentSnapshot.value,
   ])
   if (!preimage.ok) return preimage
-  const { identity, secret } = validated.value
+  const { scope, secret } = resolved
   const digest = hmac(sha256, secret, preimage.value)
-  return ok({
-    system: identity.opaqueIdentifierSystems[identityKind],
-    value: `${OPAQUE_PREFIX}${identity.keyId}:${identity.keyEpoch}:${base64UrlWithoutPadding(digest)}`,
-    role: identifierRoleByKind[identityKind],
-  })
+  return ok(
+    deepFreeze({
+      system: scope.systems.opaque[identityKind],
+      value: `${OPAQUE_PREFIX}${scope.keyId}:${scope.keyEpoch}:${base64UrlWithoutPadding(digest)}`,
+      role: identifierRoleByKind[identityKind],
+    }),
+  )
 }
 
-/** Derives one deployment-owned, role-typed Grove HMAC Identifier. */
-export const deriveOpaqueIdentifier = <Kind extends GroveOpaqueIdentityKind>(
-  deployment: DeploymentIdentitySource,
+/** Mints one deployment-owned, role-typed opaque identifier. */
+export const deriveOpaqueIdentifier = <Kind extends OpaqueIdentityKind>(
+  scope: OpaqueIdentityScope,
   identityKind: Kind,
-  components: GroveOpaqueIdentityComponents[Kind],
-): Result<CompleteIdentifierInput> =>
-  deriveOpaqueIdentifierInternal(deployment, identityKind, components, false)
+  components: OpaqueIdentityComponents[Kind],
+): Result<RoledIdentifier> => {
+  const resolved = resolveScope(scope)
+  if (!resolved.ok) return resolved
+  return deriveOpaqueIdentifierWith(resolved.value, identityKind, components)
+}
 
 /**
  * Internal test seam for the exact published normative vector key.
@@ -499,18 +644,18 @@ export const deriveOpaqueIdentifier = <Kind extends GroveOpaqueIdentityKind>(
  * Deliberately omitted from every package entry point; application code cannot opt into it.
  */
 export const deriveConformanceVectorOpaqueIdentifier = <
-  Kind extends GroveOpaqueIdentityKind,
+  Kind extends OpaqueIdentityKind,
 >(
-  deployment: DeploymentIdentityInput,
+  input: OpaqueIdentityScopeInput,
   identityKind: Kind,
-  components: GroveOpaqueIdentityComponents[Kind],
-): Result<CompleteIdentifierInput> => {
-  const secret = decodeBase64UrlWithoutPadding(deployment.secretBase64Url)
+  components: OpaqueIdentityComponents[Kind],
+): Result<RoledIdentifier> => {
+  const secret = decodeBase64UrlWithoutPadding(input.secretBase64Url)
   if (
     secret === undefined ||
     !isPublicConformanceKey(secret) ||
-    deployment.keyId !== groveExchangeProtocol.testVectors.keyId ||
-    deployment.keyEpoch !== groveExchangeProtocol.testVectors.epoch
+    input.keyId !== groveExchangeProtocol.testVectors.keyId ||
+    input.keyEpoch !== groveExchangeProtocol.testVectors.epoch
   ) {
     return err(
       'invalid-identifier',
@@ -518,47 +663,40 @@ export const deriveConformanceVectorOpaqueIdentifier = <
       ['secretBase64Url'],
     )
   }
-  return deriveOpaqueIdentifierInternal(
-    deployment,
-    identityKind,
-    components,
-    true,
+  const resolved = validateScopeInternal(input, true)
+  if (!resolved.ok) return resolved
+  return deriveOpaqueIdentifierWith(resolved.value, identityKind, components)
+}
+
+/** Mints the sole event business identifier for one immutable exchange assertion. */
+export const deriveEventIdentifier = (
+  scope: OpaqueIdentityScope,
+  sequence: EventSequence,
+): Result<ExchangeEventIdentifier> => {
+  const resolved = resolveScope(scope)
+  if (!resolved.ok) return resolved
+  const parsed = parseEventSequence(sequence)
+  if (!parsed.ok) return parsed
+  return ok(
+    deepFreeze({
+      system: resolved.value.scope.systems.event,
+      value: `${EVENT_PREFIX}${resolved.value.scope.producerInstance}:${parsed.value}`,
+      role: 'event' as const,
+    }),
   )
 }
 
-/** Creates the sole event business Identifier for one immutable exchange assertion. */
-export const deriveEventIdentifier = (
-  deployment: DeploymentIdentitySource,
-  sequence: string,
-): Result<CompleteIdentifierInput> => {
-  const validated = resolveDeployment(deployment, false)
-  if (!validated.ok) return validated
-  if (typeof sequence !== 'string' || !POSITIVE_DECIMAL.test(sequence)) {
-    return err(
-      'invalid-identifier',
-      'Event sequence must be a canonical positive decimal string.',
-      ['sequence'],
-    )
-  }
-  return ok({
-    system: validated.value.identity.eventIdentifierSystem,
-    value: `${EVENT_PREFIX}${validated.value.identity.producerInstance}:${sequence}`,
-    role: 'event',
-  })
-}
-
-/** Derives the event-scoped node value a resource without a business Identifier is keyed by. */
-export const deriveEntryNodeValue = (
-  eventSystem: string,
-  eventValue: string,
-  role: string,
-  ordinal: string,
-): Result<string> => {
+const validateEntryNodeKey = (key: unknown): Result<EntryNodeKey> => {
+  const snapshot = cloneJsonValue(key)
+  if (!snapshot.ok) return snapshot
+  const candidate = asJsonObject(snapshot.value)
+  const event = asJsonObject(candidate?.event)
   if (
-    typeof eventSystem !== 'string' ||
-    typeof eventValue !== 'string' ||
-    !parseAbsoluteUri(eventSystem).ok ||
-    !EVENT_VALUE.test(eventValue)
+    candidate === undefined ||
+    event?.role !== 'event' ||
+    !parseAbsoluteUri(event.system).ok ||
+    typeof event.value !== 'string' ||
+    !EVENT_VALUE.test(event.value)
   ) {
     return err(
       'invalid-identifier',
@@ -566,24 +704,34 @@ export const deriveEntryNodeValue = (
       ['event'],
     )
   }
-  if (typeof role !== 'string' || !LOWERCASE_ROLE.test(role)) {
+  if (
+    typeof candidate.role !== 'string' ||
+    !LOWERCASE_ROLE.test(candidate.role)
+  ) {
     return err(
       'invalid-code',
       'Entry-node role must be a lowercase code token.',
       ['role'],
     )
   }
-  if (typeof ordinal !== 'string' || !UNSIGNED_DECIMAL.test(ordinal)) {
-    return err(
-      'invalid-identifier',
-      'Entry-node ordinal must be a canonical unsigned decimal string.',
-      ['ordinal'],
-    )
-  }
+  const ordinal = parseEntryNodeOrdinal(candidate.ordinal)
+  if (!ordinal.ok) return ordinal
+  return ok({
+    event: event as unknown as ExchangeEventIdentifier,
+    role: candidate.role,
+    ordinal: ordinal.value,
+  })
+}
+
+/** Derives the event-scoped node value a resource without a business identifier is keyed by. */
+export const deriveEntryNodeValue = (key: EntryNodeKey): Result<string> => {
+  const validated = validateEntryNodeKey(key)
+  if (!validated.ok) return validated
+  const { event, role, ordinal } = validated.value
   const preimage = encodeLengthFramedUtf8([
-    groveMobileContract.identity.entryNodeDomain,
-    eventSystem,
-    eventValue,
+    groveExchangeProtocol.entryIdentity.entryNode.domain,
+    event.system,
+    event.value,
     role,
     ordinal,
   ])
@@ -593,56 +741,31 @@ export const deriveEntryNodeValue = (
   )
 }
 
-/** Creates an unkeyed, event-scoped graph-node Identifier for a resource without business ID. */
+/** Mints the entry-node identifier of one of this producer's own events. */
 export const deriveEntryNodeIdentifier = (
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
-  role: string,
-  ordinal: string,
-): Result<CompleteIdentifierInput> => {
-  const validated = resolveDeployment(deployment, false)
+  scope: OpaqueIdentityScope,
+  key: EntryNodeKey,
+): Result<EntryNodeIdentifier> => {
+  const resolved = resolveScope(scope)
+  if (!resolved.ok) return resolved
+  const validated = validateEntryNodeKey(key)
   if (!validated.ok) return validated
-  const eventSnapshot = cloneJsonValue(event)
-  if (
-    !eventSnapshot.ok ||
-    typeof eventSnapshot.value !== 'object' ||
-    eventSnapshot.value === null ||
-    Array.isArray(eventSnapshot.value)
-  ) {
+  if (!isEventOfScope(resolved.value.scope, validated.value.event)) {
     return err(
       'invalid-identifier',
       "Entry-node derivation requires this producer's complete typed event Identifier.",
       ['event'],
     )
   }
-  const eventValue = eventSnapshot.value as unknown as CompleteIdentifierInput
-  if (
-    eventValue.system !== validated.value.identity.eventIdentifierSystem ||
-    eventValue.role !== 'event' ||
-    typeof eventValue.value !== 'string' ||
-    !EVENT_VALUE.test(eventValue.value) ||
-    !eventValue.value.startsWith(
-      `${EVENT_PREFIX}${validated.value.identity.producerInstance}:`,
-    )
-  ) {
-    return err(
-      'invalid-identifier',
-      "Entry-node derivation requires this producer's complete typed event Identifier.",
-      ['event'],
-    )
-  }
-  const value = deriveEntryNodeValue(
-    eventValue.system,
-    eventValue.value,
-    role,
-    ordinal,
-  )
+  const value = deriveEntryNodeValue(validated.value)
   if (!value.ok) return value
-  return ok({
-    system: validated.value.identity.entryNodeIdentifierSystem,
-    value: value.value,
-    role: 'entry-node',
-  })
+  return ok(
+    deepFreeze({
+      system: resolved.value.scope.systems.entryNode,
+      value: value.value,
+      role: 'entry-node' as const,
+    }),
+  )
 }
 
 const hasCanonicalSha256DigestSuffix = (value: string): boolean => {
@@ -665,18 +788,14 @@ export const isEntryNodeIdentityValue = (value: unknown): boolean =>
 
 /** The UUID-v5 byte name for one identifier: length-framed UTF-8 `[system, value]`. */
 export const entryIdentifierName = (
-  input: CompleteIdentifierInput,
+  input: BusinessIdentifier,
 ): Result<Uint8Array> => {
   const snapshot = cloneJsonValue(input)
-  if (
-    !snapshot.ok ||
-    typeof snapshot.value !== 'object' ||
-    snapshot.value === null ||
-    Array.isArray(snapshot.value)
-  ) {
+  if (!snapshot.ok) return snapshot
+  const identifier = asJsonObject(snapshot.value)
+  if (identifier === undefined) {
     return err('invalid-type', 'Expected one complete Identifier.')
   }
-  const identifier = snapshot.value as unknown as CompleteIdentifierInput
   if (!parseAbsoluteUri(identifier.system).ok) {
     return err('invalid-uri', 'Identifier.system must be an absolute URI.', [
       'system',
@@ -687,54 +806,48 @@ export const entryIdentifierName = (
       'value',
     ])
   }
-  return encodeLengthFramedUtf8([identifier.system, identifier.value])
+  return encodeLengthFramedUtf8([identifier.system as string, identifier.value])
 }
 
 /** Derives the protocol-mandated lowercase UUID-v5 Bundle entry fullUrl. */
 export const deriveEntryFullUrl = (
-  input: CompleteIdentifierInput,
+  input: BusinessIdentifier,
 ): Result<UrnUuid> => {
   const name = entryIdentifierName(input)
   if (!name.ok) return name
   return parseUrnUuid(
-    `urn:uuid:${uuidV5(name.value, groveMobileContract.identity.fullUrlNamespace)}`,
+    `urn:uuid:${uuidV5(name.value, groveExchangeProtocol.entryIdentity.fullUrl.namespace)}`,
   )
 }
 
 /** Pairs a complete entry key with its deterministic exchange UUID URN. */
 export const createEntryIdentity = (
-  identifier: CompleteIdentifierInput,
+  identifier: RoledIdentifier,
   id?: FhirId,
-): Result<IdentifiedEntryIdentityInput> => {
+): Result<EntryIdentity> => {
   if (id !== undefined && !parseFhirId(id).ok) {
     return err('invalid-identifier', 'Resource.id is not a valid FHIR id.', [
       'id',
     ])
   }
-  const identifierSnapshot = cloneJsonValue(identifier)
-  if (
-    !identifierSnapshot.ok ||
-    typeof identifierSnapshot.value !== 'object' ||
-    identifierSnapshot.value === null ||
-    Array.isArray(identifierSnapshot.value)
-  ) {
-    return err('invalid-type', 'Expected one complete entry Identifier.')
+  const snapshot = cloneJsonValue(identifier)
+  if (!snapshot.ok) return snapshot
+  const candidate = asJsonObject(snapshot.value)
+  if (candidate === undefined || !isGroveIdentifierRole(candidate.role)) {
+    return err(
+      'invalid-identifier',
+      'An entry key requires one complete Identifier with a Grove identifier role.',
+      ['role'],
+    )
   }
-  const safeIdentifier =
-    identifierSnapshot.value as unknown as CompleteIdentifierInput
-  const fullUrl = deriveEntryFullUrl(safeIdentifier)
+  const key = candidate as unknown as RoledIdentifier
+  const fullUrl = deriveEntryFullUrl(key)
   if (!fullUrl.ok) return fullUrl
   return ok(
     deepFreeze({
       fullUrl: fullUrl.value,
-      identifier: {
-        system: safeIdentifier.system,
-        value: safeIdentifier.value,
-        ...(safeIdentifier.role === undefined ?
-          {}
-        : { role: safeIdentifier.role }),
-      },
+      identifier: { system: key.system, value: key.value, role: key.role },
       ...(id === undefined ? {} : { id }),
-    }) as unknown as IdentifiedEntryIdentityInput,
+    }),
   )
 }

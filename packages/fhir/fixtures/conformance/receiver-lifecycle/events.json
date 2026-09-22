@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 0,
+  "contractLock": {
+    "baseSourceRevision": "444e06fb25680c3af29e5d3ccbebeb0249be7318",
+    "baseExchangeProtocolSHA256": "bbc9e980c2c674d5ef6f9900958d29c5602031ead8a3b6325cff508799106bb5",
+    "releaseVersion": "0.6.0",
+    "fhirVersion": "4.0.1",
+    "exchangeProtocolSHA256": "04ad91c9ed49804f89bbf9a86486b001ed67ed5d98d2754fc48c6f4007481b69"
+  },
+  "events": {
+    "original": {
+      "path": "resources/original.json",
+      "sha256": "ff6c49864a4cf56068022ea019de6d6efb424f0c01eb51278578a98a33f47e6d",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42"
+      }
+    },
+    "corrected": {
+      "path": "resources/corrected.json",
+      "sha256": "dc4684173f3173538c61b164fa5654a5c8692d173b7d95f3b4109141f5ca584f",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:41"
+      }
+    },
+    "altered-retry": {
+      "path": "resources/altered-retry.json",
+      "sha256": "9a57d2b9697b6250966de2e6e134fe3f5855bfc8a4830386ac2ff698654cebd7",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42"
+      }
+    },
+    "reformatted-retry": {
+      "path": "resources/reformatted-retry.json",
+      "sha256": "093a6dfd0cebc17b78073f1a64b4aae349fa37724903cb4e5b0c74da77368c9c",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42"
+      }
+    },
+    "lexeme-retry": {
+      "path": "resources/lexeme-retry.json",
+      "sha256": "7518697d093c4646c0a2b48aac74306f5c9ed195bb85617130379f1334c1803d",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42"
+      }
+    },
+    "unordered-a": {
+      "path": "resources/unordered-a.json",
+      "sha256": "77edbb69c72b65cc9e0f4fec4f09e482cc6cd961f507c6f352da6ee13fdbd420",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:44"
+      }
+    },
+    "unordered-b": {
+      "path": "resources/unordered-b.json",
+      "sha256": "f0d1de544dae87d08909d0738bdb6acc979c8db023c5409e86f3d042a572eafc",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:45"
+      }
+    },
+    "pending": {
+      "path": "resources/pending.json",
+      "sha256": "7ae1c22cbfd01d55ab84ce8aeae07500899f717a5c0753983ef01dea53db6bda",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:46"
+      }
+    },
+    "target": {
+      "path": "resources/target.json",
+      "sha256": "d47ca9fe090282e1c84924f29088db4ffaa8ca3813f56a936c1bf02e96a8b5e2",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:47"
+      }
+    },
+    "retraction": {
+      "path": "resources/retraction.json",
+      "sha256": "54085f51d0d7629bc5a556cb9ea2813b7c7d6defadb8f2d3340270bc88f5d226",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:43"
+      }
+    },
+    "multi-v1": {
+      "path": "resources/multi-v1.json",
+      "sha256": "6460bf578d4239d06efbbbe6aefe2ef1fa4d4e8a343a9d1f704867e504fd7524",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:62"
+      }
+    },
+    "multi-v2": {
+      "path": "resources/multi-v2.json",
+      "sha256": "93f39fce303e95ab51253822b2192b67614a834977c7ad3b627c8f4245f7992e",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:61"
+      }
+    },
+    "multi-v3": {
+      "path": "resources/multi-v3.json",
+      "sha256": "0655373c22f80324ae0406cb26bc791f53d3e183102976a8b9652cd347ba1035",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:60"
+      }
+    },
+    "equal-version-conflict": {
+      "path": "resources/equal-version-conflict.json",
+      "sha256": "18432910374b9739e05eb3119d911625e3c59a56b8a8b9ac8319d805342078b3",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:63"
+      }
+    },
+    "equal-version-reassembly": {
+      "path": "resources/equal-version-reassembly.json",
+      "sha256": "8d430701506d6e790f648c023b676a8c6dbaa1f65cd88e0819c13d76cf76e5c7",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:64"
+      }
+    },
+    "other-writer": {
+      "path": "resources/other-writer.json",
+      "sha256": "ddcd18be3734b9d7b40620f985fca2f88135ca93f14c2fe2f2d17d244e44ebf1",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:65"
+      }
+    },
+    "missing-order": {
+      "path": "resources/missing-order.json",
+      "sha256": "f1b91c21429b9c0a900c35b92b0f6e05e10390ce735fe8d31676372b4d9e03f6",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:66"
+      }
+    },
+    "changed-source-record": {
+      "path": "resources/changed-source-record.json",
+      "sha256": "a67904123787cc274e68b6fc6b23a927e0260e7deb4b4ade232be3b508c6c003",
+      "eventIdentity": {
+        "type": {
+          "coding": [
+            {
+              "code": "event",
+              "system": "https://grovealliance.org/fhir/mobile/CodeSystem/grove-identifier-role",
+              "display": "Event"
+            }
+          ]
+        },
+        "system": "https://study.example.org/fhir/NamingSystem/grove-event-v0",
+        "value": "e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:67"
+      }
+    }
+  }
+}

@@ -6,8 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
+// A branded primitive is an intersection with an object type; it stays a primitive here.
 export type ReadonlyDeep<T> =
-  T extends (...arguments_: never[]) => unknown ? T
+  T extends string | number | bigint | boolean | symbol | null | undefined ? T
+  : T extends (...arguments_: never[]) => unknown ? T
   : T extends readonly unknown[] ?
     Readonly<{ [Index in keyof T]: ReadonlyDeep<T[Index]> }>
   : T extends object ? { readonly [Key in keyof T]: ReadonlyDeep<T[Key]> }

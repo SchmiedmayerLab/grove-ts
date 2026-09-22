@@ -12,44 +12,21 @@ import type {
   ProviderRawOutputRoles,
   ProviderScalarOutputRoles,
 } from '../contract/providers.generated.js'
-import type { AbsoluteUri, FhirId, FhirInstant } from '../core/index.js'
+import type { Branded, Issue } from '../core/index.js'
+import type { BusinessIdentifier } from '../mobile/identity.js'
 import type {
-  ApplicationDeviceInput,
-  CompleteIdentifierInput,
-  DeploymentIdentityInput,
-  GatewayApplicationInput,
+  ApplicationDevice,
+  ExchangeGraphIdentifiers,
+  GovernedSourceIdentifierDisclosurePolicy,
   InstantEffectiveTime,
   MobileMeasurement,
   PeriodEffectiveTime,
-  RecordingDeviceInput,
+  RecordingDevice,
   RecordingMethod,
 } from '../mobile/types.js'
+import type { ExchangeGraph } from '../r4/types.js'
 
 type ScalarOutputRoles = ProviderScalarOutputRoles
-
-/** Deployment-owned pseudonym for a provider whose native keys are account-scoped. */
-export interface ProviderAccountScopeIdentifierInput extends CompleteIdentifierInput {
-  readonly assurance: 'deployment-scoped-account-pseudonym'
-}
-
-/** Authoritative global provider key-space asserted for globally unique native keys. */
-export interface ProviderGlobalScopeIdentifierInput extends CompleteIdentifierInput {
-  readonly assurance: 'documented-global-key-space'
-}
-
-/** Identifier-only Patient reference; the pseudonym is intentionally carried in emitted FHIR. */
-export interface ProviderPatientReferenceInput {
-  readonly type: 'Patient'
-  readonly identifier: CompleteIdentifierInput & {
-    readonly assurance: 'deployment-scoped-pseudonym'
-  }
-}
-
-/** Identifier-only ResearchStudy reference; no unresolved literal is emitted. */
-export interface ProviderResearchStudyReferenceInput {
-  readonly type: 'ResearchStudy'
-  readonly identifier: CompleteIdentifierInput
-}
 
 /** Exact closed provider codes defined by the Provider IG. */
 export type ConnectedProvider = keyof ScalarOutputRoles
@@ -68,35 +45,6 @@ type ProviderContractRow<Provider extends ConnectedProvider> = Extract<
   (typeof import('../contract/providers.generated.js').providerAdapterCatalog)['providers'][number],
   { readonly id: Provider }
 >
-
-type ProviderIdentifierScope<Provider extends ConnectedProvider> =
-  ProviderContractRow<Provider>['identifierScope']
-
-type ProviderScopeMode<Provider extends ConnectedProvider> =
-  ProviderContractRow<Provider> extends (
-    {
-      readonly providerScopeMode: infer Mode extends
-        'deployment-scoped-account-pseudonym' | 'documented-global-key-space'
-    }
-  ) ?
-    Mode
-  : ProviderIdentifierScope<Provider> extends 'account' ?
-    'deployment-scoped-account-pseudonym'
-  : 'documented-global-key-space'
-
-/**
- * Complete provider-scope pair required by the Provider identity protocol.
- * Account-scoped providers use a deployment pseudonym; globally unique providers use one
- * documented global key-space pair, so identity does not fragment across accounts.
- */
-export type ProviderScopeIdentifierInput<
-  Provider extends ConnectedProvider = ConnectedProvider,
-> =
-  Provider extends ConnectedProvider ?
-    ProviderScopeMode<Provider> extends 'deployment-scoped-account-pseudonym' ?
-      ProviderAccountScopeIdentifierInput
-    : ProviderGlobalScopeIdentifierInput
-  : never
 
 type ProviderMeasurementOwner<Provider extends ConnectedProvider> =
   ProviderContractRow<Provider> extends (
@@ -184,63 +132,35 @@ export interface ProviderAdapter<
   readonly provider: Provider
 }
 
-interface NormalizedSourceRecordBase {
-  readonly recordingMethod?: RecordingMethod
-  readonly recordingDevice?: RecordingDeviceInput
-  /** Optional logical identity assigned by the application that wrote the source record. */
-  readonly writerRecord?: WriterRecordInput
-}
-
-export interface WriterRecordInput {
-  readonly applicationIdentifier: CompleteIdentifierInput
+/** The logical record identity the application that wrote the source record assigned. */
+export interface WriterRecord {
+  readonly applicationIdentifier: BusinessIdentifier
   readonly nativeRecordId: string
   /** Canonical non-negative writer revision, when the source exposes one. */
-  readonly version?: string
+  readonly version?: string | undefined
 }
 
-/** Optional FHIR type coding for a deliberately disclosed source-native Identifier. */
-export interface GovernedSourceIdentifierTypeCodingInput {
-  readonly system: AbsoluteUri
-  readonly code: string
-  readonly display?: string
-}
-
-/** Narrow CodeableConcept surface for an optional source-native Identifier.type. */
-export interface GovernedSourceIdentifierTypeInput {
-  readonly coding?: readonly [
-    GovernedSourceIdentifierTypeCodingInput,
-    ...GovernedSourceIdentifierTypeCodingInput[],
-  ]
-  readonly text?: string
+interface NormalizedSourceRecordBase {
+  readonly recordingMethod?: RecordingMethod | undefined
+  readonly recordingDevice?: RecordingDevice | undefined
+  readonly writerRecord?: WriterRecord | undefined
 }
 
 /**
- * Explicit opt-in to place the exact source-native value under a caller-governed key-space URI.
- * This traceability Identifier supplements Grove identities and is never an entry/retraction key.
- */
-export interface GovernedSourceIdentifierInput {
-  readonly system: AbsoluteUri
-  readonly nativeId: string
-  readonly type?: GovernedSourceIdentifierTypeInput
-}
-
-/**
- * Source identity fields. The native id is HMAC input and omitted by default;
- * an eligible graph may disclose it only through the explicit governed
- * top-level configuration. The provider scope must match the catalog: a deployment-owned
- * account pseudonym for account-scoped keys, or the documented global key-space pair for
- * globally unique keys. An email, access credential, or inferred scope is invalid.
+ * Source identity fields. The native id is HMAC input and omitted by default; an eligible
+ * graph discloses it only through the conversion options' disclosure policy. The record's
+ * provider scope is the context's repository scope: a deployment-owned account pseudonym
+ * for account-scoped keys, or the documented global key-space pair for globally unique keys.
  */
 export interface ProviderSourceRecord<
   Provider extends ConnectedProvider,
   SourceType extends ConnectedSourceType<Provider>,
 > extends NormalizedSourceRecordBase {
   readonly adapter: ProviderAdapter<Provider>
-  readonly providerScopeIdentifier: ProviderScopeIdentifierInput<Provider>
   readonly sourceType: SourceType
   readonly sourceNativeId: string
-  /** Application that entered the record into the connected provider. */
-  readonly dataOrigin: ApplicationDeviceInput
+  /** The application that entered the record at the connected provider. */
+  readonly writer: ApplicationDevice
 }
 
 export type ConnectedProviderMeasurements<
@@ -282,49 +202,37 @@ export type ConnectedRawProvider = keyof RawOutputRoles
 export type ConnectedRawSourceType<Provider extends ConnectedRawProvider> =
   keyof RawOutputRoles[Provider] & string
 
-declare const recordingInputBrand: unique symbol
-
 /** Canonically padded RFC 4648 base64 containing at least one byte. */
-export type CanonicalBase64 = string & {
-  readonly [recordingInputBrand]: 'CanonicalBase64'
-}
+export type CanonicalBase64 = Branded<'CanonicalBase64'>
 
 /** Base64-encoded 20-byte SHA-1 digest required by FHIR R4 Attachment.hash. */
-export type Sha1Base64 = string & {
-  readonly [recordingInputBrand]: 'Sha1Base64'
-}
+export type Sha1Base64 = Branded<'Sha1Base64'>
 
 /** A syntactically valid media type without content-transfer parameters. */
-export type MediaType = string & {
-  readonly [recordingInputBrand]: 'MediaType'
-}
+export type MediaType = Branded<'MediaType'>
 
 /** Caller-asserted immutable, version-specific HTTP(S) recording URL. */
-export type ImmutableRecordingUrl = string & {
-  readonly [recordingInputBrand]: 'ImmutableRecordingUrl'
-}
+export type ImmutableRecordingUrl = Branded<'ImmutableRecordingUrl'>
 
 export interface ProviderRecordingSourceRecord<
   Provider extends ConnectedRawProvider,
   SourceType extends ConnectedRawSourceType<Provider>,
 > {
   readonly adapter: ProviderAdapter<Provider>
-  readonly providerScopeIdentifier: ProviderScopeIdentifierInput<Provider>
   readonly sourceType: SourceType
-  /**
-   * Opaque-identity digest input. Omitted from FHIR by default; governed
-   * disclosure may place it on the sole source DocumentReference.
-   */
+  /** Opaque-identity digest input, disclosed only through the conversion options. */
   readonly sourceNativeId: string
-  /** Application that entered the already-obtained record at the provider. */
-  readonly dataOrigin: ApplicationDeviceInput
-  readonly writerRecord?: WriterRecordInput
+  /** The application that entered the already-obtained record at the provider. */
+  readonly writer: ApplicationDevice
+  /** The source activity time the recording covers. */
+  readonly effective: InstantEffectiveTime | PeriodEffectiveTime
+  readonly writerRecord?: WriterRecord | undefined
 }
 
-interface RecordingAttachmentBaseInput {
+interface RecordingAttachmentBase {
   readonly contentType: MediaType
   /** Optional human-facing presentation text; it never participates in identity. */
-  readonly title?: string
+  readonly title?: string | undefined
   /** Registered payload format the recording bytes conform to. */
   readonly format: ProviderRecordingFormat
   /** Required deployment assertion for opaque content Grove cannot inspect. */
@@ -337,13 +245,13 @@ export type ProviderRecordingFormat =
 export type RawPayloadAdmissionAssertion =
   (typeof import('../contract/providers.generated.js').providerAdapterCatalog)['rawPayloadAdmission']['allowedAssertions'][number]
 
-export interface EmbeddedRecordingAttachmentInput extends RecordingAttachmentBaseInput {
+export interface EmbeddedRecordingAttachment extends RecordingAttachmentBase {
   readonly kind: 'embedded'
   /** Exact caller-supplied bytes represented as canonical RFC 4648 base64. */
   readonly dataBase64: CanonicalBase64
 }
 
-export interface ExternalRecordingAttachmentInput extends RecordingAttachmentBaseInput {
+export interface ExternalRecordingAttachment extends RecordingAttachmentBase {
   readonly kind: 'external'
   readonly url: ImmutableRecordingUrl
   readonly size: number
@@ -351,8 +259,8 @@ export interface ExternalRecordingAttachmentInput extends RecordingAttachmentBas
   readonly immutabilityAssurance: 'immutable-version-specific'
 }
 
-export type ProviderRecordingAttachmentInput =
-  EmbeddedRecordingAttachmentInput | ExternalRecordingAttachmentInput
+export type ProviderRecordingAttachment =
+  EmbeddedRecordingAttachment | ExternalRecordingAttachment
 
 export type ProviderRecordingSource = {
   readonly [Provider in ConnectedRawProvider]: {
@@ -361,40 +269,6 @@ export type ProviderRecordingSource = {
     ]: ProviderRecordingSourceRecord<Provider, SourceType>
   }[ConnectedRawSourceType<Provider>]
 }[ConnectedRawProvider]
-
-export interface RecordingRepositoryAssignedResourceIds {
-  readonly bundle?: FhirId
-  readonly document?: FhirId
-  readonly provenance?: FhirId
-}
-
-/** Closed input for one mapped-standard Provider native recording. */
-export interface ProviderRecordingBundleInput {
-  readonly source: ProviderRecordingSource
-  readonly attachment: ProviderRecordingAttachmentInput
-  readonly subject: ProviderPatientReferenceInput
-  readonly application: ApplicationDeviceInput
-  /** Durable caller-owned sequence for a new conversion/exchange event. */
-  readonly eventSequence: string
-  /** Deployment-owned, key-epoch-specific HMAC identity configuration. */
-  readonly deploymentIdentity: DeploymentIdentityInput
-  readonly nativeIdentifierDisclosure?: GovernedSourceIdentifierInput
-  readonly documentDate: FhirInstant
-  /** Source activity time carried on conversion Provenance.occurred[x]. */
-  readonly occurred: FhirInstant
-  readonly recorded: FhirInstant
-  /** Time the immutable exchange graph was assembled (Bundle.timestamp). */
-  readonly assembled: FhirInstant
-  readonly repositoryIds?: RecordingRepositoryAssignedResourceIds
-}
-
-export interface MeasurementRepositoryAssignedResourceIds {
-  readonly bundle?: FhirId
-  readonly observations?: Readonly<
-    Partial<Record<ConnectedProviderMeasurementKind, FhirId>>
-  >
-  readonly provenance?: FhirId
-}
 
 /** Every shared or provider-owned measurement kind admitted by a connected source row. */
 export type ConnectedProviderMeasurementKind = {
@@ -405,23 +279,30 @@ export type ConnectedProviderMeasurementKind = {
   }[ConnectedSourceType<Provider>]
 }[ConnectedProvider]
 
-interface ProviderMeasurementGraphInput {
-  readonly subject: ProviderPatientReferenceInput
-  readonly application: ApplicationDeviceInput
-  readonly gatewayApplication?: GatewayApplicationInput
-  /** Durable caller-owned sequence for a new conversion/exchange event. */
-  readonly eventSequence: string
-  /** Deployment-owned, key-epoch-specific HMAC identity configuration. */
-  readonly deploymentIdentity: DeploymentIdentityInput
-  readonly nativeIdentifierDisclosure?: GovernedSourceIdentifierInput
-  /** Source activity time carried on conversion Provenance.occurred[x]. */
-  readonly occurred: FhirInstant
-  readonly recorded: FhirInstant
-  /** Time the immutable exchange graph was assembled (Bundle.timestamp). */
-  readonly assembled: FhirInstant
-  readonly repositoryIds?: MeasurementRepositoryAssignedResourceIds
-  readonly researchStudyReferences?: readonly ProviderResearchStudyReferenceInput[]
+/** Deployment policy for one conversion; every disclosure defaults to omit. */
+export interface ProviderConversionOptions {
+  readonly nativeIdentifierDisclosure?:
+    GovernedSourceIdentifierDisclosurePolicy | undefined
 }
 
-export type ProviderMeasurementBundleInput = NormalizedProviderRecord &
-  ProviderMeasurementGraphInput
+/** One converted provider record: what it converted, what it minted, and the graph. */
+export interface ProviderConversion {
+  readonly source: NormalizedSourceRecord
+  readonly identifiers: ExchangeGraphIdentifiers
+  readonly graph: ExchangeGraph
+  /** Registry warnings about what the accepted record lost; empty when nothing was. */
+  readonly warnings: readonly Issue[]
+}
+
+export interface ProviderRecordingConversion {
+  readonly source: ProviderRecordingSource
+  readonly identifiers: ExchangeGraphIdentifiers
+  readonly graph: ExchangeGraph
+  readonly warnings: readonly Issue[]
+}
+
+/** One record a batch refused, with the registry codes that say why. */
+export interface ProviderConversionFailure {
+  readonly record: NormalizedProviderRecord
+  readonly issues: readonly Issue[]
+}

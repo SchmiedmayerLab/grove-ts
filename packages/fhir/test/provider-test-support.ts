@@ -6,26 +6,35 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { AbsoluteUri, FhirInstant } from '../src/core/index.js'
 import {
   parseAbsoluteUri,
+  parseEventSequence,
   parseFhirInstant,
+  parseKeyEpoch,
+  type AbsoluteUri,
+  type FhirInstant,
   type Result,
-} from '../src/index.js'
-import type {
-  ApplicationDeviceInput,
-  DeploymentIdentityInput,
-  MobileMeasurement,
-  ResourceIdentityInput,
+} from '../src/core/index.js'
+import {
+  deriveEventIdentifier,
+  deriveOpaqueIdentitySystems,
+  validateOpaqueIdentityScope,
+  type ApplicationDevice,
+  type BusinessIdentifier,
+  type DeploymentIdentifierSystems,
+  type ExchangeEventContext,
+  type HostDevice,
+  type MobileMeasurement,
+  type OpaqueIdentityScope,
+  type OpaqueIdentityScopeInput,
+  type StudyEnrollment,
+  type Subject,
 } from '../src/mobile/index.js'
 import type {
-  buildProviderMeasurementBundle,
   ConnectedProvider,
-  ProviderPatientReferenceInput,
-  ProviderMeasurementBundleInput,
-  ProviderResearchStudyReferenceInput,
+  NormalizedProviderRecord,
 } from '../src/providers/index.js'
-import type { GroveMobileExchangeBundle } from '../src/r4/index.js'
+import type { ExchangeGraph, Observation } from '../src/r4/index.js'
 
 export const unwrap = <T>(result: Result<T>): T => {
   if (!result.ok) {
@@ -38,66 +47,114 @@ export const uri = (value: string): AbsoluteUri =>
   unwrap(parseAbsoluteUri(value))
 export const instant = (value: string): FhirInstant =>
   unwrap(parseFhirInstant(value))
-export const patient: ProviderPatientReferenceInput = {
-  type: 'Patient',
+
+export const subject: Subject = {
+  kind: 'logical',
   identifier: {
     system: uri('https://example.org/deployments/patient-pseudonyms'),
     value: 'patient-example',
-    assurance: 'deployment-scoped-pseudonym',
   },
 }
-export const study = (value: string): ProviderResearchStudyReferenceInput => ({
-  type: 'ResearchStudy',
-  identifier: {
+
+export const study = (value: string): StudyEnrollment => ({
+  study: {
     system: uri('https://example.org/deployments/research-studies'),
     value,
   },
-})
-export const resourceIdentity = (
-  system: string,
-  value: string,
-): ResourceIdentityInput => ({
-  identifier: { system: uri(system), value },
+  protocol: {
+    url: uri(`https://example.org/PlanDefinition/${value}`),
+    version: '1',
+  },
+  enrollment: {
+    system: uri('https://example.org/deployments/enrollments'),
+    value: `${value}-enrollment`,
+  },
 })
 
-export const application: ApplicationDeviceInput = {
+export const application: ApplicationDevice = {
   sourceDeviceToken: 'converter-app',
   name: 'Example converter',
   version: '0.0.0',
 }
 
-export const deploymentIdentity: DeploymentIdentityInput = {
-  opaqueIdentifierSystems: {
-    'source-record': uri('https://example.org/identity/source-record/test/1'),
-    'source-output': uri('https://example.org/identity/source-output/test/1'),
-    'writer-record': uri('https://example.org/identity/writer-record/test/1'),
-    'provider-record': uri(
-      'https://example.org/identity/provider-record/test/1',
-    ),
-    'provider-output': uri(
-      'https://example.org/identity/provider-output/test/1',
-    ),
-    'source-artifact': uri(
-      'https://example.org/identity/source-artifact/test/1',
-    ),
-    'provider-artifact': uri(
-      'https://example.org/identity/provider-artifact/test/1',
-    ),
-    'source-context': uri('https://example.org/identity/source-context/test/1'),
-    'recording-device': uri(
-      'https://example.org/identity/recording-device/test/1',
-    ),
-    'device-snapshot': uri(
-      'https://example.org/identity/device-snapshot/test/1',
-    ),
-  },
-  eventIdentifierSystem: uri('https://example.org/identity/event'),
-  entryNodeIdentifierSystem: uri('https://example.org/identity/entry-node'),
+export const host: HostDevice = {
+  sourceDeviceToken: 'converter-host',
+  operatingSystemVersion: '20.0',
+}
+
+export const identitySystems: DeploymentIdentifierSystems = unwrap(
+  deriveOpaqueIdentitySystems(
+    uri('https://example.org/identity'),
+    'test-key',
+    unwrap(parseKeyEpoch('1')),
+  ),
+)
+
+export const scopeInput: OpaqueIdentityScopeInput = {
+  systems: identitySystems,
   keyId: 'test-key',
-  keyEpoch: '1',
+  keyEpoch: unwrap(parseKeyEpoch('1')),
   secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
   producerInstance: '1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
 }
+
+export const identityScope: OpaqueIdentityScope = unwrap(
+  validateOpaqueIdentityScope(scopeInput),
+)
+
+export const accountScope: BusinessIdentifier = {
+  system: uri('https://example.org/deployments/provider-accounts'),
+  value: 'pseudonym-account-001',
+}
+
+export const globalScope: BusinessIdentifier = {
+  system: uri('https://example.org/provider-key-spaces'),
+  value: 'oura-document-uuid-global',
+}
+
+export const repositoryScope = (
+  provider: ConnectedProvider,
+): BusinessIdentifier => (provider === 'oura' ? globalScope : accountScope)
+
+export const conversionInstant: FhirInstant = instant('2026-08-20T12:03:00Z')
+
+export const context = (
+  provider: ConnectedProvider = 'withings',
+  sequence = '1',
+  overrides: Partial<ExchangeEventContext> = {},
+): ExchangeEventContext => ({
+  subject,
+  event: unwrap(
+    deriveEventIdentifier(identityScope, unwrap(parseEventSequence(sequence))),
+  ),
+  identityScope,
+  repositoryScope: repositoryScope(provider),
+  application,
+  host,
+  conversionInstant,
+  ...overrides,
+})
+
+export const writer = (provider: string): ApplicationDevice => ({
+  sourceDeviceToken: `writer-${provider}`,
+  name: provider,
+})
+
+export const record = (
+  provider: ConnectedProvider,
+  sourceType: string,
+  measurement: MobileMeasurement,
+): NormalizedProviderRecord =>
+  ({
+    source: {
+      adapter: { kind: 'providers', provider },
+      sourceType,
+      sourceNativeId: `native-${provider}-${sourceType}`,
+      recordingMethod: 'automatically-recorded',
+      writer: writer(provider),
+    },
+    measurements: [measurement],
+  }) as NormalizedProviderRecord
 
 export const dateTime: FhirInstant = instant('2026-08-20T12:00:00Z')
 export const start: FhirInstant = instant('2026-08-20T00:00:00Z')
@@ -122,44 +179,6 @@ export const bloodPressureMeasurement: Extract<
   diastolic: 76,
   effective: { kind: 'date-time', value: dateTime },
 }
-
-export const baseInput = (
-  provider: ConnectedProvider,
-  sourceType: string,
-  measurement: MobileMeasurement,
-): ProviderMeasurementBundleInput =>
-  ({
-    subject: patient,
-    measurements: [measurement],
-    source: {
-      adapter: { kind: 'providers', provider },
-      providerScopeIdentifier:
-        provider === 'oura' ?
-          {
-            system: uri('https://example.org/provider-key-spaces'),
-            value: 'oura-document-uuid-global',
-            assurance: 'documented-global-key-space',
-          }
-        : {
-            system: uri('https://example.org/deployments/provider-accounts'),
-            value: `pseudonym-${provider}-001`,
-            assurance: 'deployment-scoped-account-pseudonym',
-          },
-      sourceType,
-      sourceNativeId: `native-${provider}-${sourceType}`,
-      recordingMethod: 'automatically-recorded',
-      dataOrigin: {
-        sourceDeviceToken: `data-origin-${provider}`,
-        name: provider,
-      },
-    },
-    application,
-    eventSequence: '1',
-    deploymentIdentity,
-    occurred: instant('2026-08-20T12:00:00Z'),
-    recorded: instant('2026-08-20T12:02:00Z'),
-    assembled: instant('2026-08-20T12:03:00Z'),
-  }) as ProviderMeasurementBundleInput
 
 export const scalarCases: ReadonlyArray<{
   readonly provider: ConnectedProvider
@@ -251,10 +270,18 @@ export const scalarCases: ReadonlyArray<{
 ]
 
 export const resources = (
-  result: ReturnType<typeof buildProviderMeasurementBundle>,
-): ReadonlyArray<GroveMobileExchangeBundle['entry'][number]['resource']> => {
-  if (!result.ok) throw new Error(JSON.stringify(result.issues))
-  return result.value.entry.map((entry) => entry.resource)
+  graph: ExchangeGraph,
+): ReadonlyArray<ExchangeGraph['entry'][number]['resource']> =>
+  graph.entry.map((entry) => entry.resource)
+
+export const observationOf = (graph: ExchangeGraph): Observation => {
+  const observation = resources(graph).find(
+    (resource) => resource.resourceType === 'Observation',
+  )
+  if (observation?.resourceType !== 'Observation') {
+    throw new Error('The graph did not contain its Observation.')
+  }
+  return observation
 }
 
 export const mutableRecord = (

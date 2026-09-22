@@ -4,14 +4,14 @@
       "kind": "providers",
       "provider": "withings"
     },
-    "providerScopeIdentifier": {
-      "system": "https://example.org/deployments/provider-accounts",
-      "value": "pseudonym-withings-001",
-      "assurance": "deployment-scoped-account-pseudonym"
-    },
     "sourceType": "sleepIntraday",
     "sourceNativeId": "synthetic-withings-sleep-series-001",
-    "dataOrigin": {
+    "effective": {
+      "kind": "period",
+      "start": "2026-08-19T00:00:00Z",
+      "end": "2026-08-20T00:00:00Z"
+    },
+    "writer": {
       "sourceDeviceToken": "origin-instance-withings-001",
       "name": "Withings"
     }

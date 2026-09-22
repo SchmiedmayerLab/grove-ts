@@ -1,0 +1,4481 @@
+{
+  "schemaVersion": 0,
+  "events": "events.json",
+  "outputs": {
+    "multi-v1.primary": {
+      "event": "multi-v1",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    },
+    "multi-v1.secondary": {
+      "event": "multi-v1",
+      "fullUrl": "urn:uuid:96934596-b8b3-5623-b026-cb381d6beede"
+    },
+    "multi-v2.primary": {
+      "event": "multi-v2",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    },
+    "multi-v3.primary": {
+      "event": "multi-v3",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    },
+    "multi-v3.secondary": {
+      "event": "multi-v3",
+      "fullUrl": "urn:uuid:96934596-b8b3-5623-b026-cb381d6beede"
+    },
+    "equal-version-conflict.primary": {
+      "event": "equal-version-conflict",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    },
+    "equal-version-reassembly.primary": {
+      "event": "equal-version-reassembly",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    },
+    "other-writer.primary": {
+      "event": "other-writer",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    },
+    "missing-order.primary": {
+      "event": "missing-order",
+      "fullUrl": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+    }
+  },
+  "policy": {
+    "scope": "One verified participant/source repository and the same complete source-record identity.",
+    "membership": "Comparable writer versions select one complete source-record revision, including its output membership, not a maximum independently for each output.",
+    "equivalence": "Exact event replay is proven equality. This receiver policy does not infer cross-event source-content equality by stripping graph fields. Distinct events with equal writer versions remain unresolved, even when displayed measurements agree.",
+    "ordering": "Different writer identities or absent comparable writer evidence cannot order candidates. A missing output in a later complete revision is not a retraction tombstone.",
+    "supersession": "A unique higher complete revision under the same writer identity can become current while equal-version conflicts among older revisions remain in history. A higher version cannot resolve missing or different writer evidence. Conflict evidence is not erased when current selection advances.",
+    "authorization": "Only the listed exact output versions are authorized. Current selection never carries a previous version's grant forward."
+  },
+  "authorizedOutputs": {
+    "purpose-a": [
+      "equal-version-conflict.primary",
+      "equal-version-reassembly.primary",
+      "missing-order.primary",
+      "multi-v1.primary",
+      "multi-v1.secondary",
+      "multi-v2.primary",
+      "multi-v3.primary",
+      "other-writer.primary"
+    ],
+    "purpose-b": []
+  },
+  "sequences": [
+    {
+      "id": "removed-child-does-not-remain-current",
+      "steps": [
+        {
+          "event": "multi-v1",
+          "expect": {
+            "history": [
+              "multi-v1"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ],
+            "current": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ],
+            "newlyVisible": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v1",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary",
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v1",
+          "expect": {
+            "history": [
+              "multi-v1",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary",
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "late-old-revision-does-not-add-a-child",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v1",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v1"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary",
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "membership-removal-is-not-a-tombstone-or-a-grant",
+      "steps": [
+        {
+          "event": "multi-v1",
+          "expect": {
+            "history": [
+              "multi-v1"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ],
+            "current": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ],
+            "newlyVisible": [
+              "multi-v1.primary",
+              "multi-v1.secondary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v1",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary",
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v1",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v1.primary",
+              "multi-v1.secondary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-requires-resolution",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-arrives-first",
+      "steps": [
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary"
+            ],
+            "current": [
+              "equal-version-conflict.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "equal-version-conflict.primary"
+            ],
+            "newlyVisible": [
+              "equal-version-conflict.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-with-higher-revision-older-competing-newer",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-conflict",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-with-higher-revision-older-newer-competing",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-with-higher-revision-competing-older-newer",
+      "steps": [
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary"
+            ],
+            "current": [
+              "equal-version-conflict.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "equal-version-conflict.primary"
+            ],
+            "newlyVisible": [
+              "equal-version-conflict.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-with-higher-revision-competing-newer-older",
+      "steps": [
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary"
+            ],
+            "current": [
+              "equal-version-conflict.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "equal-version-conflict.primary"
+            ],
+            "newlyVisible": [
+              "equal-version-conflict.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-conflict",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-with-higher-revision-newer-older-competing",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-conflict-with-higher-revision-newer-competing-older",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-conflict"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-conflict",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-conflict",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-conflict.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-conflict"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-requires-resolution",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-arrives-first",
+      "steps": [
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary"
+            ],
+            "current": [
+              "equal-version-reassembly.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "equal-version-reassembly.primary"
+            ],
+            "newlyVisible": [
+              "equal-version-reassembly.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-with-higher-revision-older-competing-newer",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "equal-version-reassembly",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-with-higher-revision-older-newer-competing",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-with-higher-revision-competing-older-newer",
+      "steps": [
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary"
+            ],
+            "current": [
+              "equal-version-reassembly.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "equal-version-reassembly.primary"
+            ],
+            "newlyVisible": [
+              "equal-version-reassembly.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-with-higher-revision-competing-newer-older",
+      "steps": [
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary"
+            ],
+            "current": [
+              "equal-version-reassembly.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "equal-version-reassembly.primary"
+            ],
+            "newlyVisible": [
+              "equal-version-reassembly.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v3"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "equal-version-reassembly",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-with-higher-revision-newer-older-competing",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "equal-version-reassembly-with-higher-revision-newer-competing-older",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-reassembly"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "equal-version-reassembly",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "equal-version-reassembly",
+              "multi-v2"
+            ],
+            "versions": [
+              "equal-version-reassembly.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [
+              "multi-v2",
+              "equal-version-reassembly"
+            ],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-requires-resolution",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-arrives-first",
+      "steps": [
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "other-writer"
+            ],
+            "versions": [
+              "other-writer.primary"
+            ],
+            "current": [
+              "other-writer.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "other-writer.primary"
+            ],
+            "newlyVisible": [
+              "other-writer.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "other-writer",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "other-writer",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-with-higher-revision-older-competing-newer",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-with-higher-revision-older-newer-competing",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-with-higher-revision-competing-older-newer",
+      "steps": [
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "other-writer"
+            ],
+            "versions": [
+              "other-writer.primary"
+            ],
+            "current": [
+              "other-writer.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "other-writer.primary"
+            ],
+            "newlyVisible": [
+              "other-writer.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-with-higher-revision-competing-newer-older",
+      "steps": [
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "other-writer"
+            ],
+            "versions": [
+              "other-writer.primary"
+            ],
+            "current": [
+              "other-writer.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "other-writer.primary"
+            ],
+            "newlyVisible": [
+              "other-writer.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "other-writer",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-with-higher-revision-newer-older-competing",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-writer-with-higher-revision-newer-competing-older",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "other-writer"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "other-writer",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "other-writer",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary",
+              "other-writer.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "other-writer",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-requires-resolution",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-arrives-first",
+      "steps": [
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary"
+            ],
+            "current": [
+              "missing-order.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "missing-order.primary"
+            ],
+            "newlyVisible": [
+              "missing-order.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "missing-order",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "missing-order",
+              "multi-v2"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-with-higher-revision-older-competing-newer",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-with-higher-revision-older-newer-competing",
+      "steps": [
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary"
+            ],
+            "current": [
+              "multi-v2.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v2.primary"
+            ],
+            "newlyVisible": [
+              "multi-v2.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v2",
+              "multi-v3",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-with-higher-revision-competing-older-newer",
+      "steps": [
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary"
+            ],
+            "current": [
+              "missing-order.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "missing-order.primary"
+            ],
+            "newlyVisible": [
+              "missing-order.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v2",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-with-higher-revision-competing-newer-older",
+      "steps": [
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary"
+            ],
+            "current": [
+              "missing-order.primary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "missing-order.primary"
+            ],
+            "newlyVisible": [
+              "missing-order.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v3"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "missing-order",
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-with-higher-revision-newer-older-competing",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2"
+            ],
+            "versions": [
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "multi-v2",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "missing-order-with-higher-revision-newer-competing-older",
+      "steps": [
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3"
+            ],
+            "versions": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "conflicts": [],
+            "visible": [
+              "multi-v3.primary"
+            ],
+            "newlyVisible": [
+              "multi-v3.primary"
+            ]
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "missing-order"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v3",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "missing-order",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        },
+        {
+          "event": "multi-v2",
+          "expect": {
+            "history": [
+              "multi-v3",
+              "missing-order",
+              "multi-v2"
+            ],
+            "versions": [
+              "missing-order.primary",
+              "multi-v2.primary",
+              "multi-v3.primary",
+              "multi-v3.secondary"
+            ],
+            "current": [],
+            "conflicts": [
+              "multi-v2",
+              "missing-order",
+              "multi-v3"
+            ],
+            "visible": [],
+            "newlyVisible": []
+          }
+        }
+      ]
+    }
+  ],
+  "replayWholeSequence": {
+    "repeat": 1,
+    "restartBeforeReplay": true,
+    "preserveFinalState": true,
+    "newlyVisible": []
+  }
+}

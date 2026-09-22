@@ -104,6 +104,19 @@ for (const name of [
     `Conformance/corpora/mobile-exchange/${name}`,
   )
 }
+const receiverCorpus = 'Conformance/corpora/receiver-lifecycle'
+const receiverFiles = (
+  await readdir(resolve(igRoot, receiverCorpus), { recursive: true })
+)
+  .filter((name) => name.endsWith('.json'))
+  .sort()
+for (const name of receiverFiles) {
+  await requireByteIdentical(
+    resolve(packageRoot, '.grove-fhir', receiverCorpus, name),
+    resolve(igRoot, receiverCorpus, name),
+    `${receiverCorpus}/${name}`,
+  )
+}
 
 const pin = await readJson(resolve(packageRoot, 'grove-fhir.json'))
 if (
@@ -125,10 +138,17 @@ if (revision.status !== 0) {
 }
 const resolvedSha = revision.stdout.trim()
 const pinnedRef = pin.ref
+const vendored = await readJson(resolve(packageRoot, '.grove-fhir/.ref'))
 stdout.write(`Grove FHIR pinned ref: ${pinnedRef}\n`)
 stdout.write(`Grove FHIR checkout SHA: ${resolvedSha}\n`)
 // The guide checkout and the catalogs this package generated from must be one commit.
-if (!structuralOnly && resolvedSha !== pinnedRef) {
+// A copy vendored from a local checkout proves that by the byte comparison above instead,
+// so the pin is verified only once the contract is fetched from it.
+if (typeof vendored.local === 'string') {
+  stdout.write(
+    `Grove FHIR contract vendored from ${vendored.local}; the pin is not verified.\n`,
+  )
+} else if (!structuralOnly && resolvedSha !== pinnedRef) {
   throw new Error(
     `The Grove FHIR checkout is ${resolvedSha}, but this package is pinned to ${pinnedRef}.`,
   )

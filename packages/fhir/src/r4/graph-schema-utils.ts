@@ -9,10 +9,19 @@
 /* eslint-disable sonarjs/no-clear-text-protocols -- FHIR R4 fixes lifecycle and participant canonicals to HTTP. */
 
 import type { z } from 'zod'
-import { groveRuleParameters, groveRuleReason } from './diagnostics.js'
+import {
+  groveRuleParameters,
+  type GroveRuleIssueOptions,
+  type ProducerDiagnosticCode,
+} from './diagnostics.js'
+import {
+  groveExchangeProtocol,
+  groveMobileProfileCanonicals,
+  groveProducerDiagnostics,
+} from '../contract/measurement-catalog.generated.js'
 import { healthKitApplicationDeviceIdentity } from '../contract/providers.generated.js'
 import { parseAbsoluteUri } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
+import { identityValuePrefixes } from '../mobile/identity.js'
 
 export type UnknownRecord = Readonly<Record<string, unknown>>
 
@@ -36,7 +45,7 @@ export const completeIdentifier = (
 const LOWERCASE_UUID_V5 =
   /^urn:uuid:[\da-f]{8}-[\da-f]{4}-5[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/u
 const ENTRY_NODE_PARTS = new RegExp(
-  `^${groveMobileContract.identity.valuePrefixes.entryNode}([a-z][a-z\\d-]*):(0|[1-9]\\d*):[A-Za-z\\d_-]{43}$`,
+  `^${identityValuePrefixes.entryNode}([a-z][a-z\\d-]*):(0|[1-9]\\d*):[A-Za-z\\d_-]{43}$`,
   'u',
 )
 
@@ -51,16 +60,20 @@ export const PROVENANCE_PARTICIPANT_SYSTEM =
   'http://terminology.hl7.org/CodeSystem/provenance-participant-type'
 
 export const APPLICATION_DEVICE_PROFILES: ReadonlySet<string> = new Set([
-  groveMobileContract.profiles.applicationDevice,
+  groveMobileProfileCanonicals['grove-application-device'],
   healthKitApplicationDeviceIdentity.profile,
 ])
 
 const ENTRY_KEY_PRIORITY: readonly string[] =
-  groveMobileContract.identity.resourceIdentifierPriority
+  groveExchangeProtocol.entryIdentity.resourceIdentifierPriority
 
 export const OPAQUE_IDENTIFIER_ROLES: ReadonlySet<string> = new Set(
-  groveMobileContract.identity.opaqueIdentifierRoles,
+  groveExchangeProtocol.opaqueIdentity.identityKinds.map(
+    ({ identifierRole }) => identifierRole,
+  ),
 )
+
+const IDENTIFIER_ROLE_SYSTEM = groveExchangeProtocol.codeSystems.identifierRole
 
 export const groveIdentifierRoles = (value: unknown): readonly string[] => {
   const identifier = asRecord(value)
@@ -69,8 +82,7 @@ export const groveIdentifierRoles = (value: unknown): readonly string[] => {
   return coding.flatMap((candidate) => {
     const item = asRecord(candidate)
     return (
-        item?.system === groveMobileContract.systems.identifierRole &&
-          typeof item.code === 'string'
+        item?.system === IDENTIFIER_ROLE_SYSTEM && typeof item.code === 'string'
       ) ?
         [item.code]
       : []
@@ -112,7 +124,8 @@ export const entryKey = (entry: unknown): unknown => {
   if (!Array.isArray(extension)) return undefined
   const matches = extension.filter(
     (candidate) =>
-      asRecord(candidate)?.url === groveMobileContract.extensions.entryNodeKey,
+      asRecord(candidate)?.url ===
+      groveExchangeProtocol.extensions.entryNodeKey,
   )
   return matches.length === 1 ?
       asRecord(matches[0])?.valueIdentifier
@@ -235,13 +248,9 @@ const validateInternalTarget = (
     typeof target.resourceType !== 'string' ||
     !allowedTypes.has(target.resourceType)
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.reference-target-type',
-      path,
-      `Internal reference must resolve to ${[...allowedTypes].join(' or ')}.`,
-      `${location}.reference`,
-    )
+    addIssue(context, 'mobile-exchange.reference-target-type', path, {
+      location: `${location}.reference`,
+    })
   }
 }
 
@@ -259,7 +268,7 @@ const validateGovernedReferenceShape = (
   const identifier = asRecord(value?.identifier)
   const patientOnly = allowedTypes.size === 1 && allowedTypes.has('Patient')
   const reservedPatientSystems: ReadonlySet<string> = new Set(
-    groveMobileContract.referencePolicy.identifierOnlyPatient.reservedSystems,
+    groveExchangeProtocol.referencePolicy.identifierOnlyPatient.reservedSystems,
   )
   const declaredType = value?.type
   if (
@@ -273,8 +282,7 @@ const validateGovernedReferenceShape = (
       context,
       'mobile-exchange.logical-patient-reference',
       [...path, 'identifier', 'system'],
-      'An identifier-only Patient Reference cannot use a protocol-reserved system.',
-      `${location}.identifier.system`,
+      { location: `${location}.identifier.system` },
     )
     return
   }
@@ -288,8 +296,7 @@ const validateGovernedReferenceShape = (
       context,
       'mobile-exchange.logical-patient-reference',
       [...path, 'identifier', 'type'],
-      'An identifier-only Patient Reference cannot carry a Grove identifier role.',
-      `${location}.identifier.type`,
+      { location: `${location}.identifier.type` },
     )
     return
   }
@@ -300,13 +307,7 @@ const validateGovernedReferenceShape = (
     typeof declaredType === 'string' &&
     allowedTypes.has(declaredType)
   if (hasLiteral && hasIdentifier) {
-    addIssue(
-      context,
-      'mobile-exchange.reference-shape',
-      path,
-      'A governed Reference must be exclusively a resolving literal or a typed identifier-only logical reference with one complete absolute-system Identifier.',
-      location,
-    )
+    addIssue(context, 'mobile-exchange.reference-shape', path, { location })
   } else if (!hasLiteral && hasIdentifier && !validLogical) {
     addIssue(
       context,
@@ -314,29 +315,26 @@ const validateGovernedReferenceShape = (
         'mobile-exchange.logical-patient-reference'
       : 'mobile-exchange.reference-shape',
       path,
-      'An identifier-only logical Reference requires its exact admitted type and one complete absolute-system Identifier.',
-      location,
+      { location },
     )
   } else if (!hasLiteral && !validLogical) {
-    addIssue(
-      context,
-      'mobile-exchange.reference-shape',
-      path,
-      'A governed Reference requires exactly one resolving literal or identifier-only logical shape.',
-      location,
-    )
+    addIssue(context, 'mobile-exchange.reference-shape', path, { location })
   }
 }
 
 // The reference-policy catalog states admitted targets, not cardinality. Every Grove
-// profile binding one of these paths to Patient also binds it 1..1, so an absent
-// subject is a contract violation the governed-reference check must report.
+// profile binding one of these paths to Patient also binds it 1..1, and a bundled study
+// context names its protocol, study and participant, so an absent reference is a
+// contract violation the governed-reference check must report.
 const MANDATORY_REFERENCE_PATHS: ReadonlySet<string> = new Set([
   'DocumentReference.subject',
   'MedicationAdministration.subject',
   'MedicationStatement.subject',
   'Observation.subject',
   'QuestionnaireResponse.subject',
+  'ResearchStudy.protocol',
+  'ResearchSubject.individual',
+  'ResearchSubject.study',
   'Specimen.subject',
   'VisionPrescription.patient',
 ])
@@ -347,7 +345,7 @@ const validateProfilePathReferenceTargets = (
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ): void => {
-  for (const rule of groveMobileContract.referencePolicy.paths) {
+  for (const rule of groveExchangeProtocol.referencePolicy.paths) {
     if (rule.resourceType !== resource.resourceType) continue
     const references = resource[rule.path]
     const values = Array.isArray(references) ? references : [references]
@@ -360,8 +358,9 @@ const validateProfilePathReferenceTargets = (
         context,
         'mobile-exchange.reference-shape',
         [...path, rule.path],
-        `${ruleLocation} is mandatory and requires one governed Reference.`,
-        ruleLocation,
+        {
+          location: ruleLocation,
+        },
       )
       continue
     }
@@ -404,7 +403,7 @@ const validateProfileExtensionReferenceTargets = (
   const extensions = Array.isArray(resource.extension) ? resource.extension : []
   for (const [index, extension] of extensions.entries()) {
     const item = asRecord(extension)
-    const rule = groveMobileContract.referencePolicy.extensionTargets.find(
+    const rule = groveExchangeProtocol.referencePolicy.extensionTargets.find(
       ({ url }) => url === item?.url,
     )
     if (rule !== undefined && item !== undefined) {
@@ -481,17 +480,17 @@ export const codingCountForSystem = (
     : 0
 }
 
+/** Records one registered producer rule; its reason is the registry's, never a local string. */
 export const addIssue = (
   context: z.core.$RefinementCtx,
-  code: string,
+  code: ProducerDiagnosticCode,
   path: ReadonlyArray<number | string>,
-  message: string,
-  location?: string,
+  options: GroveRuleIssueOptions = {},
 ): void => {
   context.addIssue({
     code: 'custom',
     path: [...path],
-    message: groveRuleReason(code) ?? message,
-    params: groveRuleParameters(code, path, location),
+    message: groveProducerDiagnostics[code].reason,
+    params: groveRuleParameters(code, path, options),
   })
 }

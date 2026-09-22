@@ -14,10 +14,12 @@ import {
   codingCountForSystem,
   type UnknownRecord,
 } from './graph-schema-utils.js'
-import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
+import {
+  groveMobilePackageMetadata,
+  groveProfileClaims,
+} from '../contract/measurement-catalog.generated.js'
 import { providerAdapterCatalog } from '../contract/providers.generated.js'
 import { compareFhirDateTimes } from '../core/primitives.js'
-import { groveMobileContract } from '../mobile/contract.js'
 import {
   ALL_MEASUREMENT_DEFINITIONS,
   PROVIDER_ROWS,
@@ -200,21 +202,15 @@ const validateObservationCodes = (
         !admittedPrimaryCodes.has(String(asRecord(candidate)?.code)),
     )
   ) {
-    addIssue(
-      context,
-      `mobile-${match.id}.code`,
-      [...path, 'code'],
-      `A Grove Mobile ${match.id} Observation requires exactly its closed catalog coding set for ${match.code.system}.`,
-    )
+    addIssue(context, 'mobile-output.semantic-profile', [...path, 'code'], {
+      location: 'Observation.code',
+    })
   }
   for (const required of requiredCodings) {
     if (codingCount(observation.code, required.system, required.code) !== 1) {
-      addIssue(
-        context,
-        `mobile-${match.id}.required-coding`,
-        [...path, 'code'],
-        `A Grove Mobile ${match.id} Observation is missing or duplicates required coding ${required.system}|${required.code}.`,
-      )
+      addIssue(context, 'mobile-output.semantic-profile', [...path, 'code'], {
+        location: 'Observation.code',
+      })
     }
   }
 }
@@ -248,18 +244,17 @@ const validateObservationCategory = (
     ) {
       addIssue(
         context,
-        `mobile-${match.id}.category`,
+        'mobile-output.semantic-profile',
         [...path, 'category'],
-        `A Grove Mobile ${match.id} Observation requires exactly one catalog category coding.`,
+        {
+          location: 'Observation.category',
+        },
       )
     }
   } else if (categories.length > 0) {
-    addIssue(
-      context,
-      `mobile-${match.id}.category`,
-      [...path, 'category'],
-      `A Grove Mobile ${match.id} Observation must not invent an uncatalogued clinical category.`,
-    )
+    addIssue(context, 'mobile-output.semantic-profile', [...path, 'category'], {
+      location: 'Observation.category',
+    })
   }
 }
 
@@ -273,9 +268,11 @@ const validateObservationEffective = (
     if (typeof observation.effectiveDateTime !== 'string') {
       addIssue(
         context,
-        `mobile-${match.id}.effective`,
+        'mobile-output.semantic-profile',
         [...path, 'effectiveDateTime'],
-        `A Grove Mobile ${match.id} Observation requires effectiveDateTime.`,
+        {
+          location: 'Observation.effective[x]',
+        },
       )
     }
   } else if (match.effective === 'Period') {
@@ -283,9 +280,11 @@ const validateObservationEffective = (
     if (typeof period?.start !== 'string' || typeof period.end !== 'string') {
       addIssue(
         context,
-        `mobile-${match.id}.effective`,
+        'mobile-output.semantic-profile',
         [...path, 'effectivePeriod'],
-        `A Grove Mobile ${match.id} Observation requires a bounded effectivePeriod.`,
+        {
+          location: 'Observation.effective[x]',
+        },
       )
     }
   } else {
@@ -297,9 +296,11 @@ const validateObservationEffective = (
     if (hasDateTime === hasPeriod) {
       addIssue(
         context,
-        `mobile-${match.id}.effective`,
+        'mobile-output.semantic-profile',
         [...path, 'effectiveDateTime'],
-        `A Grove Mobile ${match.id} Observation requires exactly one admitted effectiveDateTime or bounded effectivePeriod.`,
+        {
+          location: 'Observation.effective[x]',
+        },
       )
     }
   }
@@ -311,19 +312,16 @@ const validateObservationMethod = (
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ): void => {
-  const aggregationSystem = `${groveMobileContract.canonical}/CodeSystem/grove-aggregation-method`
+  const aggregationSystem = `${groveMobilePackageMetadata.canonical}/CodeSystem/grove-aggregation-method`
   if (match.method !== undefined) {
     if (
       codingCount(observation.method, aggregationSystem, match.method.code) !==
         1 ||
       codingCountForSystem(observation.method, aggregationSystem) !== 1
     ) {
-      addIssue(
-        context,
-        `mobile-${match.id}.method`,
-        [...path, 'method'],
-        `A Grove Mobile ${match.id} Observation requires its fixed aggregation method.`,
-      )
+      addIssue(context, 'mobile-output.semantic-profile', [...path, 'method'], {
+        location: 'Observation.method',
+      })
     }
   } else if (match.methodChoice !== undefined) {
     const admittedMethods: readonly string[] = match.methodChoice
@@ -343,12 +341,9 @@ const validateObservationMethod = (
       admitted.length !== 1 ||
       codingCountForSystem(observation.method, aggregationSystem) !== 1
     ) {
-      addIssue(
-        context,
-        `mobile-${match.id}.method`,
-        [...path, 'method'],
-        `A Grove Mobile ${match.id} Observation requires exactly one admitted aggregation method.`,
-      )
+      addIssue(context, 'mobile-output.semantic-profile', [...path, 'method'], {
+        location: 'Observation.method',
+      })
     }
   }
 }
@@ -360,12 +355,11 @@ const validateQuantityValueDomain = (
   path: ReadonlyArray<number | string>,
 ): void => {
   if (typeof value !== 'number' || !violatesQuantityDomain(value, match)) return
-  addIssue(
-    context,
-    'mobile-output.quantity-value-domain',
-    [...path, 'valueQuantity', 'value'],
-    `A Grove Mobile ${match.id} result must satisfy its catalog-owned value domain.`,
-  )
+  addIssue(context, 'mobile-output.quantity-value-domain', [
+    ...path,
+    'valueQuantity',
+    'value',
+  ])
 }
 
 const POSITIVE_PERIOD_CONSTRAINT = 'grove-step-count-period-1'
@@ -386,9 +380,11 @@ const validatePositivePeriod = (
   ) {
     addIssue(
       context,
-      `mobile-${match.id}.nonzero-period`,
+      'mobile-output.semantic-profile',
       [...path, 'effectivePeriod'],
-      `A Grove Mobile ${match.id} period must have nonzero duration.`,
+      {
+        location: 'Observation.effectivePeriod',
+      },
     )
   }
 }
@@ -409,12 +405,10 @@ const validateQuantityResult = (
     valueQuantity.code !== quantity?.code ||
     valueQuantity.unit !== quantity?.unit
   ) {
-    addIssue(
-      context,
-      'mobile-output.fixed-quantity-unit',
-      [...path, 'valueQuantity'],
-      `A Grove Mobile ${match.id} result requires one finite exact value in fixed UCUM ${String(quantity?.code)}.`,
-    )
+    addIssue(context, 'mobile-output.fixed-quantity-unit', [
+      ...path,
+      'valueQuantity',
+    ])
   }
   validateQuantityValueDomain(valueQuantity?.value, match, context, path)
   validatePositivePeriod(observation, match, context, path)
@@ -451,32 +445,34 @@ const validateCodeableConceptResult = (
   if (admitted.length !== 1 || invalidSameSystem) {
     addIssue(
       context,
-      `mobile-${match.id}.coded-result`,
+      'mobile-output.semantic-profile',
       [...path, 'valueCodeableConcept'],
-      `A Grove Mobile ${match.id} result requires exactly one closed shared result coding.`,
+      {
+        location: 'Observation.valueCodeableConcept',
+      },
     )
   }
 }
 
 const validateDateTimeResult = (
   observation: UnknownRecord,
-  match: MeasurementDefinition,
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ): void => {
   if (typeof observation.valueDateTime !== 'string') {
     addIssue(
       context,
-      `mobile-${match.id}.date-time-result`,
+      'mobile-output.semantic-profile',
       [...path, 'valueDateTime'],
-      `A Grove Mobile ${match.id} result requires valueDateTime.`,
+      {
+        location: 'Observation.valueDateTime',
+      },
     )
   }
 }
 
 const validateGroupingResult = (
   observation: UnknownRecord,
-  match: MeasurementDefinition,
   context: z.core.$RefinementCtx,
   path: ReadonlyArray<number | string>,
 ): void => {
@@ -485,9 +481,11 @@ const validateGroupingResult = (
   if (members.length === 0) {
     addIssue(
       context,
-      `mobile-${match.id}.members`,
+      'mobile-output.semantic-profile',
       [...path, 'hasMember'],
-      `A Grove Mobile ${match.id} grouping requires at least one member Observation.`,
+      {
+        location: 'Observation.hasMember',
+      },
     )
   }
 }
@@ -520,10 +518,6 @@ const validateComponentResult = (
       )
     const quantity = asRecord(matching?.valueQuantity)
     const componentQuantity = definition.quantity
-    const unitClause =
-      componentQuantity === undefined ? '' : (
-        ` in fixed UCUM ${componentQuantity.code}`
-      )
     const optional = definition.cardinality === '0..1'
     if (
       matchingIndexes.length > 1 ||
@@ -543,9 +537,11 @@ const validateComponentResult = (
     ) {
       addIssue(
         context,
-        `mobile-${match.id}.${definition.id}`,
+        'mobile-output.semantic-profile',
         [...path, 'component'],
-        `A Grove Mobile ${match.id} panel admits at most one distinct finite ${definition.id} component${unitClause}${optional ? '' : ' and requires it'}.`,
+        {
+          location: 'Observation.component',
+        },
       )
     }
     if (matchedIndex !== undefined) matchedComponentIndexes.add(matchedIndex)
@@ -566,10 +562,10 @@ const validateObservationResult = (
       validateCodeableConceptResult(observation, match, context, path)
       break
     case 'dateTime':
-      validateDateTimeResult(observation, match, context, path)
+      validateDateTimeResult(observation, context, path)
       break
     case 'grouping':
-      validateGroupingResult(observation, match, context, path)
+      validateGroupingResult(observation, context, path)
       break
     case 'components':
       validateComponentResult(observation, match, context, path)
@@ -595,23 +591,19 @@ export const validateMobileObservationSemantics = (
       admission.directProfiles,
     )
   ) {
-    addIssue(
-      context,
-      'mobile-output.semantic-profile',
-      [...path, 'meta', 'profile'],
-      'Every active Observation must directly claim its exact admitted semantic/adapter profile set; connected-provider outputs require their exact provider-specific envelope and marker.',
-    )
+    addIssue(context, 'mobile-output.semantic-profile', [
+      ...path,
+      'meta',
+      'profile',
+    ])
     return
   }
   const { match } = admission
   if (match === null) return
   if (observation.status !== 'final') {
-    addIssue(
-      context,
-      `mobile-${match.id}.status`,
-      [...path, 'status'],
-      `A Grove Mobile ${match.id} Observation must be final.`,
-    )
+    addIssue(context, 'mobile-output.semantic-profile', [...path, 'status'], {
+      location: 'Observation.status',
+    })
   }
   validateObservationCodes(observation, match, context, path)
   validateObservationCategory(observation, match, context, path)

@@ -8,38 +8,28 @@
 
 import { z } from 'zod'
 import {
-  deriveProviderIdentities,
-  type ProviderIdentities,
-} from './identity.js'
-import {
   connectedProviderExclusiveDefinitions,
   sharedMeasurementDefinition,
   violatesQuantityDomain,
   type MeasurementDefinition,
 } from './measurement-definition.js'
 import {
-  absoluteUriSchema,
   applicationDeviceSchema,
-  deploymentIdentitySchema,
-  fhirIdSchema,
-  gatewayApplicationSchema,
-  governedSourceIdentifierIssues,
-  governedSourceIdentifierSchema,
-  identifierInputSchema,
-  mobileEffectiveInstantSchema,
-  nonBlankStringSchema,
-  primitiveInstantSchema,
-  providerPatientReferenceSchema,
-  providerScopeIdentifierIssues,
-  providerScopeIdentifierSchema,
-  providerResearchStudyReferenceSchema,
+  conversionOptionsSchema,
+  effectiveTimeSchema,
+  instantEffectiveSchema,
+  nativeIdentifierText,
+  nonBlankText,
+  periodEffectiveSchema,
   recordingDeviceSchema,
+  refusal,
+  sourceAbsoluteUri,
+  writerRecordSchema,
 } from './provider-input-schemas.js'
 import type {
-  ProviderMeasurementBundleInput,
-  ConnectedProviderMeasurementKind,
   ConnectedProvider,
   NormalizedProviderRecord,
+  ProviderConversionOptions,
 } from './types.js'
 import {
   sharedMobileMeasurementCatalog,
@@ -55,16 +45,18 @@ import {
   compareFhirInstants,
   deepFreeze,
   issues,
-  mapResult,
   ok,
+  zodIssuePath,
   zodIssueToIssue,
   type Issue,
   type Result,
 } from '../core/index.js'
-import type {
-  MeasurementKindsWhere,
-  MobileMeasurement,
-} from '../mobile/types.js'
+import type { MobileMeasurement } from '../mobile/types.js'
+import {
+  groveRuleIssue,
+  groveRuleIssueFromParameters,
+  type ClientRecordRule,
+} from '../r4/diagnostics.js'
 
 type ParsedProviderMeasurement =
   | MobileMeasurement
@@ -80,41 +72,75 @@ type ParsedProviderMeasurement =
           }
     }
 
-export {
-  applicationDeviceSchema,
-  deploymentIdentitySchema,
-  fhirIdSchema,
-  governedSourceIdentifierIssues,
-  governedSourceIdentifierSchema,
-  identifierInputSchema,
-  nonBlankStringSchema,
-  primitiveInstantSchema,
-  providerPatientReferenceSchema,
-  providerScopeIdentifierIssues,
-  providerScopeIdentifierSchema,
-} from './provider-input-schemas.js'
+const refuse = (
+  code: ClientRecordRule,
+  path: ReadonlyArray<string | number>,
+  message: string,
+): Issue => groveRuleIssue(code, path, { message })
 
-const sourceBase = {
-  recordingMethod: z
-    .enum(['actively-recorded', 'automatically-recorded', 'manual-entry'])
-    .optional(),
-  recordingDevice: recordingDeviceSchema.optional(),
-  writerRecord: z
-    .strictObject({
-      applicationIdentifier: identifierInputSchema,
-      nativeRecordId: nonBlankStringSchema,
-      version: z
-        .string()
-        .regex(/^(?:0|[1-9]\d*)$/u)
-        .optional(),
-    })
-    .optional(),
-} as const
+// A zod failure inside a source record is a refusal: the registry code says why, the zod
+// text is the detail. Refinements name their own code; the built-in failures map here.
+const refusalCodeFor = (issue: z.core.$ZodIssue): ClientRecordRule => {
+  if (issue.code === 'invalid_type' && issue.input === undefined) {
+    return 'mobile-input.required-metadata-missing'
+  }
+  if (issue.code === 'invalid_value' || issue.code === 'invalid_union') {
+    return 'mobile-input.unsupported-source-value'
+  }
+  return 'mobile-input.value-shape-invalid'
+}
+
+const refusalIssue = (issue: z.core.$ZodIssue): readonly Issue[] => {
+  const path = zodIssuePath(issue)
+  if (issue.code === 'unrecognized_keys') {
+    return issue.keys.map((key) =>
+      refuse('mobile-input.value-shape-invalid', [...path, key], issue.message),
+    )
+  }
+  const registered = groveRuleIssueFromParameters(
+    issue.code === 'custom' ? issue.params : undefined,
+    path,
+  )
+  return [registered ?? refuse(refusalCodeFor(issue), path, issue.message)]
+}
+
+/** Every refusal of one source record, from its zod failures. */
+export const refusalIssues = (error: z.ZodError): readonly Issue[] =>
+  error.issues.flatMap(refusalIssue)
+
+const valueAt = (
+  value: unknown,
+  path: ReadonlyArray<string | number>,
+): unknown =>
+  path.reduce<unknown>(
+    (current, segment) =>
+      typeof current === 'object' && current !== null ?
+        (current as Record<string | number, unknown>)[segment]
+      : undefined,
+    value,
+  )
+
+// The JSON snapshot refuses what zod never sees; a non-finite number is still a value.
+const snapshotRefusal = (input: unknown, issue: Issue): Issue => {
+  const offending = valueAt(input, issue.path)
+  return typeof offending === 'number' && !Number.isFinite(offending) ?
+      refuse(
+        'mobile-input.value-outside-domain',
+        issue.path,
+        'A source value must be a finite number.',
+      )
+    : refuse('mobile-input.value-shape-invalid', issue.path, issue.message)
+}
 
 const sourceSchema = z.strictObject({
-  ...sourceBase,
   adapter: z.strictObject({
-    kind: z.literal('providers'),
+    kind: z.custom<'providers'>(
+      (value) => value === 'providers',
+      refusal(
+        'mobile-input.value-shape-invalid',
+        'A provider record names the providers adapter.',
+      ),
+    ),
     provider: z.enum(
       Object.keys(providerScalarOutputRoles) as [
         ConnectedProvider,
@@ -122,101 +148,40 @@ const sourceSchema = z.strictObject({
       ],
     ),
   }),
-  providerScopeIdentifier: providerScopeIdentifierSchema,
-  sourceType: nonBlankStringSchema,
-  sourceNativeId: nonBlankStringSchema,
-  dataOrigin: applicationDeviceSchema,
+  sourceType: nonBlankText,
+  sourceNativeId: nativeIdentifierText,
+  writer: applicationDeviceSchema,
+  recordingMethod: z
+    .enum(['actively-recorded', 'automatically-recorded', 'manual-entry'])
+    .optional(),
+  recordingDevice: recordingDeviceSchema.optional(),
+  writerRecord: writerRecordSchema.optional(),
 })
 
-const instantEffectiveSchema = z.strictObject({
-  kind: z.literal('date-time'),
-  value: mobileEffectiveInstantSchema,
-})
-
-const periodEffectiveSchema = z
-  .strictObject({
-    kind: z.literal('period'),
-    start: mobileEffectiveInstantSchema,
-    end: mobileEffectiveInstantSchema,
-  })
-  .refine(
-    (value) => {
-      const ordering = compareFhirInstants(value.start, value.end)
-      return ordering.ok && ordering.value !== 1
-    },
-    { message: 'A measurement Period must not end before it starts.' },
-  )
-
-// The value arguments decide the kinds, so a swapped pair cannot compile into a lie.
-const measurementKindsWhere = <
-  ValueKind extends 'codeableConcept' | 'quantity',
-  Effective extends 'Period' | 'dateTime' | 'dateTime-or-Period',
-  Excluded extends SharedMobileMeasurementKind = never,
->(
-  valueKind: ValueKind,
-  effective: Effective,
-  excluded?: Excluded,
-): [
-  Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>,
-  ...Array<Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>>,
-] => {
-  const excludedKind: string | undefined = excluded
-  return (
+const sharedKindsWithValue = (
+  valueKind: 'codeableConcept' | 'quantity',
+  ...excluded: SharedMobileMeasurementKind[]
+): [SharedMobileMeasurementKind, ...SharedMobileMeasurementKind[]] =>
+  (
     Object.keys(sharedMobileMeasurementCatalog) as SharedMobileMeasurementKind[]
-  ).filter((kind) => {
-    const definition = sharedMobileMeasurementCatalog[kind]
-    return (
-      definition.valueKind === valueKind &&
-      definition.effective === effective &&
-      kind !== excludedKind
-    )
-  }) as [
-    Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>,
-    ...Array<Exclude<MeasurementKindsWhere<ValueKind, Effective>, Excluded>>,
-  ]
-}
+  ).filter(
+    (kind) =>
+      sharedMobileMeasurementCatalog[kind].valueKind === valueKind &&
+      !excluded.includes(kind),
+  ) as [SharedMobileMeasurementKind, ...SharedMobileMeasurementKind[]]
 
-const instantQuantityMeasurementSchema = z.strictObject({
-  kind: z.enum(measurementKindsWhere('quantity', 'dateTime')),
+// The catalog's effective[x] rule is enforced by refinement so that a mismatch is reported
+// as the effective-period refusal rather than as a shape the union could not place.
+const quantityMeasurementSchema = z.strictObject({
+  kind: z.enum(sharedKindsWithValue('quantity')),
   value: z.number(),
-  effective: instantEffectiveSchema,
+  effective: effectiveTimeSchema,
 })
 
-const periodQuantityMeasurementSchema = z.strictObject({
-  kind: z.enum(measurementKindsWhere('quantity', 'Period')),
-  value: z.number(),
-  effective: periodEffectiveSchema,
-})
-
-const choiceQuantityMeasurementKinds = measurementKindsWhere(
-  'quantity',
-  'dateTime-or-Period',
-)
-const choiceQuantityMeasurementKindSet: ReadonlySet<string> = new Set(
-  choiceQuantityMeasurementKinds,
-)
-const choiceQuantityMeasurementSchema = z.strictObject({
-  kind: z.custom<(typeof choiceQuantityMeasurementKinds)[number]>(
-    (value) =>
-      typeof value === 'string' && choiceQuantityMeasurementKindSet.has(value),
-    { message: 'Expected a catalog measurement with choice effective[x].' },
-  ),
-  value: z.number(),
-  effective: z.union([instantEffectiveSchema, periodEffectiveSchema]),
-})
-
-const instantCodedMeasurementSchema = z.strictObject({
-  kind: z.enum(measurementKindsWhere('codeableConcept', 'dateTime')),
-  value: nonBlankStringSchema,
-  effective: instantEffectiveSchema,
-})
-
-const periodCodedMeasurementSchema = z.strictObject({
-  kind: z.enum(
-    measurementKindsWhere('codeableConcept', 'Period', 'sleep-stage'),
-  ),
-  value: nonBlankStringSchema,
-  effective: periodEffectiveSchema,
+const codedMeasurementSchema = z.strictObject({
+  kind: z.enum(sharedKindsWithValue('codeableConcept', 'sleep-stage')),
+  value: nonBlankText,
+  effective: effectiveTimeSchema,
 })
 
 const bloodPressureMeasurementSchema = z.strictObject({
@@ -231,9 +196,9 @@ const sleepStageMeasurementSchema = z.strictObject({
   stage: z.enum(sharedMobileMeasurementCatalog['sleep-stage'].allowedValues),
   sourceStageCoding: z
     .strictObject({
-      system: absoluteUriSchema,
-      code: nonBlankStringSchema,
-      display: nonBlankStringSchema.optional(),
+      system: sourceAbsoluteUri,
+      code: nonBlankText,
+      display: nonBlankText.optional(),
     })
     .optional(),
   effective: periodEffectiveSchema,
@@ -250,26 +215,24 @@ const exclusiveCodedKinds = Object.values(exclusiveDefinitions)
 const exclusiveQuantityMeasurementSchema = z.strictObject({
   kind: z.enum(exclusiveQuantityKinds),
   value: z.number(),
-  effective: z.union([instantEffectiveSchema, periodEffectiveSchema]),
+  effective: effectiveTimeSchema,
 })
 
 const exclusiveCodedMeasurementSchema = z.strictObject({
   kind: z.enum(exclusiveCodedKinds),
-  value: nonBlankStringSchema,
-  effective: z.union([instantEffectiveSchema, periodEffectiveSchema]),
+  value: nonBlankText,
+  effective: effectiveTimeSchema,
 })
 
-const measurementSchema: z.ZodType<ParsedProviderMeasurement> = z.union([
-  instantQuantityMeasurementSchema,
-  periodQuantityMeasurementSchema,
-  choiceQuantityMeasurementSchema,
-  instantCodedMeasurementSchema,
-  periodCodedMeasurementSchema,
-  bloodPressureMeasurementSchema,
-  sleepStageMeasurementSchema,
-  exclusiveQuantityMeasurementSchema,
-  exclusiveCodedMeasurementSchema,
-])
+const measurementSchema: z.ZodType<ParsedProviderMeasurement> =
+  z.discriminatedUnion('kind', [
+    quantityMeasurementSchema,
+    codedMeasurementSchema,
+    bloodPressureMeasurementSchema,
+    sleepStageMeasurementSchema,
+    exclusiveQuantityMeasurementSchema,
+    exclusiveCodedMeasurementSchema,
+  ])
 
 const effectiveKindMatches = (
   definition: MeasurementDefinition,
@@ -296,6 +259,19 @@ const violatesRequiredPeriodOrdering = (
   return !ordering.ok || ordering.value !== -1
 }
 
+const addRefusal = (
+  context: z.core.$RefinementCtx,
+  code: ClientRecordRule,
+  path: ReadonlyArray<number | string>,
+  message: string,
+): void => {
+  context.addIssue({
+    code: 'custom',
+    path: [...path],
+    ...refusal(code, message),
+  })
+}
+
 const refineMeasurement = (
   measurement: z.infer<typeof measurementSchema>,
   path: ReadonlyArray<number | string>,
@@ -305,28 +281,31 @@ const refineMeasurement = (
     sharedMeasurementDefinition(measurement.kind) ??
     exclusiveDefinitions[measurement.kind]
   if (measurementDefinition === undefined) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'kind'],
-      message: `No closed Provider measurement definition exists for ${measurement.kind}.`,
-    })
+    addRefusal(
+      context,
+      'mobile-input.unsupported-source-value',
+      [...path, 'kind'],
+      `No closed Provider measurement definition exists for ${measurement.kind}.`,
+    )
     return
   }
   if (
     !effectiveKindMatches(measurementDefinition, measurement.effective.kind)
   ) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'effective'],
-      message: `${measurement.kind} requires catalog effective[x] ${measurementDefinition.effective}.`,
-    })
+    addRefusal(
+      context,
+      'mobile-input.effective-period-invalid',
+      [...path, 'effective'],
+      `${measurement.kind} requires catalog effective[x] ${measurementDefinition.effective}.`,
+    )
   }
   if (violatesRequiredPeriodOrdering(measurement, measurementDefinition)) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'effective'],
-      message: `The ${measurement.kind} Period must satisfy its catalog-owned nonzero-duration rule.`,
-    })
+    addRefusal(
+      context,
+      'mobile-input.effective-period-invalid',
+      [...path, 'effective'],
+      `The ${measurement.kind} Period must satisfy its catalog-owned nonzero-duration rule.`,
+    )
   }
   const allowedValues: readonly string[] | undefined =
     measurementDefinition.allowedValues
@@ -335,29 +314,26 @@ const refineMeasurement = (
     typeof measurement.value === 'string' &&
     allowedValues?.includes(measurement.value) !== true
   ) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'value'],
-      message: `Expected a catalog-allowed coded result for ${measurement.kind}.`,
-    })
+    addRefusal(
+      context,
+      'mobile-input.unsupported-source-value',
+      [...path, 'value'],
+      `Expected a catalog-allowed coded result for ${measurement.kind}.`,
+    )
   }
   if (
     'value' in measurement &&
     typeof measurement.value === 'number' &&
     violatesQuantityDomain(measurement.value, measurementDefinition)
   ) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'value'],
-      message: `The ${measurement.kind} value is outside its catalog-owned value domain.`,
-    })
+    addRefusal(
+      context,
+      'mobile-input.value-outside-domain',
+      [...path, 'value'],
+      `The ${measurement.kind} value is outside its catalog-owned value domain.`,
+    )
   }
 }
-
-const normalizedProviderRecordShape = {
-  source: sourceSchema,
-  measurements: z.array(measurementSchema).nonempty(),
-} as const
 
 const refineMeasurements = (
   value: {
@@ -371,50 +347,13 @@ const refineMeasurements = (
 }
 
 const normalizedProviderRecordSchema = z
-  .strictObject(normalizedProviderRecordShape)
-  .superRefine(refineMeasurements)
-
-const scalarOutputRoles = providerScalarOutputRoles as Readonly<
-  Record<string, Readonly<Record<string, Readonly<Record<string, string>>>>>
->
-
-const connectedProviderMeasurementKinds = [
-  ...new Set(
-    Object.values(scalarOutputRoles).flatMap((sources) =>
-      Object.values(sources).flatMap((mapping) => Object.keys(mapping)),
-    ),
-  ),
-] as [ConnectedProviderMeasurementKind, ...ConnectedProviderMeasurementKind[]]
-
-const providerMeasurementBundleInputSchema = z
   .strictObject({
-    ...normalizedProviderRecordShape,
-    subject: providerPatientReferenceSchema,
-    application: applicationDeviceSchema,
-    gatewayApplication: gatewayApplicationSchema.optional(),
-    eventSequence: z.string().regex(/^[1-9]\d*$/u),
-    deploymentIdentity: deploymentIdentitySchema,
-    nativeIdentifierDisclosure: governedSourceIdentifierSchema.optional(),
-    occurred: primitiveInstantSchema,
-    recorded: primitiveInstantSchema,
-    assembled: primitiveInstantSchema,
-    repositoryIds: z
-      .strictObject({
-        bundle: fhirIdSchema.optional(),
-        observations: z
-          .partialRecord(
-            z.enum(connectedProviderMeasurementKinds),
-            fhirIdSchema,
-          )
-          .optional(),
-        provenance: fhirIdSchema.optional(),
-      })
-      .optional(),
-    researchStudyReferences: z
-      .array(providerResearchStudyReferenceSchema)
-      .optional(),
+    source: sourceSchema,
+    measurements: z.array(measurementSchema).nonempty(),
   })
   .superRefine(refineMeasurements)
+
+type ParsedRecord = z.infer<typeof normalizedProviderRecordSchema>
 
 const providerSourceMapping = (
   provider: ConnectedProvider,
@@ -485,41 +424,34 @@ const isCompleteCivilDay = (start: string, end: string): boolean => {
   )
 }
 
-const recordEffectiveIssues = (input: {
-  readonly source: z.infer<typeof sourceSchema>
-  readonly measurements: ReadonlyArray<z.infer<typeof measurementSchema>>
-}): readonly Issue[] => {
+const recordEffectiveIssues = (record: ParsedRecord): readonly Issue[] => {
   const rule = providerRecordEffectiveRule(
-    input.source.adapter.provider,
-    input.source.sourceType,
+    record.source.adapter.provider,
+    record.source.sourceType,
   )
   if (rule === undefined) return []
-  const first = input.measurements[0]?.effective
+  const first = record.measurements[0]?.effective
   if (first?.kind !== 'period' || !isCompleteCivilDay(first.start, first.end)) {
     return [
-      {
-        severity: 'error',
-        code: 'value-mismatch',
-        path: ['measurements', 0, 'effective'],
-        message:
-          'This source record requires the complete source civil day as a midnight-to-midnight Period.',
-      },
+      refuse(
+        'mobile-input.effective-period-invalid',
+        ['measurements', 0, 'effective'],
+        'This source record requires the complete source civil day as a midnight-to-midnight Period.',
+      ),
     ]
   }
-  return input.measurements.flatMap((measurement, index) =>
+  return record.measurements.flatMap((measurement, index) =>
     (
       measurement.effective.kind !== 'period' ||
       measurement.effective.start !== first.start ||
       measurement.effective.end !== first.end
     ) ?
       [
-        {
-          severity: 'error' as const,
-          code: 'value-mismatch' as const,
-          path: ['measurements', index, 'effective'],
-          message:
-            'Every output from this source record must share the same complete civil-day Period.',
-        },
+        refuse(
+          'mobile-input.effective-period-invalid',
+          ['measurements', index, 'effective'],
+          'Every output from this source record must share the same complete civil-day Period.',
+        ),
       ]
     : [],
   )
@@ -529,9 +461,14 @@ export const providerOutputRole = (
   provider: ConnectedProvider,
   sourceType: string,
   kind: string,
-): string | undefined => {
-  return providerSourceMapping(provider, sourceType)?.[kind]
-}
+): string | undefined => providerSourceMapping(provider, sourceType)?.[kind]
+
+/** The measurement kinds one catalog source row admits, in catalog order. */
+export const providerSourceKinds = (
+  provider: ConnectedProvider,
+  sourceType: string,
+): readonly string[] =>
+  Object.keys(providerSourceMapping(provider, sourceType) ?? {})
 
 /** Exact catalog-owned HMAC coordinates for one Provider Observation output. */
 export const providerOutputCoordinates = (
@@ -549,93 +486,58 @@ export const providerOutputCoordinates = (
     : { outputRole, outputDiscriminator }
 }
 
-const recordMappingIssues = (input: {
-  readonly source: z.infer<typeof sourceSchema>
-  readonly measurements: ReadonlyArray<z.infer<typeof measurementSchema>>
-  readonly repositoryIds?:
-    | {
-        readonly observations?:
-          | Readonly<Partial<Record<ConnectedProviderMeasurementKind, string>>>
-          | undefined
-      }
-    | undefined
-}): readonly Issue[] => {
+const recordMappingIssues = (record: ParsedRecord): readonly Issue[] => {
   const mapping = providerSourceMapping(
-    input.source.adapter.provider,
-    input.source.sourceType,
+    record.source.adapter.provider,
+    record.source.sourceType,
   )
   if (mapping === undefined) {
     return [
-      {
-        severity: 'error',
-        code: 'unsupported-measurement',
-        path: ['source', 'sourceType'],
-        message: `${input.source.adapter.provider}/${input.source.sourceType} does not have a supported scalar mapping.`,
-      },
+      refuse(
+        'mobile-input.unsupported-source-type',
+        ['source', 'sourceType'],
+        `${record.source.adapter.provider}/${record.source.sourceType} does not have a supported scalar mapping.`,
+      ),
     ]
   }
-
   const findings: Issue[] = []
-  findings.push(
-    ...providerScopeIdentifierIssues(
-      input.source.adapter.provider,
-      input.source.providerScopeIdentifier,
-    ),
-  )
-  const kinds = input.measurements.map(({ kind }) => kind)
+  const kinds = record.measurements.map(({ kind }) => kind)
   for (const [index, kind] of kinds.entries()) {
     if (!Object.hasOwn(mapping, kind)) {
-      findings.push({
-        severity: 'error',
-        code: 'unsupported-measurement',
-        path: ['measurements', index, 'kind'],
-        message: `${input.source.adapter.provider}/${input.source.sourceType} does not have a supported scalar mapping for ${kind}.`,
-      })
+      findings.push(
+        refuse(
+          'mobile-input.unsupported-source-value',
+          ['measurements', index, 'kind'],
+          `${record.source.adapter.provider}/${record.source.sourceType} does not have a supported scalar mapping for ${kind}.`,
+        ),
+      )
     }
   }
   if (new Set(kinds).size !== kinds.length) {
-    findings.push({
-      severity: 'error',
-      code: 'duplicate-identifier',
-      path: ['measurements'],
-      message:
+    findings.push(
+      refuse(
+        'mobile-input.value-shape-invalid',
+        ['measurements'],
         'A source record may emit each admitted measurement kind at most once.',
-    })
+      ),
+    )
   }
-  for (const kind of Object.keys(input.repositoryIds?.observations ?? {})) {
-    if (!kinds.includes(kind)) {
-      findings.push({
-        severity: 'error',
-        code: 'invalid-reference',
-        path: ['repositoryIds', 'observations', kind],
-        message:
-          'A repository Observation id requires a matching emitted measurement.',
-      })
-    }
-  }
-  findings.push(...recordEffectiveIssues(input))
-  return findings
+  // A refused kind has no admitted effective time to hold to the record rule.
+  return findings.length > 0 ? findings : recordEffectiveIssues(record)
 }
 
-const sortMeasurements = <
-  Value extends {
-    readonly source: z.infer<typeof sourceSchema>
-    readonly measurements: ReadonlyArray<z.infer<typeof measurementSchema>>
-  },
->(
-  value: Value,
-): Value => {
+const sortMeasurements = (record: ParsedRecord): ParsedRecord => {
   const mapping = providerSourceMapping(
-    value.source.adapter.provider,
-    value.source.sourceType,
+    record.source.adapter.provider,
+    record.source.sourceType,
   )
-  if (mapping === undefined) return value
+  if (mapping === undefined) return record
   const order = new Map(
     Object.keys(mapping).map((kind, index) => [kind, index] as const),
   )
   return {
-    ...value,
-    measurements: [...value.measurements].sort(
+    ...record,
+    measurements: [...record.measurements].sort(
       (left, right) =>
         (order.get(left.kind) ?? Number.MAX_SAFE_INTEGER) -
         (order.get(right.kind) ?? Number.MAX_SAFE_INTEGER),
@@ -645,15 +547,20 @@ const sortMeasurements = <
 
 /**
  * Parses the provider-neutral handoff produced by an external provider adapter.
- * Raw provider payload fields are rejected rather than retained or stripped.
+ * Raw provider payload fields are refused rather than retained or stripped, and every
+ * refusal carries one `mobile-input.*` registry code.
  */
 export const parseNormalizedProviderRecord = (
   input: unknown,
 ): Result<NormalizedProviderRecord> => {
   const snapshot = cloneJsonValue(input)
-  if (!snapshot.ok) return snapshot
-  const result = normalizedProviderRecordSchema.safeParse(snapshot.value)
-  if (!result.success) return issues(result.error.issues.map(zodIssueToIssue))
+  if (!snapshot.ok) {
+    return issues(snapshot.issues.map((issue) => snapshotRefusal(input, issue)))
+  }
+  const result = normalizedProviderRecordSchema.safeParse(snapshot.value, {
+    reportInput: true,
+  })
+  if (!result.success) return issues(refusalIssues(result.error))
   const mappingIssues = recordMappingIssues(result.data)
   if (mappingIssues.length > 0) return issues(mappingIssues)
   return ok(
@@ -661,109 +568,13 @@ export const parseNormalizedProviderRecord = (
   )
 }
 
-/** The validated graph input together with the identities its derivation proved. */
-export interface ParsedProviderMeasurementBundle {
-  readonly input: ProviderMeasurementBundleInput
-  readonly identities: ProviderIdentities
-}
-
-/** Strict runtime boundary that also derives the graph identities exactly once. */
-export const parseProviderMeasurementBundle = (
+/** Strict boundary for the deployment policy of one conversion; faults, not refusals. */
+export const parseProviderConversionOptions = (
   input: unknown,
-): Result<ParsedProviderMeasurementBundle> => {
+): Result<ProviderConversionOptions> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
-  const result = providerMeasurementBundleInputSchema.safeParse(snapshot.value)
+  const result = conversionOptionsSchema.safeParse(snapshot.value)
   if (!result.success) return issues(result.error.issues.map(zodIssueToIssue))
-  const disclosureIssues = governedSourceIdentifierIssues(
-    result.data.nativeIdentifierDisclosure,
-    result.data.source.sourceNativeId,
-    result.data.deploymentIdentity,
-  )
-  if (disclosureIssues.length > 0) return issues(disclosureIssues)
-  const researchStudyIssues: Issue[] = []
-  const researchStudyKeys = (result.data.researchStudyReferences ?? []).map(
-    ({ identifier }) =>
-      `${identifier.system.length}:${identifier.system}${identifier.value.length}:${identifier.value}`,
-  )
-  if (new Set(researchStudyKeys).size !== researchStudyKeys.length) {
-    researchStudyIssues.push({
-      severity: 'error',
-      code: 'duplicate-identifier',
-      path: ['researchStudyReferences'],
-      message: 'ResearchStudy references must be unique.',
-    })
-  }
-  if (researchStudyIssues.length > 0) return issues(researchStudyIssues)
-  const mappingIssues = recordMappingIssues(result.data)
-  if (mappingIssues.length > 0) return issues(mappingIssues)
-  const sourceMapping = providerSourceMapping(
-    result.data.source.adapter.provider,
-    result.data.source.sourceType,
-  )
-  if (
-    result.data.nativeIdentifierDisclosure !== undefined &&
-    (sourceMapping === undefined ||
-      Object.keys(sourceMapping).length !== 1 ||
-      result.data.measurements.length !== 1)
-  ) {
-    return issues([
-      {
-        severity: 'error',
-        code: 'value-mismatch',
-        path: ['nativeIdentifierDisclosure'],
-        message:
-          'The Provider catalog must designate one unique one-to-one Observation before a governed source Identifier may be disclosed; ambiguous multi-output records must omit it.',
-      },
-    ])
-  }
-  const sorted = sortMeasurements(result.data)
-  const outputCoordinates = sorted.measurements.map(({ kind }) =>
-    providerOutputCoordinates(
-      sorted.source.adapter.provider,
-      sorted.source.sourceType,
-      kind,
-    ),
-  )
-  const definedOutputCoordinates = outputCoordinates.filter(
-    (coordinates): coordinates is ProviderOutputCoordinates =>
-      coordinates !== undefined,
-  )
-  if (definedOutputCoordinates.length !== outputCoordinates.length) {
-    return issues([
-      {
-        severity: 'error',
-        code: 'unsupported-measurement',
-        path: ['measurements'],
-        message:
-          'Every emitted measurement requires a catalog-owned Provider output role.',
-      },
-    ])
-  }
-  const identities = deriveProviderIdentities({
-    provider: sorted.source.adapter.provider,
-    providerScopeIdentifier: sorted.source.providerScopeIdentifier,
-    sourceType: sorted.source.sourceType,
-    sourceNativeId: sorted.source.sourceNativeId,
-    outputs: definedOutputCoordinates.map(
-      ({ outputRole, outputDiscriminator }) => ({
-        kind: 'provider-output' as const,
-        outputRole,
-        outputDiscriminator,
-      }),
-    ),
-    eventSequence: sorted.eventSequence,
-    deployment: sorted.deploymentIdentity,
-  })
-  if (!identities.ok) return identities
-  return ok({
-    input: deepFreeze(sorted) as ProviderMeasurementBundleInput,
-    identities: identities.value,
-  })
+  return ok(deepFreeze(result.data))
 }
-
-/** Strict runtime boundary for the complete deterministic graph input. */
-export const parseProviderMeasurementBundleInput = (
-  input: unknown,
-): Result<ProviderMeasurementBundleInput> =>
-  mapResult(parseProviderMeasurementBundle(input), ({ input: value }) => value)

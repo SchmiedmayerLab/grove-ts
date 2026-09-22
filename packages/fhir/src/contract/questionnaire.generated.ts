@@ -20,7 +20,7 @@ const groveQuestionnairePackageMetadataValue = {
 } as const
 
 export const groveQuestionnairePackageMetadata: typeof groveQuestionnairePackageMetadataValue =
-  deepFreeze(groveQuestionnairePackageMetadataValue)
+  /*#__PURE__*/ deepFreeze(groveQuestionnairePackageMetadataValue)
 
 const groveQuestionnaireProfileCanonicalsValue = {
   'grove-questionnaire':
@@ -30,4 +30,4 @@ const groveQuestionnaireProfileCanonicalsValue = {
 } as const
 
 export const groveQuestionnaireProfileCanonicals: typeof groveQuestionnaireProfileCanonicalsValue =
-  deepFreeze(groveQuestionnaireProfileCanonicalsValue)
+  /*#__PURE__*/ deepFreeze(groveQuestionnaireProfileCanonicalsValue)

@@ -1,18 +1,16 @@
 {
   "source": {
-    "adapter": { "kind": "providers", "provider": "google-health-api" },
-    "providerScopeIdentifier": {
-      "system": "https://example.org/deployments/provider-accounts",
-      "value": "pseudonym-google-001",
-      "assurance": "deployment-scoped-account-pseudonym"
+    "adapter": {
+      "kind": "providers",
+      "provider": "google-health-api"
     },
     "sourceType": "active-energy-burned",
     "sourceNativeId": "synthetic-active-energy-2026-08-20",
-    "recordingMethod": "automatically-recorded",
-    "dataOrigin": {
+    "writer": {
       "sourceDeviceToken": "origin-instance-google-001",
       "name": "Google Health"
-    }
+    },
+    "recordingMethod": "automatically-recorded"
   },
   "measurements": [
     {

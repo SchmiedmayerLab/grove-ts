@@ -16,10 +16,7 @@ import {
   r4CollectionBundleSchema,
 } from './base-schemas.js'
 import { refineRetractionBundle } from './retraction-graph-semantics.js'
-import type {
-  GroveMobileExchangeBundle,
-  GroveMobileRetractionBundle,
-} from './types.js'
+import type { ExchangeGraph, RetractionEvent } from './types.js'
 
 export * from './base-schemas.js'
 export {
@@ -59,13 +56,12 @@ const groveGraphBundle = (refine: typeof refineActiveBundle) =>
     .pipe(groveGraphBundleSchema)
 
 /** Profile-aware parser for one immutable active Grove exchange event. */
-export const groveMobileExchangeBundleSchema: z.ZodType<GroveMobileExchangeBundle> =
-  groveGraphBundle(
-    refineActiveBundle,
-  ) as unknown as z.ZodType<GroveMobileExchangeBundle>
+export const exchangeGraphSchema: z.ZodType<ExchangeGraph> = groveGraphBundle(
+  refineActiveBundle,
+) as unknown as z.ZodType<ExchangeGraph>
 
 /** Profile-aware parser for one append-only Grove source retraction assertion. */
-export const groveMobileRetractionBundleSchema: z.ZodType<GroveMobileRetractionBundle> =
+export const retractionEventSchema: z.ZodType<RetractionEvent> =
   groveGraphBundle(
     refineRetractionBundle,
-  ) as unknown as z.ZodType<GroveMobileRetractionBundle>
+  ) as unknown as z.ZodType<RetractionEvent>

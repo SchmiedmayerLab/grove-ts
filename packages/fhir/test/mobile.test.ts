@@ -6,36 +6,41 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { readdirSync, readFileSync } from 'node:fs'
 import { expectTypeOf } from 'expect-type'
+import {
+  context,
+  identityScope,
+  scopeInput,
+  study,
+  subject,
+  unwrap,
+  uri,
+} from './provider-test-support.js'
 import * as mobileContract from '../src/contract/measurement-catalog.generated.js'
 import {
-  parseAbsoluteUri,
   parseFhirId,
   parseFhirInstant,
   parseSemVer,
   type FhirInstant,
-  type Result,
 } from '../src/core/index.js'
 import * as mobile from '../src/mobile/index.js'
 import {
-  entryIdentifierName,
   canonicalizeMobileEffectiveInstant,
   createEntryIdentity,
   deriveEntryFullUrl,
+  deriveEventIdentifier,
   encodeLengthFramedUtf8,
+  entryIdentifierName,
   groveFhirVersion,
   groveMobilePackageMetadata,
   mobileEffectiveCanonicalizationVectors,
+  parseExchangeEventContext,
   sharedMobileMeasurementCatalog,
+  validateOpaqueIdentityScope,
   type MobileMeasurement,
 } from '../src/mobile/index.js'
 
-const unwrap = <T>(result: Result<T>): T => {
-  if (!result.ok) throw new Error(result.issues[0]?.message)
-  return result.value
-}
-
-const uri = (value: string) => unwrap(parseAbsoluteUri(value))
 const instant = (value: string): FhirInstant => unwrap(parseFhirInstant(value))
 
 describe('source-neutral Mobile contract', () => {
@@ -50,20 +55,26 @@ describe('source-neutral Mobile contract', () => {
     expect(mobile.groveExchangeProtocol.protocolVersion).toBe(0)
     expect(mobile.groveExchangeProtocol).not.toHaveProperty('version')
     expect(mobile.groveExchangeProtocol).not.toHaveProperty('releaseVersion')
-    expect(mobile.groveMobileContract).not.toHaveProperty('version')
     expect(mobile.groveRecordingFormatRegistry).not.toHaveProperty('version')
-    expect(Object.isFrozen(mobile.groveMobileContract)).toBe(true)
+    expect('groveMobileContract' in mobile).toBe(false)
     expect('groveFhirContractVersion' in mobile).toBe(false)
-    expect('groveFhirExchangeIdentity' in mobile).toBe(false)
-    expect('buildProviderMeasurementBundle' in mobile).toBe(false)
+    expect('buildProviderExchangeGraph' in mobile).toBe(false)
     expect('providerAdapterCatalog' in mobile).toBe(false)
-    expect('groveFhirProfileCanonicals' in mobile).toBe(false)
     expect('PROFILES' in mobile).toBe(false)
     expect('providerAdapterCatalog' in mobileContract).toBe(false)
     expect('providerScalarOutputRoles' in mobileContract).toBe(false)
     expect('groveProviderPackageMetadata' in mobileContract).toBe(false)
     expect('adapterMeasurementCatalog' in mobileContract).toBe(false)
   })
+
+  it('never imports the provider catalog, so a mobile-only consumer does not ship it', () => {
+    const mobileRoot = new URL('../src/mobile/', import.meta.url)
+    for (const name of readdirSync(mobileRoot)) {
+      const source = readFileSync(new URL(name, mobileRoot), 'utf8')
+      expect(source).not.toMatch(/providers\.generated|\/providers\//u)
+    }
+  })
+
   it('contains only evidenced shared measurements', () => {
     const entries = Object.values(sharedMobileMeasurementCatalog)
     expect(entries).toHaveLength(84)
@@ -145,23 +156,27 @@ describe('Mobile exchange entry identity', () => {
     })
   })
 
-  it('retains a complete business Identifier and optional repository id', () => {
+  it('retains a complete roled Identifier and optional repository id', () => {
     const identifier = {
       system: uri('https://example.org/identifiers'),
       value: 'record-1',
+      role: 'source-output' as const,
     }
     const id = unwrap(parseFhirId('repository-id'))
     const fullUrl = unwrap(deriveEntryFullUrl(identifier))
     const result = createEntryIdentity(identifier, id)
-    expect(result.ok && result.value).toEqual({
-      identifier,
-      id,
-      fullUrl,
-    })
+    expect(result.ok && result.value).toEqual({ identifier, id, fullUrl })
     expect(result.ok && Object.isFrozen(result.value)).toBe(true)
     expect(Object.isFrozen(identifier)).toBe(false)
     identifier.value = 'caller-mutated-after-construction'
     expect(result.ok && result.value.identifier.value).toBe('record-1')
+    expect(
+      createEntryIdentity({
+        system: uri('https://example.org/identifiers'),
+        value: 'record-1',
+        role: 'not-a-role',
+      } as never).ok,
+    ).toBe(false)
   })
 
   it.each([
@@ -185,6 +200,7 @@ describe('Mobile exchange entry identity', () => {
     const identifier = {
       system: uri('https://example.org/identifiers'),
       value: 'valid-😀',
+      role: 'source-output' as const,
     }
     expect(deriveEntryFullUrl(identifier).ok).toBe(true)
     expect(createEntryIdentity(identifier, 'invalid/id' as never).ok).toBe(
@@ -220,5 +236,141 @@ describe('Mobile effective-time canonicalization', () => {
     '9999-12-31T23:59:59.9996Z',
   ])('fails closed for invalid or out-of-range instant %p', (value) => {
     expect(canonicalizeMobileEffectiveInstant(value).ok).toBe(false)
+  })
+})
+
+describe('exchange event context', () => {
+  it('defaults the conversion instant to now', () => {
+    const {
+      subject,
+      event,
+      identityScope: scope,
+      repositoryScope,
+      application,
+      host,
+    } = context()
+    const before = Date.now()
+    const result = parseExchangeEventContext({
+      subject,
+      event,
+      identityScope: scope,
+      repositoryScope,
+      application,
+      host,
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const instant = Date.parse(result.value.conversionInstant)
+    expect(instant).toBeGreaterThanOrEqual(before - 1)
+    expect(instant).toBeLessThanOrEqual(Date.now() + 1)
+  })
+
+  it('validates a context once and keeps the scope handle by reference', () => {
+    const result = parseExchangeEventContext(context())
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(Object.isFrozen(result.value)).toBe(true)
+    expect(result.value.identityScope).toBe(identityScope)
+    expect(result.value.converterRole).toEqual({ kind: 'assembler' })
+    expect(result.value.studies).toEqual([])
+    expect(result.value).not.toHaveProperty('repositoryIds')
+  })
+
+  it('treats an optional field set to undefined as absent', () => {
+    const result = parseExchangeEventContext({
+      ...context(),
+      converterRole: undefined,
+      studies: undefined,
+      repositoryIds: undefined,
+      application: { ...context().application, version: undefined },
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value.application).not.toHaveProperty('version')
+  })
+
+  it('reports deployment faults under schema codes, never registry codes', () => {
+    const otherScope = unwrap(
+      validateOpaqueIdentityScope({
+        ...scopeInput,
+        producerInstance: '9ae7b610-bac2-4f13-97b4-53b84b8a90cf',
+      }),
+    )
+    const faults: ReadonlyArray<[string, unknown, string]> = [
+      [
+        'a forged scope',
+        { ...context(), identityScope: { ...identityScope } },
+        'identityScope',
+      ],
+      [
+        'an event another producer minted',
+        {
+          ...context(),
+          event: unwrap(deriveEventIdentifier(otherScope, '1' as never)),
+        },
+        'event',
+      ],
+      ['an unknown field', { ...context(), extra: true }, 'extra'],
+      ['a missing host', { ...context(), host: undefined }, 'host'],
+      [
+        'a blank application name',
+        { ...context(), application: { sourceDeviceToken: 'a', name: ' ' } },
+        'application',
+      ],
+      [
+        'a subject of unknown kind',
+        {
+          ...context(),
+          subject: { kind: 'remote', identifier: subject.identifier },
+        },
+        'subject',
+      ],
+      [
+        'a bundled Patient without the subject identifier',
+        {
+          ...context(),
+          subject: {
+            kind: 'bundled',
+            identifier: subject.identifier,
+            patient: { resourceType: 'Patient' },
+          },
+        },
+        'subject',
+      ],
+      [
+        'a duplicated study',
+        { ...context(), studies: [study('a'), study('a')] },
+        'studies',
+      ],
+      [
+        'an unknown graph node',
+        { ...context(), repositoryIds: { patient: 'x' } },
+        'repositoryIds',
+      ],
+      [
+        'a converter role without its application',
+        { ...context(), converterRole: { kind: 'gateway-application' } },
+        'converterRole',
+      ],
+      [
+        'an instant without offset',
+        { ...context(), conversionInstant: '2026-08-20T12:00:00' },
+        'conversionInstant',
+      ],
+    ]
+    for (const [label, candidate, field] of faults) {
+      const result = parseExchangeEventContext(candidate)
+      expect([label, result.ok]).toEqual([label, false])
+      if (result.ok) continue
+      expect([label, result.issues.map(({ path }) => path[0])]).toEqual([
+        label,
+        expect.arrayContaining([field]),
+      ])
+      expect(
+        result.issues
+          .filter(({ code }) => code.includes('.'))
+          .map(({ code }) => code),
+      ).toEqual([])
+    }
   })
 })

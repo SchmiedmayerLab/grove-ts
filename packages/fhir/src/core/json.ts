@@ -81,6 +81,8 @@ const cloneJsonObject = (
     if (typeof key !== 'string') return invalidJson(path)
     const property = enumerableDataProperty(value, key, [...path, key])
     if (!property.ok) return property
+    // An undefined member is absent, exactly as JSON serialization treats it.
+    if (property.value === undefined) continue
     const nested = cloneJsonNode(property.value, ancestors, [...path, key])
     if (!nested.ok) return nested
     Object.defineProperty(clone, key, {
@@ -140,8 +142,9 @@ const cloneJsonNode = (
  * Takes an isolated snapshot of caller-owned JSON before validation.
  *
  * Accessors, proxies that throw, cycles, sparse arrays, special object instances, and values
- * JSON cannot represent are rejected. Shared acyclic subgraphs are copied independently, just
- * as they are after a JSON round trip. The function itself never throws for hostile input.
+ * JSON cannot represent are rejected; an undefined member is dropped. Shared acyclic subgraphs
+ * are copied independently, just as they are after a JSON round trip. The function itself
+ * never throws for hostile input.
  */
 export const cloneJsonValue = (value: unknown): Result<JsonValue> => {
   try {

@@ -22,7 +22,7 @@ const groveMobilePackageMetadataValue = {
 } as const
 
 export const groveMobilePackageMetadata: typeof groveMobilePackageMetadataValue =
-  deepFreeze(groveMobilePackageMetadataValue)
+  /*#__PURE__*/ deepFreeze(groveMobilePackageMetadataValue)
 
 const groveMobileProfileCanonicalsValue = {
   'grove-application-device':
@@ -44,7 +44,7 @@ const groveMobileProfileCanonicalsValue = {
 } as const
 
 export const groveMobileProfileCanonicals: typeof groveMobileProfileCanonicalsValue =
-  deepFreeze(groveMobileProfileCanonicalsValue)
+  /*#__PURE__*/ deepFreeze(groveMobileProfileCanonicalsValue)
 
 const groveExchangeProtocolValue = {
   $schema:
@@ -224,7 +224,7 @@ const groveExchangeProtocolValue = {
     {
       code: 'sensor-recording-document.identity-and-content',
       reason:
-        'Every Sensor Recording Document carries its source-record, source-output, and source-artifact identities together with exactly one registered attachment payload.',
+        'Every Sensor Recording Document carries its source-record, source-output, and source-artifact identities together with exactly one attachment payload.',
       emittedBy: 'client',
     },
     {
@@ -341,6 +341,284 @@ const groveExchangeProtocolValue = {
         'The sole active lifecycle Provenance must directly claim exactly one admitted Mobile or adapter conversion profile.',
       emittedBy: 'conformance-kit',
     },
+    {
+      code: 'mobile-input.unclassified',
+      reason:
+        'A producer refused a source record without a more specific registered input rule; the refusal is reported, never silently dropped.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.unsupported-source-type',
+      reason:
+        'The source type has no admitted Grove profile in the adapter catalog, so the producer emits nothing for it.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.intentionally-unsupported-source-type',
+      reason:
+        'The adapter catalog deliberately refuses the source type for its stated reason; the producer emits no best-effort representation.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.not-yet-convertible',
+      reason:
+        'The adapter catalog admits the source type, but this producer version does not yet emit its graph.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.platform-exclusive-source-type',
+      reason:
+        'The source type is admitted only as a platform-exclusive recording document, which this conversion path does not emit.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.value-shape-invalid',
+      reason:
+        'The source value does not have the shape its selected published mapping requires.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.value-outside-domain',
+      reason:
+        "A numeric source value is nonfinite, outside the measurement's inclusive value domain, or fractional where the contract admits only integers.",
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.unsupported-source-value',
+      reason:
+        'A source enumeration, category, or typed metadata value has no published mapping in the selected contract.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.required-metadata-missing',
+      reason:
+        'A source field the selected contract requires is absent from the record.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.required-component-missing',
+      reason:
+        'A panel source record does not carry one of its required result components.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.effective-period-invalid',
+      reason:
+        "The source record's effective instant or period is not a valid FHIR date or time, starts after it ends, or places a sample outside its own interval.",
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.conversion-instant-precedes-source-version',
+      reason:
+        "The conversion instant precedes the source record's own last-modified time, so the event would misstate its order.",
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.text-not-unicode-scalar',
+      reason:
+        'A source text field contains an unpaired UTF-16 surrogate and cannot enter a FHIR string or an identity preimage.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.native-identifier-invalid',
+      reason:
+        "The source's native record identifier or writer record version is absent, blank, or negative where the contract requires a value.",
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.recording-payload-too-large',
+      reason:
+        'A recording payload exceeds the byte count FHIR Attachment.size can state, and no segmented manifest profile exists yet.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-input.empty-recording-series',
+      reason:
+        'A series carried as a recording document was supplied without samples, so an empty series cannot be told from a failed enumeration.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'healthkit-input.ecg-evidence',
+      reason:
+        'Caller-supplied electrocardiogram evidence is missing, incomplete, internally inconsistent, or cannot be represented losslessly by the adapter contract; the typed failure names the failing check.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'healthkit-input.clinical-release-unsupported',
+      reason:
+        'A clinical record declares a FHIR release other than DSTU2 or R4, so its bytes cannot be carried under a versioned FHIR JSON media type.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'healthkit-input.clinical-record-empty',
+      reason:
+        'A clinical record or CDA sample carries no resource or document bytes, which a query that excludes document data returns.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'healthkit-input.component-requires-correlation',
+      reason:
+        'A blood pressure component sample converts only inside its admitting correlation, never on its own.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'healthkit-input.source-application-invalid',
+      reason:
+        'A source revision the caller classified as an application carries no valid Apple bundle identifier.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-exchange.bundle-profile',
+      reason:
+        'An exchange Bundle directly claims exactly the Grove Mobile exchange or retraction Bundle profile for its event kind.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.entry-required',
+      reason:
+        'An exchange event carries at least one entry; an empty Bundle is not an event.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.event-times',
+      reason:
+        'An event states its Bundle timestamp, and its lifecycle Provenance states occurred[x] and recorded.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-exchange.distinct-entry-key',
+      reason:
+        'No two entries of one event carry the same entry key system and value pair.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.entry-key-selection',
+      reason:
+        "An entry key is the entry resource's highest-priority typed business identifier, or its entry-node key when the resource carries none.",
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.identifier-role',
+      reason:
+        'A Grove-typed resource Identifier carries exactly one closed Grove identifier-role coding.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.opaque-resource-identity',
+      reason:
+        'A resource Identifier typed with an opaque Grove identifier role is one complete pair whose system is absolute and whose value is a canonical v0 HMAC identity.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.distinct-resource-identity-role',
+      reason:
+        'A resource carries at most one Identifier for each Grove identifier role.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.output-required',
+      reason:
+        'An active event carries at least one clinical or source-artifact output.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.provenance-assembler',
+      reason:
+        "A conversion Provenance names exactly one assembler agent, and that agent is the event's application Device snapshot.",
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-exchange.provenance-targets',
+      reason:
+        'A conversion Provenance targets every active clinical output of its event and nothing else.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-exchange.adapter-provenance-graph',
+      reason:
+        'Every adapter output of an event claims the adapter profile its conversion Provenance governs, and a source-neutral event claims no adapter output.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-output.adapter-source-marker',
+      reason:
+        "An adapter's source marker appears exactly once on each catalog-owned output of that adapter and never on a source-neutral or different-adapter output.",
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-device.host-device-identity',
+      reason:
+        'A host Device carries exactly one event-scoped device-snapshot identity.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'mobile-support.study-context',
+      reason:
+        'A bundled study context carries one ResearchStudy, its exact-revision PlanDefinition with canonical url and version, and one ResearchSubject linking the subject to the study, each keyed as an entry node with its study-context role.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'healthkit-device.application-bundle-identifier',
+      reason:
+        'A HealthKit application Device carries exactly one typed Apple bundle identifier.',
+      emittedBy: 'client',
+    },
+    {
+      code: 'health-connect-provenance.data-origin-agent',
+      reason:
+        'A Health Connect data origin is one enterer agent whose typed identifier-only logical Device Reference names the Android package in the package-name namespace.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'sensor-recording-document.embedded-integrity',
+      reason:
+        "An embedded recording attachment's size and SHA-1 hash match its decoded bytes.",
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'sensor-recording-document.format',
+      reason:
+        "A recording attachment's format coding and content type match one active entry of the Grove recording-format registry, with no Coding.version.",
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-retraction.provenance',
+      reason:
+        'A retraction event carries exactly one retraction Provenance and no transform Provenance.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-retraction.target-required',
+      reason: 'A retraction Provenance names at least one logical target.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-retraction.distinct-target',
+      reason:
+        'No two retraction targets carry the same Identifier system and value pair.',
+      emittedBy: 'conformance-kit',
+    },
+    {
+      code: 'mobile-omission.recording-device',
+      reason:
+        'The source names a recording device without a stable per-unit token, so the producer emits no recording Device and the output carries no device reference.',
+      emittedBy: 'client',
+      severity: 'warning',
+    },
+    {
+      code: 'mobile-omission.source-offset',
+      reason:
+        'The source supplies an effective instant without a UTC offset or time-zone name, so the producer serializes it in UTC and attaches no timezone extension.',
+      emittedBy: 'client',
+      severity: 'warning',
+    },
+    {
+      code: 'mobile-omission.unmodeled-metadata',
+      reason:
+        "The source record carries metadata outside the adapter's typed allowlist, so the producer withholds those fields.",
+      emittedBy: 'client',
+      severity: 'warning',
+    },
   ],
   event: {
     semanticUnit:
@@ -348,6 +626,7 @@ const groveExchangeProtocolValue = {
     bundleIdentifier: {
       system:
         'A deployment-owned absolute URI, stable for the producer instance and never reused for another key space.',
+      recommendedSystemForm: '<deployment-root>/NamingSystem/grove-event-v0',
       valueForm:
         'e0:<lowercase-producer-instance-uuid>:<positive-monotonic-sequence>',
       soleEventBusinessIdentifier: true,
@@ -373,7 +652,9 @@ const groveExchangeProtocolValue = {
     valueForm:
       'v0:<key-id>:<positive-key-epoch>:<43-character-base64url-digest-without-padding>',
     identifierSystem:
-      'Deployment-owned and immutable for one identity kind, deployment scope, key id, and key epoch. A rotated key uses a new system and epoch.',
+      'Deployment-owned and immutable for one identity kind, deployment scope, key id, and key epoch. A rotated key uses a new system and epoch. A deployment should name it with recommendedSystemForm; a deployment that already governs its own namespaces remains conformant.',
+    recommendedSystemForm:
+      '<deployment-root>/NamingSystem/grove-<identity-kind>-v0/<key-id>/<epoch>',
     keyRequirements: {
       minimumBytes: 32,
       managedSecret: true,
@@ -737,6 +1018,8 @@ const groveExchangeProtocolValue = {
     ],
     entryNode: {
       system: 'A deployment-owned absolute URI for event-scoped graph nodes.',
+      recommendedSystemForm:
+        '<deployment-root>/NamingSystem/grove-entry-node-v0',
       domain: 'org.grovealliance.fhir.entry-node.v0',
       components: [
         'event-system',
@@ -769,6 +1052,20 @@ const groveExchangeProtocolValue = {
         'Exactly one coding from the ISO lifecycle system and zero codings from the Grove lifecycle system; translations from unrelated systems remain open.',
       shape:
         'One active Bundle contains every output derived from exactly one source record revision and exactly one conversion Provenance targeting every output.',
+      studyContext: {
+        recommendedShape:
+          "A producer that knows the participant's enrollment should bundle one ResearchStudy, its exact-revision PlanDefinition, and one ResearchSubject as event-scoped entry-node entries, reference the ResearchStudy from each output through workflow-researchStudy, and reference the PlanDefinition from ResearchStudy.protocol. An identifier-only logical ResearchStudy reference remains conformant but carries no protocol revision.",
+        subject:
+          'Observation.subject is the identifier-only deployment pseudonym unless the deployment supplies a Patient entry; ResearchSubject.individual references the same subject.',
+        protocol:
+          'ResearchStudy.protocol references a PlanDefinition entry whose url and version are exact; workflow-instantiatesCanonical is not an admitted extension.',
+        entryNodeRoles: [
+          'patient',
+          'research-study',
+          'research-subject',
+          'plan-definition',
+        ],
+      },
       entryResourcePolicy: {
         outputResourceTypes: [
           'Observation',
@@ -1038,6 +1335,14 @@ const groveExchangeProtocolValue = {
       'FHIR graphs compare semantically through lossless JSON tokens that preserve decimal lexemes. Whole-Bundle byte equality is not required.',
     byteComparison:
       'Exact bytes are required for identity preimages and registered opaque, CSV, or binary payloads.',
+    equality: {
+      formatting:
+        'A replay that differs from the accepted event only in JSON member order, whitespace, or string escaping carries the same tokens and is the exact retry.',
+      decimalLexeme:
+        'A replay whose decimal lexeme differs, such as 72.0 for 72, is different content under a reused event identifier; the receiver retains the accepted event and disregards the replay exactly as any other altered retry.',
+      vectors:
+        'Conformance/corpora/receiver-lifecycle: reformatted-retry and lexeme-retry',
+    },
   },
   testVectors: {
     keyHex: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
@@ -1277,6 +1582,20 @@ const groveExchangeProtocolValue = {
         value: 'v0:test-key:1:PPULnf0LKpASjIj8mU5TKafPKig_oqWND3_dHFShGd8',
       },
       {
+        id: 'normative-corpus-heart-rate-source-artifact',
+        identityKind: 'source-artifact',
+        components: [
+          'health-connect',
+          'HeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          'record-heart-001',
+          'heart-rate-samples',
+          '0',
+        ],
+        value: 'v0:test-key:1:ZWmx94XtgArrE8XO6W6LQ7QYbkiWCIn-K1JVw8hxwrI',
+      },
+      {
         id: 'normative-corpus-retraction-application-snapshot',
         identityKind: 'device-snapshot',
         components: [
@@ -1337,6 +1656,254 @@ const groveExchangeProtocolValue = {
           'org.grovealliance.example.client|1.4.0|1402',
         ],
         value: 'v0:test-key:1:W8r_v8DzqOippQF5DUZiyhr_iwyRQk3NTa_sQLF8aM0',
+      },
+      {
+        id: 'receiver-secondary-output',
+        identityKind: 'source-output',
+        components: [
+          'health-connect',
+          'HeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          'record-heart-001',
+          'sample',
+          '2026-08-20T15:30:01.251000000Z|0',
+        ],
+        value: 'v0:test-key:1:BYrV6N3A1WrjO1saOCgLww1gdAQqFQ5jLoFoTKwec9c',
+      },
+      {
+        id: 'receiver-changed-source-record',
+        identityKind: 'source-record',
+        components: [
+          'health-connect',
+          'HeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          'another-record',
+        ],
+        value: 'v0:test-key:1:WssrtI7oYzcgG0mFxlitvSznCx4esKSDEbK-bOUQpTk',
+      },
+      {
+        id: 'receiver-application-snapshot-67',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:67',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:2f3FbY5IkXSZQs9xgEChYLIWANCcdFhDmauCsjHgA7A',
+      },
+      {
+        id: 'receiver-other-writer',
+        identityKind: 'writer-record',
+        components: [
+          'https://study.example.org/apps',
+          'another-writer',
+          'heart-rate-1',
+        ],
+        value: 'v0:test-key:1:5mIZKnS2ox49bXbK-YuTn_SPDVdslEyQIsXF7oV2h3k',
+      },
+      {
+        id: 'receiver-application-snapshot-60',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:60',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:dFdgpZqSrZI83hNxyslxoI1qXUlq0fa2bAo4tnhv2CE',
+      },
+      {
+        id: 'receiver-application-snapshot-61',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:61',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:G0shWKztBFVa7S2QFoeDhU71zLfIEkS5BkE_3jFpiNk',
+      },
+      {
+        id: 'receiver-application-snapshot-62',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:62',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:tfnsLulBQxFAOUV6gNjzORPIjCXbXgrqMMZ3bvNa1ik',
+      },
+      {
+        id: 'receiver-application-snapshot-63',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:63',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:-mUWvC9wBT8cKHPAO4t6fvsJW9ele_WgaEO0swH-tQc',
+      },
+      {
+        id: 'receiver-application-snapshot-64',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:64',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:EYUasFsZmO8n8-2AWt5w5VyYh-6Yz5-5vSybbwLlMb8',
+      },
+      {
+        id: 'receiver-application-snapshot-65',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:65',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:oPK4uLWJLUJo8JL5r7lWjaQL8dAiSAsfVOtqsk6ruQ8',
+      },
+      {
+        id: 'receiver-application-snapshot-66',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:66',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:Tj726etFKNnHaooVq2wP2K9I5odIL8ZDIp4yvqJJtS4',
+      },
+      {
+        id: 'receiver-writer',
+        identityKind: 'writer-record',
+        components: [
+          'https://study.example.org/apps',
+          'fixture-writer',
+          'heart-rate-1',
+        ],
+        value: 'v0:test-key:1:TN39cF6jcCICy4SlWBjpAulk4eMlcb-KM3MwESD9cvw',
+      },
+      {
+        id: 'receiver-target-record',
+        identityKind: 'source-record',
+        components: [
+          'questionnaire',
+          'heart-rate',
+          'https://study.example.org/repositories',
+          'fixture',
+          'record-2',
+        ],
+        value: 'v0:test-key:1:TE47APXmta6xbmGufkf8LBv8q3aPR4NDn9bltP7vEn4',
+      },
+      {
+        id: 'receiver-target-output',
+        identityKind: 'source-output',
+        components: [
+          'questionnaire',
+          'heart-rate',
+          'https://study.example.org/repositories',
+          'fixture',
+          'record-2',
+          'primary',
+          '0',
+        ],
+        value: 'v0:test-key:1:M6afafiHPF1Pqyg4OZ5IN0R_8s97oM3WWy904IjTwy8',
+      },
+      {
+        id: 'receiver-application-snapshot-41',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:41',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:s7LpE9vScdo_lguSPQ-KetFYzpcgwAdbUFlTLS8ECPY',
+      },
+      {
+        id: 'receiver-application-snapshot-42',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:42',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:FhFF4pknUiHfdg3v3p6KQYzE8ZI_U3YKj-IdsYcRpLU',
+      },
+      {
+        id: 'receiver-application-snapshot-44',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:44',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:6I8uWw-e6duXMHPcuf6Zcjv5YKphw1S0hZgfq1N9EMM',
+      },
+      {
+        id: 'receiver-application-snapshot-45',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:45',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:v4OvFw1CH0dYyiwUrWICl6MPUpp9BrBDva51303xv4M',
+      },
+      {
+        id: 'receiver-application-snapshot-46',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:46',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:P-CZcBXDylBtujPUTLBrMVc24OEl_83sh_WrgLhEGfk',
+      },
+      {
+        id: 'receiver-application-snapshot-47',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:47',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:7CSIYKL1G_jH0947A2Wrz5arDAmPJ__NU5syHdbiLFk',
+      },
+      {
+        id: 'multi-study-application-snapshot-50',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:50',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:IPo3xVSPUNGwqi_4L3JZCTpztid-H4rQEvEt3YZ2TcU',
+      },
+      {
+        id: 'multi-study-application-snapshot-51',
+        identityKind: 'device-snapshot',
+        components: [
+          'https://study.example.org/fhir/NamingSystem/grove-event-v0',
+          'e0:1f5c58aa-6ec6-4e79-a682-829a9debd3f5:51',
+          'application',
+          'fixture-app',
+        ],
+        value: 'v0:test-key:1:1BRlmWamqCymL8adxO0bJCs1rV4L6ZGkPUGzrOfixnw',
       },
       {
         id: 'questionnaire-extraction-host-snapshot',
@@ -1430,213 +1997,528 @@ const groveExchangeProtocolValue = {
 } as const
 
 export const groveExchangeProtocol: typeof groveExchangeProtocolValue =
-  deepFreeze(groveExchangeProtocolValue)
+  /*#__PURE__*/ deepFreeze(groveExchangeProtocolValue)
 
-const groveExchangeRuleDiagnosticsValue = {
+const groveProducerDiagnosticsValue = {
   'mobile-exchange.unclassified': {
     reason:
       'A producer-contract failure reached the exchange diagnostic boundary without a more specific registered rule; validation fails closed and the conformance kit must classify the gap.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.entry-node-key': {
     reason:
       'Every Bundle entry must carry exactly one complete Grove exchange entry node key.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.deterministic-full-url': {
     reason:
       'Bundle.entry.fullUrl must be the UUID version 5 value derived from its complete entry identifier.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.resolved-reference': {
     reason:
       'Every internal UUID URN reference must resolve to a Bundle entry fullUrl.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.event-identity': {
     reason:
       'Bundle.identifier.value must be the canonical e0 producer UUID and positive sequence form.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.entry-node-digest': {
     reason:
       'An entry-node digest must be derived from the enclosing event identifier, role, and ordinal.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.entry-node-ordinal': {
     reason:
       'An entry-node ordinal is the zero-based position of its entry among the entries sharing that node-role, in Bundle entry order.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.identity-system-role': {
     reason:
       'Within one event graph, each Grove Identifier.system names exactly one Grove identifier role; one namespace cannot change meaning between nodes.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.source-output-required': {
     reason:
       'Every active clinical output must carry its exact typed source-output identity in addition to source-record identity.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.hybrid-companion': {
     reason:
       'A hybrid-required output and its exact source-preservation companion must form the catalog-declared closed, same-source, bidirectionally linked graph.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'healthkit-ecg.output-graph': {
     reason:
       'A HealthKit ECG event must satisfy the catalog-owned waveform, optional average-heart-rate, symptom-member, relationship-direction, identity, and effective-period graph contract.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.transform-provenance': {
     reason:
       'An active event must contain exactly one transform Provenance and no retraction Provenance.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-retraction.logical-target': {
     reason:
       'A retraction target must be a typed logical Reference without a literal reference.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-retraction.target-role': {
     reason:
       'Every retraction target must carry exactly one closed Grove target-role code.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-retraction.opaque-target': {
     reason:
       'A retraction target must use the exact canonical v0 HMAC identity previously emitted.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-retraction.native-record-identifier': {
     reason:
       "An optional retraction native record identifier carries one complete Identifier in the adapter's own absolute native key space and never a Grove identifier-role coding.",
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.collection-entry-operation': {
     reason:
       'A Mobile exchange event is a collection Bundle; an entry may carry neither a request nor a response, because an event is an assertion and never a transaction instruction.',
+    emittedBy: 'client',
     severity: 'error',
   },
   'mobile-support.questionnaire-response-profile': {
     reason:
       'Every supporting QuestionnaireResponse must directly claim exactly the Grove Questionnaire Response profile.',
+    emittedBy: 'client',
     severity: 'error',
   },
   'mobile-device.recording-device-dual-identity': {
     reason:
       'A recording Device carries both its durable recording-device identity and its event-scoped device-snapshot identity; neither may stand alone.',
+    emittedBy: 'client',
     severity: 'error',
   },
   'healthkit-clinical.fhir-representation': {
     reason:
       'A HealthKit clinical-record envelope must carry the exact admitted FHIR release and preserve the source representation its adapter contract declares.',
+    emittedBy: 'client',
     severity: 'error',
   },
   'sensor-recording-document.identity-and-content': {
     reason:
-      'Every Sensor Recording Document carries its source-record, source-output, and source-artifact identities together with exactly one registered attachment payload.',
+      'Every Sensor Recording Document carries its source-record, source-output, and source-artifact identities together with exactly one attachment payload.',
+    emittedBy: 'client',
     severity: 'error',
   },
   'mobile-retraction.no-clinical-copy': {
     reason:
       'A retraction event contains its lifecycle Provenance and optional Device agents, never a copied or mutilated clinical resource.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.lifecycle-coding': {
     reason:
       'A lifecycle Provenance must carry exactly one coding across the ISO transform and Grove retraction lifecycle systems; translations from other systems remain open.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.semantic-profile': {
     reason:
       'Every active Observation must directly claim one admitted Grove semantic profile shape; an empty claim cannot bypass semantic validation.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.fixed-quantity-unit': {
     reason:
       'Every Quantity-valued catalog measurement uses the exact fixed system and code declared by its semantic profile contract.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.quantity-value-domain': {
     reason:
       'Every Quantity-valued catalog measurement stays within its catalog-declared representational minimum, maximum, and integer-only domain without inventing a physiologic range.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.reference-target-type': {
     reason:
       'Every governed Patient reference resolves to a Patient entry, not merely to any existing fullUrl.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.reference-declared-type': {
     reason:
       "When Reference.type is present it must equal the referenced entry's actual resourceType token.",
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.logical-source-entity': {
     reason:
       'Lifecycle Provenance carries exactly one logical source-record Identifier entity and never a literal source Reference.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-retraction.role-target-type': {
     reason:
       'Every retraction target role fixes its admitted resource type and Identifier role.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.single-source-entity': {
     reason:
       'A lifecycle Provenance identifies exactly one source-record entity.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.reference-shape': {
     reason:
       'Each governed path has its declared singular or repeating shape and contains valid Reference objects that are exclusively resolving-literal or identifier-only logical, never both.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.logical-patient-reference': {
     reason:
       'An identifier-only logical Patient Reference carries the exact Patient type and one complete absolute-system pseudonym Identifier without a Grove role or protocol-reserved system.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.adapter-only-profile': {
     reason:
       'An adapter-only active output type must directly claim exactly its one admitted adapter profile.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.entry-resource-type': {
     reason:
       'An active event admits only its closed output, supporting, and lifecycle resource type set.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.contained-resource-prohibited': {
     reason:
       'Mobile exchange events prohibit contained resources; every graph node must be an addressable Bundle entry.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-output.document-profile': {
     reason:
       'Every active DocumentReference must directly claim exactly one admitted recording or clinical-document profile mode.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-support.device-profile': {
     reason:
       'Every active Device must directly claim exactly one admitted Grove Device profile mode.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-support.connected': {
     reason:
       'Every supporting resource must be connected to an output or the lifecycle Provenance.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
   },
   'mobile-exchange.provenance-profile': {
     reason:
       'The sole active lifecycle Provenance must directly claim exactly one admitted Mobile or adapter conversion profile.',
+    emittedBy: 'conformance-kit',
     severity: 'error',
+  },
+  'mobile-input.unclassified': {
+    reason:
+      'A producer refused a source record without a more specific registered input rule; the refusal is reported, never silently dropped.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.unsupported-source-type': {
+    reason:
+      'The source type has no admitted Grove profile in the adapter catalog, so the producer emits nothing for it.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.intentionally-unsupported-source-type': {
+    reason:
+      'The adapter catalog deliberately refuses the source type for its stated reason; the producer emits no best-effort representation.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.not-yet-convertible': {
+    reason:
+      'The adapter catalog admits the source type, but this producer version does not yet emit its graph.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.platform-exclusive-source-type': {
+    reason:
+      'The source type is admitted only as a platform-exclusive recording document, which this conversion path does not emit.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.value-shape-invalid': {
+    reason:
+      'The source value does not have the shape its selected published mapping requires.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.value-outside-domain': {
+    reason:
+      "A numeric source value is nonfinite, outside the measurement's inclusive value domain, or fractional where the contract admits only integers.",
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.unsupported-source-value': {
+    reason:
+      'A source enumeration, category, or typed metadata value has no published mapping in the selected contract.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.required-metadata-missing': {
+    reason:
+      'A source field the selected contract requires is absent from the record.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.required-component-missing': {
+    reason:
+      'A panel source record does not carry one of its required result components.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.effective-period-invalid': {
+    reason:
+      "The source record's effective instant or period is not a valid FHIR date or time, starts after it ends, or places a sample outside its own interval.",
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.conversion-instant-precedes-source-version': {
+    reason:
+      "The conversion instant precedes the source record's own last-modified time, so the event would misstate its order.",
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.text-not-unicode-scalar': {
+    reason:
+      'A source text field contains an unpaired UTF-16 surrogate and cannot enter a FHIR string or an identity preimage.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.native-identifier-invalid': {
+    reason:
+      "The source's native record identifier or writer record version is absent, blank, or negative where the contract requires a value.",
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.recording-payload-too-large': {
+    reason:
+      'A recording payload exceeds the byte count FHIR Attachment.size can state, and no segmented manifest profile exists yet.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-input.empty-recording-series': {
+    reason:
+      'A series carried as a recording document was supplied without samples, so an empty series cannot be told from a failed enumeration.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'healthkit-input.ecg-evidence': {
+    reason:
+      'Caller-supplied electrocardiogram evidence is missing, incomplete, internally inconsistent, or cannot be represented losslessly by the adapter contract; the typed failure names the failing check.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'healthkit-input.clinical-release-unsupported': {
+    reason:
+      'A clinical record declares a FHIR release other than DSTU2 or R4, so its bytes cannot be carried under a versioned FHIR JSON media type.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'healthkit-input.clinical-record-empty': {
+    reason:
+      'A clinical record or CDA sample carries no resource or document bytes, which a query that excludes document data returns.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'healthkit-input.component-requires-correlation': {
+    reason:
+      'A blood pressure component sample converts only inside its admitting correlation, never on its own.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'healthkit-input.source-application-invalid': {
+    reason:
+      'A source revision the caller classified as an application carries no valid Apple bundle identifier.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-exchange.bundle-profile': {
+    reason:
+      'An exchange Bundle directly claims exactly the Grove Mobile exchange or retraction Bundle profile for its event kind.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.entry-required': {
+    reason:
+      'An exchange event carries at least one entry; an empty Bundle is not an event.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.event-times': {
+    reason:
+      'An event states its Bundle timestamp, and its lifecycle Provenance states occurred[x] and recorded.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-exchange.distinct-entry-key': {
+    reason:
+      'No two entries of one event carry the same entry key system and value pair.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.entry-key-selection': {
+    reason:
+      "An entry key is the entry resource's highest-priority typed business identifier, or its entry-node key when the resource carries none.",
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.identifier-role': {
+    reason:
+      'A Grove-typed resource Identifier carries exactly one closed Grove identifier-role coding.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.opaque-resource-identity': {
+    reason:
+      'A resource Identifier typed with an opaque Grove identifier role is one complete pair whose system is absolute and whose value is a canonical v0 HMAC identity.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.distinct-resource-identity-role': {
+    reason:
+      'A resource carries at most one Identifier for each Grove identifier role.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.output-required': {
+    reason:
+      'An active event carries at least one clinical or source-artifact output.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.provenance-assembler': {
+    reason:
+      "A conversion Provenance names exactly one assembler agent, and that agent is the event's application Device snapshot.",
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-exchange.provenance-targets': {
+    reason:
+      'A conversion Provenance targets every active clinical output of its event and nothing else.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-exchange.adapter-provenance-graph': {
+    reason:
+      'Every adapter output of an event claims the adapter profile its conversion Provenance governs, and a source-neutral event claims no adapter output.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-output.adapter-source-marker': {
+    reason:
+      "An adapter's source marker appears exactly once on each catalog-owned output of that adapter and never on a source-neutral or different-adapter output.",
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-device.host-device-identity': {
+    reason:
+      'A host Device carries exactly one event-scoped device-snapshot identity.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'mobile-support.study-context': {
+    reason:
+      'A bundled study context carries one ResearchStudy, its exact-revision PlanDefinition with canonical url and version, and one ResearchSubject linking the subject to the study, each keyed as an entry node with its study-context role.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'healthkit-device.application-bundle-identifier': {
+    reason:
+      'A HealthKit application Device carries exactly one typed Apple bundle identifier.',
+    emittedBy: 'client',
+    severity: 'error',
+  },
+  'health-connect-provenance.data-origin-agent': {
+    reason:
+      'A Health Connect data origin is one enterer agent whose typed identifier-only logical Device Reference names the Android package in the package-name namespace.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'sensor-recording-document.embedded-integrity': {
+    reason:
+      "An embedded recording attachment's size and SHA-1 hash match its decoded bytes.",
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'sensor-recording-document.format': {
+    reason:
+      "A recording attachment's format coding and content type match one active entry of the Grove recording-format registry, with no Coding.version.",
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-retraction.provenance': {
+    reason:
+      'A retraction event carries exactly one retraction Provenance and no transform Provenance.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-retraction.target-required': {
+    reason: 'A retraction Provenance names at least one logical target.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-retraction.distinct-target': {
+    reason:
+      'No two retraction targets carry the same Identifier system and value pair.',
+    emittedBy: 'conformance-kit',
+    severity: 'error',
+  },
+  'mobile-omission.recording-device': {
+    reason:
+      'The source names a recording device without a stable per-unit token, so the producer emits no recording Device and the output carries no device reference.',
+    emittedBy: 'client',
+    severity: 'warning',
+  },
+  'mobile-omission.source-offset': {
+    reason:
+      'The source supplies an effective instant without a UTC offset or time-zone name, so the producer serializes it in UTC and attaches no timezone extension.',
+    emittedBy: 'client',
+    severity: 'warning',
+  },
+  'mobile-omission.unmodeled-metadata': {
+    reason:
+      "The source record carries metadata outside the adapter's typed allowlist, so the producer withholds those fields.",
+    emittedBy: 'client',
+    severity: 'warning',
   },
 } as const
 
-export const groveExchangeRuleDiagnostics: typeof groveExchangeRuleDiagnosticsValue =
-  deepFreeze(groveExchangeRuleDiagnosticsValue)
+export const groveProducerDiagnostics: typeof groveProducerDiagnosticsValue =
+  /*#__PURE__*/ deepFreeze(groveProducerDiagnosticsValue)
 
 const groveProfileClaimsValue = {
   $schema:
@@ -2275,9 +3157,8 @@ const groveProfileClaimsValue = {
   },
 } as const
 
-export const groveProfileClaims: typeof groveProfileClaimsValue = deepFreeze(
-  groveProfileClaimsValue,
-)
+export const groveProfileClaims: typeof groveProfileClaimsValue =
+  /*#__PURE__*/ deepFreeze(groveProfileClaimsValue)
 
 const adapterSourceMarkerClaimsValue = [
   {
@@ -2484,7 +3365,7 @@ const adapterSourceMarkerClaimsValue = [
 ] as const
 
 export const adapterSourceMarkerClaims: typeof adapterSourceMarkerClaimsValue =
-  deepFreeze(adapterSourceMarkerClaimsValue)
+  /*#__PURE__*/ deepFreeze(adapterSourceMarkerClaimsValue)
 
 const healthConnectDataOriginApplicationValue = {
   sourceField: 'Metadata.dataOrigin.packageName',
@@ -2501,7 +3382,7 @@ const healthConnectDataOriginApplicationValue = {
 } as const
 
 export const healthConnectDataOriginApplication: typeof healthConnectDataOriginApplicationValue =
-  deepFreeze(healthConnectDataOriginApplicationValue)
+  /*#__PURE__*/ deepFreeze(healthConnectDataOriginApplicationValue)
 
 const groveRecordingFormatRegistryValue = {
   codeSystem:
@@ -2596,7 +3477,7 @@ const groveRecordingFormatRegistryValue = {
 } as const
 
 export const groveRecordingFormatRegistry: typeof groveRecordingFormatRegistryValue =
-  deepFreeze(groveRecordingFormatRegistryValue)
+  /*#__PURE__*/ deepFreeze(groveRecordingFormatRegistryValue)
 
 const sharedMobileMeasurementCatalogValue = {
   'active-energy': {
@@ -5402,7 +6283,7 @@ const sharedMobileMeasurementCatalogValue = {
 } as const
 
 export const sharedMobileMeasurementCatalog: typeof sharedMobileMeasurementCatalogValue =
-  deepFreeze(sharedMobileMeasurementCatalogValue)
+  /*#__PURE__*/ deepFreeze(sharedMobileMeasurementCatalogValue)
 
 const mobileEffectiveCanonicalizationValue = {
   scope:
@@ -5415,7 +6296,7 @@ const mobileEffectiveCanonicalizationValue = {
 } as const
 
 export const mobileEffectiveCanonicalization: typeof mobileEffectiveCanonicalizationValue =
-  deepFreeze(mobileEffectiveCanonicalizationValue)
+  /*#__PURE__*/ deepFreeze(mobileEffectiveCanonicalizationValue)
 
 const mobileEffectiveCanonicalizationVectorsValue = [
   {
@@ -5451,10 +6332,12 @@ const mobileEffectiveCanonicalizationVectorsValue = [
 ] as const
 
 export const mobileEffectiveCanonicalizationVectors: typeof mobileEffectiveCanonicalizationVectorsValue =
-  deepFreeze(mobileEffectiveCanonicalizationVectorsValue)
+  /*#__PURE__*/ deepFreeze(mobileEffectiveCanonicalizationVectorsValue)
 
 export type SharedMobileMeasurementKind =
   keyof typeof sharedMobileMeasurementCatalog
+
+export type ProducerDiagnosticCode = keyof typeof groveProducerDiagnostics
 
 export type GroveRecordingFormat =
   keyof typeof groveRecordingFormatRegistry.formats

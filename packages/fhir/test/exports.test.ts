@@ -15,11 +15,11 @@ import * as questionnaire from '../src/questionnaire/index.js'
 import * as r4 from '../src/r4/index.js'
 
 type HasMeasurementBuilder<T> =
-  'buildProviderMeasurementBundle' extends keyof T ? true : false
+  'buildProviderExchangeGraph' extends keyof T ? true : false
 type HasRecordingBuilder<T> =
-  'buildProviderRecordingBundle' extends keyof T ? true : false
+  'buildProviderRecordingGraph' extends keyof T ? true : false
 type HasRetractionBuilder<T> =
-  'buildProviderRetractionBundle' extends keyof T ? true : false
+  'buildProviderRetractionEvent' extends keyof T ? true : false
 type HasInternalPackageGraph<T> =
   'groveFhirPackageGraph' extends keyof T ? true : false
 type HasContractVersion<T> =
@@ -58,9 +58,9 @@ describe('public entry-point boundaries', () => {
   })
 
   it('exposes the closed provider facade only from Provider', () => {
-    expect(typeof provider.buildProviderMeasurementBundle).toBe('function')
-    expect(typeof provider.buildProviderRecordingBundle).toBe('function')
-    expect(typeof provider.buildProviderRetractionBundle).toBe('function')
+    expect(typeof provider.buildProviderExchangeGraph).toBe('function')
+    expect(typeof provider.buildProviderRecordingGraph).toBe('function')
+    expect(typeof provider.buildProviderRetractionEvent).toBe('function')
 
     expectTypeOf<HasMeasurementBuilder<typeof provider>>().toEqualTypeOf<true>()
     expectTypeOf<HasRecordingBuilder<typeof provider>>().toEqualTypeOf<true>()
@@ -73,15 +73,10 @@ describe('public entry-point boundaries', () => {
     expect(root.groveExchangeProtocol.protocolVersion).toBe(0)
     expect(root.groveExchangeProtocol).not.toHaveProperty('version')
     expect(root.groveExchangeProtocol).not.toHaveProperty('releaseVersion')
-    expect(root.groveMobileContract).not.toHaveProperty('version')
     expect(root.groveRecordingFormatRegistry).not.toHaveProperty('version')
     expect(root.groveProfileClaims).not.toHaveProperty('version')
     expect(provider.providerAdapterCatalog).not.toHaveProperty('version')
-    expect(
-      root.groveMobileContract.identity.resourceIdentifierPriority,
-    ).toEqual(
-      root.groveExchangeProtocol.entryIdentity.resourceIdentifierPriority,
-    )
+    expect('groveMobileContract' in root).toBe(false)
     expect(mobile.groveMobilePackageMetadata.packageId).toBe(
       'org.grovealliance.fhir.mobile',
     )
@@ -95,7 +90,7 @@ describe('public entry-point boundaries', () => {
     expectTypeOf(root.groveFhirVersion).toEqualTypeOf<'4.0.1'>()
     expectTypeOf<HasContractVersion<typeof root>>().toEqualTypeOf<false>()
     expectTypeOf<
-      HasRuntimeVersion<typeof root.groveMobileContract>
+      HasRuntimeVersion<typeof root.groveExchangeProtocol>
     >().toEqualTypeOf<false>()
   })
 

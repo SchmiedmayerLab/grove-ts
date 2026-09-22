@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type {
-  ConnectedProvider,
-  ProviderScopeIdentifierInput,
-} from './types.js'
-import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
+import type { ConnectedProvider, WriterRecord } from './types.js'
+import {
+  groveExchangeProtocol,
+  groveProfileClaims,
+} from '../contract/measurement-catalog.generated.js'
 import {
   providerAdapterCatalog,
   providerRawOutputDiscriminators,
@@ -19,204 +19,225 @@ import {
   providerScalarOutputRoles,
 } from '../contract/providers.generated.js'
 import {
-  cloneJsonValue,
   deepFreeze,
   err,
+  issues,
   ok,
   parseAbsoluteUri,
+  type EntryNodeOrdinal,
   type FhirId,
-  type JsonValue,
+  type Issue,
   type Result,
 } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
 import {
+  containsIsolatedSurrogate,
   createEntryIdentity,
   deriveEntryNodeIdentifier,
-  deriveEventIdentifier,
   deriveOpaqueIdentifier,
-  isEventIdentityValue,
-  validateDeploymentIdentity,
-  type DeploymentIdentitySource,
+  isEventOfScope,
+  isOpaqueIdentityScope,
+  type BusinessIdentifier,
+  type EntryIdentity,
+  type EntryNodeIdentifier,
+  type ExchangeEventIdentifier,
+  type OpaqueIdentityComponents,
+  type OpaqueIdentityKind,
+  type OpaqueIdentityScope,
+  type RoledIdentifier,
 } from '../mobile/identity.js'
 import type {
-  ApplicationDeviceInput,
-  CompleteIdentifierInput,
-  HostDeviceInput,
-  DeploymentIdentityInput,
-  IdentifiedEntryIdentityInput,
-  RecordingDeviceInput,
+  ApplicationDevice,
+  HostDevice,
+  RecordingDevice,
 } from '../mobile/types.js'
+import { groveRuleIssue } from '../r4/diagnostics.js'
 
 /** Resource kind only; graph participation roles never partition Device identity. */
 export type DeviceSnapshotRole = 'application' | 'host' | 'recording-device'
 
-const deviceSnapshotRoles: ReadonlySet<string> = new Set([
-  'application',
-  'host',
-  'recording-device',
+const PROVIDER_CODES: ReadonlySet<string> = new Set(
+  providerAdapterCatalog.providers.map(({ id }) => id),
+)
+// A kind's coordinate family is written in its components: the first names the adapter
+// space, and only source-record coordinates carry a native record id.
+const identityKindsCoordinatedBy = (
+  adapterComponent: string,
+): ReadonlySet<string> =>
+  new Set(
+    groveExchangeProtocol.opaqueIdentity.identityKinds
+      .filter(
+        ({ components }) =>
+          components[0] === adapterComponent &&
+          (components as readonly string[]).includes('native-record-id'),
+      )
+      .map(({ kind }) => kind),
+  )
+const PROVIDER_IDENTITY_KINDS = identityKindsCoordinatedBy('provider-code')
+const GENERIC_SOURCE_IDENTITY_KINDS = identityKindsCoordinatedBy('adapter-id')
+
+const recordingDeviceAdapters: ReadonlySet<string> = new Set([
+  ...groveProfileClaims.adapterConversionProvenanceClaims.map(
+    ({ adapter }) => adapter,
+  ),
+  ...PROVIDER_CODES,
 ])
 
-type JsonObject = Readonly<Record<string, JsonValue>>
+const isNonBlank = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  value.trim() !== '' &&
+  !containsIsolatedSurrogate(value)
 
-const asJsonObject = (value: JsonValue | undefined): JsonObject | undefined =>
-  typeof value === 'object' && value !== null && !Array.isArray(value) ?
-    (value as JsonObject)
-  : undefined
+const ordinal = (index: number): EntryNodeOrdinal =>
+  String(index) as EntryNodeOrdinal
 
-const snapshotObject = (input: unknown): Result<JsonObject> => {
-  const snapshot = cloneJsonValue(input)
-  if (!snapshot.ok) return snapshot
+/**
+ * The provider coordinate guard: a provider identity kind opens with one catalog provider
+ * code, and a provider code never enters a generic source identity kind.
+ */
+export const providerCoordinateIssue = (
+  identityKind: OpaqueIdentityKind,
+  components: readonly string[],
+): Issue | undefined => {
+  const first = components[0]
   if (
-    typeof snapshot.value !== 'object' ||
-    snapshot.value === null ||
-    Array.isArray(snapshot.value)
+    PROVIDER_IDENTITY_KINDS.has(identityKind) &&
+    !PROVIDER_CODES.has(first ?? '')
   ) {
-    return err('invalid-type', 'Expected a complete identity input object.')
+    return {
+      severity: 'error',
+      code: 'invalid-code',
+      path: ['components', 0],
+      message:
+        'A Provider identity kind requires one exact catalog provider code as its first component.',
+    }
   }
-  return ok(snapshot.value as JsonObject)
+  if (
+    GENERIC_SOURCE_IDENTITY_KINDS.has(identityKind) &&
+    PROVIDER_CODES.has(first ?? '')
+  ) {
+    return {
+      severity: 'error',
+      code: 'invalid-code',
+      path: ['components', 0],
+      message:
+        'Provider coordinates require the matching provider-record, provider-output, or provider-artifact identity kind.',
+    }
+  }
+  return undefined
+}
+
+/** Mints one opaque identifier after the provider coordinate guard admits its components. */
+export const deriveProviderOpaqueIdentifier = <Kind extends OpaqueIdentityKind>(
+  scope: OpaqueIdentityScope,
+  identityKind: Kind,
+  components: OpaqueIdentityComponents[Kind],
+): Result<RoledIdentifier> => {
+  const guard =
+    Array.isArray(components) ?
+      providerCoordinateIssue(identityKind, components as readonly string[])
+    : undefined
+  return guard === undefined ?
+      deriveOpaqueIdentifier(scope, identityKind, components)
+    : issues([guard])
 }
 
 /** Derives an immutable event-scoped Device snapshot identity. */
-export const deriveDeviceSnapshotEntryIdentity = (
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
+const deriveDeviceSnapshotEntryIdentity = (
+  scope: OpaqueIdentityScope,
+  event: ExchangeEventIdentifier,
   sourceDeviceToken: string,
   role: DeviceSnapshotRole,
-  id?: import('../core/index.js').FhirId,
-): Result<IdentifiedEntryIdentityInput> => {
-  const safeDeployment = validateDeploymentIdentity(deployment)
-  if (!safeDeployment.ok) return safeDeployment
-  const safeEvent = snapshotObject(event)
-  if (!safeEvent.ok) return safeEvent
-  const eventSystem = safeEvent.value.system
-  const eventValue = safeEvent.value.value
-  const eventRole = safeEvent.value.role
-  if (
-    typeof sourceDeviceToken !== 'string' ||
-    sourceDeviceToken.trim() === '' ||
-    !deviceSnapshotRoles.has(role) ||
-    eventSystem !== safeDeployment.value.identity.eventIdentifierSystem ||
-    eventRole !== 'event' ||
-    typeof eventValue !== 'string' ||
-    !isEventIdentityValue(eventValue) ||
-    !eventValue.startsWith(
-      `${groveMobileContract.identity.valuePrefixes.event}${safeDeployment.value.identity.producerInstance}:`,
-    )
-  ) {
+  id?: FhirId,
+): Result<EntryIdentity> => {
+  if (!isNonBlank(sourceDeviceToken)) {
     return err(
       'invalid-identifier',
-      "Device snapshot identity requires a nonblank token and this producer's complete typed event Identifier.",
+      'Device snapshot identity requires a non-blank source device token.',
     )
   }
-  const identifier = deriveOpaqueIdentifier(
-    safeDeployment.value,
-    'device-snapshot',
-    [eventSystem, eventValue, role, sourceDeviceToken],
-  )
+  if (!isOpaqueIdentityScope(scope) || !isEventOfScope(scope, event)) {
+    return err(
+      'invalid-identifier',
+      "Device snapshot identity requires this producer's complete typed event Identifier.",
+    )
+  }
+  const identifier = deriveOpaqueIdentifier(scope, 'device-snapshot', [
+    event.system,
+    event.value,
+    role,
+    sourceDeviceToken,
+  ])
   if (!identifier.ok) return identifier
   return createEntryIdentity(identifier.value, id)
 }
 
-/** Derives the optional host snapshot identity an application declares, if any. */
-export const resolveHostIdentity = (
-  application: { readonly host?: HostDeviceInput | undefined },
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
-): Result<IdentifiedEntryIdentityInput | undefined> =>
-  application.host === undefined ?
-    ok(undefined)
-  : deriveDeviceSnapshotEntryIdentity(
-      deployment,
-      event,
-      application.host.sourceDeviceToken,
-      'host',
-      application.host.id,
-    )
-
-/** Derives an immutable event-scoped application Device snapshot identity. */
 export const deriveApplicationEntryIdentity = (
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
-  input: ApplicationDeviceInput,
-): Result<IdentifiedEntryIdentityInput> => {
-  const safeInput = snapshotObject(input)
-  if (!safeInput.ok) return safeInput
-  const sourceDeviceToken = safeInput.value.sourceDeviceToken
-  const id = safeInput.value.id
-  if (
-    typeof sourceDeviceToken !== 'string' ||
-    (id !== undefined && typeof id !== 'string')
-  ) {
-    return err(
-      'invalid-identifier',
-      'Application identity requires a source Device token and optional valid FHIR id.',
-    )
-  }
-  return deriveDeviceSnapshotEntryIdentity(
-    deployment,
+  scope: OpaqueIdentityScope,
+  event: ExchangeEventIdentifier,
+  application: ApplicationDevice,
+  id?: FhirId,
+): Result<EntryIdentity> =>
+  deriveDeviceSnapshotEntryIdentity(
+    scope,
     event,
-    sourceDeviceToken,
+    application.sourceDeviceToken,
     'application',
-    id as FhirId | undefined,
+    id,
   )
-}
+
+export const deriveHostEntryIdentity = (
+  scope: OpaqueIdentityScope,
+  event: ExchangeEventIdentifier,
+  host: HostDevice,
+  id?: FhirId,
+): Result<EntryIdentity> =>
+  deriveDeviceSnapshotEntryIdentity(
+    scope,
+    event,
+    host.sourceDeviceToken,
+    'host',
+    id,
+  )
 
 export interface RecordingDeviceGraphIdentity {
-  readonly stableIdentifier: CompleteIdentifierInput
+  readonly stableIdentifier: RoledIdentifier
   /** Selected Bundle entry key for this immutable event-time Device snapshot. */
-  readonly snapshot: IdentifiedEntryIdentityInput
+  readonly snapshot: EntryIdentity
 }
 
-/** Derives a stable per-unit recording Device identity from admitted instance evidence. */
+/** Derives a stable per-unit recording Device identity and its event snapshot. */
 export const deriveRecordingDeviceEntryIdentity = (
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
+  scope: OpaqueIdentityScope,
+  event: ExchangeEventIdentifier,
   adapterId: string,
-  input: RecordingDeviceInput,
+  subject: BusinessIdentifier,
+  device: RecordingDevice,
+  id?: FhirId,
 ): Result<RecordingDeviceGraphIdentity> => {
-  const safeInput = snapshotObject(input)
-  if (!safeInput.ok) return safeInput
-  const stableUnitToken = safeInput.value.stableUnitToken
-  const subjectIdentifier = asJsonObject(safeInput.value.subjectIdentifier)
-  const subjectSystem = subjectIdentifier?.system
-  const subjectValue = subjectIdentifier?.value
-  const id = safeInput.value.id
-  const identityScope = safeInput.value.identityScope
-  const disclosureAuthorization = safeInput.value.disclosureAuthorization
-  const validIdentityScope =
-    identityScope === 'deployment-scoped' ||
-    (identityScope === 'authorized-hardware' &&
-      disclosureAuthorization === 'authorized-for-exchange')
   if (
-    typeof adapterId !== 'string' ||
-    adapterId.trim() === '' ||
     !recordingDeviceAdapters.has(adapterId) ||
-    typeof stableUnitToken !== 'string' ||
-    stableUnitToken.trim() === '' ||
-    typeof subjectSystem !== 'string' ||
-    typeof subjectValue !== 'string' ||
-    subjectValue.trim() === '' ||
-    !parseAbsoluteUri(subjectSystem).ok ||
-    (id !== undefined && typeof id !== 'string') ||
-    !validIdentityScope
+    !isNonBlank(device.stableUnitToken) ||
+    !parseAbsoluteUri(subject.system).ok ||
+    !isNonBlank(subject.value)
   ) {
     return err(
       'invalid-identifier',
       'Recording Device identity requires an adapter, a complete subject Identifier, and stable per-unit token.',
     )
   }
-  const stableIdentifier = deriveOpaqueIdentifier(
-    deployment,
-    'recording-device',
-    [adapterId, subjectSystem, subjectValue, stableUnitToken],
-  )
+  const stableIdentifier = deriveOpaqueIdentifier(scope, 'recording-device', [
+    adapterId,
+    subject.system,
+    subject.value,
+    device.stableUnitToken,
+  ])
   if (!stableIdentifier.ok) return stableIdentifier
   const snapshot = deriveDeviceSnapshotEntryIdentity(
-    deployment,
+    scope,
     event,
-    stableUnitToken,
+    device.stableUnitToken,
     'recording-device',
-    id as FhirId | undefined,
+    id,
   )
   if (!snapshot.ok) return snapshot
   return ok({
@@ -227,33 +248,14 @@ export const deriveRecordingDeviceEntryIdentity = (
 
 /** Optional writer-record lineage identity for a logical record assigned by an application. */
 export const deriveWriterRecordIdentifier = (
-  deployment: DeploymentIdentitySource,
-  writerApplication: CompleteIdentifierInput,
-  writerRecordId: string,
-): Result<CompleteIdentifierInput> => {
-  const safeWriter = snapshotObject(writerApplication)
-  if (!safeWriter.ok) return safeWriter
-  const writerSystem = safeWriter.value.system
-  const writerValue = safeWriter.value.value
-  const parsedWriterSystem = parseAbsoluteUri(writerSystem)
-  if (
-    !parsedWriterSystem.ok ||
-    typeof writerValue !== 'string' ||
-    writerValue.trim() === '' ||
-    typeof writerRecordId !== 'string' ||
-    writerRecordId.trim() === ''
-  ) {
-    return err(
-      'invalid-identifier',
-      'Writer identity requires a complete application Identifier and writer record id.',
-    )
-  }
-  return deriveOpaqueIdentifier(deployment, 'writer-record', [
-    parsedWriterSystem.value,
-    writerValue,
-    writerRecordId,
+  scope: OpaqueIdentityScope,
+  writer: WriterRecord,
+): Result<RoledIdentifier> =>
+  deriveOpaqueIdentifier(scope, 'writer-record', [
+    writer.applicationIdentifier.system,
+    writer.applicationIdentifier.value,
+    writer.nativeRecordId,
   ])
-}
 
 export type ProviderOutputIdentityInput =
   | {
@@ -271,104 +273,62 @@ export interface ProviderIdentityInput<
   Provider extends ConnectedProvider = ConnectedProvider,
 > {
   readonly provider: Provider
-  readonly providerScopeIdentifier: ProviderScopeIdentifierInput<Provider>
+  readonly repositoryScope: BusinessIdentifier
   readonly sourceType: string
   readonly sourceNativeId: string
   /** Closed catalog selectors; callers do not supply arbitrary values. */
   readonly outputs: readonly ProviderOutputIdentityInput[]
-  readonly eventSequence: string
-  readonly deployment: DeploymentIdentityInput
+  readonly event: ExchangeEventIdentifier
+  readonly scope: OpaqueIdentityScope
   readonly provenanceNodeRole?:
-    'conversion-provenance' | 'retraction-provenance'
+    'conversion-provenance' | 'retraction-provenance' | undefined
 }
 
 export interface ProviderIdentities {
-  readonly sourceRecord: CompleteIdentifierInput
-  readonly outputs: readonly CompleteIdentifierInput[]
+  readonly sourceRecord: RoledIdentifier
+  readonly outputs: readonly RoledIdentifier[]
   /** Sole business identifier for the exchange event and its Bundle. */
-  readonly event: CompleteIdentifierInput
+  readonly event: ExchangeEventIdentifier
   /** Typed event-scoped node key for Provenance; not a business identifier. */
-  readonly provenanceNode: CompleteIdentifierInput
+  readonly provenanceNode: EntryNodeIdentifier
 }
 
-const providerCodes: ReadonlySet<string> = new Set(
-  providerAdapterCatalog.providers.map(({ id }) => id),
-)
+type StringTable = Readonly<
+  Record<string, Readonly<Record<string, string>> | undefined>
+>
+type NestedStringTable = Readonly<Record<string, StringTable | undefined>>
 
-const recordingDeviceAdapters: ReadonlySet<string> = new Set([
-  ...groveProfileClaims.adapterConversionProvenanceClaims.map(
-    ({ adapter }) => adapter,
-  ),
-  ...providerCodes,
-])
+const scalarRoles = providerScalarOutputRoles as NestedStringTable
+const scalarDiscriminators =
+  providerScalarOutputDiscriminators as NestedStringTable
+const rawRoles = providerRawOutputRoles as StringTable
+const rawDiscriminators = providerRawOutputDiscriminators as StringTable
 
-const providerOutputIdentity = (
-  value: JsonValue,
-): ProviderOutputIdentityInput | undefined => {
-  const output = asJsonObject(value)
-  if (output === undefined) return undefined
-  const keys = Object.keys(output)
-    .sort((left, right) => left.localeCompare(right))
-    .join(',')
-  if (
-    output.kind === 'provider-output' &&
-    keys === 'kind,outputDiscriminator,outputRole' &&
-    typeof output.outputRole === 'string' &&
-    output.outputRole.trim() !== '' &&
-    typeof output.outputDiscriminator === 'string' &&
-    output.outputDiscriminator.trim() !== ''
-  ) {
-    return {
-      kind: output.kind,
-      outputRole: output.outputRole,
-      outputDiscriminator: output.outputDiscriminator,
-    }
-  }
-  if (
-    output.kind === 'provider-artifact' &&
-    keys === 'formatCode,kind,partIndex' &&
-    typeof output.formatCode === 'string' &&
-    output.formatCode.trim() !== '' &&
-    typeof output.partIndex === 'string' &&
-    /^(?:0|[1-9]\d*)$/u.test(output.partIndex)
-  ) {
-    return {
-      kind: output.kind,
-      formatCode: output.formatCode,
-      partIndex: output.partIndex,
-    }
-  }
-  return undefined
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const OUTPUT_SELECTOR_KEYS: Readonly<Record<string, readonly string[]>> = {
+  'provider-artifact': ['kind', 'formatCode', 'partIndex'],
+  'provider-output': ['kind', 'outputRole', 'outputDiscriminator'],
 }
 
-const isProvenanceNodeRole = (
-  value: JsonValue | undefined,
-): value is 'conversion-provenance' | 'retraction-provenance' =>
-  value === 'conversion-provenance' || value === 'retraction-provenance'
+const isClosedSelector = (candidate: Record<string, unknown>): boolean => {
+  const keys = OUTPUT_SELECTOR_KEYS[String(candidate.kind)]
+  return (
+    keys !== undefined &&
+    Object.keys(candidate).every((key) => keys.includes(key)) &&
+    keys.every((key) => typeof candidate[key] === 'string')
+  )
+}
 
 const admittedProviderOutput = (
   provider: string,
   sourceType: string,
   output: ProviderOutputIdentityInput,
 ): boolean => {
-  const scalarMapping = (
-    providerScalarOutputRoles as Readonly<
-      Record<
-        string,
-        Readonly<Record<string, Readonly<Record<string, string>> | undefined>>
-      >
-    >
-  )[provider]?.[sourceType]
-  const rawRole = (
-    providerRawOutputRoles as Readonly<
-      Record<string, Readonly<Record<string, string>> | undefined>
-    >
-  )[provider]?.[sourceType]
-  const rawDiscriminator = (
-    providerRawOutputDiscriminators as Readonly<
-      Record<string, Readonly<Record<string, string>> | undefined>
-    >
-  )[provider]?.[sourceType]
+  const candidate: unknown = output
+  if (!isRecord(candidate) || !isClosedSelector(candidate)) return false
+  const rawRole = rawRoles[provider]?.[sourceType]
   if (output.kind === 'provider-artifact') {
     return (
       rawRole !== undefined &&
@@ -376,24 +336,21 @@ const admittedProviderOutput = (
       output.partIndex === '0'
     )
   }
-  const scalarDiscriminators = (
-    providerScalarOutputDiscriminators as Readonly<
-      Record<
-        string,
-        Readonly<Record<string, Readonly<Record<string, string>> | undefined>>
-      >
-    >
-  )[provider]?.[sourceType]
   if (rawRole === output.outputRole) {
-    return rawDiscriminator === output.outputDiscriminator
+    return (
+      rawDiscriminators[provider]?.[sourceType] === output.outputDiscriminator
+    )
   }
-  if (scalarMapping === undefined || scalarDiscriminators === undefined) {
-    return false
-  }
-  return Object.keys(scalarMapping).some(
-    (measurementId) =>
-      scalarMapping[measurementId] === output.outputRole &&
-      scalarDiscriminators[measurementId] === output.outputDiscriminator,
+  const mapping = scalarRoles[provider]?.[sourceType]
+  const discriminators = scalarDiscriminators[provider]?.[sourceType]
+  return (
+    mapping !== undefined &&
+    discriminators !== undefined &&
+    Object.keys(mapping).some(
+      (measurementId) =>
+        mapping[measurementId] === output.outputRole &&
+        discriminators[measurementId] === output.outputDiscriminator,
+    )
   )
 }
 
@@ -401,190 +358,185 @@ const admittedProviderSource = (
   provider: string,
   sourceType: string,
 ): boolean =>
-  (
-    providerScalarOutputRoles as Readonly<
-      Record<string, Readonly<Record<string, unknown>> | undefined>
-    >
-  )[provider]?.[sourceType] !== undefined ||
-  (
-    providerRawOutputRoles as Readonly<
-      Record<string, Readonly<Record<string, unknown>> | undefined>
-    >
-  )[provider]?.[sourceType] !== undefined
+  scalarRoles[provider]?.[sourceType] !== undefined ||
+  rawRoles[provider]?.[sourceType] !== undefined
 
-const providerSourceComponents = (
-  input: ProviderIdentityInput,
-): readonly [string, string, string, string, string] => [
-  input.provider,
-  input.sourceType,
-  input.providerScopeIdentifier.system,
-  input.providerScopeIdentifier.value,
-  input.sourceNativeId,
-]
-
-interface AdmittedProviderSelector {
-  readonly row: (typeof providerAdapterCatalog.providers)[number]
-  readonly provider: ConnectedProvider
-  readonly sourceType: string
+const selectorIssues = (input: ProviderIdentityInput): readonly Issue[] => {
+  if (
+    !PROVIDER_CODES.has(input.provider) ||
+    !admittedProviderSource(input.provider, input.sourceType)
+  ) {
+    return [
+      groveRuleIssue(
+        'mobile-input.unsupported-source-type',
+        ['source', 'sourceType'],
+        {
+          message: `${input.provider}/${input.sourceType} is not a source the Provider catalog admits.`,
+        },
+      ),
+    ]
+  }
+  const findings: Issue[] = []
+  const nodeRole: unknown = input.provenanceNodeRole
+  if (
+    nodeRole !== undefined &&
+    nodeRole !== 'conversion-provenance' &&
+    nodeRole !== 'retraction-provenance'
+  ) {
+    return [
+      groveRuleIssue(
+        'mobile-input.value-shape-invalid',
+        ['provenanceNodeRole'],
+        { message: 'The Provenance node role is one of the two closed roles.' },
+      ),
+    ]
+  }
+  const outputs: unknown = input.outputs
+  if (
+    !Array.isArray(outputs) ||
+    (outputs.length === 0 &&
+      input.provenanceNodeRole !== 'retraction-provenance')
+  ) {
+    findings.push(
+      groveRuleIssue('mobile-input.unsupported-source-value', ['outputs'], {
+        message:
+          'An active event derives at least one catalog-admitted output.',
+      }),
+    )
+    return findings
+  }
+  for (const [index, output] of input.outputs.entries()) {
+    if (!admittedProviderOutput(input.provider, input.sourceType, output)) {
+      findings.push(
+        groveRuleIssue(
+          'mobile-input.unsupported-source-value',
+          ['outputs', index],
+          {
+            message: `${input.provider}/${input.sourceType} does not admit the selected output.`,
+          },
+        ),
+      )
+    }
+  }
+  const keys = input.outputs.map((output) => JSON.stringify(output))
+  if (new Set(keys).size !== keys.length) {
+    findings.push(
+      groveRuleIssue('mobile-input.value-shape-invalid', ['outputs'], {
+        message: 'Provider output identity selectors must be unique.',
+      }),
+    )
+  }
+  if (!isNonBlank(input.sourceNativeId)) {
+    findings.push(
+      groveRuleIssue(
+        'mobile-input.native-identifier-invalid',
+        ['source', 'sourceNativeId'],
+        {
+          message: 'The source-native record identifier is blank.',
+        },
+      ),
+    )
+  }
+  return findings
 }
-
-const admittedProviderSelector = (
-  provider: JsonValue | undefined,
-  sourceType: JsonValue | undefined,
-): AdmittedProviderSelector | undefined => {
-  const row = providerAdapterCatalog.providers.find(({ id }) => id === provider)
-  return (
-      row !== undefined &&
-        typeof sourceType === 'string' &&
-        admittedProviderSource(row.id, sourceType)
-    ) ?
-      { row, provider: row.id, sourceType }
-    : undefined
-}
-
-const providerOutputsAreAdmitted = (
-  provider: ConnectedProvider,
-  sourceType: string,
-  outputs: ReadonlyArray<ProviderOutputIdentityInput | undefined>,
-  provenanceNodeRole: JsonValue | undefined,
-): outputs is readonly ProviderOutputIdentityInput[] =>
-  (outputs.length > 0 || provenanceNodeRole === 'retraction-provenance') &&
-  outputs.every(
-    (output) =>
-      output !== undefined &&
-      admittedProviderOutput(provider, sourceType, output),
-  )
 
 /** Internal closed-facade derivation of Provider business and graph-node identifiers. */
 export const deriveProviderIdentities = (
   input: ProviderIdentityInput,
 ): Result<ProviderIdentities> => {
-  const safeInput = snapshotObject(input)
-  if (!safeInput.ok) return safeInput
-  const value = safeInput.value
-  const selector = admittedProviderSelector(value.provider, value.sourceType)
-  const rawOutputs = value.outputs
-  if (selector === undefined || !Array.isArray(rawOutputs)) {
-    return err(
-      'unsupported-measurement',
-      'Provider identity selectors must match one exact pinned provider catalog row.',
-      ['outputs'],
-    )
-  }
-  const { row: providerRow, provider, sourceType } = selector
-  const parsedOutputs = rawOutputs.map(providerOutputIdentity)
-  const provenanceNodeRole = value.provenanceNodeRole
+  const candidate: unknown = input
   if (
-    !providerOutputsAreAdmitted(
-      provider,
-      sourceType,
-      parsedOutputs,
-      provenanceNodeRole,
-    )
+    !isRecord(candidate) ||
+    !isRecord(candidate.repositoryScope) ||
+    !isRecord(candidate.event)
   ) {
     return err(
-      'unsupported-measurement',
-      'Provider identity selectors must match one exact pinned provider catalog row.',
-      ['outputs'],
+      'invalid-type',
+      'Provider identity derivation takes one complete input object.',
     )
   }
-  const typedOutputs = parsedOutputs
-  const providerScope = asJsonObject(value.providerScopeIdentifier)
-  const providerScopeSystem = parseAbsoluteUri(providerScope?.system)
-  if (!providerScopeSystem.ok) {
-    return err(
-      'invalid-uri',
-      'Provider scope Identifier.system must be an absolute URI.',
-      ['providerScopeIdentifier', 'system'],
-    )
-  }
-  const expectedAssurance = providerRow.providerScopeMode
+  const findings = selectorIssues(input)
+  if (findings.length > 0) return issues(findings)
   if (
-    typeof providerScope?.value !== 'string' ||
-    providerScope.value.trim() === '' ||
-    providerScope.assurance !== expectedAssurance ||
-    sourceType.trim() === '' ||
-    typeof value.sourceNativeId !== 'string' ||
-    value.sourceNativeId.trim() === '' ||
-    typeof value.eventSequence !== 'string' ||
-    (provenanceNodeRole !== undefined &&
-      !isProvenanceNodeRole(provenanceNodeRole))
+    !parseAbsoluteUri(input.repositoryScope.system).ok ||
+    !isNonBlank(input.repositoryScope.value)
   ) {
     return err(
       'invalid-identifier',
-      'Provider identity inputs must be complete canonical values.',
+      'The repository scope must be one complete absolute-system Identifier.',
+      ['repositoryScope'],
     )
   }
-  const outputKeys = typedOutputs.map((output) => JSON.stringify(output))
-  if (new Set(outputKeys).size !== outputKeys.length) {
+  if (
+    !isOpaqueIdentityScope(input.scope) ||
+    !isEventOfScope(input.scope, input.event)
+  ) {
     return err(
-      'duplicate-identifier',
-      'Provider output identity selectors must be unique.',
-      ['outputs'],
+      'invalid-identifier',
+      "The event identifier must be one this context's identity scope minted.",
+      ['event'],
     )
   }
-  const deployment = validateDeploymentIdentity(value.deployment)
-  if (!deployment.ok) return deployment
-
-  const normalizedInput: ProviderIdentityInput = {
-    provider: provider,
-    providerScopeIdentifier: {
-      system: providerScopeSystem.value,
-      value: providerScope.value,
-      assurance: expectedAssurance,
-    },
-    sourceType,
-    sourceNativeId: value.sourceNativeId,
-    outputs: typedOutputs,
-    eventSequence: value.eventSequence,
-    deployment: deployment.value.identity,
-    ...(provenanceNodeRole === undefined ? {} : { provenanceNodeRole }),
-  }
-  const source = providerSourceComponents(normalizedInput)
-  const sourceRecord = deriveOpaqueIdentifier(
-    deployment.value,
+  const source = [
+    input.provider,
+    input.sourceType,
+    input.repositoryScope.system,
+    input.repositoryScope.value,
+    input.sourceNativeId,
+  ] as const
+  const sourceRecord = deriveProviderOpaqueIdentifier(
+    input.scope,
     'provider-record',
     source,
   )
   if (!sourceRecord.ok) return sourceRecord
 
-  const derivedOutputs: CompleteIdentifierInput[] = []
-  for (const output of typedOutputs) {
+  const outputs: RoledIdentifier[] = []
+  for (const output of input.outputs) {
     const derived =
       output.kind === 'provider-output' ?
-        deriveOpaqueIdentifier(deployment.value, 'provider-output', [
+        deriveProviderOpaqueIdentifier(input.scope, 'provider-output', [
           ...source,
           output.outputRole,
           output.outputDiscriminator,
         ])
-      : deriveOpaqueIdentifier(deployment.value, 'provider-artifact', [
+      : deriveProviderOpaqueIdentifier(input.scope, 'provider-artifact', [
           ...source,
           output.formatCode,
           output.partIndex,
         ])
     if (!derived.ok) return derived
-    derivedOutputs.push(derived.value)
+    outputs.push(derived.value)
   }
-
-  const event = deriveEventIdentifier(
-    deployment.value,
-    normalizedInput.eventSequence,
-  )
-  if (!event.ok) return event
-  const provenanceNode = deriveEntryNodeIdentifier(
-    deployment.value,
-    event.value,
-    normalizedInput.provenanceNodeRole ?? 'conversion-provenance',
-    '0',
-  )
+  const provenanceNode = deriveEntryNodeIdentifier(input.scope, {
+    event: input.event,
+    role: input.provenanceNodeRole ?? 'conversion-provenance',
+    ordinal: ordinal(0),
+  })
   if (!provenanceNode.ok) return provenanceNode
-
   return ok(
     deepFreeze({
       sourceRecord: sourceRecord.value,
-      outputs: derivedOutputs,
-      event: event.value,
+      outputs,
+      event: input.event,
       provenanceNode: provenanceNode.value,
-    }) as unknown as ProviderIdentities,
+    }),
   )
+}
+
+/** The entry-node identity of the ordinal-th entry keyed by one node role. */
+export const deriveEntryNodeEntryIdentity = (
+  scope: OpaqueIdentityScope,
+  event: ExchangeEventIdentifier,
+  role: string,
+  index: number,
+  id?: FhirId,
+): Result<EntryIdentity> => {
+  const identifier = deriveEntryNodeIdentifier(scope, {
+    event,
+    role,
+    ordinal: ordinal(index),
+  })
+  if (!identifier.ok) return identifier
+  return createEntryIdentity(identifier.value, id)
 }

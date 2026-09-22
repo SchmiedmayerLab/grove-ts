@@ -7,443 +7,261 @@
 //
 
 import {
-  parseAbsoluteUri,
-  parseFhirInstant,
-  type FhirInstant,
-  type Result,
-} from '../src/core/index.js'
+  context,
+  conversionInstant,
+  heartRateMeasurement,
+  identityScope,
+  instant,
+  record,
+  scopeInput,
+  study,
+  unwrap,
+  uri,
+} from './provider-test-support.js'
+import { groveExchangeProtocol } from '../src/contract/measurement-catalog.generated.js'
 import {
-  groveMobileContract,
-  type DeploymentIdentityInput,
+  validateOpaqueIdentityScope,
+  type RoledIdentifier,
 } from '../src/mobile/index.js'
 import {
-  buildProviderMeasurementBundle,
-  buildProviderRecordingBundle,
-  buildProviderRetractionBundle,
+  buildProviderExchangeGraph,
+  buildProviderRecordingGraph,
+  buildProviderRetractionEvent,
   encodeRecordingBytes,
   groveRecordingFormatRegistry,
   parseMediaType,
-  parseProviderRetractionInput,
-  providerOutputCoordinates,
-  type ProviderMeasurementBundleInput,
-  type ProviderRecordingBundleInput,
-  type ProviderRetractionInput,
+  type ProviderRecordingSource,
+  type NormalizedProviderRecord,
 } from '../src/providers/index.js'
-import { parseGroveMobileRetractionBundle } from '../src/r4/index.js'
+import {
+  parseRetractionEvent,
+  retractionTargets,
+  type Provenance,
+  type RetractionEvent,
+  type RetractionTarget,
+} from '../src/r4/index.js'
 
-const unwrap = <Value>(result: Result<Value>): Value => {
-  if (!result.ok) {
-    throw new Error(result.issues.map(({ message }) => message).join('\n'))
-  }
-  return result.value
-}
+const retractedAt = instant('2026-08-21T10:00:00Z')
 
-const uri = (value: string) => unwrap(parseAbsoluteUri(value))
-const instant = (value: string): FhirInstant => unwrap(parseFhirInstant(value))
-const patient = {
-  type: 'Patient',
-  identifier: {
-    system: uri('https://example.org/deployments/patient-pseudonyms'),
-    value: 'patient-example',
-    assurance: 'deployment-scoped-pseudonym',
-  },
-} as const
-
-const deploymentIdentity = {
-  opaqueIdentifierSystems: {
-    'source-record': uri('https://example.org/identity/source-record/key/1'),
-    'source-output': uri('https://example.org/identity/source-output/key/1'),
-    'writer-record': uri('https://example.org/identity/writer-record/key/1'),
-    'provider-record': uri(
-      'https://example.org/identity/provider-record/key/1',
-    ),
-    'provider-output': uri(
-      'https://example.org/identity/provider-output/key/1',
-    ),
-    'source-artifact': uri(
-      'https://example.org/identity/source-artifact/key/1',
-    ),
-    'provider-artifact': uri(
-      'https://example.org/identity/provider-artifact/key/1',
-    ),
-    'source-context': uri('https://example.org/identity/source-context/key/1'),
-    'recording-device': uri(
-      'https://example.org/identity/recording-device/key/1',
-    ),
-    'device-snapshot': uri(
-      'https://example.org/identity/device-snapshot/key/1',
-    ),
-  },
-  eventIdentifierSystem: uri('https://example.org/identity/event'),
-  entryNodeIdentifierSystem: uri('https://example.org/identity/entry-node'),
-  keyId: 'unit-key',
-  keyEpoch: '1',
-  secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
-  producerInstance: '9ae7b610-bac2-4f13-97b4-53b84b8a90cf',
-} as const satisfies DeploymentIdentityInput
-
-const source = {
-  adapter: { kind: 'providers', provider: 'withings' },
-  providerScopeIdentifier: {
-    system: uri('https://example.org/provider-accounts'),
-    value: 'participant-pseudonym',
-    assurance: 'deployment-scoped-account-pseudonym',
-  },
-  sourceType: 'getmeas:11',
-  sourceNativeId: 'provider-record-17348211',
-  recordingMethod: 'automatically-recorded',
-  dataOrigin: {
-    sourceDeviceToken: 'withings-cloud',
-    name: 'Withings',
-  },
-} as const
-
-const activeInput = {
-  subject: patient,
-  measurements: [
-    {
-      kind: 'heart-rate',
-      value: 64,
-      effective: {
-        kind: 'date-time',
-        value: instant('2026-08-20T12:00:00Z'),
-      },
-    },
-  ],
-  source,
-  application: {
-    sourceDeviceToken: 'converter-build-42',
-    name: 'Grove converter',
-    version: '1.2.3',
-    build: '42',
-  },
-  eventSequence: '100',
-  deploymentIdentity,
-  occurred: instant('2026-08-20T12:00:00Z'),
-  recorded: instant('2026-08-20T12:02:00Z'),
-  assembled: instant('2026-08-20T12:03:00Z'),
-} as const satisfies ProviderMeasurementBundleInput
-
-const outputCoordinates = providerOutputCoordinates(
-  'withings',
-  'getmeas:11',
-  'heart-rate',
+const active = unwrap(
+  buildProviderExchangeGraph(
+    record('withings', 'getmeas:11', heartRateMeasurement),
+    context('withings', '100'),
+  ),
 )
-if (outputCoordinates === undefined) {
-  throw new Error(
-    'The test requires the catalog-owned heart-rate output coordinates.',
-  )
+const targets = unwrap(retractionTargets(active.graph))
+const primary = targets.find(({ role }) => role === 'primary-output')
+if (primary === undefined) throw new Error('No primary output target.')
+
+const provenanceOf = (event: RetractionEvent): Provenance => {
+  const provenance = event.entry.find(
+    ({ resource }) => resource.resourceType === 'Provenance',
+  )?.resource
+  if (provenance?.resourceType !== 'Provenance') {
+    throw new Error('The retraction graph did not contain Provenance.')
+  }
+  return provenance
 }
 
-const retractionInput = {
-  source: {
-    provider: source.adapter.provider,
-    providerScopeIdentifier: source.providerScopeIdentifier,
-    sourceType: source.sourceType,
-    sourceNativeId: source.sourceNativeId,
-  },
-  targets: [
-    {
-      role: 'primary-output',
-      resourceType: 'Observation',
-      ...outputCoordinates,
-    },
-  ],
-  application: activeInput.application,
-  eventSequence: '101',
-  deploymentIdentity,
-  occurred: instant('2026-08-21T10:00:00Z'),
-  recorded: instant('2026-08-21T10:01:00Z'),
-  assembled: instant('2026-08-21T10:02:00Z'),
-} as const satisfies ProviderRetractionInput
+const roleExtension = groveExchangeProtocol.extensions.retractionTargetRole
+const nativeExtension =
+  groveExchangeProtocol.extensions.retractionTargetNativeIdentifier
+
+const byText = (left: string, right: string): number =>
+  left.localeCompare(right)
 
 describe('Provider source-record retraction', () => {
-  it('rejects a provider-scope assurance that contradicts the catalog', () => {
-    expect(
-      parseProviderRetractionInput({
-        ...retractionInput,
-        source: {
-          ...retractionInput.source,
-          providerScopeIdentifier: {
-            system: uri('https://example.org/provider-key-spaces'),
-            value: 'withings-global',
-            assurance: 'documented-global-key-space',
-          },
-        },
-      }).ok,
-    ).toBe(false)
-  })
-
-  it('reports malformed retraction inputs without throwing', () => {
-    const cyclic: Record<string, unknown> = {}
-    cyclic.self = cyclic
-    for (const invalid of [null, undefined, 42, 'invalid', cyclic]) {
-      expect(() => parseProviderRetractionInput(invalid)).not.toThrow()
-      expect(parseProviderRetractionInput(invalid).ok).toBe(false)
-      expect(() =>
-        buildProviderRetractionBundle(invalid as never),
-      ).not.toThrow()
-      expect(buildProviderRetractionBundle(invalid as never).ok).toBe(false)
-    }
-  })
-  it('targets the exact prior output identity in a separate append-only event', () => {
-    const active = unwrap(buildProviderMeasurementBundle(activeInput))
-    const priorObservation = active.entry.find(
+  it('derives every retractable node of an accepted graph', () => {
+    expect(targets.map(({ role }) => role).sort(byText)).toEqual([
+      'device-snapshot',
+      'device-snapshot',
+      'device-snapshot',
+      'primary-output',
+    ])
+    const observation = active.graph.entry.find(
       ({ resource }) => resource.resourceType === 'Observation',
     )?.resource
-    if (priorObservation?.resourceType !== 'Observation') {
-      throw new Error('The active graph did not contain its Observation.')
-    }
-    const priorOutput = priorObservation.identifier?.find((candidate) =>
+    if (observation?.resourceType !== 'Observation')
+      throw new Error('No Observation.')
+    const sourceOutput = observation.identifier?.find((candidate) =>
       candidate.type?.coding?.some(({ code }) => code === 'source-output'),
     )
+    expect(primary).toEqual({
+      role: 'primary-output',
+      resourceType: 'Observation',
+      identifier: {
+        system: sourceOutput?.system,
+        value: sourceOutput?.value,
+        role: 'source-output',
+      },
+    })
+    expect(retractionTargets({} as never).ok).toBe(false)
+  })
 
-    const retraction = unwrap(buildProviderRetractionBundle(retractionInput))
-    expect(retraction.meta?.profile).toEqual([
-      'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-retraction-bundle',
-    ])
-    expect(retraction.entry).toHaveLength(2)
-    const provenance = retraction.entry.find(
-      ({ resource }) => resource.resourceType === 'Provenance',
-    )?.resource
-    expect(
-      retraction.entry.some(
-        ({ resource }) => resource.resourceType === 'Device',
+  it('targets the exact prior output identity in a separate append-only event', () => {
+    const retraction = unwrap(
+      buildProviderRetractionEvent(
+        [primary],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        retractedAt,
       ),
-    ).toBe(true)
-    if (provenance === undefined) {
-      throw new Error('The retraction graph did not contain Provenance.')
-    }
-    expect(provenance.resourceType).toBe('Provenance')
-    if (provenance.resourceType !== 'Provenance') return
+    )
+    expect(retraction.meta?.profile).toEqual([
+      groveExchangeProtocol.profiles.retractionBundle,
+    ])
+    expect(
+      retraction.entry.map(({ resource }) => resource.resourceType),
+    ).toEqual(['Device', 'Device', 'Provenance'])
+    const provenance = provenanceOf(retraction)
     expect(provenance.target).toEqual([
       {
-        extension: [
-          {
-            url: 'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-retraction-target-role',
-            valueCode: 'primary-output',
-          },
-        ],
+        extension: [{ url: roleExtension, valueCode: 'primary-output' }],
         type: 'Observation',
-        identifier: priorOutput,
+        identifier: {
+          system: primary.identifier.system,
+          value: primary.identifier.value,
+          type: {
+            coding: [
+              {
+                system: groveExchangeProtocol.codeSystems.identifierRole,
+                code: 'source-output',
+              },
+            ],
+          },
+        },
       },
     ])
     expect(provenance.target[0]).not.toHaveProperty('reference')
     expect(provenance.activity?.coding).toContainEqual(
       expect.objectContaining({
-        system:
-          'https://grovealliance.org/fhir/mobile/CodeSystem/grove-lifecycle-event',
-        code: 'source-record-retracted',
+        system: groveExchangeProtocol.codeSystems.lifecycleEvent,
+        code: groveExchangeProtocol.lifecycle.retraction.activityCode,
       }),
     )
-    expect(provenance.occurredDateTime).toBe(retractionInput.occurred)
-    expect(provenance.recorded).toBe(retractionInput.recorded)
-    expect(retraction.timestamp).toBe(retractionInput.assembled)
+    expect(provenance.occurredDateTime).toBe(retractedAt)
+    expect(provenance.recorded).toBe(conversionInstant)
+    expect(retraction.timestamp).toBe(conversionInstant)
+    expect(provenance.entity?.[0]?.what.identifier?.value).toBe(
+      active.identifiers.sourceRecord.value,
+    )
     expect(JSON.stringify(retraction)).not.toMatch(/entered-in-error/u)
+    expect(parseRetractionEvent(retraction).ok).toBe(true)
   })
 
   it('rejects additional direct profiles on retraction Provenance', () => {
     const retraction = structuredClone(
-      unwrap(buildProviderRetractionBundle(retractionInput)),
+      unwrap(
+        buildProviderRetractionEvent(
+          [primary],
+          context('withings', '101'),
+          active.identifiers.sourceRecord,
+          retractedAt,
+        ),
+      ),
     )
-    const provenance = retraction.entry.find(
-      ({ resource }) => resource.resourceType === 'Provenance',
-    )?.resource
-    if (provenance?.resourceType !== 'Provenance') {
-      throw new Error('The retraction graph did not contain Provenance.')
-    }
-    const profiles = provenance.meta?.profile as
+    const profiles = provenanceOf(retraction).meta?.profile as
       Array<string | null> | undefined
     profiles?.push(
       'https://example.org/fhir/StructureDefinition/unrelated-provenance',
     )
-
-    const parsed = parseGroveMobileRetractionBundle(retraction)
+    const parsed = parseRetractionEvent(retraction)
     expect(parsed.ok).toBe(false)
     if (parsed.ok) return
     expect(parsed.issues).toContainEqual(
-      expect.objectContaining({
-        code: 'mobile-retraction.provenance-profile',
-      }),
+      expect.objectContaining({ code: 'mobile-exchange.provenance-profile' }),
     )
   })
 
   it('uses the selected source-output identity when retracting a source artifact', () => {
-    const recordingInput = {
-      source: {
-        adapter: { kind: 'providers', provider: 'withings' },
-        providerScopeIdentifier: source.providerScopeIdentifier,
-        sourceType: 'activityIntraday',
-        sourceNativeId: 'provider-record-activity-1',
-        dataOrigin: source.dataOrigin,
-      },
-      attachment: {
-        kind: 'embedded',
-        contentType: unwrap(
-          parseMediaType(
-            groveRecordingFormatRegistry.formats['provider-recording']
-              .contentTypes[0],
+    const source: ProviderRecordingSource = {
+      adapter: { kind: 'providers', provider: 'withings' },
+      sourceType: 'activityIntraday',
+      sourceNativeId: 'provider-record-activity-1',
+      writer: { sourceDeviceToken: 'withings-cloud', name: 'Withings' },
+      effective: { kind: 'date-time', value: instant('2026-08-20T12:00:00Z') },
+    }
+    const recording = unwrap(
+      buildProviderRecordingGraph(
+        source,
+        {
+          kind: 'embedded',
+          contentType: unwrap(
+            parseMediaType(
+              groveRecordingFormatRegistry.formats['provider-recording']
+                .contentTypes[0],
+            ),
           ),
-        ),
-        title: 'Authorized minimized provider recording',
-        format: 'provider-recording',
-        payloadAssertion: 'verified-sanitized-input',
-        dataBase64: unwrap(encodeRecordingBytes(Uint8Array.of(1, 2, 3))),
-      },
-      subject: activeInput.subject,
-      application: activeInput.application,
-      eventSequence: '200',
-      deploymentIdentity,
-      documentDate: instant('2026-08-20T12:01:00Z'),
-      occurred: instant('2026-08-20T12:00:00Z'),
-      recorded: instant('2026-08-20T12:02:00Z'),
-      assembled: instant('2026-08-20T12:03:00Z'),
-    } as const satisfies ProviderRecordingBundleInput
-    const active = unwrap(buildProviderRecordingBundle(recordingInput))
-    const document = active.entry.find(
+          format: 'provider-recording',
+          payloadAssertion: 'verified-sanitized-input',
+          dataBase64: unwrap(encodeRecordingBytes(Uint8Array.of(1, 2, 3))),
+        },
+        context('withings', '200'),
+      ),
+    )
+    const document = recording.graph.entry.find(
       ({ resource }) => resource.resourceType === 'DocumentReference',
     )?.resource
-    if (document?.resourceType !== 'DocumentReference') {
-      throw new Error(
-        'The active recording graph did not contain its document.',
-      )
-    }
+    if (document?.resourceType !== 'DocumentReference')
+      throw new Error('No document.')
     const sourceOutput = document.identifier?.find((candidate) =>
       candidate.type?.coding?.some(({ code }) => code === 'source-output'),
     )
-    const sourceArtifact = document.identifier?.find((candidate) =>
-      candidate.type?.coding?.some(({ code }) => code === 'source-artifact'),
+    const artifact = unwrap(retractionTargets(recording.graph)).find(
+      ({ role }) => role === 'source-artifact',
     )
-    expect(sourceOutput).toBeDefined()
-    expect(sourceArtifact).toBeDefined()
-    expect(sourceOutput).not.toEqual(sourceArtifact)
-
+    expect(artifact).toMatchObject({
+      resourceType: 'DocumentReference',
+      identifier: { system: sourceOutput?.system, value: sourceOutput?.value },
+    })
+    if (artifact === undefined) return
     const retraction = unwrap(
-      buildProviderRetractionBundle({
-        source: {
-          provider: 'withings',
-          providerScopeIdentifier: source.providerScopeIdentifier,
-          sourceType: 'activityIntraday',
-          sourceNativeId: 'provider-record-activity-1',
-        },
-        targets: [
-          {
-            role: 'source-artifact',
-            resourceType: 'DocumentReference',
-            formatCode: 'provider-recording',
-            partIndex: '0',
-          },
-        ],
-        application: activeInput.application,
-        eventSequence: '201',
-        deploymentIdentity,
-        occurred: instant('2026-08-21T10:00:00Z'),
-        recorded: instant('2026-08-21T10:01:00Z'),
-        assembled: instant('2026-08-21T10:02:00Z'),
-      }),
+      buildProviderRetractionEvent(
+        [artifact],
+        context('withings', '201'),
+        recording.identifiers.sourceRecord,
+        retractedAt,
+      ),
     )
-    const provenance = retraction.entry.find(
-      ({ resource }) => resource.resourceType === 'Provenance',
-    )?.resource
-    if (provenance?.resourceType !== 'Provenance') {
-      throw new Error('The retraction graph did not contain Provenance.')
-    }
-    expect(provenance.target[0]?.identifier).toEqual(sourceOutput)
+    expect(provenanceOf(retraction).target[0]?.identifier).toEqual(sourceOutput)
   })
 
   it('targets the exact prior recording-device snapshot', () => {
-    const stableUnitToken = 'recording-unit-1'
-    const active = unwrap(
-      buildProviderMeasurementBundle({
-        ...activeInput,
-        source: {
-          ...activeInput.source,
-          recordingDevice: {
-            stableUnitToken,
-            subjectIdentifier: {
-              system: uri('https://example.org/participants'),
-              value: 'participant-pseudonym-001',
+    const conversion = unwrap(
+      buildProviderExchangeGraph(
+        {
+          ...record('withings', 'getmeas:11', heartRateMeasurement),
+          source: {
+            ...record('withings', 'getmeas:11', heartRateMeasurement).source,
+            recordingDevice: {
+              stableUnitToken: 'recording-unit-1',
+              name: 'Recorder',
             },
-            identityScope: 'deployment-scoped',
-            name: 'Recorder',
           },
-        },
-      }),
+        } as NormalizedProviderRecord,
+        context('withings', '100'),
+      ),
     )
-    const device = active.entry.find(
-      ({ resource }) =>
-        resource.resourceType === 'Device' &&
-        resource.meta?.profile?.some(
-          (profile) => profile === groveMobileContract.profiles.recordingDevice,
-        ),
-    )?.resource
-    if (device?.resourceType !== 'Device') {
-      throw new Error('The active graph did not contain its recording Device.')
-    }
-    const snapshot = device.identifier?.find((candidate) =>
-      candidate.type?.coding?.some(({ code }) => code === 'device-snapshot'),
+    const snapshot = conversion.identifiers.recordingDeviceSnapshot
+    const target = unwrap(retractionTargets(conversion.graph)).find(
+      ({ identifier }) => identifier.value === snapshot?.value,
     )
-
-    const retraction = unwrap(
-      buildProviderRetractionBundle({
-        ...retractionInput,
-        eventSequence: '102',
-        targets: [
-          {
-            role: 'device-snapshot',
-            resourceType: 'Device',
-            priorEventSequence: activeInput.eventSequence,
-            deviceRole: 'recording-device',
-            sourceDeviceToken: stableUnitToken,
-          },
-        ],
-      }),
-    )
-    const provenance = retraction.entry.find(
-      ({ resource }) => resource.resourceType === 'Provenance',
-    )?.resource
-    if (provenance?.resourceType !== 'Provenance') {
-      throw new Error('The retraction graph did not contain Provenance.')
-    }
-    expect(provenance.target[0]?.identifier).toEqual(snapshot)
-  })
-
-  it('requires a device snapshot event to precede the retraction event', () => {
-    const target = {
+    expect(target).toMatchObject({
       role: 'device-snapshot',
       resourceType: 'Device',
-      priorEventSequence: '9999999999999999999999999999999999999999',
-      deviceRole: 'application',
-      sourceDeviceToken: activeInput.application.sourceDeviceToken,
-    } as const
-    const eventSequence = '10000000000000000000000000000000000000000'
-
-    expect(
-      parseProviderRetractionInput({
-        ...retractionInput,
-        eventSequence,
-        targets: [target],
-      }).ok,
-    ).toBe(true)
-    expect(
-      parseProviderRetractionInput({
-        ...retractionInput,
-        eventSequence,
-        targets: [{ ...target, priorEventSequence: eventSequence }],
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderRetractionInput({
-        ...retractionInput,
-        eventSequence,
-        targets: [
-          {
-            ...target,
-            priorEventSequence: '10000000000000000000000000000000000000001',
-          },
-        ],
-      }).ok,
-    ).toBe(false)
+    })
+    if (target === undefined) return
+    const retraction = unwrap(
+      buildProviderRetractionEvent(
+        [target],
+        context('withings', '102'),
+        conversion.identifiers.sourceRecord,
+        retractedAt,
+      ),
+    )
+    expect(provenanceOf(retraction).target[0]?.identifier?.value).toBe(
+      snapshot?.value,
+    )
   })
 
   it('carries the adapter native record identifier on its target', () => {
@@ -452,155 +270,195 @@ describe('Provider source-record retraction', () => {
       value: 'record-heart-001',
     }
     const retraction = unwrap(
-      buildProviderRetractionBundle({
-        ...retractionInput,
-        targets: [{ ...retractionInput.targets[0], nativeIdentifier }],
-      }),
-    )
-    const provenance = retraction.entry.find(
-      ({ resource }) => resource.resourceType === 'Provenance',
-    )?.resource
-    if (provenance?.resourceType !== 'Provenance') {
-      throw new Error('The retraction graph did not contain Provenance.')
-    }
-    expect(provenance.target[0]?.extension).toEqual([
-      {
-        url: groveMobileContract.extensions.retractionTargetRole,
-        valueCode: 'primary-output',
-      },
-      {
-        url: groveMobileContract.extensions.retractionTargetNativeIdentifier,
-        valueIdentifier: nativeIdentifier,
-      },
-    ])
-
-    const groveRoleCoding = {
-      ...retraction,
-      entry: retraction.entry.map((entry) =>
-        entry.resource.resourceType === 'Provenance' ?
-          {
-            ...entry,
-            resource: {
-              ...entry.resource,
-              target: [
-                {
-                  ...entry.resource.target[0],
-                  extension: [
-                    entry.resource.target[0]?.extension?.[0],
-                    {
-                      url: groveMobileContract.extensions
-                        .retractionTargetNativeIdentifier,
-                      valueIdentifier: {
-                        ...nativeIdentifier,
-                        type: {
-                          coding: [
-                            {
-                              system:
-                                groveMobileContract.systems.identifierRole,
-                              code: 'source-record',
-                            },
-                          ],
-                        },
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          }
-        : entry,
+      buildProviderRetractionEvent(
+        [{ ...primary, nativeIdentifier }],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        retractedAt,
       ),
-    }
-    const result = parseGroveMobileRetractionBundle(groveRoleCoding)
-    expect(result.ok).toBe(false)
-    if (result.ok) return
-    expect(result.issues.map(({ code }) => code)).toContain(
-      'mobile-retraction.native-record-identifier',
     )
+    expect(provenanceOf(retraction).target[0]?.extension).toEqual([
+      { url: roleExtension, valueCode: 'primary-output' },
+      { url: nativeExtension, valueIdentifier: nativeIdentifier },
+    ])
+    expect(
+      buildProviderRetractionEvent(
+        [
+          {
+            ...primary,
+            nativeIdentifier: { system: primary.identifier.system, value: 'x' },
+          },
+        ],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        retractedAt,
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [
+        {
+          code: 'value-mismatch',
+          path: ['targets', 0, 'nativeIdentifier', 'system'],
+        },
+      ],
+    })
+  })
+
+  it('carries a governed source identifier from the primary output into its target', () => {
+    const disclosed = unwrap(
+      buildProviderExchangeGraph(
+        record('withings', 'getmeas:11', heartRateMeasurement),
+        context('withings', '100'),
+        {
+          nativeIdentifierDisclosure: {
+            kind: 'authorized',
+            system: uri(
+              'https://example.org/repositories/withings-account-7/heart-rate-records',
+            ),
+          },
+        },
+      ),
+    )
+    const target = unwrap(retractionTargets(disclosed.graph)).find(
+      ({ role }) => role === 'primary-output',
+    )
+    expect(target?.nativeIdentifier).toEqual({
+      system:
+        'https://example.org/repositories/withings-account-7/heart-rate-records',
+      value: 'native-withings-getmeas:11',
+    })
   })
 
   it('emits retraction targets in a deterministic canonical order', () => {
-    const deviceTarget = {
-      role: 'device-snapshot',
-      resourceType: 'Device',
-      priorEventSequence: activeInput.eventSequence,
-      deviceRole: 'application',
-      sourceDeviceToken: activeInput.application.sourceDeviceToken,
-    } as const
-    const primaryTarget = retractionInput.targets[0]
+    const devices = targets.filter(({ role }) => role === 'device-snapshot')
     const forward = unwrap(
-      buildProviderRetractionBundle({
-        ...retractionInput,
-        targets: [primaryTarget, deviceTarget],
-      }),
+      buildProviderRetractionEvent(
+        [primary, ...devices],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        retractedAt,
+      ),
     )
     const reversed = unwrap(
-      buildProviderRetractionBundle({
-        ...retractionInput,
-        targets: [deviceTarget, primaryTarget],
-      }),
+      buildProviderRetractionEvent(
+        [...devices].reverse().concat(primary) as [
+          RetractionTarget,
+          ...RetractionTarget[],
+        ],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        retractedAt,
+      ),
     )
-
     expect(reversed).toEqual(forward)
   })
 
-  it('returns structured issues for malformed JavaScript input', () => {
-    expect(() =>
-      buildProviderRetractionBundle(
-        undefined as unknown as ProviderRetractionInput,
-      ),
-    ).not.toThrow()
-    expect(
-      parseProviderRetractionInput({
-        ...retractionInput,
-        unexpected: true,
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderRetractionInput({
-        ...retractionInput,
-        deploymentIdentity: {
-          ...deploymentIdentity,
-          secretBase64Url: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8',
-        },
-      }).ok,
-    ).toBe(false)
-  })
-
-  it('rejects a duplicated logical target and role/type mismatch', () => {
-    const duplicated = buildProviderRetractionBundle({
-      ...retractionInput,
-      targets: [retractionInput.targets[0], retractionInput.targets[0]],
-    })
-    expect(duplicated.ok).toBe(false)
-
-    const mismatched = buildProviderRetractionBundle({
-      ...retractionInput,
-      targets: [
-        {
-          role: 'source-artifact',
-          resourceType: 'Observation',
-          formatCode: 'provider-recording',
-          partIndex: '0',
-        },
-      ],
-    } as unknown as ProviderRetractionInput)
-    expect(mismatched.ok).toBe(false)
-  })
-
-  it('rejects a source type outside the provider catalog', () => {
-    const result = parseProviderRetractionInput({
-      ...retractionInput,
-      source: {
-        ...retractionInput.source,
-        sourceType: 'unregistered-source-type',
-      },
-    })
-    expect(result.ok).toBe(false)
-    if (!result.ok) {
-      expect(result.issues).toContainEqual(
-        expect.objectContaining({ path: ['source', 'sourceType'] }),
-      )
+  it('reports malformed retraction inputs without throwing', () => {
+    const cyclic: Record<string, unknown> = {}
+    cyclic.self = cyclic
+    for (const invalid of [null, undefined, 42, 'invalid', cyclic]) {
+      expect(() =>
+        buildProviderRetractionEvent(
+          invalid as never,
+          invalid as never,
+          invalid as never,
+          invalid as never,
+        ),
+      ).not.toThrow()
+      expect(
+        buildProviderRetractionEvent(
+          [primary],
+          invalid as never,
+          active.identifiers.sourceRecord,
+          retractedAt,
+        ).ok,
+      ).toBe(false)
     }
+  })
+
+  it('rejects targets and sources the context did not mint', () => {
+    const other = unwrap(
+      validateOpaqueIdentityScope({
+        ...scopeInput,
+        systems: {
+          ...scopeInput.systems,
+          opaque: {
+            ...scopeInput.systems.opaque,
+            'provider-output': uri('https://other.example.org/provider-output'),
+          },
+        },
+      }),
+    )
+    const build = (
+      candidates: readonly [RetractionTarget, ...RetractionTarget[]],
+      sourceRecord: RoledIdentifier = active.identifiers.sourceRecord,
+      overrides = {},
+    ) =>
+      buildProviderRetractionEvent(
+        candidates,
+        context('withings', '101', overrides),
+        sourceRecord,
+        retractedAt,
+      )
+    expect(build([primary, primary])).toMatchObject({
+      ok: false,
+      issues: [{ code: 'duplicate-identifier', path: ['targets', 1] }],
+    })
+    expect(
+      build([{ ...primary, resourceType: 'DocumentReference' }] as never),
+    ).toMatchObject({ ok: false, issues: [{ code: 'invalid-code' }] })
+    expect(build([{ ...primary, role: 'specimen' }] as never)).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-code' }],
+    })
+    expect(
+      build([
+        {
+          ...primary,
+          identifier: {
+            ...primary.identifier,
+            system: other.systems.opaque['provider-output'],
+          },
+        },
+      ]),
+    ).toMatchObject({ ok: false, issues: [{ code: 'invalid-identifier' }] })
+    expect(
+      build([
+        {
+          ...primary,
+          identifier: { ...primary.identifier, value: 'clear-record' },
+        },
+      ]),
+    ).toMatchObject({ ok: false, issues: [{ code: 'invalid-identifier' }] })
+    expect(build([] as never)).toMatchObject({
+      ok: false,
+      issues: [{ code: 'missing-required', path: ['targets'] }],
+    })
+    expect(build([primary], { ...primary.identifier })).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-identifier', path: ['sourceRecord'] }],
+    })
+    expect(
+      build([primary], undefined, { studies: [study('a')] }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'value-mismatch', path: ['studies'] }],
+    })
+    expect(
+      buildProviderRetractionEvent(
+        [primary],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        '2026-08-21' as never,
+      ),
+    ).toMatchObject({ ok: false, issues: [{ code: 'invalid-date-time' }] })
+    expect(
+      buildProviderRetractionEvent(
+        [primary],
+        { ...context('withings', '101'), identityScope: { ...identityScope } },
+        active.identifiers.sourceRecord,
+        retractedAt,
+      ).ok,
+    ).toBe(false)
   })
 })

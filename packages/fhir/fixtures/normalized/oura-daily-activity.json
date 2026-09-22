@@ -1,18 +1,16 @@
 {
   "source": {
-    "adapter": { "kind": "providers", "provider": "oura" },
-    "providerScopeIdentifier": {
-      "system": "https://example.org/provider-key-spaces",
-      "value": "oura-document-uuid-global",
-      "assurance": "documented-global-key-space"
+    "adapter": {
+      "kind": "providers",
+      "provider": "oura"
     },
     "sourceType": "daily_activity",
     "sourceNativeId": "synthetic-daily-activity-2026-08-20",
-    "recordingMethod": "automatically-recorded",
-    "dataOrigin": {
+    "writer": {
       "sourceDeviceToken": "origin-instance-oura-001",
       "name": "Oura"
-    }
+    },
+    "recordingMethod": "automatically-recorded"
   },
   "measurements": [
     {

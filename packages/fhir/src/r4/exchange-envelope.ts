@@ -28,14 +28,19 @@ import {
 } from './graph-schema-utils.js'
 import { validateProfiledResource } from './profile-semantics.js'
 import type { R4CollectionBundle } from './types.js'
-import { parseAbsoluteUri, type AbsoluteUri } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
+import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
+import {
+  parseAbsoluteUri,
+  type AbsoluteUri,
+  type EntryNodeOrdinal,
+} from '../core/index.js'
 import {
   deriveEntryFullUrl,
   deriveEntryNodeValue,
   isEntryNodeIdentityValue,
   isEventIdentityValue,
   isOpaqueIdentityValue,
+  type ExchangeEventIdentifier,
 } from '../mobile/identity.js'
 
 type CompleteIdentifier = Readonly<{ system: string; value: string }>
@@ -62,7 +67,17 @@ interface ValidatedEntryKey {
 }
 
 const ACTIVE_ENTRY_POLICY =
-  groveMobileContract.lifecycle.activeEntryResourcePolicy
+  groveExchangeProtocol.lifecycle.active.entryResourcePolicy
+const EXCHANGE_BUNDLE_PROFILE = groveExchangeProtocol.profiles.activeBundle
+const RETRACTION_BUNDLE_PROFILE =
+  groveExchangeProtocol.profiles.retractionBundle
+// Resources a bundled study context keys by these catalog roles, and the lifecycle Provenance.
+const ENTRY_NODE_ROLE_BY_RESOURCE_TYPE: ReadonlyMap<string, string> = new Map([
+  ['Patient', 'patient'],
+  ['ResearchStudy', 'research-study'],
+  ['ResearchSubject', 'research-subject'],
+  ['PlanDefinition', 'plan-definition'],
+])
 const ACTIVE_ENTRY_TYPES: ReadonlySet<string> = new Set([
   ...ACTIVE_ENTRY_POLICY.outputResourceTypes,
   ...ACTIVE_ENTRY_POLICY.supportingResourceTypes,
@@ -77,21 +92,16 @@ const validateEnvelopeProfile = (
   requiredProfile: string,
   context: z.core.$RefinementCtx,
 ): void => {
-  const exchangeProfiles = new Set([
-    groveMobileContract.profiles.exchangeBundle,
-    groveMobileContract.profiles.retractionBundle,
+  const exchangeProfiles = new Set<string>([
+    EXCHANGE_BUNDLE_PROFILE,
+    RETRACTION_BUNDLE_PROFILE,
   ])
   const claimed = (bundle.meta?.profile ?? []).filter(
     (profile): profile is string =>
       typeof profile === 'string' && exchangeProfiles.has(profile),
   )
   if (claimed.length !== 1 || claimed[0] !== requiredProfile) {
-    addIssue(
-      context,
-      'mobile-exchange.profile',
-      ['meta', 'profile'],
-      `Bundle must declare ${requiredProfile}.`,
-    )
+    addIssue(context, 'mobile-exchange.bundle-profile', ['meta', 'profile'])
   }
 }
 
@@ -108,12 +118,7 @@ const validateIdentitySystemRoles = (
       (priorSystem !== undefined && priorSystem !== located.system) ||
       (priorRole !== undefined && priorRole !== located.role)
     ) {
-      addIssue(
-        context,
-        'mobile-exchange.identity-system-role',
-        located.path,
-        'Within one event, each Grove Identifier role must use one dedicated Identifier.system and a system must not serve multiple Grove roles.',
-      )
+      addIssue(context, 'mobile-exchange.identity-system-role', located.path)
       continue
     }
     systemsByRole.set(located.role, located.system)
@@ -132,29 +137,25 @@ const validateEntryTransport = (
     entry.request !== undefined ||
     entry.response !== undefined
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.collection-entry',
-      ['entry', index],
-      'Exchange collection entries prohibit search, request, and response metadata.',
-    )
+    addIssue(context, 'mobile-exchange.collection-entry-operation', [
+      'entry',
+      index,
+    ])
   }
   if (typeof entry.fullUrl !== 'string' || !isLowercaseUuidV5(entry.fullUrl)) {
-    addIssue(
-      context,
-      'mobile-exchange.deterministic-full-url',
-      ['entry', index, 'fullUrl'],
-      'entry.fullUrl must be a lowercase RFC 4122 UUID-v5 URN.',
-    )
+    addIssue(context, 'mobile-exchange.deterministic-full-url', [
+      'entry',
+      index,
+      'fullUrl',
+    ])
     return undefined
   }
   if (state.fullUrls.has(entry.fullUrl)) {
-    addIssue(
-      context,
-      'mobile-exchange.distinct-full-url',
-      ['entry', index, 'fullUrl'],
-      'Bundle entry fullUrls must be unique.',
-    )
+    addIssue(context, 'mobile-exchange.deterministic-full-url', [
+      'entry',
+      index,
+      'fullUrl',
+    ])
   }
   state.fullUrls.add(entry.fullUrl)
   return entry.fullUrl
@@ -191,12 +192,11 @@ const validateEntryNodeOrdinal = (
   if (written === undefined || expected === undefined || written === expected) {
     return
   }
-  addIssue(
-    context,
-    'mobile-exchange.entry-node-ordinal',
-    ['entry', index, 'extension'],
-    `This entry is number ${expected} among the entries sharing its node role, so its entry-node ordinal cannot be ${written}.`,
-  )
+  addIssue(context, 'mobile-exchange.entry-node-ordinal', [
+    'entry',
+    index,
+    'extension',
+  ])
 }
 
 const validateEntryNodeDigest = (
@@ -208,24 +208,22 @@ const validateEntryNodeDigest = (
   const parts = parseEntryNodeParts(key.value)
   const expected =
     parts === null ? undefined : (
-      deriveEntryNodeValue(
-        event.system,
-        event.value,
-        parts[1] ?? '',
-        parts[2] ?? '',
-      )
+      deriveEntryNodeValue({
+        event: {
+          system: event.system,
+          value: event.value,
+          role: 'event',
+        } as ExchangeEventIdentifier,
+        role: parts[1] ?? '',
+        ordinal: (parts[2] ?? '') as EntryNodeOrdinal,
+      })
     )
-  if (
-    !isEntryNodeIdentityValue(key.value) ||
-    !expected?.ok ||
-    expected.value !== key.value
-  ) {
-    addIssue(
-      context,
-      'mobile-exchange.entry-node-digest',
-      ['entry', index, 'extension'],
-      'An entry-node digest must be derived from this event, role, and ordinal.',
-    )
+  if (!expected?.ok || expected.value !== key.value) {
+    addIssue(context, 'mobile-exchange.entry-node-digest', [
+      'entry',
+      index,
+      'extension',
+    ])
   }
 }
 
@@ -237,14 +235,16 @@ const validateEntryKeyValue = (
   state: EnvelopeState,
   context: z.core.$RefinementCtx,
 ): void => {
-  if (role === undefined) {
-    addIssue(
-      context,
-      'mobile-exchange.entry-key-role',
-      ['entry', index, 'extension'],
-      'The entry key requires one Grove Identifier role.',
-    )
-  } else if (role === 'entry-node') {
+  if (role === 'entry-node') {
+    // A key typed entry-node that is not in the n0 form selects nothing.
+    if (!isEntryNodeIdentityValue(key.value)) {
+      addIssue(context, 'mobile-exchange.entry-key-selection', [
+        'entry',
+        index,
+        'extension',
+      ])
+      return
+    }
     validateEntryNodeDigest(key, event, index, context)
     validateEntryNodeOrdinal(
       key,
@@ -253,15 +253,15 @@ const validateEntryKeyValue = (
       context,
     )
   } else if (
+    role === undefined ||
     !OPAQUE_IDENTIFIER_ROLES.has(role) ||
     !isOpaqueIdentityValue(key.value)
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.opaque-entry-key',
-      ['entry', index, 'extension'],
-      'Business entry keys require a closed role and canonical Grove HMAC value.',
-    )
+    addIssue(context, 'mobile-exchange.entry-node-key', [
+      'entry',
+      index,
+      'extension',
+    ])
   }
 }
 
@@ -274,22 +274,20 @@ const validateEntryKey = (
 ): ValidatedEntryKey | undefined => {
   const key = entryKey(entry)
   if (!completeIdentifier(key)) {
-    addIssue(
-      context,
-      'mobile-exchange.entry-node-key',
-      ['entry', index, 'extension'],
-      'Every entry requires exactly one complete Grove entry-node-key Identifier.',
-    )
+    addIssue(context, 'mobile-exchange.entry-node-key', [
+      'entry',
+      index,
+      'extension',
+    ])
     return undefined
   }
   const pair = identifierPairKey(key)
   if (state.keyPairs.has(pair)) {
-    addIssue(
-      context,
-      'mobile-exchange.distinct-entry-key',
-      ['entry', index, 'extension'],
-      'Entry node-key Identifier pairs must be distinct.',
-    )
+    addIssue(context, 'mobile-exchange.distinct-entry-key', [
+      'entry',
+      index,
+      'extension',
+    ])
   }
   state.keyPairs.add(pair)
   const role = identifierRole(key)
@@ -309,20 +307,20 @@ const validateResourceShape = (
     active &&
     (typeof resourceType !== 'string' || !ACTIVE_ENTRY_TYPES.has(resourceType))
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.entry-resource-type',
-      ['entry', index, 'resource', 'resourceType'],
-      'An active event admits only its catalog-closed output, supporting, and lifecycle resource types.',
-    )
+    addIssue(context, 'mobile-exchange.entry-resource-type', [
+      'entry',
+      index,
+      'resource',
+      'resourceType',
+    ])
   }
   if ('contained' in resource) {
-    addIssue(
-      context,
-      'mobile-exchange.contained-resource-prohibited',
-      ['entry', index, 'resource', 'contained'],
-      'Mobile exchange event graphs prohibit contained resources.',
-    )
+    addIssue(context, 'mobile-exchange.contained-resource-prohibited', [
+      'entry',
+      index,
+      'resource',
+      'contained',
+    ])
   }
   if (typeof resourceType === 'string' && typeof resource.id === 'string') {
     state.internalLogicalReferences.add(`${resourceType}/${resource.id}`)
@@ -335,40 +333,40 @@ const resourceIdentityRoleCounts = (
   context: z.core.$RefinementCtx,
 ): ReadonlyMap<string, number> => {
   const roleCounts = new Map<string, number>()
-  for (const candidate of identifiersOf(resource)) {
+  const declaredType = asRecord(resource)?.resourceType
+  const resourceType =
+    typeof declaredType === 'string' ? declaredType : 'Resource'
+  for (const [position, candidate] of identifiersOf(resource).entries()) {
     const groveRoles = groveIdentifierRoles(candidate)
-    const role = identifierRole(candidate)
     if (groveRoles.length === 0) continue
+    const path = ['entry', index, 'resource', 'identifier', position]
+    const location = `${resourceType}.identifier[${String(position)}]`
+    const role = identifierRole(candidate)
     if (role === undefined || !OPAQUE_IDENTIFIER_ROLES.has(role)) {
-      addIssue(
-        context,
-        'mobile-exchange.identifier-role',
-        ['entry', index, 'resource', 'identifier'],
-        'A Grove-typed resource Identifier requires exactly one closed opaque identity role.',
-      )
+      addIssue(context, 'mobile-exchange.identifier-role', path, { location })
       continue
     }
-    roleCounts.set(role, (roleCounts.get(role) ?? 0) + 1)
+    const count = (roleCounts.get(role) ?? 0) + 1
+    roleCounts.set(role, count)
+    if (count > 1) {
+      addIssue(
+        context,
+        'mobile-exchange.distinct-resource-identity-role',
+        path,
+        {
+          location,
+        },
+      )
+    }
     if (
       !completeIdentifier(candidate) ||
       !parseAbsoluteUri(candidate.system).ok ||
       !isOpaqueIdentityValue(candidate.value)
     ) {
-      addIssue(
-        context,
-        'mobile-exchange.opaque-resource-identity',
-        ['entry', index, 'resource', 'identifier'],
-        'A typed resource identity must be one complete canonical Grove HMAC Identifier.',
-      )
+      addIssue(context, 'mobile-exchange.opaque-resource-identity', path, {
+        location,
+      })
     }
-  }
-  if ([...roleCounts.values()].some((count) => count > 1)) {
-    addIssue(
-      context,
-      'mobile-exchange.distinct-resource-identity-role',
-      ['entry', index, 'resource', 'identifier'],
-      'A resource may carry at most one Identifier for each Grove identity role.',
-    )
   }
   return roleCounts
 }
@@ -385,12 +383,11 @@ const validateSelectedEntryKey = (
     (selected === undefined && role !== 'entry-node') ||
     (selected !== undefined && !identifierPairEqual(selected, key))
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.entry-key-selection',
-      ['entry', index, 'extension'],
-      'The entry key must be the highest-priority typed business Identifier, or entry-node when none exists.',
-    )
+    addIssue(context, 'mobile-exchange.entry-key-selection', [
+      'entry',
+      index,
+      'extension',
+    ])
   }
 }
 
@@ -405,17 +402,43 @@ const validateProvenanceEntryNode = (
   if (resource.resourceType !== 'Provenance' || role !== 'entry-node') return
   const parts = parseEntryNodeParts(key.value)
   const expectedRole =
-    requiredProfile === groveMobileContract.profiles.retractionBundle ?
+    requiredProfile === RETRACTION_BUNDLE_PROFILE ?
       'retraction-provenance'
     : 'conversion-provenance'
   if (parts?.[1] !== expectedRole || parts[2] !== '0') {
-    addIssue(
-      context,
-      'mobile-exchange.provenance-node-key',
-      ['entry', index, 'extension'],
-      `Provenance requires the ${expectedRole} entry-node at ordinal zero.`,
-    )
+    addIssue(context, 'mobile-exchange.entry-node-ordinal', [
+      'entry',
+      index,
+      'extension',
+    ])
   }
+}
+
+// A study context keys its supporting entries by the catalog's closed node roles, so a
+// receiver reads which resource an entry-node key stands for from the key alone.
+const validateStudyContextEntryNode = (
+  resource: UnknownRecord,
+  key: CompleteIdentifier,
+  role: string | undefined,
+  index: number,
+  context: z.core.$RefinementCtx,
+): void => {
+  const expectedRole = ENTRY_NODE_ROLE_BY_RESOURCE_TYPE.get(
+    String(resource.resourceType),
+  )
+  if (
+    expectedRole === undefined ||
+    role !== 'entry-node' ||
+    parseEntryNodeParts(key.value)?.[1] === expectedRole
+  ) {
+    return
+  }
+  addIssue(
+    context,
+    'mobile-support.study-context',
+    ['entry', index, 'extension'],
+    { location: `Bundle.entry[${String(index)}].extension.valueIdentifier` },
+  )
 }
 
 const validateEntryResource = (
@@ -429,12 +452,11 @@ const validateEntryResource = (
   context: z.core.$RefinementCtx,
 ): void => {
   if (entry.resource === undefined) {
-    addIssue(
-      context,
-      'mobile-exchange.resource-required',
-      ['entry', index, 'resource'],
-      'Every exchange entry requires a resource.',
-    )
+    addIssue(context, 'mobile-exchange.entry-resource-type', [
+      'entry',
+      index,
+      'resource',
+    ])
     return
   }
   const resource = asRecord(entry.resource) ?? {}
@@ -461,6 +483,13 @@ const validateEntryResource = (
     index,
     context,
   )
+  validateStudyContextEntryNode(
+    resource,
+    key.identifier,
+    key.role,
+    index,
+    context,
+  )
 }
 
 const validateDerivedFullUrl = (
@@ -474,12 +503,11 @@ const validateDerivedFullUrl = (
     value: key.value,
   })
   if (!derived.ok || derived.value !== fullUrl) {
-    addIssue(
-      context,
-      'mobile-exchange.deterministic-full-url',
-      ['entry', index, 'fullUrl'],
-      'entry.fullUrl must be UUID-v5 over the length-framed entry key pair.',
-    )
+    addIssue(context, 'mobile-exchange.deterministic-full-url', [
+      'entry',
+      index,
+      'fullUrl',
+    ])
   }
 }
 
@@ -533,8 +561,7 @@ const validateLocatedReference = (
       context,
       'mobile-exchange.resolved-reference',
       ['entry', entryIndex, 'resource', ...located.path],
-      `Literal reference ${located.reference} does not resolve to one Bundle entry fullUrl.`,
-      `${bundleLocation}.reference`,
+      { location: `${bundleLocation}.reference` },
     )
   } else {
     const targetType = state.resourcesByFullUrl.get(
@@ -548,17 +575,16 @@ const validateLocatedReference = (
         context,
         'mobile-exchange.reference-declared-type',
         ['entry', entryIndex, 'resource', ...located.path, 'type'],
-        'Reference.type must agree with the resolved internal resource type.',
-        `${resourceLocation}.type`,
+        { location: `${resourceLocation}.type` },
       )
     }
   }
   if (state.internalLogicalReferences.has(located.reference)) {
     addIssue(
       context,
-      'mobile-exchange.internal-reference-full-url',
+      'mobile-exchange.reference-shape',
       ['entry', entryIndex, 'resource', ...located.path],
-      `Reference ${located.reference} targets a Bundle entry and must use that entry's UUID fullUrl.`,
+      { location: bundleLocation },
     )
   }
 }
@@ -590,35 +616,23 @@ export const validateExchangeEnvelope = (
   requiredProfile: string,
 ): ValidatedEnvelope | undefined => {
   validateEnvelopeProfile(bundle, requiredProfile, context)
+  if (groveIdentifierRoles(bundle.identifier).length !== 1) {
+    addIssue(context, 'mobile-exchange.identifier-role', ['identifier'])
+  }
   if (
     !completeIdentifier(bundle.identifier) ||
     !parseAbsoluteUri(bundle.identifier.system).ok ||
     identifierRole(bundle.identifier) !== 'event' ||
     !isEventIdentityValue(bundle.identifier.value)
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.event-identity',
-      ['identifier'],
-      'Bundle.identifier must be one complete typed canonical e0 event Identifier.',
-    )
+    addIssue(context, 'mobile-exchange.event-identity', ['identifier'])
     return undefined
   }
   if (bundle.timestamp === undefined) {
-    addIssue(
-      context,
-      'mobile-exchange.assembled-time',
-      ['timestamp'],
-      'Bundle.timestamp is the mandatory graph assembly time.',
-    )
+    addIssue(context, 'mobile-exchange.event-times', ['timestamp'])
   }
   if (bundle.entry === undefined || bundle.entry.length === 0) {
-    addIssue(
-      context,
-      'mobile-exchange.entry-required',
-      ['entry'],
-      'An exchange event requires at least one entry.',
-    )
+    addIssue(context, 'mobile-exchange.entry-required', ['entry'])
     return undefined
   }
 
@@ -631,7 +645,7 @@ export const validateExchangeEnvelope = (
     resourcesByFullUrl: new Map(),
     entryNodeOrdinals: entryNodeOrdinals(entries),
   }
-  const active = requiredProfile === groveMobileContract.profiles.exchangeBundle
+  const active = requiredProfile === EXCHANGE_BUNDLE_PROFILE
   for (const [index, entry] of entries.entries()) {
     validateEntry(
       entry,

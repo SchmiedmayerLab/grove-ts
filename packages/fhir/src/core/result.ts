@@ -7,16 +7,12 @@
 //
 
 import type { z } from 'zod'
+import type { ProducerDiagnosticCode } from '../contract/measurement-catalog.generated.js'
 
 export type IssueSeverity = 'error' | 'warning'
 
-/**
- * Namespaced producer-rule identifier. The registry that names them lives above core,
- * so this states only the contract's `namespace.rule` grammar.
- */
-type GroveProducerRuleCode = `${string}.${string}`
-
-export type IssueCode =
+/** A failure of this package's own input contract, outside the producer registry. */
+export type SchemaIssueCode =
   | 'duplicate-identifier'
   | 'external-validation-required'
   | 'invalid-choice'
@@ -29,9 +25,9 @@ export type IssueCode =
   | 'missing-required'
   | 'out-of-range'
   | 'schema-invalid'
-  | 'unsupported-measurement'
   | 'value-mismatch'
-  | GroveProducerRuleCode
+
+export type IssueCode = SchemaIssueCode | ProducerDiagnosticCode
 
 export interface Issue {
   readonly severity: IssueSeverity

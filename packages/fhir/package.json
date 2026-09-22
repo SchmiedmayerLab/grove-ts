@@ -53,7 +53,9 @@
     "test": "npm run test:unit && npm run test:package",
     "test:browser": "npm run build && node scripts/browser-smoke.mjs",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "test:package": "npm run build && node scripts/package-smoke.mjs",
+    "test:package": "npm run build && node scripts/package-smoke.mjs && npm run check:surface",
+    "generate:surface": "npm run build && node scripts/type-surface.mjs",
+    "check:surface": "node scripts/type-surface.mjs --check",
     "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "typecheck": "npm run check:catalog && npm run check:zod && tsc --noEmit && tsc -p test/tsconfig.json",
@@ -92,7 +94,9 @@
   "dependencies": {
     "@noble/hashes": "2.3.0",
     "@types/fhir": "^0.0.44",
-    "uuid": "^14.0.2",
+    "uuid": "^14.0.2"
+  },
+  "peerDependencies": {
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -108,7 +112,8 @@
     "prettier": "^3.6.2",
     "rimraf": "^6.1.2",
     "ts-jest": "^29.4.12",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "zod": "^4.4.3"
   },
   "engines": {
     "node": ">=24"

@@ -24,7 +24,6 @@ export const refinementIssues = (
     const rule = groveRuleIssueFromParameters(
       issue.code === 'custom' ? issue.params : undefined,
       path,
-      issue.message,
     )
     return rule === undefined ?
         [
@@ -43,8 +42,11 @@ export const expectRule = (
   refine: Refinement,
   resource: unknown,
   code: string,
+  location?: string,
 ): void => {
-  expect(
-    refinementIssues(refine, resource).map(({ code: actual }) => actual),
-  ).toContain(code)
+  const issues = refinementIssues(refine, resource)
+  expect(issues.map(({ code: actual }) => actual)).toContain(code)
+  if (location !== undefined) {
+    expect(issues.find((issue) => issue.code === code)?.location).toBe(location)
+  }
 }

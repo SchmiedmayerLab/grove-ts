@@ -28,20 +28,24 @@ import {
   locatedReferences,
   type UnknownRecord,
 } from './graph-schema-utils.js'
+import { validateStudyContext } from './study-context-semantics.js'
 import type { R4CollectionBundle } from './types.js'
 import {
+  groveExchangeProtocol,
   groveProfileClaims,
   healthConnectDataOriginApplication,
 } from '../contract/measurement-catalog.generated.js'
 import { parseAbsoluteUri } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
 import { isOpaqueIdentityValue } from '../mobile/identity.js'
 
 export { hasAdmittedMobileObservationProfile } from './active-observation-semantics.js'
 export { validateExchangeEnvelope, type ValidatedEnvelope }
 
 const ACTIVE_ENTRY_POLICY =
-  groveMobileContract.lifecycle.activeEntryResourcePolicy
+  groveExchangeProtocol.lifecycle.active.entryResourcePolicy
+const LIFECYCLE_EVENT_SYSTEM = groveExchangeProtocol.codeSystems.lifecycleEvent
+const RETRACTION_ACTIVITY_CODE =
+  groveExchangeProtocol.lifecycle.retraction.activityCode
 const ACTIVE_OUTPUT_TYPES: ReadonlySet<string> = new Set(
   ACTIVE_ENTRY_POLICY.outputResourceTypes,
 )
@@ -112,17 +116,12 @@ export const validateAssemblerAgent = (
       1 ||
     (!internalApplication && !logicalApplication)
   ) {
-    addIssue(
-      context,
-      'mobile-provenance.assembler',
-      path,
-      'Grove Provenance requires exactly one assembler linked to an application Device snapshot.',
-    )
+    addIssue(context, 'mobile-exchange.provenance-assembler', path)
   }
 }
 
 const CONVERSION_PROVENANCE_PROFILES: ReadonlySet<string> = new Set([
-  groveMobileContract.profiles.conversionProvenance,
+  groveExchangeProtocol.profiles.conversionProvenance,
   ...groveProfileClaims.adapterConversionProvenanceClaims.map(
     ({ profile }) => profile,
   ),
@@ -173,12 +172,12 @@ const validateHealthConnectDataOriginApplication = (
     identifier.system !== healthConnectDataOriginApplication.identifierSystem ||
     identifier.value.trim() === ''
   ) {
-    addIssue(
-      context,
-      'health-connect.data-origin-application',
-      [...path, 'entity', 0, 'agent'],
-      'Health Connect DataOrigin.packageName must be one enterer agent with a typed identifier-only logical Device Reference in the Android package-name namespace.',
-    )
+    addIssue(context, 'health-connect-provenance.data-origin-agent', [
+      ...path,
+      'entity',
+      0,
+      'agent',
+    ])
   }
 }
 
@@ -223,8 +222,8 @@ const selectConversionProvenance = (
   const retractions = provenances.filter((resource) =>
     codingExists(
       asRecord(resource)?.activity,
-      groveMobileContract.systems.lifecycleEvent,
-      groveMobileContract.lifecycle.sourceRecordRetracted,
+      LIFECYCLE_EVENT_SYSTEM,
+      RETRACTION_ACTIVITY_CODE,
     ),
   )
   if (
@@ -232,12 +231,7 @@ const selectConversionProvenance = (
     conversions.length !== 1 ||
     retractions.length !== 0
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.transform-provenance',
-      ['entry'],
-      'An active event requires exactly one transform Provenance and no retraction Provenance.',
-    )
+    addIssue(context, 'mobile-exchange.transform-provenance', ['entry'])
     return undefined
   }
   const resource = asRecord(conversions[0])
@@ -263,47 +257,28 @@ const validateConversionProvenanceHeader = (
     typeof profiles[0] !== 'string' ||
     !CONVERSION_PROVENANCE_PROFILES.has(profiles[0])
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.provenance-profile',
-      ['entry'],
-      'Conversion Provenance must directly declare exactly its admitted Mobile or adapter conversion profile.',
-    )
+    addIssue(context, 'mobile-exchange.provenance-profile', ['entry'])
   }
   if (
     codingCount(provenance.activity, ISO_LIFECYCLE_SYSTEM, 'transform') !== 1 ||
     codingCountForSystem(provenance.activity, ISO_LIFECYCLE_SYSTEM) !== 1 ||
-    codingCountForSystem(
-      provenance.activity,
-      groveMobileContract.systems.lifecycleEvent,
-    ) !== 0
+    codingCountForSystem(provenance.activity, LIFECYCLE_EVENT_SYSTEM) !== 0
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.lifecycle-coding',
-      ['entry'],
-      'Conversion Provenance requires exactly one transform coding from the ISO lifecycle system and no Grove retraction lifecycle coding.',
-    )
+    addIssue(context, 'mobile-exchange.lifecycle-coding', ['entry'])
   }
   validateAssemblerAgent(provenance, envelope, context, ['entry'])
   if (
     provenance.occurredDateTime === undefined &&
     provenance.occurredPeriod === undefined
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.occurred-time',
-      ['entry'],
-      'Conversion Provenance requires occurred[x].',
-    )
+    addIssue(context, 'mobile-exchange.event-times', ['entry'], {
+      location: 'Provenance.occurred[x]',
+    })
   }
   if (provenance.recorded === undefined) {
-    addIssue(
-      context,
-      'mobile-exchange.recorded-time',
-      ['entry'],
-      'Conversion Provenance requires recorded.',
-    )
+    addIssue(context, 'mobile-exchange.event-times', ['entry'], {
+      location: 'Provenance.recorded',
+    })
   }
   return directConversionProfile(profiles)
 }
@@ -317,12 +292,7 @@ const conversionSourceIdentifier = (
   const sourceWhat = asRecord(sourceEntity?.what)
   const identifier = sourceWhat?.identifier
   if (entities.length !== 1) {
-    addIssue(
-      context,
-      'mobile-exchange.single-source-entity',
-      ['entry'],
-      'Conversion Provenance must carry exactly one source entity.',
-    )
+    addIssue(context, 'mobile-exchange.single-source-entity', ['entry'])
   }
   if (
     sourceEntity?.role !== 'source' ||
@@ -332,12 +302,7 @@ const conversionSourceIdentifier = (
     identifierRole(identifier) !== 'source-record' ||
     !isOpaqueIdentityValue(identifier.value)
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.logical-source-entity',
-      ['entry'],
-      'Conversion Provenance source must be a logical typed opaque source-record Identifier with no literal reference.',
-    )
+    addIssue(context, 'mobile-exchange.logical-source-entity', ['entry'])
   }
   return identifier
 }
@@ -352,12 +317,7 @@ const collectOutputEntries = (
     : [],
   )
   if (outputs.length === 0) {
-    addIssue(
-      context,
-      'mobile-exchange.output-required',
-      ['entry'],
-      'An active exchange event requires at least one clinical or source-artifact output.',
-    )
+    addIssue(context, 'mobile-exchange.output-required', ['entry'])
   }
   return outputs
 }
@@ -375,12 +335,13 @@ const validateOutputAdapterClaim = (
     : claims.length === 1 &&
       claims[0]?.profile === provenanceAdapterClaim.profile
   if (claims.length > 1 || !matches) {
-    addIssue(
-      context,
-      'mobile-exchange.adapter-provenance-graph',
-      ['entry', output.index, 'resource', 'meta', 'profile'],
-      "Every adapter output must claim exactly the adapter profile governed by this event's conversion Provenance, and source-neutral events must not claim adapter outputs.",
-    )
+    addIssue(context, 'mobile-exchange.adapter-provenance-graph', [
+      'entry',
+      output.index,
+      'resource',
+      'meta',
+      'profile',
+    ])
   }
 }
 
@@ -401,12 +362,12 @@ const validateOutputIdentities = (
     !parseAbsoluteUri(output.system).ok ||
     !isOpaqueIdentityValue(output.value)
   ) {
-    addIssue(
-      context,
-      'mobile-output.source-output-required',
-      ['entry', index, 'resource', 'identifier'],
-      'Every active output requires matching source-record and exact typed output identities.',
-    )
+    addIssue(context, 'mobile-output.source-output-required', [
+      'entry',
+      index,
+      'resource',
+      'identifier',
+    ])
   }
 }
 
@@ -473,12 +434,13 @@ const validateHybridCompanions = (
   )) {
     const source = identifierWithRole(output.entry.resource, 'source-record')
     if (!hasHybridDocumentCompanion(source, outputs)) {
-      addIssue(
-        context,
-        'mobile-output.hybrid-companion',
-        ['entry', output.index, 'resource', 'meta', 'profile'],
-        'A SensorKit ECG Observation requires one exact native Recording Document companion in the same event with the same source-record Identifier.',
-      )
+      addIssue(context, 'mobile-output.hybrid-companion', [
+        'entry',
+        output.index,
+        'resource',
+        'meta',
+        'profile',
+      ])
     }
   }
 }
@@ -505,12 +467,7 @@ const validateProvenanceTargets = (
     new Set(actual).size !== actual.length ||
     actual.some((reference) => !expected.has(reference))
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.provenance-targets',
-      ['entry'],
-      'Conversion Provenance must target every and only active clinical output.',
-    )
+    addIssue(context, 'mobile-exchange.provenance-targets', ['entry'])
   }
 }
 
@@ -569,12 +526,7 @@ const validateSupportingResourceConnectivity = (
       !reachable.has(fullUrl),
   )
   if (disconnected) {
-    addIssue(
-      context,
-      'mobile-support.connected',
-      ['entry'],
-      'Every supporting resource must be connected by literal Bundle references to an output or the lifecycle Provenance.',
-    )
+    addIssue(context, 'mobile-support.connected', ['entry'])
   }
 }
 
@@ -585,7 +537,7 @@ export const refineActiveBundle = (
   const envelope = validateExchangeEnvelope(
     bundle,
     context,
-    groveMobileContract.profiles.exchangeBundle,
+    groveExchangeProtocol.profiles.activeBundle,
   )
   if (envelope === undefined) return
   const conversion = selectConversionProvenance(envelope, context)
@@ -610,4 +562,5 @@ export const refineActiveBundle = (
   validateHybridCompanions(outputs, context)
   validateProvenanceTargets(conversion.resource, outputs, context)
   validateSupportingResourceConnectivity(envelope, context)
+  validateStudyContext(envelope, context)
 }

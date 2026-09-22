@@ -9,23 +9,23 @@
 import { sha1 } from '@noble/hashes/legacy.js'
 import { z } from 'zod'
 import {
-  assemblerAgent,
+  makeConversionProvenance,
+  occurredFor,
+  resolveContextGraph,
+  type ContextGraph,
+} from './context-graph.js'
+import {
   coding,
   deduplicateIdentifiedEntries,
   governedSourceIdentifier,
   identifiedEntry,
   identifier,
-  makeApplicationDevice,
-  makeHostDevice,
-  provenanceActivity,
   resourceId,
-  sourceEntityAgent,
 } from './graph.js'
 import {
-  deriveApplicationEntryIdentity,
   deriveProviderIdentities,
   deriveWriterRecordIdentifier,
-  resolveHostIdentity,
+  type ProviderIdentities,
 } from './identity.js'
 import {
   EXTENSIONS,
@@ -35,23 +35,23 @@ import {
 } from './profiles.js'
 import {
   applicationDeviceSchema,
-  deploymentIdentitySchema,
-  fhirIdSchema,
-  identifierInputSchema,
   governedSourceIdentifierIssues,
-  governedSourceIdentifierSchema,
-  nonBlankStringSchema,
-  primitiveInstantSchema,
-  providerPatientReferenceSchema,
-  providerScopeIdentifierIssues,
-  providerScopeIdentifierSchema,
-} from './provider.js'
+  effectiveTimeSchema,
+  nativeIdentifierText,
+  nonBlankText,
+  refusal,
+  writerRecordSchema,
+} from './provider-input-schemas.js'
+import { parseProviderConversionOptions, refusalIssues } from './provider.js'
 import type {
   CanonicalBase64,
-  ProviderRecordingBundleInput,
   ConnectedRawProvider,
   ImmutableRecordingUrl,
   MediaType,
+  ProviderConversionOptions,
+  ProviderRecordingAttachment,
+  ProviderRecordingConversion,
+  ProviderRecordingSource,
   Sha1Base64,
 } from './types.js'
 import {
@@ -68,20 +68,25 @@ import {
   ok,
   decodeCanonicalBase64,
   encodeBase64,
-  parseFhirInstant,
-  zodIssueToIssue,
   type Issue,
   type Result,
 } from '../core/index.js'
-import { createEntryIdentity } from '../mobile/identity.js'
-import type { IdentifiedEntryIdentityInput } from '../mobile/types.js'
 import {
-  parseGroveMobileExchangeBundle,
-  type GroveMobileExchangeBundle,
-} from '../r4/index.js'
+  createEntryIdentity,
+  type EntryIdentity,
+  type RoledIdentifier,
+} from '../mobile/identity.js'
+import type {
+  ExchangeEventContext,
+  ExchangeGraphIdentifiers,
+  GovernedSourceIdentifierDisclosurePolicy,
+} from '../mobile/types.js'
+import { groveRuleIssue, type ClientRecordRule } from '../r4/diagnostics.js'
+import { parseExchangeGraph, type DocumentReference } from '../r4/index.js'
 
 const BASE64 = /^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{2}==|[A-Za-z\d+/]{3}=)?$/u
 const MEDIA_TYPE = /^[A-Za-z\d!#$&^_.+-]+\/[A-Za-z\d!#$&^_.+-]+$/u
+const MAX_ATTACHMENT_SIZE = 2_147_483_647
 
 const decodeRecordingBase64 = (value: string): Uint8Array | undefined =>
   value.length === 0 || !BASE64.test(value) ?
@@ -133,21 +138,6 @@ export const parseMediaType = (value: unknown): Result<MediaType> => {
   return ok(value as MediaType)
 }
 
-const parseAttachmentSize = (value: unknown): Result<number> => {
-  if (
-    typeof value !== 'number' ||
-    !Number.isInteger(value) ||
-    value < 0 ||
-    value > 2_147_483_647
-  ) {
-    return err(
-      'out-of-range',
-      'Attachment.size must be an integer in the FHIR R4 unsignedInt range 0...2147483647.',
-    )
-  }
-  return ok(value)
-}
-
 export const parseImmutableRecordingUrl = (
   value: unknown,
 ): Result<ImmutableRecordingUrl> => {
@@ -176,6 +166,22 @@ export const parseImmutableRecordingUrl = (
   return ok(value as ImmutableRecordingUrl)
 }
 
+// A primitive parser's verdict, restated as the refusal the registry names for it.
+const refusing =
+  <Value>(parse: (value: unknown) => Result<Value>, code: ClientRecordRule) =>
+  (value: unknown, context: z.core.$RefinementCtx): void => {
+    const parsed = parse(value)
+    if (!parsed.ok) {
+      context.addIssue({
+        code: 'custom',
+        ...refusal(
+          code,
+          parsed.issues[0]?.message ?? 'Invalid attachment field.',
+        ),
+      })
+    }
+  }
+
 const providerValues = Object.keys(providerRawOutputRoles) as [
   ConnectedRawProvider,
   ...ConnectedRawProvider[],
@@ -186,30 +192,31 @@ const recordingSourceSchema = z.strictObject({
     kind: z.literal('providers'),
     provider: z.enum(providerValues),
   }),
-  providerScopeIdentifier: providerScopeIdentifierSchema,
-  sourceType: nonBlankStringSchema,
-  sourceNativeId: nonBlankStringSchema,
-  dataOrigin: applicationDeviceSchema,
-  writerRecord: z
-    .strictObject({
-      applicationIdentifier: identifierInputSchema,
-      nativeRecordId: nonBlankStringSchema,
-      version: z
-        .string()
-        .regex(/^(?:0|[1-9]\d*)$/u)
-        .optional(),
-    })
-    .optional(),
+  sourceType: nonBlankText,
+  sourceNativeId: nativeIdentifierText,
+  writer: applicationDeviceSchema,
+  effective: effectiveTimeSchema,
+  writerRecord: writerRecordSchema.optional(),
 })
 
 const recordingAttachmentBase = {
-  contentType: z.string().min(1),
-  title: nonBlankStringSchema.optional(),
+  contentType: z
+    .string()
+    .superRefine(refusing(parseMediaType, 'mobile-input.value-shape-invalid')),
+  title: nonBlankText.optional(),
   format: z.literal(
     'provider-recording',
+    refusal(
+      'mobile-input.unsupported-source-value',
+      'Expected a registered provider recording format.',
+    ),
   ) satisfies z.ZodType<ProviderRecordingFormat>,
   payloadAssertion: z.enum(
     providerAdapterCatalog.rawPayloadAdmission.allowedAssertions,
+    refusal(
+      'mobile-input.value-shape-invalid',
+      'Expected exactly one catalog-derived payload admission assertion.',
+    ),
   ),
 } as const
 
@@ -217,188 +224,136 @@ const recordingAttachmentSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     ...recordingAttachmentBase,
     kind: z.literal('embedded'),
-    dataBase64: z.string().min(1),
+    dataBase64: z
+      .string()
+      .superRefine(
+        refusing(parseCanonicalBase64, 'mobile-input.empty-recording-series'),
+      ),
   }),
   z.strictObject({
     ...recordingAttachmentBase,
     kind: z.literal('external'),
-    url: z.string().min(1),
-    size: z.number(),
-    hash: z.string().min(1),
+    url: z
+      .string()
+      .superRefine(
+        refusing(
+          parseImmutableRecordingUrl,
+          'mobile-input.value-shape-invalid',
+        ),
+      ),
+    size: z
+      .number()
+      .int()
+      .min(0)
+      .refine(
+        (value) => value <= MAX_ATTACHMENT_SIZE,
+        refusal(
+          'mobile-input.recording-payload-too-large',
+          'Attachment.size exceeds the FHIR R4 unsignedInt range.',
+        ),
+      ),
+    hash: z
+      .string()
+      .superRefine(
+        refusing(parseSha1Base64, 'mobile-input.value-shape-invalid'),
+      ),
     immutabilityAssurance: z.literal('immutable-version-specific'),
   }),
 ])
-
-const recordingBundleInputSchema = z.strictObject({
-  source: recordingSourceSchema,
-  attachment: recordingAttachmentSchema,
-  subject: providerPatientReferenceSchema,
-  application: applicationDeviceSchema,
-  eventSequence: z.string().regex(/^[1-9]\d*$/u),
-  deploymentIdentity: deploymentIdentitySchema,
-  nativeIdentifierDisclosure: governedSourceIdentifierSchema.optional(),
-  documentDate: primitiveInstantSchema,
-  occurred: primitiveInstantSchema,
-  recorded: primitiveInstantSchema,
-  assembled: primitiveInstantSchema,
-  repositoryIds: z
-    .strictObject({
-      bundle: fhirIdSchema.optional(),
-      document: fhirIdSchema.optional(),
-      provenance: fhirIdSchema.optional(),
-    })
-    .optional(),
-})
 
 const hasRawMapping = (
   provider: ConnectedRawProvider,
   sourceType: string,
 ): boolean => Object.hasOwn(providerRawOutputRoles[provider], sourceType)
 
-/** Strict parser for the closed Provider mapped-standard facade. */
-export const parseProviderRecordingBundleInput = (
+const refuse = (
+  code: ClientRecordRule,
+  path: ReadonlyArray<string | number>,
+  message: string,
+): Issue => groveRuleIssue(code, path, { message })
+
+/** Strict boundary for one already-obtained provider recording's source record. */
+export const parseProviderRecordingSource = (
   input: unknown,
-): Result<ProviderRecordingBundleInput> => {
+): Result<ProviderRecordingSource> => {
   const snapshot = cloneJsonValue(input)
-  if (!snapshot.ok) return snapshot
-  const parsed = recordingBundleInputSchema.safeParse(snapshot.value)
-  if (!parsed.success) return issues(parsed.error.issues.map(zodIssueToIssue))
-
-  const findings: Issue[] = []
-  findings.push(
-    ...providerScopeIdentifierIssues(
-      parsed.data.source.adapter.provider,
-      parsed.data.source.providerScopeIdentifier,
-    ),
-  )
-  findings.push(
-    ...governedSourceIdentifierIssues(
-      parsed.data.nativeIdentifierDisclosure,
-      parsed.data.source.sourceNativeId,
-      parsed.data.deploymentIdentity,
-    ),
-  )
-  if (
-    !hasRawMapping(
-      parsed.data.source.adapter.provider,
-      parsed.data.source.sourceType,
-    )
-  ) {
-    findings.push({
-      severity: 'error',
-      code: 'unsupported-measurement',
-      path: ['source', 'sourceType'],
-      message: `${parsed.data.source.adapter.provider}/${parsed.data.source.sourceType} is not admitted as a Provider native recording.`,
-    })
+  if (!snapshot.ok) {
+    return issues([
+      refuse(
+        'mobile-input.value-shape-invalid',
+        [],
+        snapshot.issues[0]?.message ?? '',
+      ),
+    ])
   }
-  const checks: ReadonlyArray<
-    readonly [Result<unknown>, ReadonlyArray<string | number>]
-  > = [
-    [parseFhirInstant(parsed.data.documentDate), ['documentDate']],
-    [parseFhirInstant(parsed.data.occurred), ['occurred']],
-    [parseFhirInstant(parsed.data.recorded), ['recorded']],
-    [parseFhirInstant(parsed.data.assembled), ['assembled']],
-    [
-      parseMediaType(parsed.data.attachment.contentType),
-      ['attachment', 'contentType'],
-    ],
-    ...(parsed.data.attachment.kind === 'embedded' ?
-      [
-        [
-          parseCanonicalBase64(parsed.data.attachment.dataBase64),
-          ['attachment', 'dataBase64'],
-        ] as const,
-      ]
-    : [
-        [
-          parseImmutableRecordingUrl(parsed.data.attachment.url),
-          ['attachment', 'url'],
-        ] as const,
-        [
-          parseAttachmentSize(parsed.data.attachment.size),
-          ['attachment', 'size'],
-        ] as const,
-        [
-          parseSha1Base64(parsed.data.attachment.hash),
-          ['attachment', 'hash'],
-        ] as const,
-      ]),
-  ]
-  for (const [check, path] of checks) {
-    if (!check.ok) {
-      findings.push(
-        ...check.issues.map((finding) => ({ ...finding, path: [...path] })),
-      )
-    }
+  const parsed = recordingSourceSchema.safeParse(snapshot.value, {
+    reportInput: true,
+  })
+  if (!parsed.success) return issues(refusalIssues(parsed.error))
+  if (!hasRawMapping(parsed.data.adapter.provider, parsed.data.sourceType)) {
+    return issues([
+      refuse(
+        'mobile-input.unsupported-source-type',
+        ['sourceType'],
+        `${parsed.data.adapter.provider}/${parsed.data.sourceType} is not admitted as a Provider native recording.`,
+      ),
+    ])
   }
+  return ok(deepFreeze(parsed.data) as unknown as ProviderRecordingSource)
+}
 
+/** Strict boundary for the caller-supplied recording payload and its admission assertion. */
+export const parseProviderRecordingAttachment = (
+  input: unknown,
+): Result<ProviderRecordingAttachment> => {
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) {
+    return issues([
+      refuse(
+        'mobile-input.value-shape-invalid',
+        [],
+        snapshot.issues[0]?.message ?? '',
+      ),
+    ])
+  }
+  const parsed = recordingAttachmentSchema.safeParse(snapshot.value, {
+    reportInput: true,
+  })
+  if (!parsed.success) return issues(refusalIssues(parsed.error))
   const declaredContentTypes: readonly string[] =
-    groveRecordingFormatRegistry.formats[parsed.data.attachment.format]
-      .contentTypes
-  if (!declaredContentTypes.includes(parsed.data.attachment.contentType)) {
-    findings.push({
-      severity: 'error',
-      code: 'value-mismatch',
-      path: ['attachment', 'contentType'],
-      message: `Recording contentType must be one of ${declaredContentTypes.join(', ')} for the declared ${parsed.data.attachment.format} registry format.`,
-    })
+    groveRecordingFormatRegistry.formats[parsed.data.format].contentTypes
+  if (!declaredContentTypes.includes(parsed.data.contentType)) {
+    return issues([
+      refuse(
+        'mobile-input.unsupported-source-value',
+        ['contentType'],
+        `Recording contentType must be one of ${declaredContentTypes.join(', ')} for the declared ${parsed.data.format} registry format.`,
+      ),
+    ])
   }
-
-  if (findings.length === 0) {
-    const identity = deriveProviderIdentities({
-      provider: parsed.data.source.adapter.provider,
-      providerScopeIdentifier: parsed.data.source.providerScopeIdentifier,
-      sourceType: parsed.data.source.sourceType,
-      sourceNativeId: parsed.data.source.sourceNativeId,
-      outputs: [
-        {
-          kind: 'provider-output',
-          outputRole: PROVIDER_RECORDING_OUTPUT_ROLE,
-          outputDiscriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
-        },
-        {
-          kind: 'provider-artifact',
-          formatCode: parsed.data.attachment.format,
-          partIndex: '0',
-        },
-      ],
-      eventSequence: parsed.data.eventSequence,
-      deployment: parsed.data.deploymentIdentity,
-    })
-    if (!identity.ok) findings.push(...identity.issues)
-  }
-
-  if (findings.length > 0) return issues(findings)
-  return ok(deepFreeze(parsed.data) as unknown as ProviderRecordingBundleInput)
+  return ok(deepFreeze(parsed.data) as unknown as ProviderRecordingAttachment)
 }
 
 interface RecordingGraphIdentities {
-  readonly sourceRecord: {
-    readonly system: import('../core/index.js').AbsoluteUri
-    readonly value: string
-  }
-  readonly event: {
-    readonly system: import('../core/index.js').AbsoluteUri
-    readonly value: string
-  }
-  readonly document: IdentifiedEntryIdentityInput
-  readonly sourceArtifact: import('../mobile/types.js').CompleteIdentifierInput
-  readonly provenance: IdentifiedEntryIdentityInput
-  readonly application: IdentifiedEntryIdentityInput
-  readonly applicationHost?: IdentifiedEntryIdentityInput
-  readonly dataOrigin: IdentifiedEntryIdentityInput
-  readonly dataOriginHost?: IdentifiedEntryIdentityInput
-  readonly writerRecord?: import('../mobile/types.js').CompleteIdentifierInput
+  readonly connected: ProviderIdentities
+  readonly document: EntryIdentity
+  readonly sourceArtifact: RoledIdentifier
+  readonly provenance: EntryIdentity
+  readonly writerRecord?: RoledIdentifier
 }
 
-const resolveRecordingGraphIdentities = (
-  input: ProviderRecordingBundleInput,
+const resolveRecordingIdentities = (
+  source: ProviderRecordingSource,
+  attachment: ProviderRecordingAttachment,
+  graph: ContextGraph,
 ): Result<RecordingGraphIdentities> => {
+  const { context } = graph
+  const repositoryIds = context.repositoryIds ?? {}
   const connected = deriveProviderIdentities({
-    provider: input.source.adapter.provider,
-    providerScopeIdentifier: input.source.providerScopeIdentifier,
-    sourceType: input.source.sourceType,
-    sourceNativeId: input.source.sourceNativeId,
+    provider: source.adapter.provider,
+    repositoryScope: context.repositoryScope,
+    sourceType: source.sourceType,
+    sourceNativeId: source.sourceNativeId,
     outputs: [
       {
         kind: 'provider-output',
@@ -407,82 +362,43 @@ const resolveRecordingGraphIdentities = (
       },
       {
         kind: 'provider-artifact',
-        formatCode: input.attachment.format,
+        formatCode: attachment.format,
         partIndex: '0',
       },
     ],
-    eventSequence: input.eventSequence,
-    deployment: input.deploymentIdentity,
+    event: context.event,
+    scope: context.identityScope,
   })
   if (!connected.ok) return connected
-  const documentIdentifier = connected.value.outputs[0]
-  const sourceArtifact = connected.value.outputs[1]
+  const [documentIdentifier, sourceArtifact] = connected.value.outputs
   if (documentIdentifier === undefined || sourceArtifact === undefined) {
-    return err(
-      'missing-required',
+    throw new Error(
       'The recording output and source artifact identities are required.',
     )
   }
   const document = createEntryIdentity(
     documentIdentifier,
-    input.repositoryIds?.document,
+    repositoryIds['primary-output'],
   )
   if (!document.ok) return document
   const provenance = createEntryIdentity(
     connected.value.provenanceNode,
-    input.repositoryIds?.provenance,
+    repositoryIds.provenance,
   )
   if (!provenance.ok) return provenance
-  const application = deriveApplicationEntryIdentity(
-    input.deploymentIdentity,
-    connected.value.event,
-    input.application,
-  )
-  if (!application.ok) return application
-  const applicationHost = resolveHostIdentity(
-    input.application,
-    input.deploymentIdentity,
-    connected.value.event,
-  )
-  if (!applicationHost.ok) return applicationHost
-  const dataOrigin = deriveApplicationEntryIdentity(
-    input.deploymentIdentity,
-    connected.value.event,
-    input.source.dataOrigin,
-  )
-  if (!dataOrigin.ok) return dataOrigin
-  const dataOriginHost = resolveHostIdentity(
-    input.source.dataOrigin,
-    input.deploymentIdentity,
-    connected.value.event,
-  )
-  if (!dataOriginHost.ok) return dataOriginHost
-
   const writerRecord =
-    input.source.writerRecord === undefined ?
-      undefined
-    : deriveWriterRecordIdentifier(
-        input.deploymentIdentity,
-        input.source.writerRecord.applicationIdentifier,
-        input.source.writerRecord.nativeRecordId,
-      )
-  if (writerRecord !== undefined && !writerRecord.ok) return writerRecord
-
+    source.writerRecord === undefined ?
+      ok(undefined)
+    : deriveWriterRecordIdentifier(context.identityScope, source.writerRecord)
+  if (!writerRecord.ok) return writerRecord
   return ok({
-    sourceRecord: connected.value.sourceRecord,
-    event: connected.value.event,
+    connected: connected.value,
     document: document.value,
     sourceArtifact,
     provenance: provenance.value,
-    application: application.value,
-    dataOrigin: dataOrigin.value,
-    ...(applicationHost.value === undefined ?
+    ...(writerRecord.value === undefined ?
       {}
-    : { applicationHost: applicationHost.value }),
-    ...(dataOriginHost.value === undefined ?
-      {}
-    : { dataOriginHost: dataOriginHost.value }),
-    ...(writerRecord === undefined ? {} : { writerRecord: writerRecord.value }),
+    : { writerRecord: writerRecord.value }),
   })
 }
 
@@ -490,10 +406,7 @@ const PROVIDER_TITLES = Object.fromEntries(
   providerAdapterCatalog.providers.map(({ id, title }) => [id, title]),
 ) as Readonly<Record<ConnectedRawProvider, string>>
 
-const providerTitle = (provider: ConnectedRawProvider): string =>
-  PROVIDER_TITLES[provider]
-
-const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
+const attachmentFor = (input: ProviderRecordingAttachment) => {
   if (input.kind === 'external') {
     return {
       contentType: input.contentType,
@@ -515,167 +428,157 @@ const attachmentFor = (input: ProviderRecordingBundleInput['attachment']) => {
   }
 }
 
+const makeDocument = (
+  source: ProviderRecordingSource,
+  attachment: ProviderRecordingAttachment,
+  identities: RecordingGraphIdentities,
+  graph: ContextGraph,
+  disclosure: GovernedSourceIdentifierDisclosurePolicy,
+): DocumentReference => ({
+  resourceType: 'DocumentReference' as const,
+  ...resourceId(identities.document),
+  meta: {
+    profile: [
+      PROFILES.sensorRecordingDocument,
+      PROFILES.providerRecordingDocument,
+    ],
+  },
+  extension: [
+    { url: EXTENSIONS.provider, valueCode: source.adapter.provider },
+    {
+      url: EXTENSIONS.providerSourceType,
+      valueCode: `${source.adapter.provider}/${source.sourceType}`,
+    },
+    ...(source.writerRecord?.version === undefined ?
+      []
+    : [
+        {
+          url: EXTENSIONS.writerRecordVersion,
+          valueString: source.writerRecord.version,
+        },
+      ]),
+  ],
+  identifier: [
+    identifier(identities.connected.sourceRecord),
+    identifier(identities.document.identifier),
+    identifier(identities.sourceArtifact),
+    ...(identities.writerRecord === undefined ?
+      []
+    : [identifier(identities.writerRecord)]),
+    ...(disclosure.kind === 'omit' ?
+      []
+    : [governedSourceIdentifier(disclosure, source.sourceNativeId)]),
+  ],
+  status: 'current' as const,
+  type: {
+    text: `${PROVIDER_TITLES[source.adapter.provider]} ${source.sourceType} archive`,
+  },
+  subject: graph.subject,
+  date: graph.context.conversionInstant,
+  author: [{ reference: graph.application.fullUrl }],
+  content: [
+    {
+      attachment: attachmentFor(attachment),
+      format: coding(
+        groveRecordingFormatRegistry.codeSystem,
+        attachment.format,
+        groveRecordingFormatRegistry.formats[attachment.format].title,
+      ),
+    },
+  ],
+})
+
 /**
- * Builds the complete deterministic R4 graph for one already-obtained native
- * provider recording. This pure facade performs no fetching, authentication,
- * webhook handling, vendor parsing, or credential management.
+ * Builds the exchange graph for one already-obtained native provider recording.
+ *
+ * This pure facade performs no fetching, authentication, webhook handling, vendor parsing,
+ * or credential management. Its DocumentReference cannot carry the research-study
+ * extension, so a context naming studies is a fault rather than a silent omission.
  */
-export const buildProviderRecordingBundle = (
-  input: ProviderRecordingBundleInput,
-): Result<GroveMobileExchangeBundle> => {
-  const parsed = parseProviderRecordingBundleInput(input)
-  if (!parsed.ok) return parsed
-  const validated = parsed.value
-  const identities = resolveRecordingGraphIdentities(validated)
+export const buildProviderRecordingGraph = (
+  source: ProviderRecordingSource,
+  attachment: ProviderRecordingAttachment,
+  context: ExchangeEventContext,
+  options: ProviderConversionOptions = {},
+): Result<ProviderRecordingConversion> => {
+  const parsedSource = parseProviderRecordingSource(source)
+  if (!parsedSource.ok) return parsedSource
+  const parsedAttachment = parseProviderRecordingAttachment(attachment)
+  if (!parsedAttachment.ok) return parsedAttachment
+  const parsedOptions = parseProviderConversionOptions(options)
+  if (!parsedOptions.ok) return parsedOptions
+  const graph = resolveContextGraph(context, parsedSource.value.writer, false)
+  if (!graph.ok) return graph
+  const disclosure = parsedOptions.value.nativeIdentifierDisclosure ?? {
+    kind: 'omit',
+  }
+  const disclosureIssues = governedSourceIdentifierIssues(
+    disclosure,
+    graph.value.context.identityScope,
+  )
+  if (disclosureIssues.length > 0) return issues(disclosureIssues)
+  const identities = resolveRecordingIdentities(
+    parsedSource.value,
+    parsedAttachment.value,
+    graph.value,
+  )
   if (!identities.ok) return identities
-
-  const sourceCode = `${validated.source.adapter.provider}/${validated.source.sourceType}`
-  const document = {
-    resourceType: 'DocumentReference' as const,
-    ...resourceId(identities.value.document),
-    meta: {
-      profile: [
-        PROFILES.sensorRecordingDocument,
-        PROFILES.providerRecordingDocument,
-      ],
-    },
-    extension: [
-      {
-        url: EXTENSIONS.provider,
-        valueCode: validated.source.adapter.provider,
-      },
-      {
-        url: EXTENSIONS.providerSourceType,
-        valueCode: sourceCode,
-      },
-      ...(validated.source.writerRecord?.version === undefined ?
-        []
-      : [
-          {
-            url: EXTENSIONS.writerRecordVersion,
-            valueString: validated.source.writerRecord.version,
-          },
-        ]),
-    ],
-    identifier: [
-      identifier(identities.value.sourceRecord),
-      identifier(identities.value.document.identifier),
-      identifier(identities.value.sourceArtifact),
-      ...(identities.value.writerRecord === undefined ?
-        []
-      : [identifier(identities.value.writerRecord)]),
-      ...(validated.nativeIdentifierDisclosure === undefined ?
-        []
-      : [governedSourceIdentifier(validated.nativeIdentifierDisclosure)]),
-    ],
-    status: 'current' as const,
-    type: {
-      text: `${providerTitle(validated.source.adapter.provider)} ${validated.source.sourceType} archive`,
-    },
-    subject: {
-      type: validated.subject.type,
-      identifier: {
-        system: validated.subject.identifier.system,
-        value: validated.subject.identifier.value,
-      },
-    },
-    date: validated.documentDate,
-    author: [{ reference: identities.value.application.fullUrl }],
-    content: [
-      {
-        attachment: attachmentFor(validated.attachment),
-        format: coding(
-          groveRecordingFormatRegistry.codeSystem,
-          validated.attachment.format,
-          groveRecordingFormatRegistry.formats[validated.attachment.format]
-            .title,
-        ),
-      },
-    ],
-  }
-  const application = makeApplicationDevice({
-    ...validated.application,
-    identity: identities.value.application,
-    ...(identities.value.applicationHost === undefined ?
-      {}
-    : { parentReference: identities.value.applicationHost.fullUrl }),
+  const document = makeDocument(
+    parsedSource.value,
+    parsedAttachment.value,
+    identities.value,
+    graph.value,
+    disclosure,
+  )
+  const provenance = makeConversionProvenance({
+    identity: identities.value.provenance,
+    profile: PROFILES.providerConversionProvenance,
+    targets: [identities.value.document.fullUrl],
+    occurred: occurredFor([parsedSource.value.effective]),
+    recorded: graph.value.context.conversionInstant,
+    sourceRecord: identities.value.connected.sourceRecord,
+    graph: graph.value,
   })
-  const applicationHost =
-    (
-      validated.application.host === undefined ||
-      identities.value.applicationHost === undefined
-    ) ?
-      undefined
-    : makeHostDevice({
-        ...validated.application.host,
-        identity: identities.value.applicationHost,
-      })
-  const dataOrigin = makeApplicationDevice({
-    ...validated.source.dataOrigin,
-    identity: identities.value.dataOrigin,
-    ...(identities.value.dataOriginHost === undefined ?
-      {}
-    : { parentReference: identities.value.dataOriginHost.fullUrl }),
-  })
-  const dataOriginHost =
-    (
-      validated.source.dataOrigin.host === undefined ||
-      identities.value.dataOriginHost === undefined
-    ) ?
-      undefined
-    : makeHostDevice({
-        ...validated.source.dataOrigin.host,
-        identity: identities.value.dataOriginHost,
-      })
-  const provenance = {
-    resourceType: 'Provenance' as const,
-    ...resourceId(identities.value.provenance),
-    meta: {
-      profile: [PROFILES.providerConversionProvenance],
-    },
-    target: [{ reference: identities.value.document.fullUrl }],
-    occurredDateTime: validated.occurred,
-    recorded: validated.recorded,
-    activity: provenanceActivity(),
-    agent: [assemblerAgent(identities.value.application.fullUrl)],
-    entity: [
-      {
-        role: 'source' as const,
-        what: { identifier: identifier(identities.value.sourceRecord) },
-        agent: [sourceEntityAgent(identities.value.dataOrigin.fullUrl)],
-      },
-    ],
-  }
-
   const entries = deduplicateIdentifiedEntries([
+    ...graph.value.leadingEntries,
     identifiedEntry(identities.value.document, document),
-    ...((
-      dataOriginHost === undefined ||
-      identities.value.dataOriginHost === undefined
-    ) ?
-      []
-    : [identifiedEntry(identities.value.dataOriginHost, dataOriginHost)]),
-    identifiedEntry(identities.value.dataOrigin, dataOrigin),
-    ...((
-      applicationHost === undefined ||
-      identities.value.applicationHost === undefined
-    ) ?
-      []
-    : [identifiedEntry(identities.value.applicationHost, applicationHost)]),
-    identifiedEntry(identities.value.application, application),
+    ...graph.value.supportingEntries,
     identifiedEntry(identities.value.provenance, provenance),
   ])
   if (!entries.ok) return entries
-
-  return parseGroveMobileExchangeBundle({
+  const { repositoryIds = {} } = graph.value.context
+  const parsed = parseExchangeGraph({
     resourceType: 'Bundle',
-    ...(validated.repositoryIds?.bundle === undefined ?
-      {}
-    : { id: validated.repositoryIds.bundle }),
+    ...(repositoryIds.bundle === undefined ? {} : { id: repositoryIds.bundle }),
     meta: { profile: [PROFILES.mobileBundle] },
-    identifier: identifier(identities.value.event),
+    identifier: identifier(identities.value.connected.event),
     type: 'collection',
-    timestamp: validated.assembled,
+    timestamp: graph.value.context.conversionInstant,
     entry: entries.value,
+  })
+  if (!parsed.ok) return parsed
+  const identifiers: ExchangeGraphIdentifiers = {
+    event: identities.value.connected.event,
+    sourceRecord: identities.value.connected.sourceRecord,
+    outputs: [identities.value.document.identifier],
+    provenance: identities.value.provenance.identifier,
+    applicationSnapshot: graph.value.application.identifier,
+    hostSnapshot: graph.value.host.identifier,
+    writerSnapshot: graph.value.writer.identifier,
+    sourceArtifact: identities.value.sourceArtifact,
+    ...(graph.value.gatewayApplication === undefined ?
+      {}
+    : {
+        gatewayApplicationSnapshot: graph.value.gatewayApplication.identifier,
+      }),
+    ...(identities.value.writerRecord === undefined ?
+      {}
+    : { writerRecord: identities.value.writerRecord }),
+  }
+  return ok({
+    source: parsedSource.value,
+    identifiers,
+    graph: parsed.value,
+    warnings: [],
   })
 }

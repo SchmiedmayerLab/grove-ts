@@ -8,7 +8,12 @@
 
 import {
   parseAbsoluteUri,
+  parseEntryNodeOrdinal,
+  parseEventSequence,
+  parseKeyEpoch,
   type AbsoluteUri,
+  type EntryNodeOrdinal,
+  type EventSequence,
   type Result,
 } from '../src/core/index.js'
 import {
@@ -27,12 +32,18 @@ import {
   groveExchangeProtocol,
   isEntryNodeIdentityValue,
   isEventIdentityValue,
+  isOpaqueIdentityScope,
   isOpaqueIdentityValue,
-  validateDeploymentIdentity,
-  type DeploymentIdentityInput,
-  type GroveOpaqueIdentityComponents,
-  type GroveOpaqueIdentityKind,
+  validateOpaqueIdentityScope,
+  type OpaqueIdentityComponents,
+  type OpaqueIdentityKind,
+  type OpaqueIdentityScopeInput,
+  type OpaqueIdentitySystems,
 } from '../src/mobile/index.js'
+import {
+  deriveProviderOpaqueIdentifier,
+  providerCoordinateIssue,
+} from '../src/providers/identity.js'
 
 const unwrap = <Value>(result: Result<Value>): Value => {
   if (!result.ok) throw new Error(result.issues[0]?.message)
@@ -40,78 +51,51 @@ const unwrap = <Value>(result: Result<Value>): Value => {
 }
 
 const uri = (value: string): AbsoluteUri => unwrap(parseAbsoluteUri(value))
+const sequence = (value: string): EventSequence =>
+  unwrap(parseEventSequence(value))
+const ordinal = (value: string): EntryNodeOrdinal =>
+  unwrap(parseEntryNodeOrdinal(value))
 
-const conformanceDeployment = {
-  opaqueIdentifierSystems: {
-    'source-record': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-record-v0/test-key/1',
-    ),
-    'source-output': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-output-v0/test-key/1',
-    ),
-    'writer-record': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-writer-record-v0/test-key/1',
-    ),
-    'provider-record': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-provider-record-v0/test-key/1',
-    ),
-    'provider-output': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-provider-output-v0/test-key/1',
-    ),
-    'source-artifact': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-artifact-v0/test-key/1',
-    ),
-    'provider-artifact': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-provider-artifact-v0/test-key/1',
-    ),
-    'source-context': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-source-context-v0/test-key/1',
-    ),
-    'recording-device': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-recording-device-v0/test-key/1',
-    ),
-    'device-snapshot': uri(
-      'https://study.example.org/fhir/NamingSystem/grove-device-snapshot-v0/test-key/1',
-    ),
+const vectors = groveExchangeProtocol.testVectors
+const vectorSystems = Object.fromEntries(
+  vectors.identitySystems.map(({ identityKind, system }) => [
+    identityKind,
+    uri(system),
+  ]),
+) as OpaqueIdentitySystems
+
+const conformanceScope: OpaqueIdentityScopeInput = {
+  systems: {
+    opaque: vectorSystems,
+    event: uri(vectors.event.system),
+    entryNode: uri(vectors.entryNode.system),
   },
-  eventIdentifierSystem: uri(groveExchangeProtocol.testVectors.event.system),
-  entryNodeIdentifierSystem: uri(
-    groveExchangeProtocol.testVectors.entryNode.system,
-  ),
-  keyId: groveExchangeProtocol.testVectors.keyId,
-  keyEpoch: groveExchangeProtocol.testVectors.epoch,
-  secretBase64Url: Buffer.from(
-    groveExchangeProtocol.testVectors.keyHex,
-    'hex',
-  ).toString('base64url'),
-  producerInstance: groveExchangeProtocol.testVectors.event.producerInstance,
-} as const satisfies DeploymentIdentityInput
-
-const runtimeDeployment: DeploymentIdentityInput = {
-  ...conformanceDeployment,
-  secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
+  keyId: vectors.keyId,
+  keyEpoch: unwrap(parseKeyEpoch(vectors.epoch)),
+  secretBase64Url: Buffer.from(vectors.keyHex, 'hex').toString('base64url'),
+  producerInstance: vectors.event.producerInstance,
 }
 
-const identityVectors = groveExchangeProtocol.testVectors.identities
-const invalidIdentityVectors =
-  groveExchangeProtocol.testVectors.invalidIdentities
+const runtimeInput: OpaqueIdentityScopeInput = {
+  ...conformanceScope,
+  secretBase64Url: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY',
+}
+const runtimeScope = unwrap(validateOpaqueIdentityScope(runtimeInput))
 
-const deriveVectorIdentity = <Kind extends GroveOpaqueIdentityKind>(
+const identityVectors = vectors.identities
+const invalidIdentityVectors = vectors.invalidIdentities
+
+const deriveVectorIdentity = <Kind extends OpaqueIdentityKind>(
   kind: Kind,
-  components: GroveOpaqueIdentityComponents[Kind],
-) =>
-  deriveConformanceVectorOpaqueIdentifier(
-    conformanceDeployment,
-    kind,
-    components,
-  )
+  components: OpaqueIdentityComponents[Kind],
+) => deriveConformanceVectorOpaqueIdentifier(conformanceScope, kind, components)
 
 describe('Grove exchange protocol identity', () => {
   it('fails closed without throwing at every untyped identity boundary', () => {
     const invalidValues = [null, undefined, 42, 'wrong-shape', Symbol('x')]
     for (const invalid of invalidValues) {
       const operations = [
-        () => validateDeploymentIdentity(invalid),
+        () => validateOpaqueIdentityScope(invalid as never),
         () => encodeLengthFramedUtf8(invalid as never),
         () => deriveEntryFullUrl(invalid as never),
         () => entryIdentifierName(invalid as never),
@@ -126,17 +110,13 @@ describe('Grove exchange protocol identity', () => {
           ]),
         () =>
           deriveOpaqueIdentifier(
-            runtimeDeployment,
+            runtimeScope,
             'source-record',
             invalid as never,
           ),
-        () =>
-          deriveEntryNodeIdentifier(
-            runtimeDeployment,
-            invalid as never,
-            'conversion-provenance',
-            '0',
-          ),
+        () => deriveEventIdentifier(runtimeScope, invalid as never),
+        () => deriveEntryNodeIdentifier(runtimeScope, invalid as never),
+        () => deriveEntryNodeValue(invalid as never),
       ]
       for (const operation of operations) {
         expect(operation).not.toThrow()
@@ -146,13 +126,36 @@ describe('Grove exchange protocol identity', () => {
 
     const cyclic: Record<string, unknown> = {}
     cyclic.self = cyclic
-    expect(() => validateDeploymentIdentity(cyclic as never)).not.toThrow()
-    expect(validateDeploymentIdentity(cyclic as never).ok).toBe(false)
+    expect(() => validateOpaqueIdentityScope(cyclic as never)).not.toThrow()
+    expect(validateOpaqueIdentityScope(cyclic as never).ok).toBe(false)
   })
 
-  it('keeps a reused deployment handle immune to mutation', () => {
-    const validated = unwrap(validateDeploymentIdentity(runtimeDeployment))
-    const components: GroveOpaqueIdentityComponents['source-record'] = [
+  it('accepts only the handle it validated and keeps its key private', () => {
+    expect(isOpaqueIdentityScope(runtimeScope)).toBe(true)
+    expect(Object.isFrozen(runtimeScope)).toBe(true)
+    expect(runtimeScope).not.toHaveProperty('secretBase64Url')
+    expect(JSON.stringify(runtimeScope)).not.toContain(
+      runtimeInput.secretBase64Url,
+    )
+    const forged = { ...runtimeScope }
+    expect(isOpaqueIdentityScope(forged)).toBe(false)
+    expect(
+      deriveOpaqueIdentifier(forged, 'source-record', [
+        'healthkit',
+        'HKQuantityTypeIdentifierHeartRate',
+        'https://study.example.org/fhir/NamingSystem/participant',
+        'participant-1',
+        'native-1',
+      ]),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-identifier', path: ['scope'] }],
+    })
+    expect(deriveEventIdentifier(forged, sequence('1')).ok).toBe(false)
+  })
+
+  it('keeps a reused scope handle immune to mutation', () => {
+    const components: OpaqueIdentityComponents['source-record'] = [
       'healthkit',
       'HKQuantityTypeIdentifierHeartRate',
       'https://study.example.org/fhir/NamingSystem/participant',
@@ -160,21 +163,13 @@ describe('Grove exchange protocol identity', () => {
       'native-1',
     ]
     const before = unwrap(
-      deriveOpaqueIdentifier(validated, 'source-record', components),
+      deriveOpaqueIdentifier(runtimeScope, 'source-record', components),
     )
-    const event = unwrap(deriveEventIdentifier(validated, '1'))
-
-    const mutable = validated as {
-      identity: { keyId: string }
-      secret?: Uint8Array
-    }
-    expect(mutable.secret).toBeUndefined()
+    const event = unwrap(deriveEventIdentifier(runtimeScope, sequence('1')))
+    const mutable = runtimeScope as { keyId: string; secret?: Uint8Array }
     for (const mutate of [
       () => {
-        mutable.identity.keyId = 'TAMPERED'
-      },
-      () => {
-        mutable.identity = { keyId: 'TAMPERED' }
+        mutable.keyId = 'TAMPERED'
       },
       () => {
         mutable.secret = new Uint8Array(32)
@@ -186,16 +181,14 @@ describe('Grove exchange protocol identity', () => {
         // A frozen handle rejects the write; a sloppy-mode caller silently keeps the original.
       }
     }
-
-    expect(validated.identity.keyId).toBe(runtimeDeployment.keyId)
+    expect(runtimeScope.keyId).toBe(runtimeInput.keyId)
     expect(
-      deriveOpaqueIdentifier(validated, 'source-record', components),
+      deriveOpaqueIdentifier(runtimeScope, 'source-record', components),
     ).toEqual({ ok: true, value: before })
-    expect(deriveEventIdentifier(validated, '1')).toEqual({
+    expect(deriveEventIdentifier(runtimeScope, sequence('1'))).toEqual({
       ok: true,
       value: event,
     })
-    expect(validateDeploymentIdentity(validated.identity).ok).toBe(true)
   })
 
   it.each(identityVectors)(
@@ -207,45 +200,47 @@ describe('Grove exchange protocol identity', () => {
       )
       expect(derived).toMatchObject({
         ok: true,
-        value: { value: vector.value },
+        value: {
+          value: vector.value,
+          system: vectorSystems[vector.identityKind],
+        },
       })
     },
   )
 
   it('matches the shared event, entry-node, and fullUrl vectors', () => {
-    const vector = groveExchangeProtocol.testVectors
     const event = unwrap(
-      deriveEventIdentifier(runtimeDeployment, vector.event.sequence),
+      deriveEventIdentifier(runtimeScope, sequence(vectors.event.sequence)),
     )
     expect(event).toEqual({
-      system: vector.event.system,
-      value: vector.event.value,
+      system: vectors.event.system,
+      value: vectors.event.value,
       role: 'event',
     })
 
     const node = unwrap(
-      deriveEntryNodeIdentifier(
-        runtimeDeployment,
+      deriveEntryNodeIdentifier(runtimeScope, {
         event,
-        vector.entryNode.role,
-        vector.entryNode.ordinal,
-      ),
+        role: vectors.entryNode.role,
+        ordinal: ordinal(vectors.entryNode.ordinal),
+      }),
     )
-    expect(node.value).toBe(vector.entryNode.value)
+    expect(node).toEqual({
+      system: vectors.entryNode.system,
+      value: vectors.entryNode.value,
+      role: 'entry-node',
+    })
     expect(deriveEntryFullUrl(node)).toEqual({
       ok: true,
-      value: vector.entryNode.fullUrl,
+      value: vectors.entryNode.fullUrl,
     })
-    const fullUrlVector = vector.fullUrls[0]
+    const fullUrlVector = vectors.fullUrls[0]
     expect(
       deriveEntryFullUrl({
         system: uri(fullUrlVector.system),
         value: fullUrlVector.value,
       }),
-    ).toEqual({
-      ok: true,
-      value: fullUrlVector.fullUrl,
-    })
+    ).toEqual({ ok: true, value: fullUrlVector.fullUrl })
   })
 
   it('length-frames tuples without delimiter collisions', () => {
@@ -286,78 +281,83 @@ describe('Grove exchange protocol identity', () => {
   })
 
   it('fails closed for the public test key at public APIs and malformed key spaces', () => {
-    expect(validateDeploymentIdentity(conformanceDeployment).ok).toBe(false)
+    expect(validateOpaqueIdentityScope(conformanceScope).ok).toBe(false)
     expect(
-      validateDeploymentIdentity({
-        ...runtimeDeployment,
+      validateOpaqueIdentityScope({
+        ...runtimeInput,
         keyUse: 'conformance-testing',
-      }).ok,
+      } as never).ok,
     ).toBe(false)
     const sourceVector = identityVectors[0]
     expect(
-      deriveOpaqueIdentifier(
-        conformanceDeployment,
+      deriveConformanceVectorOpaqueIdentifier(
+        runtimeInput,
         sourceVector.identityKind,
         sourceVector.components as never,
       ).ok,
     ).toBe(false)
     expect(
-      validateDeploymentIdentity({
-        ...runtimeDeployment,
-        opaqueIdentifierSystems: {
-          ...runtimeDeployment.opaqueIdentifierSystems,
-          'source-record':
-            runtimeDeployment.opaqueIdentifierSystems['source-output'],
+      validateOpaqueIdentityScope({
+        ...runtimeInput,
+        systems: {
+          ...runtimeInput.systems,
+          opaque: {
+            ...runtimeInput.systems.opaque,
+            'source-record': runtimeInput.systems.opaque['source-output'],
+          },
         },
       }).ok,
     ).toBe(false)
     const withWrongKinds = {
-      ...runtimeDeployment,
-      opaqueIdentifierSystems: Object.fromEntries(
-        Object.entries(runtimeDeployment.opaqueIdentifierSystems).map(
-          ([kind, system], index) => [
-            index === 0 ? 'unknown-kind' : kind,
-            system,
-          ],
+      ...runtimeInput,
+      systems: {
+        ...runtimeInput.systems,
+        opaque: Object.fromEntries(
+          Object.entries(runtimeInput.systems.opaque).map(
+            ([kind, system], index) => [
+              index === 0 ? 'unknown-kind' : kind,
+              system,
+            ],
+          ),
         ),
-      ),
-    } as unknown as DeploymentIdentityInput
-    expect(validateDeploymentIdentity(withWrongKinds).ok).toBe(false)
+      },
+    } as unknown as OpaqueIdentityScopeInput
+    expect(validateOpaqueIdentityScope(withWrongKinds).ok).toBe(false)
     for (const badSystem of [
       'https://例.example/identity',
       'https://example.org/%ZZ',
       'https://example.org/identity value',
     ]) {
       expect(
-        validateDeploymentIdentity({
-          ...runtimeDeployment,
-          eventIdentifierSystem: badSystem as AbsoluteUri,
+        validateOpaqueIdentityScope({
+          ...runtimeInput,
+          systems: { ...runtimeInput.systems, event: badSystem as AbsoluteUri },
         }).ok,
       ).toBe(false)
     }
   })
 
   it.each([
-    { opaqueIdentifierSystems: null },
-    { opaqueIdentifierSystems: [] },
+    { systems: null },
+    { systems: { ...runtimeInput.systems, opaque: [] } },
     { keyId: 42 },
     { keyId: 'not a token' },
     { keyEpoch: 1 },
     { keyEpoch: '0' },
     { producerInstance: 42 },
-    { producerInstance: runtimeDeployment.producerInstance.toUpperCase() },
+    { producerInstance: runtimeInput.producerInstance.toUpperCase() },
     { secretBase64Url: 42 },
     { secretBase64Url: '*' },
     { secretBase64Url: 'A' },
     { secretBase64Url: 'AA' },
-    { eventIdentifierSystem: '/relative' },
-    { entryNodeIdentifierSystem: '/relative' },
-  ])('rejects malformed deployment field set %#', (replacement) => {
+    { systems: { ...runtimeInput.systems, event: '/relative' } },
+    { systems: { ...runtimeInput.systems, entryNode: '/relative' } },
+  ])('rejects malformed scope field set %#', (replacement) => {
     expect(
-      validateDeploymentIdentity({
-        ...runtimeDeployment,
+      validateOpaqueIdentityScope({
+        ...runtimeInput,
         ...replacement,
-      }).ok,
+      } as never).ok,
     ).toBe(false)
   })
 
@@ -368,20 +368,20 @@ describe('Grove exchange protocol identity', () => {
     if (source === undefined) throw new Error('Missing source-output vector.')
     expect(
       deriveOpaqueIdentifier(
-        runtimeDeployment,
-        'unknown-kind' as GroveOpaqueIdentityKind,
+        runtimeScope,
+        'unknown-kind' as OpaqueIdentityKind,
         source.components as never,
       ).ok,
     ).toBe(false)
     expect(
       deriveOpaqueIdentifier(
-        runtimeDeployment,
+        runtimeScope,
         'source-output',
         source.components.slice(0, -1) as never,
       ).ok,
     ).toBe(false)
     expect(
-      deriveOpaqueIdentifier(runtimeDeployment, 'source-output', [
+      deriveOpaqueIdentifier(runtimeScope, 'source-output', [
         ...source.components,
         'extra',
       ] as never).ok,
@@ -397,7 +397,7 @@ describe('Grove exchange protocol identity', () => {
     components[1] = 42
     expect(
       deriveOpaqueIdentifier(
-        runtimeDeployment,
+        runtimeScope,
         'source-output',
         components as never,
       ),
@@ -413,7 +413,7 @@ describe('Grove exchange protocol identity', () => {
         const components: string[] = [...vector.components]
         components[0] = invalid
         const result = deriveOpaqueIdentifier(
-          runtimeDeployment,
+          runtimeScope,
           vector.identityKind,
           components as never,
         )
@@ -464,26 +464,39 @@ describe('Grove exchange protocol identity', () => {
     ] as const
 
     for (const { kind, components } of invalidProviderCoordinates) {
-      const result = deriveOpaqueIdentifier(
-        runtimeDeployment,
-        kind,
-        components as never,
-      )
-      expect(result).toMatchObject({
+      expect(
+        deriveProviderOpaqueIdentifier(runtimeScope, kind, components as never),
+      ).toMatchObject({
         ok: false,
         issues: [{ code: 'invalid-code', path: ['components', 0] }],
       })
     }
+    expect(
+      providerCoordinateIssue('provider-record', [
+        'not-a-provider',
+        'type',
+        's',
+        'v',
+        'id',
+      ]),
+    ).toMatchObject({ code: 'invalid-code' })
   })
 
   it('rejects every shared invalid opaque-identity vector', () => {
     expect(invalidIdentityVectors).toHaveLength(4)
     for (const vector of invalidIdentityVectors) {
-      const result = deriveOpaqueIdentifier(
-        runtimeDeployment,
-        vector.identityKind,
-        vector.components as never,
-      )
+      const result =
+        vector.expectedError === 'provider-kind-required' ?
+          deriveProviderOpaqueIdentifier(
+            runtimeScope,
+            vector.identityKind,
+            vector.components as never,
+          )
+        : deriveOpaqueIdentifier(
+            runtimeScope,
+            vector.identityKind,
+            vector.components as never,
+          )
       expect(result.ok).toBe(false)
       if (!result.ok) {
         expect(result.issues[0]?.path).toEqual([
@@ -498,59 +511,56 @@ describe('Grove exchange protocol identity', () => {
 
   it('binds entry-node derivation to this producer typed event identity', () => {
     const event = unwrap(
-      deriveEventIdentifier(
-        runtimeDeployment,
-        groveExchangeProtocol.testVectors.event.sequence,
-      ),
+      deriveEventIdentifier(runtimeScope, sequence(vectors.event.sequence)),
     )
     expect(
-      deriveEntryNodeIdentifier(
-        runtimeDeployment,
-        { system: event.system, value: event.value },
-        'conversion-provenance',
-        '0',
-      ).ok,
+      deriveEntryNodeIdentifier(runtimeScope, {
+        event: { system: event.system, value: event.value } as never,
+        role: 'conversion-provenance',
+        ordinal: ordinal('0'),
+      }).ok,
     ).toBe(false)
     expect(
-      deriveEntryNodeIdentifier(
-        runtimeDeployment,
-        {
+      deriveEntryNodeIdentifier(runtimeScope, {
+        event: {
           ...event,
           value: 'e0:13ed2fea-25b0-4d0d-9a26-c6d2a7f057a2:1',
         },
-        'conversion-provenance',
-        '0',
-      ).ok,
+        role: 'conversion-provenance',
+        ordinal: ordinal('0'),
+      }).ok,
     ).toBe(false)
   })
 
   it('validates event and entry-node lexical boundaries independently', () => {
     const event = unwrap(
-      deriveEventIdentifier(
-        runtimeDeployment,
-        groveExchangeProtocol.testVectors.event.sequence,
-      ),
+      deriveEventIdentifier(runtimeScope, sequence(vectors.event.sequence)),
     )
-    expect(deriveEventIdentifier(runtimeDeployment, 1 as never).ok).toBe(false)
-    expect(deriveEventIdentifier(runtimeDeployment, '0').ok).toBe(false)
+    expect(deriveEventIdentifier(runtimeScope, 1 as never).ok).toBe(false)
+    expect(deriveEventIdentifier(runtimeScope, '0' as never).ok).toBe(false)
+    const node = (
+      key: Partial<{ system: unknown; value: unknown; role: unknown }>,
+      role: unknown,
+      nodeOrdinal: unknown,
+    ) =>
+      deriveEntryNodeValue({
+        event: { ...event, ...key },
+        role,
+        ordinal: nodeOrdinal,
+      } as never)
+    expect(node({ system: '/relative' }, 'resource', '0').ok).toBe(false)
+    expect(node({}, 42, '0').ok).toBe(false)
+    expect(node({}, 'Uppercase', '0').ok).toBe(false)
+    expect(node({}, 'resource', 0).ok).toBe(false)
+    expect(node({}, 'resource', '01').ok).toBe(false)
+    expect(node({ role: 'source-record' }, 'resource', '0').ok).toBe(false)
+    expect(node({}, 'resource', '0').ok).toBe(true)
     expect(
-      deriveEntryNodeValue('/relative', event.value, 'resource', '0').ok,
-    ).toBe(false)
-    expect(
-      deriveEntryNodeValue(event.system, event.value, 42 as never, '0').ok,
-    ).toBe(false)
-    expect(
-      deriveEntryNodeValue(event.system, event.value, 'Uppercase', '0').ok,
-    ).toBe(false)
-    expect(
-      deriveEntryNodeValue(event.system, event.value, 'resource', 0 as never)
-        .ok,
-    ).toBe(false)
-    expect(
-      deriveEntryNodeValue(event.system, event.value, 'resource', '01').ok,
-    ).toBe(false)
-    expect(
-      deriveEntryNodeIdentifier(runtimeDeployment, event, 'Uppercase', '0').ok,
+      deriveEntryNodeIdentifier(runtimeScope, {
+        event,
+        role: 'Uppercase',
+        ordinal: ordinal('0'),
+      }).ok,
     ).toBe(false)
     expect(isEventIdentityValue(42)).toBe(false)
     expect(isEventIdentityValue('e0:not-a-uuid:1')).toBe(false)

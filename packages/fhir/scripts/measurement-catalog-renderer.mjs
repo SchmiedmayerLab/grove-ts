@@ -13,7 +13,7 @@ export const renderMeasurementCatalogSources = ({
   effectiveCanonicalization,
   effectiveCanonicalizationVectors,
   exchangeProtocol,
-  exchangeRuleDiagnostics,
+  producerDiagnostics,
   healthConnectDataOriginApplication,
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
@@ -39,7 +39,9 @@ export const renderMeasurementCatalogSources = ({
     const valueName = `${name}Value`
     return `const ${valueName} = ${JSON.stringify(value, null, 2)} as const
 
-  export const ${name}: typeof ${valueName} = deepFreeze(${valueName})`
+  export const ${name}: typeof ${valueName} = /*#__PURE__*/ deepFreeze(
+    ${valueName},
+  )`
   }
 
   const header = (disableClearText) => `//
@@ -67,7 +69,7 @@ export const renderMeasurementCatalogSources = ({
 
   ${frozenExport('groveExchangeProtocol', exchangeProtocol)}
 
-  ${frozenExport('groveExchangeRuleDiagnostics', exchangeRuleDiagnostics)}
+  ${frozenExport('groveProducerDiagnostics', producerDiagnostics)}
 
   ${frozenExport('groveProfileClaims', profileClaims)}
 
@@ -84,6 +86,8 @@ export const renderMeasurementCatalogSources = ({
   ${frozenExport('mobileEffectiveCanonicalizationVectors', effectiveCanonicalizationVectors)}
 
   export type SharedMobileMeasurementKind = keyof typeof sharedMobileMeasurementCatalog
+
+  export type ProducerDiagnosticCode = keyof typeof groveProducerDiagnostics
 
   export type GroveRecordingFormat =
     keyof typeof groveRecordingFormatRegistry.formats

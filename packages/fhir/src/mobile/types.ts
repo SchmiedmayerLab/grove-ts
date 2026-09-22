@@ -6,19 +6,18 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
 import type {
-  AbsoluteUri,
-  FhirId,
-  FhirInstant,
-  UrnUuid,
-} from '../core/index.js'
+  BusinessIdentifier,
+  ExchangeEventIdentifier,
+  OpaqueIdentityScope,
+  RoledIdentifier,
+} from './identity.js'
+import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
+import type { AbsoluteUri, FhirId, FhirInstant } from '../core/index.js'
+import type { Patient } from '../r4/types.js'
 
 type SharedCatalog =
   typeof import('../contract/measurement-catalog.generated.js').sharedMobileMeasurementCatalog
-
-type OpaqueIdentityDefinition =
-  (typeof import('../contract/measurement-catalog.generated.js').groveExchangeProtocol)['opaqueIdentity']['identityKinds'][number]
 
 /** Kinds whose catalog definition declares the given value kind and effective. */
 export type MeasurementKindsWhere<
@@ -134,50 +133,6 @@ export interface SleepStageMeasurement {
   readonly effective: PeriodEffectiveTime
 }
 
-/** Complete FHIR business Identifier pair; neither member may be omitted. */
-export interface CompleteIdentifierInput {
-  readonly system: AbsoluteUri
-  readonly value: string
-  /** Grove role carried in Identifier.type for deployment-owned identities. */
-  readonly role?: GroveIdentifierRole
-}
-
-/** Closed roles used to distinguish deployment-owned identifier key spaces. */
-export type GroveIdentifierRole =
-  OpaqueIdentityDefinition['identifierRole'] | 'entry-node' | 'event'
-
-/** Closed HMAC domains from the Grove FHIR exchange protocol. */
-export type GroveOpaqueIdentityKind = OpaqueIdentityDefinition['kind']
-
-export type GroveOpaqueIdentitySystems = Readonly<
-  Record<GroveOpaqueIdentityKind, AbsoluteUri>
->
-
-/**
- * Deployment-owned identity material.
- *
- * Every opaque system names exactly one deployment, identity kind, key id, and key epoch. The
- * secret is used only while a graph is built and is never retained in, or emitted with, FHIR.
- */
-export interface DeploymentIdentityInput {
-  readonly opaqueIdentifierSystems: GroveOpaqueIdentitySystems
-  readonly eventIdentifierSystem: AbsoluteUri
-  readonly entryNodeIdentifierSystem: AbsoluteUri
-  readonly keyId: string
-  /** Canonical positive decimal string; represented lexically to avoid JavaScript integer loss. */
-  readonly keyEpoch: string
-  /** Canonical unpadded base64url key material containing at least 32 bytes. */
-  readonly secretBase64Url: string
-  /** Canonical lowercase RFC 4122 UUID (versions 1 through 5). */
-  readonly producerInstance: string
-}
-
-/** Caller-owned business identity with an optional repository-assigned Resource.id. */
-export interface ResourceIdentityInput {
-  readonly identifier: CompleteIdentifierInput
-  readonly id?: FhirId
-}
-
 /** Closed union of normalized measurements defined by the shared Mobile IG. */
 export type MobileMeasurement =
   | BloodPressureMeasurement
@@ -187,65 +142,162 @@ export type MobileMeasurement =
   | PeriodQuantityMeasurement
   | SleepStageMeasurement
 
-/** Derived exchange identity returned by identity helpers, never required as input. */
-export interface IdentifiedEntryIdentityInput extends ResourceIdentityInput {
-  readonly fullUrl: UrnUuid
+export type RecordingMethod =
+  'actively-recorded' | 'automatically-recorded' | 'manual-entry'
+
+/**
+ * The participant an output describes.
+ *
+ * A logical subject is the identifier-only pseudonym reference and needs no Patient entry;
+ * a bundled subject adds the deployment's own Patient entry, which must carry the same
+ * identifier, and outputs reference that entry.
+ */
+export type Subject =
+  | { readonly kind: 'logical'; readonly identifier: BusinessIdentifier }
+  | {
+      readonly kind: 'bundled'
+      readonly identifier: BusinessIdentifier
+      readonly patient: Patient
+    }
+
+/** One ResearchStudy, its exact-revision PlanDefinition and one ResearchSubject. */
+export interface StudyEnrollment {
+  readonly study: BusinessIdentifier
+  readonly protocol: {
+    readonly url: AbsoluteUri
+    readonly version: string
+  }
+  readonly enrollment: BusinessIdentifier
 }
 
-export interface ApplicationDeviceInput {
-  /** Deployment-governed token for this source application/build; never emitted in clear. */
+/** The immutable snapshot of one application build; the token never appears in clear. */
+export interface ApplicationDevice {
   readonly sourceDeviceToken: string
-  readonly id?: FhirId | undefined
   readonly name: string
   readonly version?: string | undefined
   readonly build?: string | undefined
-  readonly manufacturer?: string | undefined
-  /** Optional immutable snapshot of the hardware/OS hosting this application. */
-  readonly host?: HostDeviceInput | undefined
 }
 
-export interface HostDeviceInput {
-  /** Event-time source token for this host snapshot; never emitted in clear. */
+/** The immutable snapshot of the hardware and OS hosting the converter. */
+export interface HostDevice {
   readonly sourceDeviceToken: string
-  readonly id?: FhirId | undefined
-  readonly name?: string | undefined
-  readonly manufacturer?: string | undefined
-  readonly modelNumber?: string | undefined
   readonly operatingSystemVersion: string
-}
-
-interface RecordingDeviceBaseInput {
-  /** Stable token for one physical unit; model, manufacturer, or subject are not substitutes. */
-  readonly stableUnitToken: string
-  /** Complete logical subject identity used only in the HMAC preimage. */
-  readonly subjectIdentifier: CompleteIdentifierInput
-  readonly id?: FhirId | undefined
   readonly name?: string | undefined
   readonly manufacturer?: string | undefined
   readonly modelNumber?: string | undefined
 }
 
-/** Recording-device identity must declare its privacy/disclosure scope. */
-export type RecordingDeviceInput = RecordingDeviceBaseInput &
-  (
-    | { readonly identityScope: 'deployment-scoped' }
-    | {
-        readonly identityScope: 'authorized-hardware'
-        readonly disclosureAuthorization: 'authorized-for-exchange'
-      }
-  )
+/** One physical recording unit; model, manufacturer, or subject are not substitutes for the token. */
+export interface RecordingDevice {
+  readonly stableUnitToken: string
+  readonly name?: string | undefined
+  readonly manufacturer?: string | undefined
+  readonly modelNumber?: string | undefined
+}
 
-/** Explicit evidence for an optional application gateway role. */
-export type GatewayApplicationInput =
+/**
+ * How the converter application relates to the measurement.
+ *
+ * Conversion alone makes it the assembler; a gateway mediated or routed the measurement,
+ * either the converter itself or a distinct application emitted as a second snapshot.
+ */
+export type ConverterRole =
+  | { readonly kind: 'assembler' }
+  | { readonly kind: 'gateway' }
   | {
-      readonly kind: 'converter-application'
-      readonly roleAssurance: 'mediated-or-routed-measurement'
-    }
-  | {
-      readonly kind: 'distinct-application'
-      readonly roleAssurance: 'mediated-or-routed-measurement'
-      readonly application: ApplicationDeviceInput
+      readonly kind: 'gateway-application'
+      readonly application: ApplicationDevice
     }
 
-export type RecordingMethod =
-  'actively-recorded' | 'automatically-recorded' | 'manual-entry'
+/** The graph nodes a repository may have assigned a Resource.id to. */
+export type ExchangeGraphNode =
+  | 'bundle'
+  | 'primary-output'
+  | 'source-artifact'
+  | 'recording-device'
+  | 'application-device'
+  | 'host-device'
+  | 'writer'
+  | 'provenance'
+
+/**
+ * Everything one exchange event needs beyond the source record.
+ *
+ * `converterRole` defaults to the assembler, `studies` to none, and `repositoryIds` to
+ * none; Provenance.recorded and Bundle.timestamp are the conversion instant.
+ */
+export interface ExchangeEventContext {
+  readonly subject: Subject
+  readonly event: ExchangeEventIdentifier
+  readonly identityScope: OpaqueIdentityScope
+  readonly repositoryScope: BusinessIdentifier
+  readonly application: ApplicationDevice
+  /** Required here: a server states its own facts, where a phone reads them from the OS. */
+  readonly host: HostDevice
+  /** Defaults to the instant the builder runs. */
+  readonly conversionInstant?: FhirInstant | undefined
+  readonly converterRole?: ConverterRole | undefined
+  readonly studies?: readonly StudyEnrollment[] | undefined
+  readonly repositoryIds?:
+    Readonly<Partial<Record<ExchangeGraphNode, FhirId>>> | undefined
+}
+
+/** A context after parsing, with every default applied. */
+export interface ResolvedExchangeEventContext extends ExchangeEventContext {
+  readonly conversionInstant: FhirInstant
+  readonly converterRole: ConverterRole
+  readonly studies: readonly StudyEnrollment[]
+}
+
+export interface GovernedSourceIdentifierTypeCoding {
+  readonly system: AbsoluteUri
+  readonly code: string
+  readonly display?: string | undefined
+}
+
+/** Narrow CodeableConcept surface for a disclosed source-native Identifier.type. */
+export interface GovernedSourceIdentifierType {
+  readonly coding?:
+    | readonly [
+        GovernedSourceIdentifierTypeCoding,
+        ...GovernedSourceIdentifierTypeCoding[],
+      ]
+    | undefined
+  readonly text?: string | undefined
+}
+
+/**
+ * Whether the designated primary output discloses the source-native record identifier in
+ * clear under a caller-governed key-space URI; it supplements Grove identities and never
+ * becomes an entry or retraction key.
+ */
+export type GovernedSourceIdentifierDisclosurePolicy =
+  | { readonly kind: 'omit' }
+  | {
+      readonly kind: 'authorized'
+      readonly system: AbsoluteUri
+      readonly type?: GovernedSourceIdentifierType | undefined
+    }
+
+/** Every identifier one exchange graph minted, in the roles the graph carries them. */
+export interface ExchangeGraphIdentifiers {
+  readonly event: ExchangeEventIdentifier
+  readonly sourceRecord: RoledIdentifier
+  /** Every output identity in Bundle order; a provider record has no child outputs. */
+  readonly outputs: readonly [RoledIdentifier, ...RoledIdentifier[]]
+  readonly provenance: RoledIdentifier
+  readonly applicationSnapshot: RoledIdentifier
+  readonly hostSnapshot: RoledIdentifier
+  readonly writerSnapshot: RoledIdentifier
+  readonly sourceArtifact?: RoledIdentifier
+  readonly recordingDevice?: RoledIdentifier
+  readonly recordingDeviceSnapshot?: RoledIdentifier
+  readonly gatewayApplicationSnapshot?: RoledIdentifier
+  readonly writerRecord?: RoledIdentifier
+}
+
+/** The outcome of converting several records: what converted and what was refused. */
+export interface ConversionBatch<Conversion, Failure> {
+  readonly conversions: readonly Conversion[]
+  readonly failures: readonly Failure[]
+}

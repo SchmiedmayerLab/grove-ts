@@ -27,7 +27,7 @@ const groveProviderPackageMetadataValue = {
 } as const
 
 export const groveProviderPackageMetadata: typeof groveProviderPackageMetadataValue =
-  deepFreeze(groveProviderPackageMetadataValue)
+  /*#__PURE__*/ deepFreeze(groveProviderPackageMetadataValue)
 
 const groveProviderPackageCanonicalsValue = {
   mobile: 'https://grovealliance.org/fhir/mobile',
@@ -36,7 +36,7 @@ const groveProviderPackageCanonicalsValue = {
 } as const
 
 export const groveProviderPackageCanonicals: typeof groveProviderPackageCanonicalsValue =
-  deepFreeze(groveProviderPackageCanonicalsValue)
+  /*#__PURE__*/ deepFreeze(groveProviderPackageCanonicalsValue)
 
 const groveProviderProfileCanonicalsValue = {
   'grove-mobile-active-energy':
@@ -512,7 +512,7 @@ const groveProviderProfileCanonicalsValue = {
 } as const
 
 export const groveProviderProfileCanonicals: typeof groveProviderProfileCanonicalsValue =
-  deepFreeze(groveProviderProfileCanonicalsValue)
+  /*#__PURE__*/ deepFreeze(groveProviderProfileCanonicalsValue)
 
 const providerAdapterCatalogValue = {
   $schema:
@@ -1825,7 +1825,7 @@ const providerAdapterCatalogValue = {
 } as const
 
 export const providerAdapterCatalog: typeof providerAdapterCatalogValue =
-  deepFreeze(providerAdapterCatalogValue)
+  /*#__PURE__*/ deepFreeze(providerAdapterCatalogValue)
 
 const adapterMeasurementCatalogValue = {
   healthkit: {
@@ -6717,7 +6717,7 @@ const adapterMeasurementCatalogValue = {
 } as const
 
 export const adapterMeasurementCatalog: typeof adapterMeasurementCatalogValue =
-  deepFreeze(adapterMeasurementCatalogValue)
+  /*#__PURE__*/ deepFreeze(adapterMeasurementCatalogValue)
 
 const healthKitApplicationDeviceIdentityValue = {
   profile:
@@ -6738,7 +6738,7 @@ const healthKitApplicationDeviceIdentityValue = {
 } as const
 
 export const healthKitApplicationDeviceIdentity: typeof healthKitApplicationDeviceIdentityValue =
-  deepFreeze(healthKitApplicationDeviceIdentityValue)
+  /*#__PURE__*/ deepFreeze(healthKitApplicationDeviceIdentityValue)
 
 const healthKitClinicalRecordAdmissionValue = {
   profile:
@@ -6758,7 +6758,7 @@ const healthKitClinicalRecordAdmissionValue = {
 } as const
 
 export const healthKitClinicalRecordAdmission: typeof healthKitClinicalRecordAdmissionValue =
-  deepFreeze(healthKitClinicalRecordAdmissionValue)
+  /*#__PURE__*/ deepFreeze(healthKitClinicalRecordAdmissionValue)
 
 const providerScalarOutputRolesValue = {
   'google-health-api': {
@@ -6969,7 +6969,7 @@ const providerScalarOutputRolesValue = {
 } as const
 
 export const providerScalarOutputRoles: typeof providerScalarOutputRolesValue =
-  deepFreeze(providerScalarOutputRolesValue)
+  /*#__PURE__*/ deepFreeze(providerScalarOutputRolesValue)
 
 const providerScalarOutputDiscriminatorsValue = {
   'google-health-api': {
@@ -7177,7 +7177,7 @@ const providerScalarOutputDiscriminatorsValue = {
 } as const
 
 export const providerScalarOutputDiscriminators: typeof providerScalarOutputDiscriminatorsValue =
-  deepFreeze(providerScalarOutputDiscriminatorsValue)
+  /*#__PURE__*/ deepFreeze(providerScalarOutputDiscriminatorsValue)
 
 const providerRecordEffectiveRulesValue = {
   oura: {
@@ -7217,7 +7217,7 @@ const providerRecordEffectiveRulesValue = {
 } as const
 
 export const providerRecordEffectiveRules: typeof providerRecordEffectiveRulesValue =
-  deepFreeze(providerRecordEffectiveRulesValue)
+  /*#__PURE__*/ deepFreeze(providerRecordEffectiveRulesValue)
 
 const providerRawOutputRolesValue = {
   'google-health-api': {
@@ -7233,7 +7233,7 @@ const providerRawOutputRolesValue = {
 } as const
 
 export const providerRawOutputRoles: typeof providerRawOutputRolesValue =
-  deepFreeze(providerRawOutputRolesValue)
+  /*#__PURE__*/ deepFreeze(providerRawOutputRolesValue)
 
 const providerRawOutputDiscriminatorsValue = {
   'google-health-api': {
@@ -7249,7 +7249,7 @@ const providerRawOutputDiscriminatorsValue = {
 } as const
 
 export const providerRawOutputDiscriminators: typeof providerRawOutputDiscriminatorsValue =
-  deepFreeze(providerRawOutputDiscriminatorsValue)
+  /*#__PURE__*/ deepFreeze(providerRawOutputDiscriminatorsValue)
 
 export type AdapterMeasurementCatalog = typeof adapterMeasurementCatalog
 

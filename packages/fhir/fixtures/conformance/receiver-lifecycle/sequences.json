@@ -1,0 +1,709 @@
+{
+  "schemaVersion": 0,
+  "events": "events.json",
+  "policy": {
+    "visiblePurpose": "purpose-a",
+    "deniedPurposes": [
+      "purpose-b"
+    ],
+    "scope": "One verified participant and source repository; transport restoration preserves that scope.",
+    "order": "Compare canonical decimal writer versions only for the same complete writer-record Identifier pair. Neither arrival, event sequence nor issued establishes source revision order.",
+    "conflict": "Retain incomparable different versions; disclose neither as the current output.",
+    "retraction": "Retain the logical target tombstone before or after its target arrives. Replay never removes it. Reappearance requires a separate receiver policy and is outside this corpus.",
+    "references": "An unresolved logical clinical reference keeps the referring output pending and undisclosed. A later target must match its complete Identifier and verified subject/source scope.",
+    "authorization": "The harness independently authorizes purpose-a for the named output versions only; purpose-b has no authorization. Profile validity and graph readiness never create authorization.",
+    "arrays": "State arrays are sets of event aliases. Versions/current/visible aliases select the Observation in the named event. A retracted alias identifies its complete source-output Identifier and suppresses every version with that identity, not just that alias. history includes retractions; versions does not. newlyVisible is the access newly made available at this step, not an HTTP receipt code."
+  },
+  "sequences": [
+    {
+      "id": "exact-and-conflicting-replay",
+      "steps": [
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [
+              "original"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "altered-retry",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "reformatted-replay",
+      "steps": [
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [
+              "original"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "reformatted-retry",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "lexeme-replay",
+      "steps": [
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [
+              "original"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "lexeme-retry",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "correction-before-original",
+      "steps": [
+        {
+          "event": "corrected",
+          "expect": {
+            "history": [
+              "corrected"
+            ],
+            "versions": [
+              "corrected"
+            ],
+            "current": [
+              "corrected"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "corrected"
+            ],
+            "newlyVisible": [
+              "corrected"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "corrected",
+              "original"
+            ],
+            "versions": [
+              "corrected",
+              "original"
+            ],
+            "current": [
+              "corrected"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "corrected"
+            ],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "corrected",
+          "expect": {
+            "history": [
+              "corrected",
+              "original"
+            ],
+            "versions": [
+              "corrected",
+              "original"
+            ],
+            "current": [
+              "corrected"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "corrected"
+            ],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "original-before-correction",
+      "steps": [
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [
+              "original"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "corrected",
+          "expect": {
+            "history": [
+              "original",
+              "corrected"
+            ],
+            "versions": [
+              "original",
+              "corrected"
+            ],
+            "current": [
+              "corrected"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "corrected"
+            ],
+            "newlyVisible": [
+              "corrected"
+            ],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "unordered-conflict",
+      "steps": [
+        {
+          "event": "unordered-a",
+          "expect": {
+            "history": [
+              "unordered-a"
+            ],
+            "versions": [
+              "unordered-a"
+            ],
+            "current": [
+              "unordered-a"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "unordered-a"
+            ],
+            "newlyVisible": [
+              "unordered-a"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "unordered-b",
+          "expect": {
+            "history": [
+              "unordered-a",
+              "unordered-b"
+            ],
+            "versions": [
+              "unordered-a",
+              "unordered-b"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [
+              "unordered-a",
+              "unordered-b"
+            ],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "unordered-a",
+          "expect": {
+            "history": [
+              "unordered-a",
+              "unordered-b"
+            ],
+            "versions": [
+              "unordered-a",
+              "unordered-b"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [
+              "unordered-a",
+              "unordered-b"
+            ],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "pending-reference-resolution",
+      "steps": [
+        {
+          "event": "pending",
+          "expect": {
+            "history": [
+              "pending"
+            ],
+            "versions": [
+              "pending"
+            ],
+            "current": [
+              "pending"
+            ],
+            "pending": [
+              "pending"
+            ],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {
+              "questionnaire": "pending"
+            }
+          }
+        },
+        {
+          "event": "target",
+          "expect": {
+            "history": [
+              "pending",
+              "target"
+            ],
+            "versions": [
+              "pending",
+              "target"
+            ],
+            "current": [
+              "pending",
+              "target"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "pending",
+              "target"
+            ],
+            "newlyVisible": [
+              "pending",
+              "target"
+            ],
+            "references": {
+              "questionnaire": "resolved"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "retraction-before-target",
+      "steps": [
+        {
+          "event": "retraction",
+          "expect": {
+            "history": [
+              "retraction"
+            ],
+            "versions": [],
+            "current": [],
+            "pending": [],
+            "retracted": [
+              "original"
+            ],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "retraction",
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [
+              "original"
+            ],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "retraction",
+          "expect": {
+            "history": [
+              "retraction",
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [
+              "original"
+            ],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "transport": "restored-producer",
+          "expect": {
+            "history": [
+              "retraction",
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [
+              "original"
+            ],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "retraction-after-target",
+      "steps": [
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [
+              "original"
+            ],
+            "pending": [],
+            "retracted": [],
+            "conflicts": [],
+            "visible": [
+              "original"
+            ],
+            "newlyVisible": [
+              "original"
+            ],
+            "references": {}
+          }
+        },
+        {
+          "event": "retraction",
+          "expect": {
+            "history": [
+              "original",
+              "retraction"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [
+              "original"
+            ],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "expect": {
+            "history": [
+              "original",
+              "retraction"
+            ],
+            "versions": [
+              "original"
+            ],
+            "current": [],
+            "pending": [],
+            "retracted": [
+              "original"
+            ],
+            "conflicts": [],
+            "visible": [],
+            "newlyVisible": [],
+            "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "correction-before-retraction",
+      "steps": [
+        {
+          "event": "corrected",
+          "expect": {
+            "history": ["corrected"], "versions": ["corrected"], "current": ["corrected"],
+            "pending": [], "retracted": [], "conflicts": [], "visible": ["corrected"],
+            "newlyVisible": ["corrected"], "references": {}
+          }
+        },
+        {
+          "event": "retraction",
+          "expect": {
+            "history": ["corrected", "retraction"], "versions": ["corrected"], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "expect": {
+            "history": ["corrected", "retraction", "original"], "versions": ["corrected", "original"], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        },
+        {
+          "event": "corrected",
+          "transport": "restored-producer",
+          "expect": {
+            "history": ["corrected", "retraction", "original"], "versions": ["corrected", "original"], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "retraction-before-correction",
+      "steps": [
+        {
+          "event": "retraction",
+          "expect": {
+            "history": ["retraction"], "versions": [], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        },
+        {
+          "event": "corrected",
+          "expect": {
+            "history": ["retraction", "corrected"], "versions": ["corrected"], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        },
+        {
+          "event": "original",
+          "expect": {
+            "history": ["retraction", "corrected", "original"], "versions": ["corrected", "original"], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        },
+        {
+          "event": "corrected",
+          "transport": "restored-producer",
+          "expect": {
+            "history": ["retraction", "corrected", "original"], "versions": ["corrected", "original"], "current": [],
+            "pending": [], "retracted": ["original"], "conflicts": [], "visible": [],
+            "newlyVisible": [], "references": {}
+          }
+        }
+      ]
+    }
+  ],
+  "replayWholeSequence": {
+    "repeat": 1,
+    "restartBeforeReplay": true,
+    "preserveFinalState": true,
+    "newlyVisible": []
+  },
+  "logicalReferences": {
+    "questionnaire": {
+      "sourceEvent": "pending",
+      "referencePointer": "/entry/2/resource/derivedFrom/0",
+      "targetEvent": "target",
+      "targetPointer": "/entry/4/resource"
+    }
+  }
+}

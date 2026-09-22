@@ -7,25 +7,26 @@
 //
 
 import {
-  assemblerAgent,
+  contextFault,
+  makeConversionProvenance,
+  occurredFor,
+  resolveContextGraph,
+  type ContextGraph,
+} from './context-graph.js'
+import {
   coding,
   concept,
   deduplicateIdentifiedEntries,
   governedSourceIdentifier,
   identifiedEntry,
   identifier,
-  makeApplicationDevice,
-  makeHostDevice,
   makeRecordingDevice,
-  provenanceActivity,
   resourceId,
-  sourceEntityAgent,
 } from './graph.js'
 import {
-  deriveApplicationEntryIdentity,
+  deriveProviderIdentities,
   deriveRecordingDeviceEntryIdentity,
   deriveWriterRecordIdentifier,
-  resolveHostIdentity,
   type ProviderIdentities,
   type RecordingDeviceGraphIdentity,
 } from './identity.js'
@@ -36,34 +37,41 @@ import {
   type MeasurementDefinition,
 } from './measurement-definition.js'
 import { EXTENSIONS, PROFILES, SYSTEMS } from './profiles.js'
-import { parseProviderMeasurementBundle } from './provider.js'
-import type { ProviderMeasurementBundleInput } from './types.js'
-import { providerAdapterCatalog } from '../contract/providers.generated.js'
+import { governedSourceIdentifierIssues } from './provider-input-schemas.js'
 import {
-  collectResults,
-  issues,
-  ok,
-  type Issue,
-  type Result,
-  type UrnUuid,
-} from '../core/index.js'
+  parseNormalizedProviderRecord,
+  parseProviderConversionOptions,
+  providerOutputCoordinates,
+  providerSourceKinds,
+  type ProviderOutputCoordinates,
+} from './provider.js'
+import type {
+  NormalizedProviderRecord,
+  ProviderConversion,
+  ProviderConversionFailure,
+  ProviderConversionOptions,
+} from './types.js'
+import { providerAdapterCatalog } from '../contract/providers.generated.js'
+import { collectResults, issues, ok, type Result } from '../core/index.js'
 import {
   createEntryIdentity,
-  validateDeploymentIdentity,
-  type DeploymentIdentitySource,
+  type EntryIdentity,
+  type RoledIdentifier,
 } from '../mobile/identity.js'
 import type {
-  CompleteIdentifierInput,
-  IdentifiedEntryIdentityInput,
+  ConversionBatch,
+  ExchangeEventContext,
+  ExchangeGraphIdentifiers,
+  GovernedSourceIdentifierDisclosurePolicy,
 } from '../mobile/types.js'
 import {
-  parseGroveMobileExchangeBundle,
+  parseExchangeGraph,
   type CodeableConcept,
-  type GroveMobileExchangeBundle,
+  type ExchangeGraph,
+  type Observation,
 } from '../r4/index.js'
 
-type ConnectedMeasurement =
-  ProviderMeasurementBundleInput['measurements'][number]
+type ConnectedMeasurement = NormalizedProviderRecord['measurements'][number]
 
 const quantity = (
   value: number,
@@ -80,70 +88,57 @@ const quantity = (
 })
 
 interface ResolvedGraphIdentities {
-  readonly sourceRecord: CompleteIdentifierInput
-  readonly event: CompleteIdentifierInput
-  readonly observations: readonly IdentifiedEntryIdentityInput[]
-  readonly provenance: IdentifiedEntryIdentityInput
-  readonly application: IdentifiedEntryIdentityInput
-  readonly applicationHost?: IdentifiedEntryIdentityInput
-  readonly dataOrigin: IdentifiedEntryIdentityInput
-  readonly dataOriginHost?: IdentifiedEntryIdentityInput
-  readonly gatewayReference?: UrnUuid
-  readonly distinctGatewayApplication?: IdentifiedEntryIdentityInput
-  readonly distinctGatewayHost?: IdentifiedEntryIdentityInput
+  readonly connected: ProviderIdentities
+  readonly observations: readonly [EntryIdentity, ...EntryIdentity[]]
+  readonly provenance: EntryIdentity
   readonly recordingDevice?: RecordingDeviceGraphIdentity
-  readonly writerRecord?: CompleteIdentifierInput
+  readonly writerRecord?: RoledIdentifier
 }
 
-type ProviderGraphEntry = GroveMobileExchangeBundle['entry'][number]
-type ProviderGraphResource = Parameters<typeof identifiedEntry>[1]
+type ProviderGraphEntry = ExchangeGraph['entry'][number]
 
+// A validated record names catalog rows the generator proved exist; a miss is a defect.
 const definitionFor = (
-  input: ProviderMeasurementBundleInput,
+  record: NormalizedProviderRecord,
   kind: ConnectedMeasurement['kind'],
 ): MeasurementDefinition => {
   const definition = providerMeasurementDefinition(
-    input.source.adapter.provider,
+    record.source.adapter.provider,
     kind,
   )
   if (definition === undefined) {
     throw new Error(
-      `Validated Provider input has no definition for ${input.source.adapter.provider}/${kind}.`,
+      `Validated Provider record has no definition for ${record.source.adapter.provider}/${kind}.`,
     )
   }
   return definition
 }
 
-const categoryFor = (definition: MeasurementDefinition) => {
-  if (definition.category === undefined) return undefined
-  return [
-    concept(
-      definition.category.system,
-      definition.category.code,
-      definition.category.display,
-    ),
-  ]
-}
+const categoryFor = (definition: MeasurementDefinition) =>
+  definition.category === undefined ?
+    undefined
+  : [
+      concept(
+        definition.category.system,
+        definition.category.code,
+        definition.category.display,
+      ),
+    ]
 
 const profileFor = (
-  input: ProviderMeasurementBundleInput,
+  record: NormalizedProviderRecord,
   kind: ConnectedMeasurement['kind'],
 ): readonly string[] => {
   const semanticProfile = providerMeasurementProfile(
-    input.source.adapter.provider,
+    record.source.adapter.provider,
     kind,
   )
-  if (semanticProfile === undefined) {
-    throw new Error(
-      `Validated Provider input has no semantic profile for ${input.source.adapter.provider}/${kind}.`,
-    )
-  }
   const adapterProfile = providerObservationProfile(
-    input.source.adapter.provider,
+    record.source.adapter.provider,
   )
-  if (adapterProfile === undefined) {
+  if (semanticProfile === undefined || adapterProfile === undefined) {
     throw new Error(
-      `Validated Provider input has no adapter profile for ${input.source.adapter.provider}.`,
+      `Validated Provider record has no profile for ${record.source.adapter.provider}/${kind}.`,
     )
   }
   return [semanticProfile, adapterProfile]
@@ -171,10 +166,10 @@ for (const provider of providerAdapterCatalog.providers) {
 
 /** The aggregation a measurement carries, or `undefined` when the catalog declares none. */
 const aggregationMethodFor = (
-  input: ProviderMeasurementBundleInput,
+  record: NormalizedProviderRecord,
   kind: ConnectedMeasurement['kind'],
 ): CodeableConcept | undefined => {
-  const definition = definitionFor(input, kind)
+  const definition = definitionFor(record, kind)
   if (definition.method !== undefined) {
     return concept(
       SYSTEMS.groveAggregationMethod,
@@ -186,24 +181,22 @@ const aggregationMethodFor = (
     return undefined
   }
   const declared = declaredAggregationMethods.get(
-    `${input.source.adapter.provider}|${input.source.sourceType}|${kind}`,
+    `${record.source.adapter.provider}|${record.source.sourceType}|${kind}`,
   )
   return declared === undefined ? undefined : (
       concept(SYSTEMS.groveAggregationMethod, declared)
     )
 }
 
-/**
- * A measurement whose catalog entry admits more than one aggregation must have one declared for
- * this exact provider and source type, otherwise the emitted Observation would silently omit the
- * method its profile requires.
- */
+// A measurement whose catalog entry admits more than one aggregation must have one declared
+// for this exact provider and source type, otherwise the emitted Observation would omit the
+// method its profile requires.
 const missingAggregationMethod = (
-  input: ProviderMeasurementBundleInput,
+  record: NormalizedProviderRecord,
   kind: ConnectedMeasurement['kind'],
 ): boolean =>
-  definitionFor(input, kind).methodChoice !== undefined &&
-  aggregationMethodFor(input, kind) === undefined
+  definitionFor(record, kind).methodChoice !== undefined &&
+  aggregationMethodFor(record, kind) === undefined
 
 const effectiveFor = (measurement: ConnectedMeasurement) =>
   measurement.effective.kind === 'date-time' ?
@@ -216,11 +209,11 @@ const effectiveFor = (measurement: ConnectedMeasurement) =>
     }
 
 const resultFor = (
-  input: ProviderMeasurementBundleInput,
+  record: NormalizedProviderRecord,
   measurement: ConnectedMeasurement,
 ) => {
   if (measurement.kind === 'blood-pressure') {
-    const definition = definitionFor(input, 'blood-pressure')
+    const definition = definitionFor(record, 'blood-pressure')
     const systolic = definition.components?.[0]
     const diastolic = definition.components?.[1]
     if (systolic?.quantity === undefined || diastolic?.quantity === undefined) {
@@ -242,7 +235,7 @@ const resultFor = (
     }
   }
 
-  const definition = definitionFor(input, measurement.kind)
+  const definition = definitionFor(record, measurement.kind)
 
   if (typeof measurement.value === 'string') {
     const { resultCodeSystem } = definition as {
@@ -264,487 +257,397 @@ const resultFor = (
   }
 }
 
-const makeObservation = (
-  input: ProviderMeasurementBundleInput,
-  measurement: ConnectedMeasurement,
-  observationIdentity: IdentifiedEntryIdentityInput,
-  identities: ResolvedGraphIdentities,
-  method: CodeableConcept | undefined,
-) => {
-  const definition = definitionFor(input, measurement.kind)
-  const category = categoryFor(definition)
-  const extensions = [
-    {
-      url: EXTENSIONS.provider,
-      valueCode: input.source.adapter.provider,
-    },
-    {
-      url: EXTENSIONS.providerSourceType,
-      valueCode: `${input.source.adapter.provider}/${input.source.sourceType}`,
-    },
-    ...(identities.gatewayReference === undefined ?
-      []
-    : [
-        {
-          url: EXTENSIONS.gatewayDevice,
-          valueReference: { reference: identities.gatewayReference },
-        },
-      ]),
-    ...(input.source.recordingMethod === undefined ?
-      []
-    : [
-        {
-          url: EXTENSIONS.recordingMethod,
-          valueCoding: coding(
-            SYSTEMS.groveRecordingMethod,
-            input.source.recordingMethod,
-          ),
-        },
-      ]),
-    ...(input.researchStudyReferences ?? []).map((reference) => ({
-      url: EXTENSIONS.researchStudy,
-      valueReference: {
-        type: reference.type,
-        identifier: {
-          system: reference.identifier.system,
-          value: reference.identifier.value,
-        },
-      },
-    })),
-  ]
+interface ObservationInput {
+  readonly record: NormalizedProviderRecord
+  readonly measurement: ConnectedMeasurement
+  readonly identity: EntryIdentity
+  readonly identities: ResolvedGraphIdentities
+  readonly graph: ContextGraph
+  readonly disclosure: GovernedSourceIdentifierDisclosurePolicy
+}
 
+const makeObservation = (input: ObservationInput): Observation => {
+  const { record, measurement, identity, identities, graph } = input
+  const definition = definitionFor(record, measurement.kind)
+  const category = categoryFor(definition)
+  const method = aggregationMethodFor(record, measurement.kind)
   return {
     resourceType: 'Observation' as const,
-    ...resourceId(observationIdentity),
-    meta: { profile: profileFor(input, measurement.kind) },
+    ...resourceId(identity),
+    meta: { profile: profileFor(record, measurement.kind) },
     extension: [
-      ...extensions,
-      ...(input.source.writerRecord?.version === undefined ?
+      {
+        url: EXTENSIONS.provider,
+        valueCode: record.source.adapter.provider,
+      },
+      {
+        url: EXTENSIONS.providerSourceType,
+        valueCode: `${record.source.adapter.provider}/${record.source.sourceType}`,
+      },
+      ...(graph.gatewayReference === undefined ?
+        []
+      : [
+          {
+            url: EXTENSIONS.gatewayDevice,
+            valueReference: { reference: graph.gatewayReference },
+          },
+        ]),
+      ...(record.source.recordingMethod === undefined ?
+        []
+      : [
+          {
+            url: EXTENSIONS.recordingMethod,
+            valueCoding: coding(
+              SYSTEMS.groveRecordingMethod,
+              record.source.recordingMethod,
+            ),
+          },
+        ]),
+      ...graph.researchStudyExtensions,
+      ...(record.source.writerRecord?.version === undefined ?
         []
       : [
           {
             url: EXTENSIONS.writerRecordVersion,
-            valueString: input.source.writerRecord.version,
+            valueString: record.source.writerRecord.version,
           },
         ]),
     ],
     identifier: [
-      identifier(identities.sourceRecord),
-      identifier(observationIdentity.identifier),
+      identifier(identities.connected.sourceRecord),
+      identifier(identity.identifier),
       ...(identities.writerRecord === undefined ?
         []
       : [identifier(identities.writerRecord)]),
-      ...(input.nativeIdentifierDisclosure === undefined ?
+      ...(input.disclosure.kind === 'omit' ?
         []
-      : [governedSourceIdentifier(input.nativeIdentifierDisclosure)]),
+      : [
+          governedSourceIdentifier(
+            input.disclosure,
+            record.source.sourceNativeId,
+          ),
+        ]),
     ],
     status: 'final' as const,
     ...(category === undefined ? {} : { category }),
     code: {
       coding: [coding(definition.code.system, definition.code.code)],
     },
-    subject: {
-      type: input.subject.type,
-      identifier: {
-        system: input.subject.identifier.system,
-        value: input.subject.identifier.value,
-      },
-    },
+    subject: graph.subject,
     ...effectiveFor(measurement),
-    ...resultFor(input, measurement),
+    ...resultFor(record, measurement),
     ...(method === undefined ? {} : { method }),
-    ...(input.source.recordingDevice === undefined ?
+    ...(identities.recordingDevice === undefined ?
       {}
-    : { device: { reference: identities.recordingDevice?.snapshot.fullUrl } }),
+    : { device: { reference: identities.recordingDevice.snapshot.fullUrl } }),
   }
 }
 
-const makeProvenance = (
-  input: ProviderMeasurementBundleInput,
-  identities: ResolvedGraphIdentities,
-) => {
-  return {
-    resourceType: 'Provenance' as const,
-    ...resourceId(identities.provenance),
-    meta: {
-      profile: [PROFILES.providerConversionProvenance],
-    },
-    target: identities.observations.map(({ fullUrl }) => ({
-      reference: fullUrl,
-    })),
-    occurredDateTime: input.occurred,
-    recorded: input.recorded,
-    activity: provenanceActivity(),
-    agent: [assemblerAgent(identities.application.fullUrl)],
-    entity: [
-      {
-        role: 'source' as const,
-        what: {
-          identifier: identifier(identities.sourceRecord),
-        },
-        agent: [sourceEntityAgent(identities.dataOrigin.fullUrl)],
-      },
-    ],
-  }
-}
-
-const optionalRecordingDeviceIdentity = (
-  input: ProviderMeasurementBundleInput['source']['recordingDevice'],
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
-  adapterId: string,
-): Result<RecordingDeviceGraphIdentity | undefined> =>
-  input === undefined ?
-    ok(undefined)
-  : deriveRecordingDeviceEntryIdentity(deployment, event, adapterId, input)
-
-type ResolvedGatewayIdentity = Pick<
-  ResolvedGraphIdentities,
-  'distinctGatewayApplication' | 'distinctGatewayHost' | 'gatewayReference'
->
-
-const resolveGatewayIdentity = (
-  input: ProviderMeasurementBundleInput['gatewayApplication'],
-  converter: IdentifiedEntryIdentityInput,
-  deployment: DeploymentIdentitySource,
-  event: CompleteIdentifierInput,
-): Result<ResolvedGatewayIdentity> => {
-  if (input === undefined) return ok({})
-  if (input.kind === 'converter-application') {
-    return ok({ gatewayReference: converter.fullUrl })
-  }
-  const application = deriveApplicationEntryIdentity(
-    deployment,
-    event,
-    input.application,
-  )
-  if (!application.ok) return application
-  const host = resolveHostIdentity(input.application, deployment, event)
-  if (!host.ok) return host
-  return ok({
-    gatewayReference: application.value.fullUrl,
-    distinctGatewayApplication: application.value,
-    ...(host.value === undefined ? {} : { distinctGatewayHost: host.value }),
-  })
-}
-
-const missingAggregationIssues = (
-  input: ProviderMeasurementBundleInput,
-): readonly Issue[] =>
-  input.measurements.flatMap((measurement, index) =>
-    missingAggregationMethod(input, measurement.kind) ?
-      [
-        {
-          severity: 'error' as const,
-          code: 'unsupported-measurement' as const,
-          path: ['measurements', index],
-          message:
-            `${input.source.adapter.provider}/${input.source.sourceType} declares no aggregation ` +
-            `for ${measurement.kind}, so its Observation would omit the method its profile requires.`,
-        },
-      ]
-    : [],
-  )
-
-// One output identity is derived per measurement, so a length mismatch is a builder defect
-// rather than a caller error; it is still reported instead of thrown.
-const misalignedIdentities = (path: ReadonlyArray<string | number>) =>
-  issues([
-    {
-      severity: 'error' as const,
-      code: 'value-mismatch' as const,
-      path,
-      message:
-        'Provider output identities do not align with the measurements they were derived from.',
-    },
-  ])
-
-const zipMeasurements = <Value>(
-  input: ProviderMeasurementBundleInput,
-  values: readonly Value[],
-): ReadonlyArray<readonly [ConnectedMeasurement, Value]> | undefined => {
-  const pairs = input.measurements.flatMap((measurement, index) => {
-    const value = values[index]
-    return value === undefined ? [] : [[measurement, value] as const]
-  })
-  return pairs.length === values.length ? pairs : undefined
-}
-
-const resolveObservationIdentities = (
-  input: ProviderMeasurementBundleInput,
-  outputs: readonly CompleteIdentifierInput[],
-): Result<readonly IdentifiedEntryIdentityInput[]> => {
-  const pairs = zipMeasurements(input, outputs)
-  if (pairs === undefined) return misalignedIdentities(['measurements'])
-  return collectResults(
-    pairs.map(([measurement, output]) =>
-      createEntryIdentity(
-        output,
-        input.repositoryIds?.observations?.[measurement.kind],
-      ),
+const outputCoordinates = (
+  record: NormalizedProviderRecord,
+): Result<
+  readonly [ProviderOutputCoordinates, ...ProviderOutputCoordinates[]]
+> => {
+  const coordinates = record.measurements.map(({ kind }) =>
+    providerOutputCoordinates(
+      record.source.adapter.provider,
+      record.source.sourceType,
+      kind,
     ),
   )
+  const [first, ...rest] = coordinates
+  if (first === undefined || coordinates.some((entry) => entry === undefined)) {
+    throw new Error('Validated Provider measurements name no catalog output.')
+  }
+  return ok([first, ...(rest as ProviderOutputCoordinates[])])
+}
+
+// A disclosure is admitted only where the catalog row designates one one-to-one output.
+const disclosureIssues = (
+  record: NormalizedProviderRecord,
+  disclosure: GovernedSourceIdentifierDisclosurePolicy,
+  graph: ContextGraph,
+): Result<undefined> => {
+  if (disclosure.kind === 'omit') return ok(undefined)
+  const scopeIssues = governedSourceIdentifierIssues(
+    disclosure,
+    graph.context.identityScope,
+  )
+  if (scopeIssues.length > 0) return issues(scopeIssues)
+  const rowKinds = providerSourceKinds(
+    record.source.adapter.provider,
+    record.source.sourceType,
+  )
+  return rowKinds.length === 1 && record.measurements.length === 1 ?
+      ok(undefined)
+    : contextFault(
+        ['nativeIdentifierDisclosure'],
+        'The Provider catalog must designate one unique one-to-one Observation before a governed source Identifier may be disclosed; ambiguous multi-output records must omit it.',
+      )
 }
 
 const resolveGraphIdentities = (
-  input: ProviderMeasurementBundleInput,
-  connected: ProviderIdentities,
+  record: NormalizedProviderRecord,
+  graph: ContextGraph,
 ): Result<ResolvedGraphIdentities> => {
-  const aggregation = missingAggregationIssues(input)
-  if (aggregation.length > 0) return issues(aggregation)
-  const deployment = validateDeploymentIdentity(input.deploymentIdentity)
-  if (!deployment.ok) return deployment
-
-  const observations = resolveObservationIdentities(input, connected.outputs)
+  const { context } = graph
+  const repositoryIds = context.repositoryIds ?? {}
+  const coordinates = outputCoordinates(record)
+  if (!coordinates.ok) return coordinates
+  const connected = deriveProviderIdentities({
+    provider: record.source.adapter.provider,
+    repositoryScope: context.repositoryScope,
+    sourceType: record.source.sourceType,
+    sourceNativeId: record.source.sourceNativeId,
+    outputs: coordinates.value.map((output) => ({
+      kind: 'provider-output' as const,
+      ...output,
+    })),
+    event: context.event,
+    scope: context.identityScope,
+  })
+  if (!connected.ok) return connected
+  if (
+    repositoryIds['primary-output'] !== undefined &&
+    connected.value.outputs.length !== 1
+  ) {
+    return contextFault(
+      ['repositoryIds', 'primary-output'],
+      'A primary-output repository id names the sole output of a one-output record.',
+    )
+  }
+  const observations = collectResults(
+    connected.value.outputs.map((output) =>
+      createEntryIdentity(output, repositoryIds['primary-output']),
+    ),
+  )
   if (!observations.ok) return observations
+  const [firstObservation, ...otherObservations] = observations.value
+  if (firstObservation === undefined) {
+    throw new Error('Validated Provider record derived no output identity.')
+  }
   const provenance = createEntryIdentity(
-    connected.provenanceNode,
-    input.repositoryIds?.provenance,
+    connected.value.provenanceNode,
+    repositoryIds.provenance,
   )
   if (!provenance.ok) return provenance
-  const application = deriveApplicationEntryIdentity(
-    deployment.value,
-    connected.event,
-    input.application,
-  )
-  if (!application.ok) return application
-  const applicationHost = resolveHostIdentity(
-    input.application,
-    deployment.value,
-    connected.event,
-  )
-  if (!applicationHost.ok) return applicationHost
-  const gateway = resolveGatewayIdentity(
-    input.gatewayApplication,
-    application.value,
-    deployment.value,
-    connected.event,
-  )
-  if (!gateway.ok) return gateway
-  const dataOrigin = deriveApplicationEntryIdentity(
-    deployment.value,
-    connected.event,
-    input.source.dataOrigin,
-  )
-  if (!dataOrigin.ok) return dataOrigin
-  const dataOriginHost = resolveHostIdentity(
-    input.source.dataOrigin,
-    deployment.value,
-    connected.event,
-  )
-  if (!dataOriginHost.ok) return dataOriginHost
-
-  const recordingDevice = optionalRecordingDeviceIdentity(
-    input.source.recordingDevice,
-    deployment.value,
-    connected.event,
-    input.source.adapter.provider,
-  )
-  if (!recordingDevice.ok) return recordingDevice
-
-  const writerRecord =
-    input.source.writerRecord === undefined ?
-      undefined
-    : deriveWriterRecordIdentifier(
-        deployment.value,
-        input.source.writerRecord.applicationIdentifier,
-        input.source.writerRecord.nativeRecordId,
+  const recordingDevice =
+    record.source.recordingDevice === undefined ?
+      ok(undefined)
+    : deriveRecordingDeviceEntryIdentity(
+        context.identityScope,
+        context.event,
+        record.source.adapter.provider,
+        context.subject.identifier,
+        record.source.recordingDevice,
+        repositoryIds['recording-device'],
       )
-  if (writerRecord !== undefined && !writerRecord.ok) return writerRecord
-
-  const resolved: ResolvedGraphIdentities = {
-    sourceRecord: connected.sourceRecord,
-    event: connected.event,
-    observations: observations.value,
+  if (!recordingDevice.ok) return recordingDevice
+  const writerRecord =
+    record.source.writerRecord === undefined ?
+      ok(undefined)
+    : deriveWriterRecordIdentifier(
+        context.identityScope,
+        record.source.writerRecord,
+      )
+  if (!writerRecord.ok) return writerRecord
+  return ok({
+    connected: connected.value,
+    observations: [firstObservation, ...otherObservations],
     provenance: provenance.value,
-    application: application.value,
-    dataOrigin: dataOrigin.value,
-    ...(applicationHost.value === undefined ?
-      {}
-    : { applicationHost: applicationHost.value }),
-    ...(dataOriginHost.value === undefined ?
-      {}
-    : { dataOriginHost: dataOriginHost.value }),
-    ...gateway.value,
-    ...(writerRecord === undefined ? {} : { writerRecord: writerRecord.value }),
     ...(recordingDevice.value === undefined ?
       {}
     : { recordingDevice: recordingDevice.value }),
-  }
-  return { ok: true, value: resolved }
-}
-
-const buildProviderObservationEntries = (
-  input: ProviderMeasurementBundleInput,
-  identities: ResolvedGraphIdentities,
-): Result<readonly ProviderGraphEntry[]> => {
-  const pairs = zipMeasurements(input, identities.observations)
-  if (pairs === undefined) return misalignedIdentities(['measurements'])
-  return ok(
-    pairs.map(([measurement, identity]) =>
-      identifiedEntry(
-        identity,
-        makeObservation(
-          input,
-          measurement,
-          identity,
-          identities,
-          aggregationMethodFor(input, measurement.kind),
-        ),
-      ),
-    ),
-  )
-}
-
-const optionalIdentifiedEntry = (
-  identity: IdentifiedEntryIdentityInput | undefined,
-  resource: ProviderGraphResource | undefined,
-): readonly ProviderGraphEntry[] =>
-  identity === undefined || resource === undefined ?
-    []
-  : [identifiedEntry(identity, resource)]
-
-const buildProviderSupportingEntries = (
-  input: ProviderMeasurementBundleInput,
-  identities: ResolvedGraphIdentities,
-): readonly ProviderGraphEntry[] => {
-  const applicationHostInput = input.application.host
-  const applicationHost =
-    (
-      applicationHostInput === undefined ||
-      identities.applicationHost === undefined
-    ) ?
-      undefined
-    : makeHostDevice({
-        ...applicationHostInput,
-        identity: identities.applicationHost,
-      })
-  const application = makeApplicationDevice({
-    ...input.application,
-    identity: identities.application,
-    ...(identities.applicationHost === undefined ?
+    ...(writerRecord.value === undefined ?
       {}
-    : { parentReference: identities.applicationHost.fullUrl }),
+    : { writerRecord: writerRecord.value }),
   })
-  const gatewayApplicationInput =
-    input.gatewayApplication?.kind === 'distinct-application' ?
-      input.gatewayApplication.application
-    : undefined
-  const gatewayApplication =
-    (
-      gatewayApplicationInput === undefined ||
-      identities.distinctGatewayApplication === undefined
-    ) ?
-      undefined
-    : makeApplicationDevice({
-        ...gatewayApplicationInput,
-        identity: identities.distinctGatewayApplication,
-        ...(identities.distinctGatewayHost === undefined ?
-          {}
-        : { parentReference: identities.distinctGatewayHost.fullUrl }),
-      })
-  const gatewayHostInput = gatewayApplicationInput?.host
-  const gatewayHost =
-    (
-      gatewayHostInput === undefined ||
-      identities.distinctGatewayHost === undefined
-    ) ?
-      undefined
-    : makeHostDevice({
-        ...gatewayHostInput,
-        identity: identities.distinctGatewayHost,
-      })
-  const recordingDeviceInput = input.source.recordingDevice
+}
+
+const graphIdentifiers = (
+  identities: ResolvedGraphIdentities,
+  graph: ContextGraph,
+): ExchangeGraphIdentifiers => {
+  const [first, ...rest] = identities.connected.outputs
+  if (first === undefined) {
+    throw new Error('Validated Provider record derived no output identity.')
+  }
+  return {
+    event: identities.connected.event,
+    sourceRecord: identities.connected.sourceRecord,
+    outputs: [first, ...rest],
+    provenance: identities.provenance.identifier,
+    applicationSnapshot: graph.application.identifier,
+    hostSnapshot: graph.host.identifier,
+    writerSnapshot: graph.writer.identifier,
+    ...(identities.recordingDevice === undefined ?
+      {}
+    : {
+        recordingDevice: identities.recordingDevice.stableIdentifier,
+        recordingDeviceSnapshot: identities.recordingDevice.snapshot.identifier,
+      }),
+    ...(graph.gatewayApplication === undefined ?
+      {}
+    : { gatewayApplicationSnapshot: graph.gatewayApplication.identifier }),
+    ...(identities.writerRecord === undefined ?
+      {}
+    : { writerRecord: identities.writerRecord }),
+  }
+}
+
+const buildEntries = (
+  record: NormalizedProviderRecord,
+  identities: ResolvedGraphIdentities,
+  graph: ContextGraph,
+  disclosure: GovernedSourceIdentifierDisclosurePolicy,
+): Result<readonly ProviderGraphEntry[]> => {
+  const observations = record.measurements.map((measurement, index) => {
+    const identity = identities.observations[index]
+    if (identity === undefined) {
+      throw new Error(
+        'Provider output identities do not align with the measurements they were derived from.',
+      )
+    }
+    return identifiedEntry(
+      identity,
+      makeObservation({
+        record,
+        measurement,
+        identity,
+        identities,
+        graph,
+        disclosure,
+      }),
+    )
+  })
+  const [firstMeasurement, ...otherMeasurements] = record.measurements
+  const provenance = makeConversionProvenance({
+    identity: identities.provenance,
+    profile: PROFILES.providerConversionProvenance,
+    targets: identities.observations.map(({ fullUrl }) => fullUrl),
+    occurred: occurredFor([
+      firstMeasurement.effective,
+      ...otherMeasurements.map(({ effective }) => effective),
+    ]),
+    recorded: graph.context.conversionInstant,
+    sourceRecord: identities.connected.sourceRecord,
+    graph,
+  })
   const recordingDevice =
     (
-      recordingDeviceInput === undefined ||
+      record.source.recordingDevice === undefined ||
       identities.recordingDevice === undefined
     ) ?
-      undefined
-    : makeRecordingDevice({
-        ...recordingDeviceInput,
-        identity: identities.recordingDevice.snapshot,
-        stableIdentifier: identities.recordingDevice.stableIdentifier,
-      })
-  const dataOriginHostInput = input.source.dataOrigin.host
-  const dataOriginHost =
-    (
-      dataOriginHostInput === undefined ||
-      identities.dataOriginHost === undefined
-    ) ?
-      undefined
-    : makeHostDevice({
-        ...dataOriginHostInput,
-        identity: identities.dataOriginHost,
-      })
-  const dataOrigin = makeApplicationDevice({
-    ...input.source.dataOrigin,
-    identity: identities.dataOrigin,
-    ...(identities.dataOriginHost === undefined ?
-      {}
-    : { parentReference: identities.dataOriginHost.fullUrl }),
-  })
-  const provenance = makeProvenance(input, identities)
-  return [
-    ...optionalIdentifiedEntry(
-      identities.recordingDevice?.snapshot,
-      recordingDevice,
-    ),
-    ...optionalIdentifiedEntry(identities.dataOriginHost, dataOriginHost),
-    identifiedEntry(identities.dataOrigin, dataOrigin),
-    ...optionalIdentifiedEntry(identities.distinctGatewayHost, gatewayHost),
-    ...optionalIdentifiedEntry(
-      identities.distinctGatewayApplication,
-      gatewayApplication,
-    ),
-    ...optionalIdentifiedEntry(identities.applicationHost, applicationHost),
-    identifiedEntry(identities.application, application),
-    identifiedEntry(identities.provenance, provenance),
-  ]
-}
-
-const buildProviderGraphEntries = (
-  input: ProviderMeasurementBundleInput,
-  identities: ResolvedGraphIdentities,
-): Result<readonly ProviderGraphEntry[]> => {
-  const observations = buildProviderObservationEntries(input, identities)
-  if (!observations.ok) return observations
+      []
+    : [
+        identifiedEntry(
+          identities.recordingDevice.snapshot,
+          makeRecordingDevice({
+            ...record.source.recordingDevice,
+            identity: identities.recordingDevice.snapshot,
+            stableIdentifier: identities.recordingDevice.stableIdentifier,
+          }),
+        ),
+      ]
   return deduplicateIdentifiedEntries([
-    ...observations.value,
-    ...buildProviderSupportingEntries(input, identities),
+    ...graph.leadingEntries,
+    ...observations,
+    ...recordingDevice,
+    ...graph.supportingEntries,
+    identifiedEntry(identities.provenance, provenance),
   ])
 }
 
 /**
- * Builds one deterministic, profile-stamped R4 resource graph for the non-empty
- * subset of catalog-admitted outputs present in a connected-provider source
- * record. Every output shares one conversion Provenance. Native ids are digest
- * input by default and may appear only through the explicit governed disclosure
- * policy. Times, repository ids, and the durable event sequence remain
- * caller-owned; malformed inputs return structured issues and no partial graph.
+ * Converts one normalized provider record into its exchange graph.
+ *
+ * The context needs the subject, the event this scope minted, the identity scope, the
+ * repository scope, the application and the host; the conversion instant defaults to now,
+ * the converter role to the assembler, and the studies to none. A refused record returns
+ * `mobile-input.*` issues; a context or option fault returns the package's schema codes.
+ * Every output shares one conversion Provenance whose occurred time spans the outputs'
+ * effective times and whose recorded time is the conversion instant. A catalog
+ * inconsistency the generator should have caught throws, because no input can cause it.
  */
-export const buildProviderMeasurementBundle = (
-  input: ProviderMeasurementBundleInput,
-): Result<GroveMobileExchangeBundle> => {
-  const parsed = parseProviderMeasurementBundle(input)
-  if (!parsed.ok) return parsed
-  const { input: validatedInput, identities: connected } = parsed.value
-
-  const identities = resolveGraphIdentities(validatedInput, connected)
+export const buildProviderExchangeGraph = (
+  record: NormalizedProviderRecord,
+  context: ExchangeEventContext,
+  options: ProviderConversionOptions = {},
+): Result<ProviderConversion> => {
+  const parsedRecord = parseNormalizedProviderRecord(record)
+  if (!parsedRecord.ok) return parsedRecord
+  const parsedOptions = parseProviderConversionOptions(options)
+  if (!parsedOptions.ok) return parsedOptions
+  const graph = resolveContextGraph(
+    context,
+    parsedRecord.value.source.writer,
+    true,
+  )
+  if (!graph.ok) return graph
+  const disclosure = parsedOptions.value.nativeIdentifierDisclosure ?? {
+    kind: 'omit',
+  }
+  const admitted = disclosureIssues(parsedRecord.value, disclosure, graph.value)
+  if (!admitted.ok) return admitted
+  const aggregation = parsedRecord.value.measurements.flatMap(
+    (measurement, index) =>
+      missingAggregationMethod(parsedRecord.value, measurement.kind) ?
+        [
+          {
+            severity: 'error' as const,
+            code: 'mobile-input.unsupported-source-value' as const,
+            path: ['measurements', index],
+            message: `${parsedRecord.value.source.adapter.provider}/${parsedRecord.value.source.sourceType} declares no aggregation for ${measurement.kind}, so its Observation would omit the method its profile requires.`,
+          },
+        ]
+      : [],
+  )
+  if (aggregation.length > 0) return issues(aggregation)
+  const identities = resolveGraphIdentities(parsedRecord.value, graph.value)
   if (!identities.ok) return identities
-
-  const entry = buildProviderGraphEntries(validatedInput, identities.value)
-  if (!entry.ok) return entry
-
-  return parseGroveMobileExchangeBundle({
+  const entries = buildEntries(
+    parsedRecord.value,
+    identities.value,
+    graph.value,
+    disclosure,
+  )
+  if (!entries.ok) return entries
+  const { repositoryIds = {} } = graph.value.context
+  const parsed = parseExchangeGraph({
     resourceType: 'Bundle',
-    ...(validatedInput.repositoryIds?.bundle === undefined ?
-      {}
-    : { id: validatedInput.repositoryIds.bundle }),
+    ...(repositoryIds.bundle === undefined ? {} : { id: repositoryIds.bundle }),
     meta: { profile: [PROFILES.mobileBundle] },
-    identifier: identifier(identities.value.event),
+    identifier: identifier(identities.value.connected.event),
     type: 'collection',
-    timestamp: validatedInput.assembled,
-    entry: entry.value,
+    timestamp: graph.value.context.conversionInstant,
+    entry: entries.value,
   })
+  if (!parsed.ok) return parsed
+  return ok({
+    source: parsedRecord.value.source,
+    identifiers: graphIdentifiers(identities.value, graph.value),
+    graph: parsed.value,
+    warnings: [],
+  })
+}
+
+/**
+ * Converts several records, each under the context its callback reserves for it.
+ *
+ * A refused record becomes a failure with its registry codes; the callback's own errors
+ * propagate, because a failed reservation is the caller's exception and never a refusal.
+ */
+export const buildProviderExchangeGraphs = (
+  records: readonly NormalizedProviderRecord[],
+  context: (record: NormalizedProviderRecord) => ExchangeEventContext,
+  options: ProviderConversionOptions = {},
+): ConversionBatch<ProviderConversion, ProviderConversionFailure> => {
+  const conversions: ProviderConversion[] = []
+  const failures: ProviderConversionFailure[] = []
+  for (const record of records) {
+    const result = buildProviderExchangeGraph(record, context(record), options)
+    if (result.ok) conversions.push(result.value)
+    else failures.push({ record, issues: result.issues })
+  }
+  return { conversions, failures }
 }

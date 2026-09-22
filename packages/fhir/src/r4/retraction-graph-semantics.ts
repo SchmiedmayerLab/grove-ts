@@ -24,9 +24,12 @@ import {
   type UnknownRecord,
 } from './graph-schema-utils.js'
 import type { R4CollectionBundle } from './types.js'
+import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import { parseAbsoluteUri } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
 import { isOpaqueIdentityValue } from '../mobile/identity.js'
+
+const RETRACTION = groveExchangeProtocol.lifecycle.retraction
+const LIFECYCLE_EVENT_SYSTEM = groveExchangeProtocol.codeSystems.lifecycleEvent
 
 const retractionRoleFor = (reference: unknown): string | undefined => {
   const extensions = asRecord(reference)?.extension
@@ -34,13 +37,13 @@ const retractionRoleFor = (reference: unknown): string | undefined => {
   const matches = extensions.filter(
     (extension) =>
       asRecord(extension)?.url ===
-      groveMobileContract.extensions.retractionTargetRole,
+      groveExchangeProtocol.extensions.retractionTargetRole,
   )
   const code = asRecord(matches[0])?.valueCode
   return matches.length === 1 && typeof code === 'string' ? code : undefined
 }
 
-const RETRACTION_TARGET_RULES = groveMobileContract.lifecycle.retractionTargets
+const RETRACTION_TARGET_RULES = RETRACTION.targetRoles
 const RETRACTION_ROLES: ReadonlySet<string> = new Set(
   Object.keys(RETRACTION_TARGET_RULES),
 )
@@ -56,12 +59,7 @@ const validateRetractionResourceSet = (
       ),
   )
   if (containsClinicalCopy) {
-    addIssue(
-      context,
-      'mobile-retraction.no-clinical-copy',
-      ['entry'],
-      'Retraction Bundles contain Provenance and optional Device agents only.',
-    )
+    addIssue(context, 'mobile-retraction.no-clinical-copy', ['entry'])
   }
 }
 
@@ -75,17 +73,12 @@ const selectRetractionProvenance = (
   const retractions = provenances.filter((resource) =>
     codingExists(
       asRecord(resource)?.activity,
-      groveMobileContract.systems.lifecycleEvent,
-      groveMobileContract.lifecycle.sourceRecordRetracted,
+      LIFECYCLE_EVENT_SYSTEM,
+      RETRACTION.activityCode,
     ),
   )
   if (provenances.length !== 1 || retractions.length !== 1) {
-    addIssue(
-      context,
-      'mobile-retraction.provenance',
-      ['entry'],
-      'A retraction event requires exactly one retraction Provenance and no transform Provenance.',
-    )
+    addIssue(context, 'mobile-retraction.provenance', ['entry'])
     return undefined
   }
   return asRecord(retractions[0])
@@ -100,33 +93,20 @@ const validateRetractionProvenanceHeader = (
   if (
     !Array.isArray(profiles) ||
     profiles.length !== 1 ||
-    profiles[0] !== groveMobileContract.profiles.retractionProvenance
+    profiles[0] !== groveExchangeProtocol.profiles.retractionProvenance
   ) {
-    addIssue(
-      context,
-      'mobile-retraction.provenance-profile',
-      ['entry'],
-      'Retraction Provenance must declare the Grove Mobile retraction profile.',
-    )
+    addIssue(context, 'mobile-exchange.provenance-profile', ['entry'])
   }
   if (
     codingCount(
       provenance.activity,
-      groveMobileContract.systems.lifecycleEvent,
-      groveMobileContract.lifecycle.sourceRecordRetracted,
+      LIFECYCLE_EVENT_SYSTEM,
+      RETRACTION.activityCode,
     ) !== 1 ||
-    codingCountForSystem(
-      provenance.activity,
-      groveMobileContract.systems.lifecycleEvent,
-    ) !== 1 ||
+    codingCountForSystem(provenance.activity, LIFECYCLE_EVENT_SYSTEM) !== 1 ||
     codingCountForSystem(provenance.activity, ISO_LIFECYCLE_SYSTEM) !== 0
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.lifecycle-coding',
-      ['entry'],
-      'Retraction Provenance requires exactly one source-record-retracted coding from the Grove lifecycle system and no ISO transform lifecycle coding.',
-    )
+    addIssue(context, 'mobile-exchange.lifecycle-coding', ['entry'])
   }
   validateAssemblerAgent(provenance, envelope, context, ['entry'])
 }
@@ -143,12 +123,12 @@ const validateRetractionTargetShape = (
     reference.type === '' ||
     !completeIdentifier(targetIdentifier)
   ) {
-    addIssue(
-      context,
-      'mobile-retraction.logical-target',
-      ['entry', 'resource', 'target', index],
-      'A retraction target must be a typed logical Reference with no literal reference.',
-    )
+    addIssue(context, 'mobile-retraction.logical-target', [
+      'entry',
+      'resource',
+      'target',
+      index,
+    ])
   }
 }
 
@@ -164,12 +144,13 @@ const validateRetractionTargetIdentity = (
     identifierRole(targetIdentifier) !== expectedRole ||
     !isOpaqueIdentityValue(targetIdentifier.value)
   ) {
-    addIssue(
-      context,
-      'mobile-retraction.opaque-target',
-      ['entry', 'resource', 'target', index, 'identifier'],
-      'Each target requires the exact typed canonical Grove HMAC Identifier previously emitted.',
-    )
+    addIssue(context, 'mobile-retraction.opaque-target', [
+      'entry',
+      'resource',
+      'target',
+      index,
+      'identifier',
+    ])
   }
 }
 
@@ -182,12 +163,13 @@ const recordDistinctTarget = (
   if (!completeIdentifier(targetIdentifier)) return
   const pair = `${targetIdentifier.system.length}:${targetIdentifier.system}${targetIdentifier.value.length}:${targetIdentifier.value}`
   if (keys.has(pair)) {
-    addIssue(
-      context,
-      'mobile-retraction.distinct-target',
-      ['entry', 'resource', 'target', index, 'identifier'],
-      'Retraction target Identifier pairs must be unique.',
-    )
+    addIssue(context, 'mobile-retraction.distinct-target', [
+      'entry',
+      'resource',
+      'target',
+      index,
+      'identifier',
+    ])
   }
   keys.add(pair)
 }
@@ -204,7 +186,7 @@ const validateRetractionTargetNativeIdentifier = (
   const matches = extensions.filter(
     (extension) =>
       asRecord(extension)?.url ===
-      groveMobileContract.extensions.retractionTargetNativeIdentifier,
+      groveExchangeProtocol.extensions.retractionTargetNativeIdentifier,
   )
   if (matches.length === 0) return
   const native = asRecord(matches[0])?.valueIdentifier
@@ -214,18 +196,18 @@ const validateRetractionTargetNativeIdentifier = (
     !parseAbsoluteUri(native.system).ok ||
     groveIdentifierRoles(native).length > 0
   ) {
-    addIssue(
-      context,
-      'mobile-retraction.native-record-identifier',
-      ['entry', 'resource', 'target', index, 'extension'],
-      "A target carries at most one native record Identifier, complete in the adapter's own absolute key space and free of any Grove identifier-role coding.",
-    )
+    addIssue(context, 'mobile-retraction.native-record-identifier', [
+      'entry',
+      'resource',
+      'target',
+      index,
+      'extension',
+    ])
   }
 }
 
 const validateRetractionTargetType = (
   reference: UnknownRecord | undefined,
-  role: string | undefined,
   targetRule:
     | (typeof RETRACTION_TARGET_RULES)[keyof typeof RETRACTION_TARGET_RULES]
     | undefined,
@@ -237,12 +219,13 @@ const validateRetractionTargetType = (
     (typeof reference?.type !== 'string' ||
       !(targetRule.resourceTypes as readonly string[]).includes(reference.type))
   ) {
-    addIssue(
-      context,
-      'mobile-retraction.role-target-type',
-      ['entry', 'resource', 'target', index, 'type'],
-      `${String(role)} targets must declare one of the admitted Reference.type values: ${(targetRule.resourceTypes as readonly string[]).join(', ')}.`,
-    )
+    addIssue(context, 'mobile-retraction.role-target-type', [
+      'entry',
+      'resource',
+      'target',
+      index,
+      'type',
+    ])
   }
 }
 
@@ -261,12 +244,13 @@ const validateRetractionTarget = (
   const identifier = reference?.identifier
   validateRetractionTargetShape(reference, identifier, index, context)
   if (role === undefined || !RETRACTION_ROLES.has(role)) {
-    addIssue(
-      context,
-      'mobile-retraction.target-role',
-      ['entry', 'resource', 'target', index, 'extension'],
-      'Each target requires exactly one closed Grove target role.',
-    )
+    addIssue(context, 'mobile-retraction.target-role', [
+      'entry',
+      'resource',
+      'target',
+      index,
+      'extension',
+    ])
   }
   validateRetractionTargetIdentity(
     identifier,
@@ -275,7 +259,7 @@ const validateRetractionTarget = (
     context,
   )
   recordDistinctTarget(identifier, index, keys, context)
-  validateRetractionTargetType(reference, role, targetRule, index, context)
+  validateRetractionTargetType(reference, targetRule, index, context)
   validateRetractionTargetNativeIdentifier(reference, index, context)
 }
 
@@ -285,12 +269,7 @@ const validateRetractionTargets = (
 ): void => {
   const targets = Array.isArray(provenance.target) ? provenance.target : []
   if (targets.length === 0) {
-    addIssue(
-      context,
-      'mobile-retraction.target-required',
-      ['entry'],
-      'Retraction Provenance requires at least one exact logical target.',
-    )
+    addIssue(context, 'mobile-retraction.target-required', ['entry'])
   }
   const keys = new Set<string>()
   for (const [index, target] of targets.entries()) {
@@ -307,12 +286,7 @@ const validateRetractionSource = (
   const sourceWhat = asRecord(sourceEntity?.what)
   const source = sourceWhat?.identifier
   if (entities.length !== 1) {
-    addIssue(
-      context,
-      'mobile-exchange.single-source-entity',
-      ['entry'],
-      'Retraction Provenance must carry exactly one source entity.',
-    )
+    addIssue(context, 'mobile-exchange.single-source-entity', ['entry'])
   }
   if (
     sourceEntity?.role !== 'source' ||
@@ -322,12 +296,7 @@ const validateRetractionSource = (
     identifierRole(source) !== 'source-record' ||
     !isOpaqueIdentityValue(source.value)
   ) {
-    addIssue(
-      context,
-      'mobile-exchange.logical-source-entity',
-      ['entry'],
-      'Retraction Provenance source must be a logical typed opaque source-record Identifier with no literal reference.',
-    )
+    addIssue(context, 'mobile-exchange.logical-source-entity', ['entry'])
   }
 }
 
@@ -340,12 +309,9 @@ const validateRetractionTimes = (
       provenance.occurredPeriod === undefined) ||
     provenance.recorded === undefined
   ) {
-    addIssue(
-      context,
-      'mobile-retraction.times',
-      ['entry'],
-      'Retraction Provenance requires distinct occurred[x] and recorded fields.',
-    )
+    addIssue(context, 'mobile-exchange.event-times', ['entry'], {
+      location: 'Provenance.occurred[x]',
+    })
   }
 }
 
@@ -356,7 +322,7 @@ export const refineRetractionBundle = (
   const envelope = validateExchangeEnvelope(
     bundle,
     context,
-    groveMobileContract.profiles.retractionBundle,
+    groveExchangeProtocol.profiles.retractionBundle,
   )
   if (envelope === undefined) return
   const resources = envelope.entries.map(({ resource }) => resource)

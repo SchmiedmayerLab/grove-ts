@@ -9,11 +9,14 @@
 /* eslint-disable sonarjs/no-clear-text-protocols -- FHIR fixes these canonical URIs to HTTP. */
 
 import {
+  groveExchangeProtocol,
+  groveMobileProfileCanonicals,
+} from '../contract/measurement-catalog.generated.js'
+import {
   providerAdapterCatalog,
   groveProviderPackageCanonicals,
   groveProviderProfileCanonicals,
 } from '../contract/providers.generated.js'
-import { groveMobileContract } from '../mobile/contract.js'
 
 export const PROVIDER_RECORDING_OUTPUT_ROLE: 'native-recording' =
   providerAdapterCatalog.recordingDocument.outputRole
@@ -30,10 +33,10 @@ type GroveSystems = Readonly<{
 
 export const SYSTEMS: GroveSystems = {
   groveAggregationMethod: `${groveProviderPackageCanonicals.mobile}/CodeSystem/grove-aggregation-method`,
-  groveIdentifierRole: groveMobileContract.systems.identifierRole,
-  groveLifecycleEvent: groveMobileContract.systems.lifecycleEvent,
+  groveIdentifierRole: groveExchangeProtocol.codeSystems.identifierRole,
+  groveLifecycleEvent: groveExchangeProtocol.codeSystems.lifecycleEvent,
   groveRecordingMethod: `${groveProviderPackageCanonicals.mobile}/CodeSystem/grove-recording-method`,
-  isoLifecycle: 'http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle',
+  isoLifecycle: groveExchangeProtocol.lifecycle.active.activitySystem,
   provenanceParticipant:
     'http://terminology.hl7.org/CodeSystem/provenance-participant-type',
 } as const
@@ -55,7 +58,7 @@ export const PROFILES: GroveProfiles = {
   mobileBundle: groveProviderProfileCanonicals['grove-mobile-exchange-bundle'],
   recordingDevice: groveProviderProfileCanonicals['grove-recording-device'],
   applicationDevice: groveProviderProfileCanonicals['grove-application-device'],
-  hostDevice: groveMobileContract.profiles.hostDevice,
+  hostDevice: groveMobileProfileCanonicals['grove-host-device'],
   providerObservation: groveProviderProfileCanonicals['providers-observation'],
   sensorRecordingDocument:
     groveProviderProfileCanonicals['grove-sensor-recording-document'],
@@ -63,8 +66,8 @@ export const PROFILES: GroveProfiles = {
     groveProviderProfileCanonicals['providers-recording-document'],
   providerConversionProvenance:
     groveProviderProfileCanonicals['providers-conversion-provenance'],
-  retractionBundle: groveMobileContract.profiles.retractionBundle,
-  retractionProvenance: groveMobileContract.profiles.retractionProvenance,
+  retractionBundle: groveExchangeProtocol.profiles.retractionBundle,
+  retractionProvenance: groveExchangeProtocol.profiles.retractionProvenance,
 } as const
 
 type GroveExtensions = Readonly<{
@@ -79,18 +82,25 @@ type GroveExtensions = Readonly<{
   writerRecordVersion: string
 }>
 
+const extensionTarget = (name: string): string => {
+  const rule = groveExchangeProtocol.referencePolicy.extensionTargets.find(
+    ({ url }) => url.endsWith(`/${name}`),
+  )
+  if (rule === undefined) {
+    throw new Error(`The exchange protocol names no ${name} extension target.`)
+  }
+  return rule.url
+}
+
 export const EXTENSIONS: GroveExtensions = {
-  gatewayDevice:
-    'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
+  gatewayDevice: extensionTarget('observation-gatewayDevice'),
   recordingMethod: `${groveProviderPackageCanonicals.mobile}/StructureDefinition/grove-recording-method`,
-  provider: `${groveProviderPackageCanonicals.providers}/StructureDefinition/provider`,
-  providerSourceType: `${groveProviderPackageCanonicals.providers}/StructureDefinition/provider-source-type`,
-  entryNodeKey: groveMobileContract.extensions.entryNodeKey,
-  retractionTargetRole: groveMobileContract.extensions.retractionTargetRole,
+  provider: providerAdapterCatalog.providerExtension.url,
+  providerSourceType: providerAdapterCatalog.sourceTypeExtension.url,
+  entryNodeKey: groveExchangeProtocol.extensions.entryNodeKey,
+  retractionTargetRole: groveExchangeProtocol.extensions.retractionTargetRole,
   retractionTargetNativeIdentifier:
-    groveMobileContract.extensions.retractionTargetNativeIdentifier,
-  researchStudy:
-    'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',
-  writerRecordVersion:
-    'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-writer-record-version',
+    groveExchangeProtocol.extensions.retractionTargetNativeIdentifier,
+  researchStudy: extensionTarget('workflow-researchStudy'),
+  writerRecordVersion: groveExchangeProtocol.extensions.writerRecordVersion,
 } as const

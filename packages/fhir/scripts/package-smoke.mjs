@@ -47,14 +47,22 @@ for (const [name, entryPoint] of [
 }
 
 assert.equal(typeof mobile.canonicalizeMobileEffectiveInstant, 'function')
+assert.equal(typeof mobile.validateOpaqueIdentityScope, 'function')
+assert.equal(typeof mobile.deriveOpaqueIdentitySystems, 'function')
+assert.equal(typeof root.isSemanticallyEqual, 'function')
+assert.equal(typeof root.retractionTargets, 'function')
 assert.equal(root.groveFhirVersion, '4.0.1')
 assert.equal('groveFhirContractVersion' in root, false)
+assert.equal('groveMobileContract' in root, false)
 assert.equal(root.groveExchangeProtocol.schemaVersion, 0)
 assert.equal(root.groveExchangeProtocol.protocolVersion, 0)
 assert.equal('version' in root.groveExchangeProtocol, false)
 assert.equal('releaseVersion' in root.groveExchangeProtocol, false)
-assert.equal('version' in root.groveMobileContract, false)
 assert.equal('version' in root.groveRecordingFormatRegistry, false)
+assert.equal(
+  root.groveProducerDiagnostics['mobile-omission.source-offset'].severity,
+  'warning',
+)
 assert.equal(
   mobile.groveMobilePackageMetadata.packageId,
   'org.grovealliance.fhir.mobile',
@@ -73,9 +81,10 @@ assert.equal(
 )
 assert.equal(typeof root.parseFhirInstant, 'function')
 assert.equal(typeof r4.parseR4CollectionBundle, 'function')
-assert.equal(typeof r4.parseGroveMobileExchangeBundle, 'function')
-assert.equal(typeof r4.parseGroveMobileRetractionBundle, 'function')
-assert.equal(typeof provider.parseProviderRetractionInput, 'function')
+assert.equal(typeof r4.parseExchangeGraph, 'function')
+assert.equal(typeof r4.parseRetractionEvent, 'function')
+assert.equal(typeof provider.buildProviderRetractionEvent, 'function')
+assert.equal(typeof provider.buildProviderExchangeGraphs, 'function')
 assert.equal(typeof provider.providerOutputCoordinates, 'function')
 assert.equal(typeof provider.providerOutputRole, 'function')
 assert.equal(typeof questionnaire.buildQuestionnaire, 'function')

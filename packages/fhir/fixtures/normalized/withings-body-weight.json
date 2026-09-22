@@ -1,18 +1,16 @@
 {
   "source": {
-    "adapter": { "kind": "providers", "provider": "withings" },
-    "providerScopeIdentifier": {
-      "system": "https://example.org/deployments/provider-accounts",
-      "value": "pseudonym-withings-001",
-      "assurance": "deployment-scoped-account-pseudonym"
+    "adapter": {
+      "kind": "providers",
+      "provider": "withings"
     },
     "sourceType": "getmeas:1",
     "sourceNativeId": "synthetic-weight-2026-08-20",
-    "recordingMethod": "automatically-recorded",
-    "dataOrigin": {
+    "writer": {
       "sourceDeviceToken": "origin-instance-withings-001",
       "name": "Withings"
-    }
+    },
+    "recordingMethod": "automatically-recorded"
   },
   "measurements": [
     {

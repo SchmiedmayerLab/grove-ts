@@ -10,89 +10,82 @@ import { readFileSync } from 'node:fs'
 import { expectTypeOf } from 'expect-type'
 import { assert, property, uint8Array } from 'fast-check'
 import {
-  deploymentIdentity,
+  application,
+  context,
+  conversionInstant,
+  identityScope,
   instant,
-  patient,
   unwrap,
   uri,
 } from './provider-test-support.js'
 import { adapterSourceMarkerClaims } from '../src/contract/measurement-catalog.generated.js'
 import {
   parseFhirId,
-  parseGroveMobileExchangeBundle,
+  parseExchangeGraph,
   parsePositiveInteger,
   type Result,
 } from '../src/index.js'
 import {
-  buildProviderRecordingBundle,
+  buildProviderRecordingGraph,
   groveRecordingFormatRegistry,
   healthKitClinicalRecordAdmission,
   providerRawOutputRoles,
   encodeRecordingBytes,
   parseCanonicalBase64,
-  parseProviderRecordingBundleInput,
+  parseProviderRecordingAttachment,
+  parseProviderRecordingSource,
   parseImmutableRecordingUrl,
   parseMediaType,
   parseSha1Base64,
-  type ApplicationDeviceInput,
-  type ProviderRecordingBundleInput,
   type ConnectedRawProvider,
+  type ProviderRecordingAttachment,
+  type ProviderRecordingConversion,
+  type ProviderRecordingSource,
 } from '../src/providers/index.js'
 
-const converter: ApplicationDeviceInput = {
-  sourceDeviceToken: 'converter-instance-7f3a',
-  name: 'Grove converter',
-  version: '0.0.0',
-}
-
-const rawInput = (
+const rawSource = (
   provider: ConnectedRawProvider,
   sourceType: string,
-): ProviderRecordingBundleInput =>
+): ProviderRecordingSource =>
   ({
-    source: {
-      adapter: { kind: 'providers', provider },
-      providerScopeIdentifier:
-        provider === 'oura' ?
-          {
-            system: uri('https://example.org/provider-key-spaces'),
-            value: 'oura-document-uuid-global',
-            assurance: 'documented-global-key-space',
-          }
-        : {
-            system: uri('https://provider.example.org/accounts'),
-            value: 'account-pseudonym-001',
-            assurance: 'deployment-scoped-account-pseudonym',
-          },
-      sourceType,
-      sourceNativeId: `native-record-${provider}-${sourceType}`,
-      dataOrigin: {
-        sourceDeviceToken: `origin-${provider}`,
-        name: `${provider} source`,
-      },
+    adapter: { kind: 'providers', provider },
+    sourceType,
+    sourceNativeId: `native-record-${provider}-${sourceType}`,
+    writer: {
+      sourceDeviceToken: `origin-${provider}`,
+      name: `${provider} source`,
     },
-    attachment: {
-      kind: 'embedded',
-      contentType: unwrap(
-        parseMediaType(
-          groveRecordingFormatRegistry.formats['provider-recording']
-            .contentTypes[0],
-        ),
-      ),
-      title: 'Authorized minimized provider recording',
-      format: 'provider-recording',
-      payloadAssertion: 'caller-authorized-opaque-payload',
-      dataBase64: unwrap(encodeRecordingBytes(Uint8Array.of(1, 2, 3))),
+    effective: {
+      kind: 'period',
+      start: instant('2026-08-20T00:00:00Z'),
+      end: instant('2026-08-20T12:00:00Z'),
     },
-    subject: patient,
-    application: converter,
-    eventSequence: '1',
-    deploymentIdentity,
-    documentDate: instant('2026-08-20T17:00:01Z'),
-    occurred: instant('2026-08-20T17:00:00Z'),
-    recorded: instant('2026-08-20T17:00:02Z'),
-    assembled: instant('2026-08-20T17:00:03Z'),
-  }) as ProviderRecordingBundleInput
+  }) as ProviderRecordingSource
+
+const embedded: ProviderRecordingAttachment = {
+  kind: 'embedded',
+  contentType: unwrap(
+    parseMediaType(
+      groveRecordingFormatRegistry.formats['provider-recording']
+        .contentTypes[0],
+    ),
+  ),
+  title: 'Authorized minimized provider recording',
+  format: 'provider-recording',
+  payloadAssertion: 'caller-authorized-opaque-payload',
+  dataBase64: unwrap(encodeRecordingBytes(Uint8Array.of(1, 2, 3))),
+}
+
+const build = (
+  source: ProviderRecordingSource,
+  attachment: ProviderRecordingAttachment = embedded,
+  overrides = {},
+): Result<ProviderRecordingConversion> =>
+  buildProviderRecordingGraph(
+    source,
+    attachment,
+    context(source.adapter.provider, '1', overrides),
+  )
 
 const recordingSources = Object.entries(providerRawOutputRoles).flatMap(
   ([provider, sources]) =>
@@ -112,11 +105,9 @@ const mutableRecordingGraph = (): {
   readonly bundle: unknown
   readonly document: MutableJsonObject
 } => {
-  const built = buildProviderRecordingBundle(
-    rawInput('google-health-api', 'heart-rate'),
+  const bundle = structuredClone(
+    unwrap(build(rawSource('google-health-api', 'heart-rate'))).graph,
   )
-  if (!built.ok) throw new Error('Expected a valid recording graph fixture.')
-  const bundle = structuredClone(built.value)
   const entries = mutableObject(bundle, 'Bundle').entry
   if (!Array.isArray(entries)) throw new Error('Expected Bundle.entry.')
   const documentEntry: unknown = entries.find(
@@ -136,39 +127,17 @@ const mutableRecordingGraph = (): {
   }
 }
 
+const documentOf = (conversion: ProviderRecordingConversion) => {
+  const document = conversion.graph.entry.find(
+    ({ resource }) => resource.resourceType === 'DocumentReference',
+  )?.resource
+  if (document?.resourceType !== 'DocumentReference') {
+    throw new Error('Missing recording document.')
+  }
+  return document
+}
+
 describe('Provider native recording graph', () => {
-  it('enforces the catalog provider scope for native recordings', () => {
-    const oura = rawInput('oura', 'heartrate')
-    expect(
-      parseProviderRecordingBundleInput({
-        ...oura,
-        source: {
-          ...oura.source,
-          providerScopeIdentifier: {
-            system: uri('https://example.org/provider-accounts'),
-            value: 'account-pseudonym',
-            assurance: 'deployment-scoped-account-pseudonym',
-          },
-        },
-      }).ok,
-    ).toBe(false)
-
-    const withings = rawInput('withings', 'activityIntraday')
-    expect(
-      parseProviderRecordingBundleInput({
-        ...withings,
-        source: {
-          ...withings.source,
-          providerScopeIdentifier: {
-            system: uri('https://example.org/provider-key-spaces'),
-            value: 'withings-global',
-            assurance: 'documented-global-key-space',
-          },
-        },
-      }).ok,
-    ).toBe(false)
-  })
-
   it.each([
     'google-health-heart-rate-recording.json',
     'oura-heart-rate-recording.json',
@@ -179,32 +148,28 @@ describe('Provider native recording graph', () => {
       readFileSync(new URL(`../fixtures/normalized/${name}`, import.meta.url), {
         encoding: 'utf8',
       }),
-    ) as Pick<ProviderRecordingBundleInput, 'attachment' | 'source'>
-    const graph = rawInput('google-health-api', 'heart-rate')
-    expect(
-      buildProviderRecordingBundle({
-        ...graph,
-        ...fixture,
-      }).ok,
-    ).toBe(true)
+    ) as {
+      source: ProviderRecordingSource
+      attachment: ProviderRecordingAttachment
+    }
+    expect(parseProviderRecordingSource(fixture.source).ok).toBe(true)
+    expect(parseProviderRecordingAttachment(fixture.attachment).ok).toBe(true)
+    expect(build(fixture.source, fixture.attachment).ok).toBe(true)
   })
 
   it.each(recordingSources)(
     'admits the exact catalogued %s/%s raw source',
     (provider, sourceType) => {
-      const result = buildProviderRecordingBundle(
-        rawInput(provider as ConnectedRawProvider, sourceType),
+      const result = build(
+        rawSource(provider as ConnectedRawProvider, sourceType),
       )
       expect(result.ok).toBe(true)
       if (!result.ok) return
 
-      expect(result.value.entry).toHaveLength(4)
-      expect(Object.isFrozen(result.value)).toBe(true)
-      const document = result.value.entry.find(
-        ({ resource }) => resource.resourceType === 'DocumentReference',
-      )?.resource
-      expect(document?.resourceType).toBe('DocumentReference')
-      if (document?.resourceType !== 'DocumentReference') return
+      expect(result.value.graph.entry).toHaveLength(5)
+      expect(Object.isFrozen(result.value.graph)).toBe(true)
+      expect(result.value.warnings).toEqual([])
+      const document = documentOf(result.value)
       expect(document.meta?.profile).toEqual([
         'https://grovealliance.org/fhir/sensor/StructureDefinition/grove-sensor-recording-document',
         'https://grovealliance.org/fhir/providers/StructureDefinition/providers-recording-document',
@@ -220,40 +185,33 @@ describe('Provider native recording graph', () => {
         },
       ])
       expect(document.identifier?.map(({ system }) => system)).toEqual([
-        deploymentIdentity.opaqueIdentifierSystems['provider-record'],
-        (
-          deploymentIdentity.opaqueIdentifierSystems as Readonly<
-            Record<string, string>
-          >
-        )['provider-output'],
-        (
-          deploymentIdentity.opaqueIdentifierSystems as Readonly<
-            Record<string, string>
-          >
-        )['provider-artifact'],
+        identityScope.systems.opaque['provider-record'],
+        identityScope.systems.opaque['provider-output'],
+        identityScope.systems.opaque['provider-artifact'],
       ])
       expect(document.id).toBeUndefined()
+      expect(document.date).toBe(conversionInstant)
+      expect(result.value.identifiers.sourceArtifact?.role).toBe(
+        'source-artifact',
+      )
+      expect(result.value.identifiers.outputs).toHaveLength(1)
     },
   )
 
   it('keeps optional Attachment.title presentation text optional end to end', () => {
-    const input = rawInput('oura', 'heartrate')
-    const attachment = structuredClone(input.attachment)
+    const attachment = structuredClone(embedded)
     Reflect.deleteProperty(attachment, 'title')
-    const result = buildProviderRecordingBundle({ ...input, attachment })
+    const result = build(rawSource('oura', 'heartrate'), attachment)
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    const document = result.value.entry.find(
-      ({ resource }) => resource.resourceType === 'DocumentReference',
-    )?.resource
-    expect(document?.resourceType).toBe('DocumentReference')
-    if (document?.resourceType !== 'DocumentReference') return
-    expect(document.content[0]?.attachment.title).toBeUndefined()
-    expect(parseGroveMobileExchangeBundle(result.value).ok).toBe(true)
+    expect(
+      documentOf(result.value).content[0]?.attachment.title,
+    ).toBeUndefined()
+    expect(parseExchangeGraph(result.value.graph).ok).toBe(true)
   })
 
   it('keeps an unversioned writer identity and never emits a version without it', () => {
-    const input = rawInput('withings', 'activityIntraday')
+    const input = rawSource('withings', 'activityIntraday')
     const writerRecord = {
       applicationIdentifier: {
         system: uri('https://example.org/applications'),
@@ -261,48 +219,38 @@ describe('Provider native recording graph', () => {
       },
       nativeRecordId: 'writer-record-1',
     } as const
-    const unversioned = buildProviderRecordingBundle({
+    const unversioned = build({ ...input, writerRecord })
+    const versioned = build({
       ...input,
-      source: { ...input.source, writerRecord },
-    })
-    const versioned = buildProviderRecordingBundle({
-      ...input,
-      source: {
-        ...input.source,
-        writerRecord: { ...writerRecord, version: '7' },
-      },
-      eventSequence: '2',
+      writerRecord: { ...writerRecord, version: '7' },
     })
     expect(unversioned.ok && versioned.ok).toBe(true)
     if (!unversioned.ok || !versioned.ok) return
-    const document = (result: typeof unversioned) =>
-      result.value.entry.find(
-        ({ resource }) => resource.resourceType === 'DocumentReference',
-      )?.resource
     const writerVersionUrl =
       'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-writer-record-version'
-    const hasWriterIdentity = (resource: ReturnType<typeof document>) =>
-      resource?.resourceType === 'DocumentReference' &&
-      resource.identifier?.some((candidate) =>
+    const hasWriterIdentity = (conversion: ProviderRecordingConversion) =>
+      documentOf(conversion).identifier?.some((candidate) =>
         candidate.type?.coding?.some(({ code }) => code === 'writer-record'),
       )
-
-    expect(hasWriterIdentity(document(unversioned))).toBe(true)
+    expect(hasWriterIdentity(unversioned.value)).toBe(true)
+    expect(unversioned.value.identifiers.writerRecord?.role).toBe(
+      'writer-record',
+    )
     expect(
-      document(unversioned)?.extension?.some(
+      documentOf(unversioned.value).extension?.some(
         ({ url }) => url === writerVersionUrl,
       ),
     ).not.toBe(true)
-    expect(hasWriterIdentity(document(versioned))).toBe(true)
-    expect(document(versioned)?.extension).toEqual(
+    expect(hasWriterIdentity(versioned.value)).toBe(true)
+    expect(documentOf(versioned.value).extension).toEqual(
       expect.arrayContaining([{ url: writerVersionUrl, valueString: '7' }]),
     )
     expect(
-      parseProviderRecordingBundleInput({
-        ...input,
-        source: { ...input.source, writerRecordVersion: '1' },
-      }).ok,
-    ).toBe(false)
+      parseProviderRecordingSource({ ...input, writerRecordVersion: '1' }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
   })
 
   it('accepts the catalog-owned direct-only HealthKit clinical document claim', () => {
@@ -314,9 +262,7 @@ describe('Provider native recording graph', () => {
     if (healthKitMarker === undefined) {
       throw new Error('Expected the generated HealthKit source marker.')
     }
-    document.meta = {
-      profile: [healthKitClinicalRecordAdmission.profile],
-    }
+    document.meta = { profile: [healthKitClinicalRecordAdmission.profile] }
     document.extension = [
       {
         url: healthKitMarker.url,
@@ -355,33 +301,24 @@ describe('Provider native recording graph', () => {
         mutableObject(mutableObject(entry, 'entry').resource, 'resource')
           .resourceType === 'Provenance',
     )
-    if (provenanceEntry === undefined) {
-      throw new Error('Expected conversion Provenance.')
-    }
-    const provenance = mutableObject(
+    mutableObject(
       mutableObject(provenanceEntry, 'Provenance entry').resource,
       'Provenance',
-    )
-    provenance.meta = {
+    ).meta = {
       profile: [
         'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-conversion-provenance',
       ],
     }
+    expect(parseExchangeGraph(bundle).ok).toBe(true)
 
     const wrongDirectProfiles = structuredClone(bundle)
-    const wrongEntries = mutableObject(
-      wrongDirectProfiles,
-      'wrong-profile Bundle',
-    ).entry
+    const wrongEntries = mutableObject(wrongDirectProfiles, 'Bundle').entry
     if (!Array.isArray(wrongEntries)) throw new Error('Expected Bundle.entry.')
     const wrongDocumentEntry: unknown = wrongEntries.find(
       (entry: unknown) =>
         mutableObject(mutableObject(entry, 'entry').resource, 'resource')
           .resourceType === 'DocumentReference',
     )
-    if (wrongDocumentEntry === undefined) {
-      throw new Error('Expected DocumentReference.')
-    }
     mutableObject(
       mutableObject(wrongDocumentEntry, 'DocumentReference entry').resource,
       'DocumentReference',
@@ -391,24 +328,19 @@ describe('Provider native recording graph', () => {
         healthKitClinicalRecordAdmission.profile,
       ],
     }
-    expect(parseGroveMobileExchangeBundle(bundle).ok).toBe(true)
-    expect(parseGroveMobileExchangeBundle(wrongDirectProfiles).ok).toBe(false)
+    expect(parseExchangeGraph(wrongDirectProfiles).ok).toBe(false)
 
     const clinicalDocumentIn = (
       candidate: unknown,
     ): Record<string, unknown> => {
       const candidateEntries = mutableObject(candidate, 'clinical Bundle').entry
-      if (!Array.isArray(candidateEntries)) {
+      if (!Array.isArray(candidateEntries))
         throw new Error('Expected Bundle.entry.')
-      }
       const candidateDocumentEntry: unknown = candidateEntries.find(
         (entry: unknown) =>
           mutableObject(mutableObject(entry, 'entry').resource, 'resource')
             .resourceType === representation.resourceType,
       )
-      if (candidateDocumentEntry === undefined) {
-        throw new Error(`Expected ${representation.resourceType}.`)
-      }
       return mutableObject(
         mutableObject(candidateDocumentEntry, 'clinical entry').resource,
         'clinical DocumentReference',
@@ -419,7 +351,7 @@ describe('Provider native recording graph', () => {
         Array.isArray(candidate.content) ? candidate.content[0] : undefined,
         'clinical content',
       )
-    const invalidRepresentations = [
+    for (const mutate of [
       (candidate: Record<string, unknown>) => {
         mutableObject(
           contentOf(candidate).attachment,
@@ -430,52 +362,43 @@ describe('Provider native recording graph', () => {
         mutableObject(contentOf(candidate).format, 'format').code =
           'fhir-collection-bundle'
       },
-    ]
-    for (const mutate of invalidRepresentations) {
+    ]) {
       const candidate = structuredClone(bundle)
       mutate(clinicalDocumentIn(candidate))
-      const result = parseGroveMobileExchangeBundle(candidate)
+      const result = parseExchangeGraph(candidate)
       expect(result.ok).toBe(false)
       if (result.ok) continue
       expect(result.issues.map(({ code }) => code)).toContain(
         'healthkit-clinical.fhir-representation',
       )
     }
-
     for (const release of healthKitClinicalRecordAdmission.admittedFHIRReleases) {
       const candidate = structuredClone(bundle)
       mutableObject(
         contentOf(clinicalDocumentIn(candidate)).attachment,
         'attachment',
       ).contentType = representation.contentTypeByRelease[release]
-      expect(parseGroveMobileExchangeBundle(candidate).ok).toBe(true)
+      expect(parseExchangeGraph(candidate).ok).toBe(true)
     }
   })
 
   it('emits exact embedded bytes, computed SHA-1 integrity, and a complete audit graph', () => {
-    const input = rawInput('google-health-api', 'heart-rate')
-    const result = buildProviderRecordingBundle(input)
+    const source = rawSource('google-health-api', 'heart-rate')
+    const result = build(source)
     expect(result.ok).toBe(true)
     if (!result.ok) return
-
-    const documentEntry = result.value.entry.find(
-      ({ resource }) => resource.resourceType === 'DocumentReference',
-    )
-    const provenance = result.value.entry.find(
+    const document = documentOf(result.value)
+    const provenance = result.value.graph.entry.find(
       ({ resource }) => resource.resourceType === 'Provenance',
     )?.resource
-    expect(documentEntry?.resource.resourceType).toBe('DocumentReference')
-    if (documentEntry?.resource.resourceType !== 'DocumentReference') return
-    expect(documentEntry.resource.content).toEqual([
+    expect(document.content).toEqual([
       {
         attachment: {
-          contentType:
-            groveRecordingFormatRegistry.formats['provider-recording']
-              .contentTypes[0],
+          contentType: embedded.contentType,
           data: 'AQID',
           size: 3,
           hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
-          title: 'Authorized minimized provider recording',
+          title: embedded.title,
         },
         format: {
           system:
@@ -485,23 +408,29 @@ describe('Provider native recording graph', () => {
         },
       },
     ])
-    expect(documentEntry.resource.status).toBe('current')
-    expect(documentEntry.resource.date).toBe(input.documentDate)
-    expect(documentEntry.resource.author).toHaveLength(1)
-    expect(provenance?.resourceType).toBe('Provenance')
-    if (provenance?.resourceType !== 'Provenance') return
+    expect(document.status).toBe('current')
+    expect(document.author).toHaveLength(1)
+    if (provenance?.resourceType !== 'Provenance')
+      throw new Error('No Provenance.')
     expect(provenance.meta?.profile).toEqual([
       'https://grovealliance.org/fhir/providers/StructureDefinition/providers-conversion-provenance',
     ])
-    expect(provenance.target).toEqual([{ reference: documentEntry.fullUrl }])
-    expect(provenance.entity).toHaveLength(1)
+    expect(provenance.target).toEqual([
+      { reference: result.value.graph.entry[0].fullUrl },
+    ])
+    expect(provenance.occurredPeriod).toEqual({
+      start: '2026-08-20T00:00:00.000Z',
+      end: '2026-08-20T12:00:00.000Z',
+    })
+    expect(provenance.recorded).toBe(conversionInstant)
     expect(provenance.entity?.[0]?.what.identifier?.system).toBe(
-      deploymentIdentity.opaqueIdentifierSystems['provider-record'],
+      identityScope.systems.opaque['provider-record'],
     )
-    const serialized = JSON.stringify(result.value)
-    expect(serialized).not.toContain(input.source.sourceNativeId)
-    expect(serialized).not.toContain(input.source.providerScopeIdentifier.value)
-    expect(serialized).not.toContain(input.attachment.payloadAssertion)
+    const serialized = JSON.stringify(result.value.graph)
+    expect(serialized).not.toContain(source.sourceNativeId)
+    expect(serialized).not.toContain(
+      context('google-health-api').repositoryScope.value,
+    )
     expect(serialized).not.toContain('payloadAssertion')
   })
 
@@ -513,9 +442,10 @@ describe('Provider native recording graph', () => {
         if (!Array.isArray(identifiers))
           throw new Error('Expected identifiers.')
         document.identifier = identifiers.filter((candidate) => {
-          const identifier = mutableObject(candidate, 'Identifier')
-          const type = mutableObject(identifier.type, 'Identifier.type')
-          const codings = type.coding
+          const codings = mutableObject(
+            mutableObject(candidate, 'Identifier').type,
+            'Identifier.type',
+          ).coding
           return !(
             Array.isArray(codings) &&
             codings.some(
@@ -533,12 +463,10 @@ describe('Provider native recording graph', () => {
         const identifiers = document.identifier
         if (!Array.isArray(identifiers))
           throw new Error('Expected identifiers.')
-        const sourceArtifact = mutableObject(
-          identifiers[2],
-          'source-artifact Identifier',
-        )
-        const type = mutableObject(sourceArtifact.type, 'Identifier.type')
-        const codings = type.coding
+        const codings = mutableObject(
+          mutableObject(identifiers[2], 'source-artifact Identifier').type,
+          'Identifier.type',
+        ).coding
         if (!Array.isArray(codings)) throw new Error('Expected type coding.')
         mutableObject(codings[0], 'Identifier.type.coding').code =
           'source-context'
@@ -549,11 +477,10 @@ describe('Provider native recording graph', () => {
       mutate: (document: MutableJsonObject) => {
         const content = document.content
         if (!Array.isArray(content)) throw new Error('Expected content.')
-        const format = mutableObject(
+        mutableObject(
           mutableObject(content[0], 'content').format,
-          'content.format',
-        )
-        format.version = '1.2.3'
+          'format',
+        ).version = '1.2.3'
       },
     },
     {
@@ -561,11 +488,10 @@ describe('Provider native recording graph', () => {
       mutate: (document: MutableJsonObject) => {
         const content = document.content
         if (!Array.isArray(content)) throw new Error('Expected content.')
-        const attachment = mutableObject(
+        mutableObject(
           mutableObject(content[0], 'content').attachment,
-          'content.attachment',
-        )
-        attachment.contentType = 'application/octet-stream'
+          'attachment',
+        ).contentType = 'application/octet-stream'
       },
     },
     {
@@ -581,11 +507,10 @@ describe('Provider native recording graph', () => {
       mutate: (document: MutableJsonObject) => {
         const content = document.content
         if (!Array.isArray(content)) throw new Error('Expected content.')
-        const attachment = mutableObject(
+        mutableObject(
           mutableObject(content[0], 'content').attachment,
-          'content.attachment',
-        )
-        attachment.size = 4
+          'attachment',
+        ).size = 4
       },
     },
     {
@@ -593,11 +518,10 @@ describe('Provider native recording graph', () => {
       mutate: (document: MutableJsonObject) => {
         const content = document.content
         if (!Array.isArray(content)) throw new Error('Expected content.')
-        const attachment = mutableObject(
+        mutableObject(
           mutableObject(content[0], 'content').attachment,
-          'content.attachment',
-        )
-        attachment.hash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAA='
+          'attachment',
+        ).hash = 'AAAAAAAAAAAAAAAAAAAAAAAAAAA='
       },
     },
     ...(['type', 'subject', 'date'] as const).map((property) => ({
@@ -609,31 +533,17 @@ describe('Provider native recording graph', () => {
   ])('rejects a recording document with $name', ({ mutate }) => {
     const { bundle, document } = mutableRecordingGraph()
     mutate(document)
-    expect(parseGroveMobileExchangeBundle(bundle).ok).toBe(false)
+    expect(parseExchangeGraph(bundle).ok).toBe(false)
   })
 
   it('matches the frozen raw source/output identity vectors', () => {
-    const input = rawInput('google-health-api', 'heart-rate')
-    const result = buildProviderRecordingBundle({
-      ...input,
-      source: {
-        ...input.source,
-        providerScopeIdentifier: {
-          system: uri('https://provider.example.org/accounts'),
-          value: 'account-001',
-          assurance: 'deployment-scoped-account-pseudonym',
-        },
-        sourceNativeId: 'heart-rate-2026-08-20',
-      },
-    } as ProviderRecordingBundleInput)
+    const result = build({
+      ...rawSource('google-health-api', 'heart-rate'),
+      sourceNativeId: 'heart-rate-2026-08-20',
+    })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    const document = result.value.entry.find(
-      ({ resource }) => resource.resourceType === 'DocumentReference',
-    )?.resource
-    if (document?.resourceType !== 'DocumentReference') {
-      throw new Error('Missing recording document')
-    }
+    const document = documentOf(result.value)
     expect(document.identifier).toHaveLength(3)
     for (const entry of document.identifier ?? []) {
       expect(entry.value).toMatch(/^v0:test-key:1:[A-Za-z0-9_-]{43}$/u)
@@ -641,30 +551,33 @@ describe('Provider native recording graph', () => {
   })
 
   it('places an explicitly governed native Identifier only on the sole recording DocumentReference', () => {
-    const input = rawInput('google-health-api', 'heart-rate')
+    const source = rawSource('google-health-api', 'heart-rate')
     const nativeSystem = uri(
       'https://example.org/repositories/google-account-4/recordings',
     )
-    const result = buildProviderRecordingBundle({
-      ...input,
-      nativeIdentifierDisclosure: {
-        system: nativeSystem,
-        nativeId: input.source.sourceNativeId,
-        type: {
-          coding: [
-            {
-              system: uri('https://example.org/identifier-types'),
-              code: 'provider-record-id',
-              display: 'Provider record id',
-            },
-          ],
+    const result = buildProviderRecordingGraph(
+      source,
+      embedded,
+      context('google-health-api'),
+      {
+        nativeIdentifierDisclosure: {
+          kind: 'authorized',
+          system: nativeSystem,
+          type: {
+            coding: [
+              {
+                system: uri('https://example.org/identifier-types'),
+                code: 'provider-record-id',
+                display: 'Provider record id',
+              },
+            ],
+          },
         },
       },
-    })
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-
-    const carryingResources = result.value.entry.filter(({ resource }) =>
+    const carrying = result.value.graph.entry.filter(({ resource }) =>
       (
         resource as {
           readonly identifier?: ReadonlyArray<{
@@ -674,18 +587,18 @@ describe('Provider native recording graph', () => {
         }
       ).identifier?.some(
         ({ system, value }) =>
-          system === nativeSystem && value === input.source.sourceNativeId,
+          system === nativeSystem && value === source.sourceNativeId,
       ),
     )
-    expect(carryingResources).toHaveLength(1)
-    const document = carryingResources[0]?.resource
-    expect(document?.resourceType).toBe('DocumentReference')
-    if (document?.resourceType !== 'DocumentReference') return
+    expect(carrying).toHaveLength(1)
+    expect(carrying[0]?.resource.resourceType).toBe('DocumentReference')
     expect(
-      document.identifier?.find(({ system }) => system === nativeSystem),
+      documentOf(result.value).identifier?.find(
+        ({ system }) => system === nativeSystem,
+      ),
     ).toEqual({
       system: nativeSystem,
-      value: input.source.sourceNativeId,
+      value: source.sourceNativeId,
       type: {
         coding: [
           {
@@ -699,32 +612,19 @@ describe('Provider native recording graph', () => {
   })
 
   it.each([
-    {
-      name: 'a mismatched native value',
-      disclosure: (input: ProviderRecordingBundleInput) => ({
-        system: uri('https://example.org/repositories/recordings'),
-        nativeId: `${input.source.sourceNativeId}-wrong`,
-      }),
-    },
-    {
-      name: 'a relative key-space system',
-      disclosure: (input: ProviderRecordingBundleInput) => ({
-        system: 'recordings',
-        nativeId: input.source.sourceNativeId,
-      }),
-    },
-    {
-      name: 'the Grove entry identity system',
-      disclosure: (input: ProviderRecordingBundleInput) => ({
-        system: input.deploymentIdentity.entryNodeIdentifierSystem,
-        nativeId: input.source.sourceNativeId,
-      }),
-    },
-    {
-      name: 'a Grove graph-role type coding',
-      disclosure: (input: ProviderRecordingBundleInput) => ({
-        system: uri('https://example.org/repositories/recordings'),
-        nativeId: input.source.sourceNativeId,
+    [
+      'a relative key-space system',
+      { kind: 'authorized', system: 'recordings' },
+    ],
+    [
+      'the Grove entry identity system',
+      { kind: 'authorized', system: identityScope.systems.entryNode },
+    ],
+    [
+      'a Grove graph-role type coding',
+      {
+        kind: 'authorized',
+        system: 'https://example.org/repositories/recordings',
         type: {
           coding: [
             {
@@ -734,78 +634,60 @@ describe('Provider native recording graph', () => {
             },
           ],
         },
-      }),
-    },
-  ])('rejects recording source disclosure using $name', ({ disclosure }) => {
-    const input = rawInput('oura', 'heartrate')
-    const candidate = {
-      ...input,
-      nativeIdentifierDisclosure: disclosure(input),
-    } as unknown as ProviderRecordingBundleInput
-    expect(parseProviderRecordingBundleInput(candidate).ok).toBe(false)
-    expect(buildProviderRecordingBundle(candidate).ok).toBe(false)
+      },
+    ],
+  ])('rejects recording source disclosure using %s', (_name, disclosure) => {
+    const result = buildProviderRecordingGraph(
+      rawSource('oura', 'heartrate'),
+      embedded,
+      context('oura'),
+      { nativeIdentifierDisclosure: disclosure as never },
+    )
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    for (const issue of result.issues) expect(issue.code).not.toMatch(/\./u)
   })
 
   it('supports an immutable external attachment without copying or fetching it', () => {
-    const input = rawInput('oura', 'heartrate')
-    const result = buildProviderRecordingBundle({
-      ...input,
-      attachment: {
-        kind: 'external',
-        contentType: unwrap(
-          parseMediaType(
-            groveRecordingFormatRegistry.formats['provider-recording']
-              .contentTypes[0],
-          ),
+    const result = build(rawSource('oura', 'heartrate'), {
+      kind: 'external',
+      contentType: embedded.contentType,
+      title: 'Authorized minimized Oura recording',
+      format: 'provider-recording',
+      payloadAssertion: 'verified-sanitized-input',
+      url: unwrap(
+        parseImmutableRecordingUrl(
+          'https://objects.example.org/recordings/version-42',
         ),
-        title: 'Authorized minimized Oura recording',
-        format: 'provider-recording',
-        payloadAssertion: 'verified-sanitized-input',
-        url: unwrap(
-          parseImmutableRecordingUrl(
-            'https://objects.example.org/recordings/version-42',
-          ),
-        ),
-        size: unwrap(parsePositiveInteger(3)),
-        hash: unwrap(parseSha1Base64('cDeAcZjCKn0rCAc3HXY3eahP388=')),
-        immutabilityAssurance: 'immutable-version-specific',
-      },
+      ),
+      size: unwrap(parsePositiveInteger(3)),
+      hash: unwrap(parseSha1Base64('cDeAcZjCKn0rCAc3HXY3eahP388=')),
+      immutabilityAssurance: 'immutable-version-specific',
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    const document = result.value.entry.find(
-      ({ resource }) => resource.resourceType === 'DocumentReference',
-    )?.resource
-    if (document?.resourceType !== 'DocumentReference') return
-    expect(document.content[0]?.attachment).toMatchObject({
+    expect(documentOf(result.value).content[0]?.attachment).toMatchObject({
       url: 'https://objects.example.org/recordings/version-42',
       size: 3,
       hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
     })
-    expect(document.content[0]?.attachment.data).toBeUndefined()
-    const serialized = JSON.stringify(result.value)
+    expect(documentOf(result.value).content[0]?.attachment.data).toBeUndefined()
+    const serialized = JSON.stringify(result.value.graph)
     expect(serialized).not.toContain('verified-sanitized-input')
-    expect(serialized).not.toContain('payloadAssertion')
   })
 
   it('retains repository-assigned ids while keeping digest identities out of Resource.id', () => {
-    const input = rawInput('withings', 'activityIntraday')
-    const result = buildProviderRecordingBundle({
-      ...input,
+    const result = build(rawSource('withings', 'activityIntraday'), embedded, {
       repositoryIds: {
         bundle: unwrap(parseFhirId('bundle-42')),
-        document: unwrap(parseFhirId('document-42')),
+        'primary-output': unwrap(parseFhirId('document-42')),
         provenance: unwrap(parseFhirId('provenance-42')),
       },
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value.id).toBe('bundle-42')
-    expect(
-      result.value.entry.find(
-        ({ resource }) => resource.resourceType === 'DocumentReference',
-      )?.resource.id,
-    ).toBe('document-42')
+    expect(result.value.graph.id).toBe('bundle-42')
+    expect(documentOf(result.value).id).toBe('document-42')
   })
 
   it.each([
@@ -814,37 +696,37 @@ describe('Provider native recording graph', () => {
     ['oura', 'sleep'],
     ['withings', 'getmeas:11'],
   ] as const)('fails closed for non-raw %s/%s sources', (provider, source) => {
-    expect(buildProviderRecordingBundle(rawInput(provider, source)).ok).toBe(
-      false,
-    )
+    expect(build(rawSource(provider, source))).toMatchObject({
+      ok: false,
+      issues: [
+        { code: 'mobile-input.unsupported-source-type', path: ['sourceType'] },
+      ],
+    })
   })
 
-  it('rejects unknown provider fields rather than silently stripping them', () => {
-    const input = rawInput('google-health-api', 'heart-rate')
+  it('refuses unknown provider fields rather than silently stripping them', () => {
+    const source = rawSource('google-health-api', 'heart-rate')
     expect(
-      parseProviderRecordingBundleInput({
-        ...input,
-        source: { ...input.source, vendorPayload: { bpm: 64 } },
-      }).ok,
-    ).toBe(false)
+      parseProviderRecordingSource({ ...source, vendorPayload: { bpm: 64 } }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
     expect(
-      parseProviderRecordingBundleInput({
-        ...input,
-        attachment: { ...input.attachment, bearerToken: 'secret' },
-      }).ok,
-    ).toBe(false)
+      parseProviderRecordingAttachment({ ...embedded, bearerToken: 'secret' }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
   })
 
   it('fails closed for absent, ambiguous, or unsupported raw payload assertions', () => {
-    const input = rawInput('google-health-api', 'heart-rate')
     const attachmentWithoutAssertion = {
       kind: 'embedded',
-      contentType: input.attachment.contentType,
-      title: input.attachment.title,
-      dataBase64:
-        input.attachment.kind === 'embedded' ?
-          input.attachment.dataBase64
-        : 'AQID',
+      contentType: embedded.contentType,
+      title: embedded.title,
+      dataBase64: 'AQID',
+      format: 'provider-recording',
     }
     for (const attachment of [
       attachmentWithoutAssertion,
@@ -857,36 +739,40 @@ describe('Provider native recording graph', () => {
       },
       { ...attachmentWithoutAssertion, payloadAssertion: 'unreviewed' },
     ]) {
-      expect(
-        parseProviderRecordingBundleInput({
-          ...input,
-          attachment,
-        }).ok,
-      ).toBe(false)
+      expect(parseProviderRecordingAttachment(attachment).ok).toBe(false)
     }
   })
 
   it.each([
-    ['empty data', { dataBase64: '' }],
-    ['noncanonical base64', { dataBase64: 'AQI' }],
-    ['invalid media type', { contentType: 'application/json; charset=utf-8' }],
-  ])('rejects %s', (_name, change) => {
-    const input = rawInput('google-health-api', 'heart-rate')
+    ['empty data', { dataBase64: '' }, 'mobile-input.empty-recording-series'],
+    [
+      'noncanonical base64',
+      { dataBase64: 'AQI' },
+      'mobile-input.empty-recording-series',
+    ],
+    [
+      'invalid media type',
+      { contentType: 'application/json; charset=utf-8' },
+      'mobile-input.value-shape-invalid',
+    ],
+    [
+      'an unregistered media type',
+      { contentType: 'text/plain' },
+      'mobile-input.unsupported-source-value',
+    ],
+  ])('refuses %s', (_name, change, code) => {
     expect(
-      buildProviderRecordingBundle({
-        ...input,
-        attachment: { ...input.attachment, ...change },
-      } as ProviderRecordingBundleInput).ok,
-    ).toBe(false)
+      parseProviderRecordingAttachment({ ...embedded, ...change }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code }],
+    })
   })
 
-  it('rejects invalid external integrity and URL metadata', () => {
-    const input = rawInput('oura', 'heartrate')
+  it('refuses invalid external integrity and URL metadata', () => {
     const external = {
       kind: 'external',
-      contentType:
-        groveRecordingFormatRegistry.formats['provider-recording']
-          .contentTypes[0],
+      contentType: embedded.contentType,
       title: 'Authorized recording',
       format: 'provider-recording',
       payloadAssertion: 'caller-authorized-opaque-payload',
@@ -895,24 +781,18 @@ describe('Provider native recording graph', () => {
       hash: 'AQID',
       immutabilityAssurance: 'immutable-version-specific',
     } as const
+    expect(parseProviderRecordingAttachment(external).ok).toBe(false)
     expect(
-      buildProviderRecordingBundle({
-        ...input,
-        attachment: external,
-      } as unknown as ProviderRecordingBundleInput).ok,
-    ).toBe(false)
-
-    expect(
-      buildProviderRecordingBundle({
-        ...input,
-        attachment: {
-          ...external,
-          url: 'https://objects.example.org/recording/version-42',
-          size: 2_147_483_648,
-          hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
-        },
-      } as unknown as ProviderRecordingBundleInput).ok,
-    ).toBe(false)
+      parseProviderRecordingAttachment({
+        ...external,
+        url: 'https://objects.example.org/recording/version-42',
+        size: 2_147_483_648,
+        hash: 'cDeAcZjCKn0rCAc3HXY3eahP388=',
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.recording-payload-too-large' }],
+    })
   })
 
   it('rejects a 32-byte SHA-256 digest where R4 requires a 20-byte SHA-1 hash', () => {
@@ -949,122 +829,86 @@ describe('Provider native recording graph', () => {
     const cyclic: Record<string, unknown> = {}
     cyclic.self = cyclic
     for (const invalid of [null, undefined, 42, 'invalid', cyclic]) {
-      expect(() => parseProviderRecordingBundleInput(invalid)).not.toThrow()
-      expect(parseProviderRecordingBundleInput(invalid).ok).toBe(false)
-      expect(() => buildProviderRecordingBundle(invalid as never)).not.toThrow()
-      expect(buildProviderRecordingBundle(invalid as never).ok).toBe(false)
+      expect(() => parseProviderRecordingSource(invalid)).not.toThrow()
+      expect(parseProviderRecordingSource(invalid).ok).toBe(false)
+      expect(() => parseProviderRecordingAttachment(invalid)).not.toThrow()
+      expect(parseProviderRecordingAttachment(invalid).ok).toBe(false)
+      expect(() =>
+        buildProviderRecordingGraph(
+          invalid as never,
+          invalid as never,
+          invalid as never,
+        ),
+      ).not.toThrow()
+      expect(
+        buildProviderRecordingGraph(
+          invalid as never,
+          invalid as never,
+          invalid as never,
+        ).ok,
+      ).toBe(false)
     }
   })
 
   it('deduplicates one application snapshot across participation roles', () => {
-    const input = rawInput('withings', 'sleepIntraday')
-    const result = buildProviderRecordingBundle({
-      ...input,
-      source: { ...input.source, dataOrigin: input.application },
+    const result = build({
+      ...rawSource('withings', 'sleepIntraday'),
+      writer: application,
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(
-      result.value.entry.filter(
+      result.value.graph.entry.filter(
         ({ resource }) => resource.resourceType === 'Device',
       ),
-    ).toHaveLength(1)
-    expect(result.value.entry).toHaveLength(3)
+    ).toHaveLength(2)
+    expect(result.value.graph.entry).toHaveLength(4)
   })
 
-  it.each(['source', 'application', 'data-origin'] as const)(
-    'rejects invalid Unicode identity input in the %s identity role',
-    (role) => {
-      const input = rawInput('google-health-api', 'heart-rate')
-      const invalid = '\ud800'
-      let candidate: ProviderRecordingBundleInput
-      if (role === 'source') {
-        candidate = {
-          ...input,
-          source: { ...input.source, sourceNativeId: invalid },
-        }
-      } else if (role === 'application') {
-        candidate = {
-          ...input,
-          application: {
-            ...input.application,
-            sourceDeviceToken: invalid,
-          },
-        }
-      } else {
-        candidate = {
-          ...input,
-          source: {
-            ...input.source,
-            dataOrigin: {
-              ...input.source.dataOrigin,
-              sourceDeviceToken: invalid,
-            },
-          },
-        }
-      }
-      expect(parseProviderRecordingBundleInput(candidate).ok).toBe(false)
-      expect(buildProviderRecordingBundle(candidate).ok).toBe(false)
-    },
-  )
+  it('refuses invalid Unicode in the source and faults it in the context', () => {
+    const invalid = '\ud800'
+    const source = rawSource('google-health-api', 'heart-rate')
+    expect(
+      parseProviderRecordingSource({ ...source, sourceNativeId: invalid }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.text-not-unicode-scalar' }],
+    })
+    expect(
+      parseProviderRecordingSource({
+        ...source,
+        writer: { ...source.writer, sourceDeviceToken: invalid },
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.text-not-unicode-scalar' }],
+    })
+    const faulted = build(source, embedded, {
+      application: { ...application, sourceDeviceToken: invalid },
+    })
+    expect(faulted.ok).toBe(false)
+    if (!faulted.ok) expect(faulted.issues[0]?.code).toBe('invalid-identifier')
+  })
 
   it.each([
     [
-      'provider account value',
-      (input: ProviderRecordingBundleInput) => ({
-        ...input,
-        source: {
-          ...input.source,
-          providerScopeIdentifier: {
-            ...input.source.providerScopeIdentifier,
-            value: '  ',
-          },
-        },
-      }),
-    ],
-    [
       'source native id',
-      (input: ProviderRecordingBundleInput) => ({
-        ...input,
-        source: { ...input.source, sourceNativeId: '\t' },
-      }),
+      { sourceNativeId: '\t' },
+      'mobile-input.native-identifier-invalid',
     ],
+    ['source type', { sourceType: '\n ' }, 'mobile-input.value-shape-invalid'],
     [
-      'source type',
-      (input: ProviderRecordingBundleInput) => ({
-        ...input,
-        source: { ...input.source, sourceType: '\n ' },
-      }),
+      'writer token',
+      { writer: { sourceDeviceToken: ' \t ', name: 'x' } },
+      'mobile-input.value-shape-invalid',
     ],
-    [
-      'converter source-device token',
-      (input: ProviderRecordingBundleInput) => ({
-        ...input,
-        application: {
-          ...input.application,
-          sourceDeviceToken: '   ',
-        },
-      }),
-    ],
-    [
-      'data-origin source-device token',
-      (input: ProviderRecordingBundleInput) => ({
-        ...input,
-        source: {
-          ...input.source,
-          dataOrigin: {
-            ...input.source.dataOrigin,
-            sourceDeviceToken: ' \t ',
-          },
-        },
-      }),
-    ],
-  ] as const)('rejects a whitespace-only %s', (_name, mutate) => {
+  ] as const)('refuses a whitespace-only %s', (_name, change, code) => {
     expect(
-      parseProviderRecordingBundleInput(
-        mutate(rawInput('google-health-api', 'heart-rate')),
-      ).ok,
-    ).toBe(false)
+      parseProviderRecordingSource({
+        ...rawSource('google-health-api', 'heart-rate'),
+        ...change,
+      }),
+    ).toMatchObject({ ok: false, issues: [{ code }] })
   })
 
   it('round-trips arbitrary non-empty byte arrays to canonical base64', () => {
@@ -1074,12 +918,9 @@ describe('Provider native recording graph', () => {
         expect(encoded.ok).toBe(true)
         if (!encoded.ok) return
         expect(
-          parseProviderRecordingBundleInput({
-            ...rawInput('google-health-api', 'heart-rate'),
-            attachment: {
-              ...rawInput('google-health-api', 'heart-rate').attachment,
-              dataBase64: encoded.value,
-            },
+          parseProviderRecordingAttachment({
+            ...embedded,
+            dataBase64: encoded.value,
           }).ok,
         ).toBe(true)
       }),
@@ -1087,11 +928,7 @@ describe('Provider native recording graph', () => {
   })
 
   it('exposes a result-typed, closed recording facade', () => {
-    const result = buildProviderRecordingBundle(
-      rawInput('google-health-api', 'heart-rate'),
-    )
-    expectTypeOf(result).toExtend<
-      Result<import('../src/r4/index.js').GroveMobileExchangeBundle>
-    >()
+    const result = build(rawSource('google-health-api', 'heart-rate'))
+    expectTypeOf(result).toExtend<Result<ProviderRecordingConversion>>()
   })
 })

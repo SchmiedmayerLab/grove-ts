@@ -10,10 +10,7 @@
 
 import { readFileSync } from 'node:fs'
 import { adapterSourceMarkerClaims } from '../src/contract/measurement-catalog.generated.js'
-import {
-  parseGroveMobileExchangeBundle,
-  parseGroveMobileRetractionBundle,
-} from '../src/r4/index.js'
+import { parseExchangeGraph, parseRetractionEvent } from '../src/r4/index.js'
 
 interface JsonPatchOperation {
   readonly op: 'add' | 'remove' | 'replace'
@@ -68,6 +65,36 @@ const pointerComponents = (pointer: string): string[] =>
     .split('/')
     .map((component) => component.replaceAll('~1', '/').replaceAll('~0', '~'))
 
+type PatchContainer = Record<string, unknown> | unknown[]
+
+const resolveParent = (
+  root: unknown,
+  components: readonly string[],
+  pointer: string,
+): PatchContainer => {
+  let parent = root as PatchContainer
+  for (const component of components) {
+    const next =
+      Array.isArray(parent) ? parent[Number(component)] : parent[component]
+    if (typeof next !== 'object' || next === null) {
+      throw new Error(`Patch path does not resolve: ${pointer}`)
+    }
+    parent = next as PatchContainer
+  }
+  return parent
+}
+
+const applyToArray = (
+  parent: unknown[],
+  property: string,
+  operation: JsonPatchOperation,
+): void => {
+  const index = property === '-' ? parent.length : Number(property)
+  if (operation.op === 'remove') parent.splice(index, 1)
+  else if (operation.op === 'add') parent.splice(index, 0, operation.value)
+  else parent[index] = operation.value
+}
+
 const patched = (
   base: unknown,
   operations: readonly JsonPatchOperation[],
@@ -78,37 +105,18 @@ const patched = (
     const property = components.pop()
     if (property === undefined)
       throw new Error('A JSON Patch path is required.')
-    let parent = result as Record<string, unknown> | unknown[]
-    for (const component of components) {
-      const next =
-        Array.isArray(parent) ? parent[Number(component)] : parent[component]
-      if (typeof next !== 'object' || next === null) {
-        throw new Error(`Patch path does not resolve: ${operation.path}`)
-      }
-      parent = next as Record<string, unknown> | unknown[]
-    }
-    if (Array.isArray(parent)) {
-      const index = Number(property)
-      if (operation.op === 'remove') parent.splice(index, 1)
-      else if (operation.op === 'add') parent.splice(index, 0, operation.value)
-      else parent[index] = operation.value
-    } else if (operation.op === 'remove') {
-      Reflect.deleteProperty(parent, property)
-    } else {
-      parent[property] = operation.value
-    }
+    const parent = resolveParent(result, components, operation.path)
+    if (Array.isArray(parent)) applyToArray(parent, property, operation)
+    else if (operation.op === 'remove') Reflect.deleteProperty(parent, property)
+    else parent[property] = operation.value
   }
   return result
 }
 
 describe('shared Grove Mobile exchange corpus', () => {
   it('accepts both normative positive graphs', () => {
-    expect(parseGroveMobileExchangeBundle(bases['mobile-exchange']).ok).toBe(
-      true,
-    )
-    expect(
-      parseGroveMobileRetractionBundle(bases['mobile-retraction']).ok,
-    ).toBe(true)
+    expect(parseExchangeGraph(bases['mobile-exchange']).ok).toBe(true)
+    expect(parseRetractionEvent(bases['mobile-retraction']).ok).toBe(true)
   })
 
   it('accepts a directly claimed HealthKit application snapshot with its product identifier', () => {
@@ -138,7 +146,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         },
       },
     ])
-    expect(parseGroveMobileExchangeBundle(input).ok).toBe(true)
+    expect(parseExchangeGraph(input).ok).toBe(true)
   })
 
   it('does not mistake an Expression.reference URI for a FHIR Reference', () => {
@@ -157,7 +165,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         ],
       },
     ])
-    expect(parseGroveMobileExchangeBundle(input).ok).toBe(true)
+    expect(parseExchangeGraph(input).ok).toBe(true)
   })
 
   it.each([
@@ -167,7 +175,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     const input = patched(bases['mobile-exchange'], [
       { op: 'remove', path: `/entry/${String(entry)}/resource/subject` },
     ])
-    const result = parseGroveMobileExchangeBundle(input)
+    const result = parseExchangeGraph(input)
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(
@@ -196,7 +204,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         value: 'n0:patient:1:qN9xaTdoz-LfvONC7FgEUNMz06zyWhfzD0khPhtjVig',
       },
     ])
-    const result = parseGroveMobileExchangeBundle(misnumbered)
+    const result = parseExchangeGraph(misnumbered)
     expect(result.ok).toBe(false)
     if (result.ok) return
     const codes = result.issues.map(({ code }) => code)
@@ -212,7 +220,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         value: [{ reference: 'urn:uuid:00000000-0000-5000-8000-000000000000' }],
       },
     ])
-    const result = parseGroveMobileExchangeBundle(input)
+    const result = parseExchangeGraph(input)
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(
@@ -237,7 +245,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         value: sourceSystem,
       },
     ])
-    const result = parseGroveMobileExchangeBundle(input)
+    const result = parseExchangeGraph(input)
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.issues).toContainEqual(
@@ -258,7 +266,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         ],
       },
     ])
-    const result = parseGroveMobileExchangeBundle(input)
+    const result = parseExchangeGraph(input)
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.issues).toContainEqual(
@@ -277,11 +285,11 @@ describe('shared Grove Mobile exchange corpus', () => {
         },
       },
     ])
-    const result = parseGroveMobileExchangeBundle(input)
+    const result = parseExchangeGraph(input)
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.issues.map(({ code }) => code)).toContain(
-        'mobile-exchange.adapter-source-marker',
+        'mobile-output.adapter-source-marker',
       )
     }
   })
@@ -301,11 +309,11 @@ describe('shared Grove Mobile exchange corpus', () => {
           'https://grovealliance.org/fhir/healthkit/StructureDefinition/healthkit-conversion-provenance',
       },
     ])
-    const result = parseGroveMobileExchangeBundle(input)
+    const result = parseExchangeGraph(input)
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.issues.map(({ code }) => code)).toContain(
-        'mobile-exchange.adapter-source-marker',
+        'mobile-output.adapter-source-marker',
       )
     }
   })
@@ -358,7 +366,7 @@ describe('shared Grove Mobile exchange corpus', () => {
         ],
       },
     ])
-    expect(parseGroveMobileExchangeBundle(healthConnectGraph).ok).toBe(true)
+    expect(parseExchangeGraph(healthConnectGraph).ok).toBe(true)
 
     const literalDataOrigin = patched(healthConnectGraph, [
       {
@@ -367,11 +375,11 @@ describe('shared Grove Mobile exchange corpus', () => {
         value: 'urn:uuid:8f87a88a-8744-5116-8901-9274f62472ac',
       },
     ])
-    const result = parseGroveMobileExchangeBundle(literalDataOrigin)
+    const result = parseExchangeGraph(literalDataOrigin)
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.issues.map(({ code }) => code)).toContain(
-        'health-connect.data-origin-application',
+        'health-connect-provenance.data-origin-agent',
       )
     }
   })
@@ -382,8 +390,8 @@ describe('shared Grove Mobile exchange corpus', () => {
       const input = patched(bases[base], patch)
       const result =
         base === 'mobile-exchange' ?
-          parseGroveMobileExchangeBundle(input)
-        : parseGroveMobileRetractionBundle(input)
+          parseExchangeGraph(input)
+        : parseRetractionEvent(input)
       expect(result.ok).toBe(false)
       if (result.ok) return
       const emitted = result.issues.find(
@@ -427,7 +435,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated primary clinical coding',
-      expectedCode: 'mobile-heart-rate.code',
+      expectedCode: 'mobile-output.semantic-profile',
       patch: [
         {
           op: 'add' as const,
@@ -438,7 +446,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated category coding',
-      expectedCode: 'mobile-heart-rate.category',
+      expectedCode: 'mobile-output.semantic-profile',
       patch: [
         {
           op: 'add' as const,
@@ -485,7 +493,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'HealthKit application Device without its product identifier',
-      expectedCode: 'healthkit-application-device.bundle-identifier',
+      expectedCode: 'healthkit-device.application-bundle-identifier',
       patch: [
         {
           op: 'replace' as const,
@@ -532,7 +540,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'duplicated active exchange profile claim',
-      expectedCode: 'mobile-exchange.profile',
+      expectedCode: 'mobile-exchange.bundle-profile',
       patch: [
         {
           op: 'add' as const,
@@ -544,7 +552,7 @@ describe('shared Grove Mobile exchange corpus', () => {
     },
     {
       name: 'simultaneous active and retraction profile claims',
-      expectedCode: 'mobile-exchange.profile',
+      expectedCode: 'mobile-exchange.bundle-profile',
       patch: [
         {
           op: 'add' as const,
@@ -634,9 +642,7 @@ describe('shared Grove Mobile exchange corpus', () => {
       ],
     },
   ])('rejects adversarial $name input', ({ patch, expectedCode }) => {
-    const result = parseGroveMobileExchangeBundle(
-      patched(bases['mobile-exchange'], patch),
-    )
+    const result = parseExchangeGraph(patched(bases['mobile-exchange'], patch))
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.issues.map(({ code }) => code)).toContain(expectedCode)
@@ -661,7 +667,7 @@ describe('shared Grove Mobile exchange corpus', () => {
       },
     },
   ])('rejects adversarial retraction $name', ({ value, expectedCode }) => {
-    const result = parseGroveMobileRetractionBundle(
+    const result = parseRetractionEvent(
       patched(bases['mobile-retraction'], [
         { op: 'add', path: '/entry/0/resource/activity/coding/1', value },
       ]),
@@ -672,7 +678,7 @@ describe('shared Grove Mobile exchange corpus', () => {
   })
 
   it('rejects even an empty contained array in a retraction graph', () => {
-    const result = parseGroveMobileRetractionBundle(
+    const result = parseRetractionEvent(
       patched(bases['mobile-retraction'], [
         {
           op: 'add',

@@ -13,13 +13,13 @@ import {
 } from './rule-test-support.js'
 import {
   adapterSourceMarkerClaims,
+  groveRecordingFormatRegistry,
   groveProfileClaims,
 } from '../src/contract/measurement-catalog.generated.js'
 import {
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
 } from '../src/contract/providers.generated.js'
-import { groveMobileContract } from '../src/mobile/contract.js'
 import {
   hasAdmittedActiveDeviceProfile,
   hasAdmittedActiveDocumentReferenceProfile,
@@ -115,7 +115,7 @@ describe('profile-specific resource semantic boundaries', () => {
     )
     expectRule(
       recording,
-      'mobile-recording-device.identities',
+      'mobile-device.recording-device-dual-identity',
       roles('recording-device', 'device-snapshot'),
     )
 
@@ -125,7 +125,7 @@ describe('profile-specific resource semantic boundaries', () => {
         meta: { profile: [hostProfile] },
         identifier: [],
       },
-      'mobile-host-device.identity',
+      'mobile-device.host-device-identity',
       roles('device-snapshot'),
     )
   })
@@ -184,7 +184,7 @@ describe('profile-specific resource semantic boundaries', () => {
       mutate(candidate)
       expectRule(
         candidate,
-        'healthkit-application-device.bundle-identifier',
+        'healthkit-device.application-bundle-identifier',
         roles('device-snapshot'),
       )
     }
@@ -206,15 +206,15 @@ describe('profile-specific resource semantic boundaries', () => {
       { ...document, meta: { profile: ['https://example.org/unknown'] } },
       'mobile-output.document-profile',
     )
-    expectRule(document, 'mobile-recording-document.identities')
+    expectRule(document, 'sensor-recording-document.identity-and-content')
     expectRule(
       document,
-      'mobile-recording-document.identity-roles',
+      'sensor-recording-document.identity-and-content',
       roles('source-record', 'source-output', 'source-artifact', 'unexpected'),
     )
     expectRule(
       document,
-      'mobile-recording-document.identity-roles',
+      'sensor-recording-document.identity-and-content',
       new Map([
         ['source-record', 1],
         ['source-output', 1],
@@ -224,11 +224,15 @@ describe('profile-specific resource semantic boundaries', () => {
     )
     expectRule(
       document,
-      'mobile-recording-document.required-metadata',
+      'sensor-recording-document.identity-and-content',
       requiredRoles,
     )
-    expectRule(document, 'mobile-recording-document.attachment', requiredRoles)
-    expectRule(document, 'mobile-recording-document.format', requiredRoles)
+    expectRule(
+      document,
+      'sensor-recording-document.identity-and-content',
+      requiredRoles,
+    )
+    expectRule(document, 'sensor-recording-document.format', requiredRoles)
   })
 
   it('fails closed for malformed embedded recording data and registry metadata', () => {
@@ -267,7 +271,7 @@ describe('profile-specific resource semantic boundaries', () => {
       content.attachment.data = data
       expectRule(
         candidate,
-        'mobile-recording-document.embedded-integrity',
+        'sensor-recording-document.embedded-integrity',
         requiredRoles,
       )
     }
@@ -279,7 +283,7 @@ describe('profile-specific resource semantic boundaries', () => {
       system: 'https://example.org/wrong',
       code: 'unknown',
     }
-    expectRule(invalidFormat, 'mobile-recording-document.format', requiredRoles)
+    expectRule(invalidFormat, 'sensor-recording-document.format', requiredRoles)
   })
 
   it('requires the exact QuestionnaireResponse profile', () => {
@@ -343,7 +347,7 @@ describe('profile-specific resource semantic boundaries', () => {
     }
     expectRule(
       healthKitResource,
-      'mobile-exchange.adapter-source-marker',
+      'mobile-output.adapter-source-marker',
       roles(...healthKitClaim.requiredIdentifierRoles),
     )
 
@@ -352,7 +356,7 @@ describe('profile-specific resource semantic boundaries', () => {
       meta: { profile: ['https://example.org/neutral'] },
       extension: [{ url: marker.url, valueCode: 'owned-marker' }],
     }
-    expectRule(neutral, 'mobile-exchange.adapter-source-marker')
+    expectRule(neutral, 'mobile-output.adapter-source-marker')
   })
 
   it('admits only the release-versioned media types on clinical documents', () => {
@@ -365,7 +369,7 @@ describe('profile-specific resource semantic boundaries', () => {
         {
           attachment: { contentType },
           format: {
-            system: groveMobileContract.recordingFormats.codeSystem,
+            system: groveRecordingFormatRegistry.codeSystem,
             code: healthKitClinicalRecordAdmission.payloadFormat,
           },
         },

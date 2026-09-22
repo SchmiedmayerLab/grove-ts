@@ -9,17 +9,16 @@
 import { readFileSync } from 'node:fs'
 import { assert, double, oneof, property } from 'fast-check'
 import {
-  baseInput,
+  context,
   dateTime,
-  end,
   heartRateMeasurement,
-  resources,
-  resourceIdentity,
+  observationOf,
+  record,
   start,
   unwrap,
   uri,
 } from './provider-test-support.js'
-import { parseGroveMobileExchangeBundle } from '../src/index.js'
+import { parseExchangeGraph } from '../src/index.js'
 import {
   createEntryIdentity,
   deriveEntryFullUrl,
@@ -27,27 +26,33 @@ import {
   groveExchangeProtocol,
 } from '../src/mobile/index.js'
 import {
-  buildProviderMeasurementBundle,
+  buildProviderExchangeGraph,
+  buildProviderExchangeGraphs,
   parseNormalizedProviderRecord,
-  parseProviderMeasurementBundleInput,
   providerAdapterCatalog,
   providerRawOutputDiscriminators,
   providerRawOutputRoles,
   providerScalarOutputDiscriminators,
   providerScalarOutputRoles,
   type ConnectedProviderRecord,
-  type ProviderMeasurementBundleInput,
+  type NormalizedProviderRecord,
 } from '../src/providers/index.js'
+
+const normalized = (name: string): NormalizedProviderRecord =>
+  JSON.parse(
+    readFileSync(
+      new URL(`../fixtures/normalized/${name}`, import.meta.url),
+      'utf8',
+    ),
+  ) as NormalizedProviderRecord
 
 describe('Exchange entry identity', () => {
   it.each(groveExchangeProtocol.testVectors.fullUrls)(
     'matches the protocol $id vector',
     (vector) => {
-      const derived = deriveEntryFullUrl({
-        system: uri(vector.system),
-        value: vector.value,
-      })
-      expect(derived).toEqual({ ok: true, value: vector.fullUrl })
+      expect(
+        deriveEntryFullUrl({ system: uri(vector.system), value: vector.value }),
+      ).toEqual({ ok: true, value: vector.fullUrl })
     },
   )
 
@@ -62,21 +67,17 @@ describe('Exchange entry identity', () => {
 
   it('rejects emitted quantities outside their catalog-owned domains', () => {
     const valid = unwrap(
-      buildProviderMeasurementBundle(
-        baseInput('withings', 'getmeas:6', {
+      buildProviderExchangeGraph(
+        record('withings', 'getmeas:6', {
           kind: 'body-fat-percentage',
           value: 0,
           effective: { kind: 'date-time', value: dateTime },
         }),
+        context(),
       ),
-    )
+    ).graph
     const tampered = structuredClone(valid)
-    const observation = tampered.entry.find(
-      ({ resource }) => resource.resourceType === 'Observation',
-    )?.resource
-    if (observation?.resourceType !== 'Observation') {
-      throw new Error('Expected a body-fat Observation.')
-    }
+    const observation = observationOf(tampered)
     if (observation.valueQuantity === undefined) {
       throw new Error('Expected a body-fat Quantity result.')
     }
@@ -88,16 +89,13 @@ describe('Exchange entry identity', () => {
             ...entry,
             resource: {
               ...observation,
-              valueQuantity: {
-                ...observation.valueQuantity,
-                value: 100.1,
-              },
+              valueQuantity: { ...observation.valueQuantity, value: 100.1 },
             },
           }
         : entry,
       ),
     }
-    const parsed = parseGroveMobileExchangeBundle(invalidBundle)
+    const parsed = parseExchangeGraph(invalidBundle)
     expect(parsed.ok).toBe(false)
     if (!parsed.ok) {
       expect(parsed.issues.map(({ code }) => code)).toContain(
@@ -107,32 +105,20 @@ describe('Exchange entry identity', () => {
   })
 
   it('rejects isolated UTF-16 surrogates before UUID derivation', () => {
-    expect(
-      deriveEntryFullUrl({
-        system: uri('https://example.org/identifiers'),
-        value: 'invalid-\ud800',
-      }).ok,
-    ).toBe(false)
-    expect(
-      deriveEntryFullUrl({
-        system: uri('https://example.org/identifiers'),
-        value: 'invalid-\udc00',
-      }).ok,
-    ).toBe(false)
-    expect(
-      deriveEntryFullUrl({
-        system: uri('https://example.org/identifiers'),
-        value: 'valid-😀',
-      }).ok,
-    ).toBe(true)
+    const system = uri('https://example.org/identifiers')
+    expect(deriveEntryFullUrl({ system, value: 'invalid-\ud800' }).ok).toBe(
+      false,
+    )
+    expect(deriveEntryFullUrl({ system, value: 'invalid-\udc00' }).ok).toBe(
+      false,
+    )
+    expect(deriveEntryFullUrl({ system, value: 'valid-😀' }).ok).toBe(true)
   })
 
   it('rejects incomplete entry identifiers and invalid repository ids', () => {
     expect(
-      entryIdentifierName({
-        system: '/relative' as never,
-        value: 'record-1',
-      }).ok,
+      entryIdentifierName({ system: '/relative' as never, value: 'record-1' })
+        .ok,
     ).toBe(false)
     expect(
       entryIdentifierName({
@@ -151,6 +137,7 @@ describe('Exchange entry identity', () => {
         {
           system: uri('https://example.org/identifiers'),
           value: 'record-1',
+          role: 'source-output',
         },
         'invalid/id' as never,
       ).ok,
@@ -165,24 +152,18 @@ describe('Provider-neutral normalization contract', () => {
     'oura-sleep-duration.json',
     'withings-body-weight.json',
   ])('accepts the normalized %s fixture', (name) => {
-    const fixture: unknown = JSON.parse(
-      readFileSync(new URL(`../fixtures/normalized/${name}`, import.meta.url), {
-        encoding: 'utf8',
-      }),
-    )
+    const fixture = normalized(name)
     expect(parseNormalizedProviderRecord(fixture).ok).toBe(true)
+    expect(
+      buildProviderExchangeGraph(
+        fixture,
+        context(fixture.source.adapter.provider),
+      ).ok,
+    ).toBe(true)
   })
 
   it('normalizes multi-output serialization order without mutating caller data', () => {
-    const fixture = JSON.parse(
-      readFileSync(
-        new URL(
-          '../fixtures/normalized/oura-daily-activity.json',
-          import.meta.url,
-        ),
-        { encoding: 'utf8' },
-      ),
-    ) as { measurements: Array<{ kind: string }> }
+    const fixture = normalized('oura-daily-activity.json')
     const callerOrder = fixture.measurements.map(({ kind }) => kind)
     const result = parseNormalizedProviderRecord(fixture)
     expect(result.ok).toBe(true)
@@ -196,179 +177,78 @@ describe('Provider-neutral normalization contract', () => {
     expect(Object.isFrozen(result.value.measurements)).toBe(true)
   })
 
-  it('rejects raw response fields rather than silently stripping them', () => {
-    const fixture = JSON.parse(
-      readFileSync(
-        new URL(
-          '../fixtures/normalized/oura-sleep-duration.json',
-          import.meta.url,
-        ),
-        { encoding: 'utf8' },
-      ),
-    ) as Record<string, unknown>
+  it('refuses raw response fields rather than silently stripping them', () => {
     expect(
       parseNormalizedProviderRecord({
-        ...fixture,
+        ...normalized('oura-sleep-duration.json'),
         rawVendorResponse: { readiness: 97 },
-      }).ok,
-    ).toBe(false)
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [
+        {
+          code: 'mobile-input.value-shape-invalid',
+          path: ['rawVendorResponse'],
+        },
+      ],
+    })
   })
 
-  it('requires the provider-dependent scope assurance declared by the catalog', () => {
-    const fixture = JSON.parse(
-      readFileSync(
-        new URL(
-          '../fixtures/normalized/oura-sleep-duration.json',
-          import.meta.url,
-        ),
-        { encoding: 'utf8' },
-      ),
-    ) as {
+  it('preserves identity strings verbatim and refuses a mismatched source token', () => {
+    const spaced = record('withings', 'getmeas:11', heartRateMeasurement)
+    const result = parseNormalizedProviderRecord({
+      ...spaced,
       source: {
-        providerScopeIdentifier: Record<string, unknown>
-      }
-    }
-    const { system, value } = fixture.source.providerScopeIdentifier
-    expect(
-      parseNormalizedProviderRecord({
-        ...fixture,
-        source: {
-          ...fixture.source,
-          providerScopeIdentifier: { system, value },
-        },
-      }).ok,
-    ).toBe(false)
-
-    expect(
-      parseNormalizedProviderRecord({
-        ...fixture,
-        source: {
-          ...fixture.source,
-          providerScopeIdentifier: {
-            ...fixture.source.providerScopeIdentifier,
-            assurance: 'deployment-scoped-account-pseudonym',
-          },
-        },
-      }).ok,
-    ).toBe(false)
-
-    const accountScoped = baseInput(
-      'withings',
-      'getmeas:11',
-      heartRateMeasurement,
-    )
-    expect(
-      parseNormalizedProviderRecord({
-        source: {
-          ...accountScoped.source,
-          providerScopeIdentifier: {
-            system: 'https://example.org/provider-key-spaces',
-            value: 'withings-global',
-            assurance: 'documented-global-key-space',
-          },
-        },
-        measurements: accountScoped.measurements,
-      }).ok,
-    ).toBe(false)
-  })
-
-  it('strictly parses the complete graph input and preserves identity strings verbatim', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = parseProviderMeasurementBundleInput({
-      ...input,
-      source: {
-        ...input.source,
-        providerScopeIdentifier: {
-          ...input.source.providerScopeIdentifier,
-          value: ' pseudonym-with-significant-spaces ',
-        },
+        ...spaced.source,
+        sourceNativeId: ' record-with-significant-spaces ',
       },
     })
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-    expect(result.value.source.providerScopeIdentifier.value).toBe(
-      ' pseudonym-with-significant-spaces ',
+    expect(result.ok && result.value.source.sourceNativeId).toBe(
+      ' record-with-significant-spaces ',
     )
 
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        rawVendorResponse: { heart_rate: 64 },
-      } as ProviderMeasurementBundleInput & {
-        rawVendorResponse: unknown
-      }).ok,
-    ).toBe(false)
-    expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        source: {
-          ...input.source,
-          rawVendorResponse: { heart_rate: 64 },
+      parseNormalizedProviderRecord(
+        record('oura', 'daily_readiness', heartRateMeasurement),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [
+        {
+          code: 'mobile-input.unsupported-source-value',
+          path: ['measurements', 0, 'kind'],
         },
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
-  })
-
-  it('rejects an arbitrary adapter and a mismatched source token', () => {
-    const dataOrigin = {
-      sourceDeviceToken: 'oura',
-      name: 'Oura',
-    }
+      ],
+    })
     expect(
       parseNormalizedProviderRecord({
+        ...spaced,
         source: {
-          adapter: { kind: 'mobile', provider: 'oura' },
-          providerScopeIdentifier: {
-            system: 'https://example.org/provider-key-spaces',
-            value: 'oura-document-uuid-global',
-            assurance: 'documented-global-key-space',
-          },
-          sourceType: 'sleep',
-          sourceNativeId: 'sleep-1',
-          dataOrigin,
+          ...spaced.source,
+          adapter: { kind: 'mobile', provider: 'withings' },
         },
-        measurements: [
-          {
-            kind: 'sleep-duration',
-            value: 7.4,
-            effective: { kind: 'period', start, end },
-          },
-        ],
-      }).ok,
-    ).toBe(false)
-
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
     expect(
       parseNormalizedProviderRecord({
-        source: {
-          adapter: { kind: 'providers', provider: 'oura' },
-          providerScopeIdentifier: {
-            system: 'https://example.org/provider-key-spaces',
-            value: 'oura-document-uuid-global',
-            assurance: 'documented-global-key-space',
-          },
-          sourceType: 'daily_readiness',
-          sourceNativeId: 'readiness-1',
-          dataOrigin,
-        },
-        measurements: [heartRateMeasurement],
-      }).ok,
-    ).toBe(false)
+        ...spaced,
+        source: { ...spaced.source, sourceType: 'invented' },
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-type' }],
+    })
   })
 
   it('correlates provider, source token, and measurement at compile time', () => {
     const withingsSource = {
       adapter: { kind: 'providers', provider: 'withings' },
-      providerScopeIdentifier: {
-        system: uri('https://example.org/deployments/provider-accounts'),
-        value: 'pseudonym-withings-001',
-        assurance: 'deployment-scoped-account-pseudonym',
-      },
       sourceType: 'getmeas:11',
       sourceNativeId: 'heart-rate-1',
-      dataOrigin: {
-        sourceDeviceToken: 'withings',
-        name: 'Withings',
-      },
+      writer: { sourceDeviceToken: 'withings', name: 'Withings' },
     } as const
     const valid: ConnectedProviderRecord<'withings', 'getmeas:11'> = {
       source: withingsSource,
@@ -386,9 +266,6 @@ describe('Provider-neutral normalization contract', () => {
       kind: 'blood-glucose',
       value: 95,
       effective: { kind: 'date-time', value: dateTime },
-      specimen: {
-        identity: resourceIdentity('https://example.org/specimens', 'blood'),
-      },
     }
     // @ts-expect-error Oura sleep admits sleep-duration, never glucose.
     const invalid: OuraSleep = { source, measurements: [invalidMeasurement] }
@@ -421,39 +298,69 @@ describe('Provider-neutral normalization contract', () => {
       'single',
     )
   })
+
+  it('converts a batch under per-record contexts and keeps refusals beside conversions', () => {
+    const records = [
+      record('withings', 'getmeas:11', heartRateMeasurement),
+      record('withings', 'getmeas:54', {
+        kind: 'oxygen-saturation',
+        value: 101,
+        effective: { kind: 'date-time', value: dateTime },
+      }),
+      record('google-health-api', 'steps', {
+        kind: 'step-count',
+        value: 12,
+        effective: { kind: 'period', start, end: dateTime },
+      }),
+    ]
+    let sequence = 0
+    const batch = buildProviderExchangeGraphs(records, (candidate) => {
+      sequence += 1
+      return context(candidate.source.adapter.provider, String(sequence))
+    })
+    expect(batch.conversions).toHaveLength(2)
+    expect(batch.failures).toHaveLength(1)
+    expect(batch.failures[0]?.record).toBe(records[1])
+    expect(batch.failures[0]?.issues.map(({ code }) => code)).toEqual([
+      'mobile-input.value-outside-domain',
+    ])
+    expect(
+      new Set(batch.conversions.map(({ graph }) => graph.identifier.value))
+        .size,
+    ).toBe(2)
+    expect(() =>
+      buildProviderExchangeGraphs(records, () => {
+        throw new Error('reservation failed')
+      }),
+    ).toThrow('reservation failed')
+  })
 })
 
 describe('Provider builder properties', () => {
   it('preserves every finite positive heart-rate value', () => {
     assert(
       property(
-        double({
-          min: 0.01,
-          max: 400,
-          noNaN: true,
-          noDefaultInfinity: true,
-        }),
+        double({ min: 0.01, max: 400, noNaN: true, noDefaultInfinity: true }),
         (value) => {
-          const result = buildProviderMeasurementBundle(
-            baseInput('withings', 'getmeas:11', {
+          const result = buildProviderExchangeGraph(
+            record('withings', 'getmeas:11', {
               kind: 'heart-rate',
               value,
               effective: { kind: 'date-time', value: dateTime },
             }),
+            context(),
           )
           expect(result.ok).toBe(true)
           if (!result.ok) return
-          expect(
-            resources(result).find(
-              (resource) => resource.resourceType === 'Observation',
-            )?.valueQuantity?.value,
-          ).toBe(value)
+          expect(observationOf(result.value.graph).valueQuantity?.value).toBe(
+            value,
+          )
         },
       ),
     )
   })
 
-  it('rejects every oxygen saturation outside the percentage range', () => {
+  it('refuses every oxygen saturation outside the percentage range', () => {
     assert(
       property(
         oneof(
@@ -462,14 +369,18 @@ describe('Provider builder properties', () => {
         ),
         (value) => {
           expect(
-            buildProviderMeasurementBundle(
-              baseInput('withings', 'getmeas:54', {
+            buildProviderExchangeGraph(
+              record('withings', 'getmeas:54', {
                 kind: 'oxygen-saturation',
                 value,
                 effective: { kind: 'date-time', value: dateTime },
               }),
-            ).ok,
-          ).toBe(false)
+              context(),
+            ),
+          ).toMatchObject({
+            ok: false,
+            issues: [{ code: 'mobile-input.value-outside-domain' }],
+          })
         },
       ),
     )

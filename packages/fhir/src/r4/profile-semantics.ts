@@ -18,14 +18,15 @@ import {
 } from './graph-schema-utils.js'
 import {
   adapterSourceMarkerClaims,
+  groveMobileProfileCanonicals,
   groveProfileClaims,
+  groveRecordingFormatRegistry,
 } from '../contract/measurement-catalog.generated.js'
 import {
   healthKitApplicationDeviceIdentity,
   healthKitClinicalRecordAdmission,
 } from '../contract/providers.generated.js'
 import { decodeCanonicalBase64 } from '../core/index.js'
-import { groveMobileContract } from '../mobile/contract.js'
 
 const SHA1_BASE64 = /^[A-Za-z\d+/]{26}[AEIMQUYcgkosw048]=$/u
 
@@ -40,17 +41,17 @@ const bytesEqual = (left: Uint8Array, right: Uint8Array): boolean =>
   left.length === right.length &&
   left.every((value, index) => value === right[index])
 
-type RecordingFormats = typeof groveMobileContract.recordingFormats.formats
+type RecordingFormats = typeof groveRecordingFormatRegistry.formats
 
 const isRecordingFormatCode = (code: unknown): code is keyof RecordingFormats =>
   typeof code === 'string' &&
-  Object.hasOwn(groveMobileContract.recordingFormats.formats, code)
+  Object.hasOwn(groveRecordingFormatRegistry.formats, code)
 
 const recordingFormat = (
   code: unknown,
 ): RecordingFormats[keyof RecordingFormats] | undefined =>
   isRecordingFormatCode(code) ?
-    groveMobileContract.recordingFormats.formats[code]
+    groveRecordingFormatRegistry.formats[code]
   : undefined
 
 interface ExactProfileClaim {
@@ -161,12 +162,11 @@ const validateProfiledDevice = (
     groveProfileClaims.activeDeviceClaims,
   )
   if (claim === undefined) {
-    addIssue(
-      context,
-      'mobile-support.device-profile',
-      [...path, 'meta', 'profile'],
-      'An active Device must declare exactly one catalog-admitted direct profile mode.',
-    )
+    addIssue(context, 'mobile-support.device-profile', [
+      ...path,
+      'meta',
+      'profile',
+    ])
     return
   }
   const requiredRoles = new Set(claim.requiredIdentifierRoles ?? [])
@@ -174,37 +174,28 @@ const validateProfiledDevice = (
     [...requiredRoles].some((role) => roleCounts.get(role) !== 1) ||
     [...roleCounts].some(([role]) => !requiredRoles.has(role))
   ) {
-    addIssue(
-      context,
-      'mobile-support.device-profile',
-      [...path, 'identifier'],
-      'An active Device must carry exactly the typed identities required by its admitted profile mode.',
-    )
+    addIssue(context, 'mobile-support.device-profile', [...path, 'identifier'])
     return
   }
   const profile = claim.profiles[0]
   if (
-    profile === groveMobileContract.profiles.recordingDevice &&
+    profile === groveMobileProfileCanonicals['grove-recording-device'] &&
     (roleCounts.get('recording-device') !== 1 ||
       identifiersOf(resource).length !== 2)
   ) {
-    addIssue(
-      context,
-      'mobile-recording-device.identities',
-      [...path, 'identifier'],
-      'A recording Device requires exactly one stable recording-device identity and one event snapshot identity.',
-    )
+    addIssue(context, 'mobile-device.recording-device-dual-identity', [
+      ...path,
+      'identifier',
+    ])
   }
   if (
-    profile === groveMobileContract.profiles.hostDevice &&
+    profile === groveMobileProfileCanonicals['grove-host-device'] &&
     identifiersOf(resource).length !== 1
   ) {
-    addIssue(
-      context,
-      'mobile-host-device.identity',
-      [...path, 'identifier'],
-      'A host Device carries exactly one event snapshot identity.',
-    )
+    addIssue(context, 'mobile-device.host-device-identity', [
+      ...path,
+      'identifier',
+    ])
   }
   if (profile === healthKitApplicationDeviceIdentity.profile) {
     const definition = healthKitApplicationDeviceIdentity.bundleIdentifier
@@ -226,12 +217,10 @@ const validateProfiledDevice = (
       typeof bundleIdentifierValue !== 'string' ||
       bundleIdentifierValue.trim() === ''
     ) {
-      addIssue(
-        context,
-        'healthkit-application-device.bundle-identifier',
-        [...path, 'identifier'],
-        'A HealthKit application Device requires exactly one typed Apple bundle product identifier.',
-      )
+      addIssue(context, 'healthkit-device.application-bundle-identifier', [
+        ...path,
+        'identifier',
+      ])
     }
   }
 }
@@ -244,12 +233,11 @@ const validateRecordingDocument = (
 ) => {
   const claim = exactProfileClaim(resource, DOCUMENT_REFERENCE_PROFILE_CLAIMS)
   if (claim === undefined) {
-    addIssue(
-      context,
-      'mobile-output.document-profile',
-      [...path, 'meta', 'profile'],
-      'A source-preservation DocumentReference must declare exactly one catalog-admitted direct profile set.',
-    )
+    addIssue(context, 'mobile-output.document-profile', [
+      ...path,
+      'meta',
+      'profile',
+    ])
   }
   const requiredRoles: ReadonlySet<string> = new Set<string>(
     claim?.requiredIdentifierRoles ?? [],
@@ -258,12 +246,10 @@ const validateRecordingDocument = (
     (role) => roleCounts.get(role) !== 1,
   )
   if (claim !== undefined && missingRoles.length > 0) {
-    addIssue(
-      context,
-      'mobile-recording-document.identities',
-      [...path, 'identifier'],
-      'A source-preservation DocumentReference requires every identity role named by its exact profile claim.',
-    )
+    addIssue(context, 'sensor-recording-document.identity-and-content', [
+      ...path,
+      'identifier',
+    ])
   }
   const admittedRoles = new Set([...requiredRoles, 'writer-record'])
   if (
@@ -271,24 +257,17 @@ const validateRecordingDocument = (
     (claim !== undefined &&
       [...roleCounts].some(([role]) => !admittedRoles.has(role)))
   ) {
-    addIssue(
-      context,
-      'mobile-recording-document.identity-roles',
-      [...path, 'identifier'],
-      'A recording DocumentReference admits only its three required identities and at most one writer-record identity.',
-    )
+    addIssue(context, 'sensor-recording-document.identity-and-content', [
+      ...path,
+      'identifier',
+    ])
   }
   if (
     resource.type === undefined ||
     resource.subject === undefined ||
     typeof resource.date !== 'string'
   ) {
-    addIssue(
-      context,
-      'mobile-recording-document.required-metadata',
-      path,
-      'A recording DocumentReference requires type, Patient subject, and document creation date.',
-    )
+    addIssue(context, 'sensor-recording-document.identity-and-content', path)
   }
   const content = Array.isArray(resource.content) ? resource.content : []
   const item = asRecord(content[0])
@@ -308,12 +287,10 @@ const validateRecordingDocument = (
     typeof attachment.hash !== 'string' ||
     !SHA1_BASE64.test(attachment.hash)
   ) {
-    addIssue(
-      context,
-      'mobile-recording-document.attachment',
-      [...path, 'content'],
-      'A recording has one attachment with exactly one payload location, media type, R4-sized byte count, and canonical SHA-1 hash.',
-    )
+    addIssue(context, 'sensor-recording-document.identity-and-content', [
+      ...path,
+      'content',
+    ])
   }
   if (typeof attachment?.data === 'string') {
     const payload = decodeFhirBase64(attachment.data)
@@ -324,29 +301,29 @@ const validateRecordingDocument = (
       payload.length !== attachment.size ||
       !bytesEqual(sha1(payload), digest)
     ) {
-      addIssue(
-        context,
-        'mobile-recording-document.embedded-integrity',
-        [...path, 'content', 0, 'attachment'],
-        'Embedded recording size and SHA-1 hash must match the decoded attachment bytes.',
-      )
+      addIssue(context, 'sensor-recording-document.embedded-integrity', [
+        ...path,
+        'content',
+        0,
+        'attachment',
+      ])
     }
   }
   const definition = recordingFormat(format?.code)
   const formatContentTypes: readonly string[] = definition?.contentTypes ?? []
   if (
-    format?.system !== groveMobileContract.recordingFormats.codeSystem ||
+    format?.system !== groveRecordingFormatRegistry.codeSystem ||
     format.version !== undefined ||
     definition?.status !== 'active' ||
     typeof attachment?.contentType !== 'string' ||
     !formatContentTypes.includes(attachment.contentType)
   ) {
-    addIssue(
-      context,
-      'mobile-recording-document.format',
-      [...path, 'content', 0, 'format'],
-      'Recording format and content type must match the active Grove registry entry; Coding.version is not permitted.',
-    )
+    addIssue(context, 'sensor-recording-document.format', [
+      ...path,
+      'content',
+      0,
+      'format',
+    ])
   }
   if (claim === groveProfileClaims.healthKitClinicalRecordDocumentClaim) {
     const representation = healthKitClinicalRecordAdmission.fhirRepresentation
@@ -359,12 +336,13 @@ const validateRecordingDocument = (
       typeof attachment?.contentType !== 'string' ||
       !admittedContentTypes.includes(attachment.contentType)
     ) {
-      addIssue(
-        context,
-        'healthkit-clinical.fhir-representation',
-        [...path, 'content', 0, 'attachment', 'contentType'],
-        'A HealthKit clinical-record document must declare the admitted payload format and the exact media type of its source FHIR release.',
-      )
+      addIssue(context, 'healthkit-clinical.fhir-representation', [
+        ...path,
+        'content',
+        0,
+        'attachment',
+        'contentType',
+      ])
     }
   }
 }
@@ -379,12 +357,11 @@ const validateProfiledQuestionnaireResponse = (
       groveProfileClaims.activeQuestionnaireResponseClaim,
     ]) === undefined
   ) {
-    addIssue(
-      context,
-      'mobile-support.questionnaire-response-profile',
-      [...path, 'meta', 'profile'],
-      'An active QuestionnaireResponse must directly declare exactly the admitted Grove QuestionnaireResponse profile.',
-    )
+    addIssue(context, 'mobile-support.questionnaire-response-profile', [
+      ...path,
+      'meta',
+      'profile',
+    ])
   }
 }
 
@@ -439,12 +416,9 @@ const validateAdapterSourceMarkers = (
         (claimsAdapterProfile && (candidates.length !== 1 || !complete)) ||
         (!claimsAdapterProfile && candidates.length !== 0)
       ) {
-        addIssue(
-          context,
-          'mobile-exchange.adapter-source-marker',
-          path,
-          `The ${claim.adapter} source marker must appear exactly once on its catalog-owned adapter output and never on a source-neutral or different-adapter output.`,
-        )
+        addIssue(context, 'mobile-output.adapter-source-marker', path, {
+          location: `${resource.resourceType}.extension`,
+        })
       }
     }
   }
@@ -474,12 +448,11 @@ const validateAdapterOnlyOutputProfile = (
     resource.resourceType === 'Specimen' &&
     identifiersOf(resource).length !== requiredRoles.size
   if (!exactProfile || invalidRoles || closedSpecimenIdentifiers) {
-    addIssue(
-      context,
-      'mobile-output.adapter-only-profile',
-      [...path, 'meta', 'profile'],
-      'This active output resource type is admitted only under its exact one-profile adapter claim and required typed identities.',
-    )
+    addIssue(context, 'mobile-output.adapter-only-profile', [
+      ...path,
+      'meta',
+      'profile',
+    ])
   }
 }
 

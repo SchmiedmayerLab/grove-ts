@@ -11,10 +11,18 @@ import { err, ok, type Result } from './result.js'
 declare const brand: unique symbol
 declare const numericBrand: unique symbol
 
-type Branded<Name extends string> = string & { readonly [brand]: Name }
+export type Branded<Name extends string> = string & {
+  readonly [brand]: Name
+}
 
 export type AbsoluteUri = Branded<'AbsoluteUri'>
 export type Canonical = Branded<'Canonical'>
+/** Canonical positive decimal naming one key epoch of a deployment's identity scope. */
+export type KeyEpoch = Branded<'KeyEpoch'>
+/** Canonical positive decimal ordering one producer instance's exchange events. */
+export type EventSequence = Branded<'EventSequence'>
+/** Canonical unsigned decimal position of an entry among those sharing its node role. */
+export type EntryNodeOrdinal = Branded<'EntryNodeOrdinal'>
 export type FhirId = Branded<'FhirId'>
 export type FhirInstant = Branded<'FhirInstant'>
 export type PatientReference = Branded<'PatientReference'>
@@ -34,6 +42,8 @@ const UUID =
   '[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 const URN_UUID = new RegExp(`^urn:uuid:${UUID}$`, 'u')
 const DECIMAL_IDENTIFIER = /^\d+$/u
+const POSITIVE_DECIMAL = /^[1-9]\d*$/u
+const UNSIGNED_DECIMAL = /^(?:0|[1-9]\d*)$/u
 const SEMVER_IDENTIFIER = /^[\dA-Za-z-]+$/u
 
 const isNumericIdentifier = (value: string): boolean =>
@@ -364,6 +374,38 @@ export const parsePositiveInteger = (
     )
   }
   return ok(value as PositiveInteger)
+}
+
+export const parseKeyEpoch = (value: unknown): Result<KeyEpoch> => {
+  if (typeof value !== 'string' || !POSITIVE_DECIMAL.test(value)) {
+    return err(
+      'invalid-identifier',
+      'Expected a canonical positive decimal key epoch.',
+    )
+  }
+  return ok(value as KeyEpoch)
+}
+
+export const parseEventSequence = (value: unknown): Result<EventSequence> => {
+  if (typeof value !== 'string' || !POSITIVE_DECIMAL.test(value)) {
+    return err(
+      'invalid-identifier',
+      'Expected a canonical positive decimal event sequence.',
+    )
+  }
+  return ok(value as EventSequence)
+}
+
+export const parseEntryNodeOrdinal = (
+  value: unknown,
+): Result<EntryNodeOrdinal> => {
+  if (typeof value !== 'string' || !UNSIGNED_DECIMAL.test(value)) {
+    return err(
+      'invalid-identifier',
+      'Expected a canonical unsigned decimal entry-node ordinal.',
+    )
+  }
+  return ok(value as EntryNodeOrdinal)
 }
 
 export const parseUrnUuid = (value: unknown): Result<UrnUuid> => {

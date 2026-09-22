@@ -4,14 +4,14 @@
       "kind": "providers",
       "provider": "oura"
     },
-    "providerScopeIdentifier": {
-      "system": "https://example.org/provider-key-spaces",
-      "value": "oura-document-uuid-global",
-      "assurance": "documented-global-key-space"
-    },
     "sourceType": "heartrate",
     "sourceNativeId": "synthetic-oura-heart-rate-series-001",
-    "dataOrigin": {
+    "effective": {
+      "kind": "period",
+      "start": "2026-08-19T00:00:00Z",
+      "end": "2026-08-20T00:00:00Z"
+    },
+    "writer": {
       "sourceDeviceToken": "origin-instance-oura-001",
       "name": "Oura"
     }

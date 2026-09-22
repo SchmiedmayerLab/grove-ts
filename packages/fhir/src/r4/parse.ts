@@ -6,16 +6,18 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type z } from 'zod'
+import { z } from 'zod'
+import { refineActiveBundle } from './active-graph-semantics.js'
 import {
   groveRuleIssue,
   groveRuleIssueFromParameters,
-  type GroveExchangeRuleCode,
+  isProducerDiagnosticCode,
+  type ProducerDiagnosticCode,
 } from './diagnostics.js'
 import { asRecord } from './graph-schema-utils.js'
+import { refineRetractionBundle } from './retraction-graph-semantics.js'
 import {
-  groveMobileExchangeBundleSchema,
-  groveMobileRetractionBundleSchema,
+  exchangeGraphSchema,
   hasAdmittedActiveDeviceProfile,
   hasAdmittedActiveDocumentReferenceProfile,
   hasAdmittedActiveProvenanceProfile,
@@ -28,18 +30,19 @@ import {
   documentReferenceSchema,
   observationSchema,
   provenanceSchema,
+  retractionEventSchema,
   specimenSchema,
   supportedR4ResourceSchema,
 } from './schemas.js'
 import type {
   Device,
   DocumentReference,
+  ExchangeGraph,
   Observation,
   Provenance,
+  RetractionEvent,
   Specimen,
   SupportedR4Resource,
-  GroveMobileExchangeBundle,
-  GroveMobileRetractionBundle,
   R4CollectionBundle,
 } from './types.js'
 import {
@@ -57,7 +60,6 @@ const normalizeIssue = (entry: z.core.$ZodIssue): Issue =>
   groveRuleIssueFromParameters(
     entry.code === 'custom' ? entry.params : undefined,
     zodIssuePath(entry),
-    entry.message,
   ) ?? zodIssueToIssue(entry)
 
 // The schema decides the parsed type; a caller-chosen T would make the cast below a lie.
@@ -104,7 +106,7 @@ const ofType =
     asRecord(resource)?.resourceType === resourceType && rejects(resource)
 
 interface EntryRulePrecheck {
-  readonly code: GroveExchangeRuleCode
+  readonly code: ProducerDiagnosticCode
   readonly path: readonly string[]
   readonly rejects: (resource: unknown) => boolean
 }
@@ -193,33 +195,68 @@ const entryRuleIssue = (
   return undefined
 }
 
+type GraphRefinement = (
+  bundle: R4CollectionBundle,
+  context: z.core.$RefinementCtx,
+) => void
+
+// The base R4 schema rejects a Bundle before its graph refinements run, yet the graph
+// rule is the more specific diagnostic. The refinements read defensively, so they are
+// tried on the snapshot itself; anything they cannot read falls back to the schema issues.
+const graphRuleIssues = (
+  snapshot: unknown,
+  refine: GraphRefinement,
+): readonly Issue[] | undefined => {
+  try {
+    const result = z
+      .unknown()
+      .superRefine((value, context) => {
+        refine(value as R4CollectionBundle, context)
+      })
+      .safeParse(snapshot)
+    if (result.success) return undefined
+    const rules = result.error.issues
+      .map(normalizeIssue)
+      .filter((issue) => isProducerDiagnosticCode(issue.code))
+    return rules.length === 0 ? undefined : rules
+  } catch {
+    return undefined
+  }
+}
+
 const parseGraphBundle = <T>(
   schema: z.ZodType<T>,
+  refine: GraphRefinement,
   prechecks: readonly EntryRulePrecheck[],
   input: unknown,
 ): Result<T> => {
   const snapshot = cloneJsonValue(input)
   if (!snapshot.ok) return snapshot
   const early = entryRuleIssue(snapshot.value, prechecks)
-  return early === undefined ?
-      parseSnapshotWith(schema, snapshot.value)
-    : issues([early])
+  if (early !== undefined) return issues([early])
+  const result = schema.safeParse(snapshot.value)
+  if (result.success) return ok(deepFreeze(result.data) as T)
+  const normalized = result.error.issues.map(normalizeIssue)
+  if (normalized.some((issue) => isProducerDiagnosticCode(issue.code))) {
+    return issues(normalized)
+  }
+  return issues(graphRuleIssues(snapshot.value, refine) ?? normalized)
 }
 
-export const parseGroveMobileExchangeBundle = (
-  input: unknown,
-): Result<GroveMobileExchangeBundle> =>
+/** Parses and validates one active exchange event; it never throws for any input. */
+export const parseExchangeGraph = (input: unknown): Result<ExchangeGraph> =>
   parseGraphBundle(
-    groveMobileExchangeBundleSchema,
+    exchangeGraphSchema,
+    refineActiveBundle,
     ACTIVE_ENTRY_PRECHECKS,
     input,
   )
 
-export const parseGroveMobileRetractionBundle = (
-  input: unknown,
-): Result<GroveMobileRetractionBundle> =>
+/** Parses and validates one retraction assertion; it never throws for any input. */
+export const parseRetractionEvent = (input: unknown): Result<RetractionEvent> =>
   parseGraphBundle(
-    groveMobileRetractionBundleSchema,
+    retractionEventSchema,
+    refineRetractionBundle,
     RETRACTION_ENTRY_PRECHECKS,
     input,
   )

@@ -107,10 +107,10 @@ type GraphBundle<Resource> = ReadonlyDeep<
   }
 >
 
-/** Grove-profiled event graph with complete event and entry identity. */
-export type GroveMobileExchangeBundle = GraphBundle<GraphResource>
+/** The validated collection Bundle of one active exchange event. */
+export type ExchangeGraph = GraphBundle<GraphResource>
 
-/** Grove-profiled retraction assertion containing Provenance and optional Device agents only. */
-export type GroveMobileRetractionBundle = GraphBundle<Device | Provenance>
+/** The validated retraction assertion: its Provenance and optional Device agents only. */
+export type RetractionEvent = GraphBundle<Device | Provenance>
 
 export type SupportedR4Resource = R4CollectionBundle | GraphResource

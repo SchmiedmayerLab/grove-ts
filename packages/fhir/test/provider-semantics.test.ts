@@ -8,14 +8,14 @@
 
 import {
   application,
-  baseInput,
   bloodPressureMeasurement,
+  context,
   dateTime,
-  deploymentIdentity,
-  end,
   heartRateMeasurement,
+  identityScope,
   instant,
-  resourceIdentity,
+  observationOf,
+  record,
   resources,
   start,
   unwrap,
@@ -31,11 +31,10 @@ import {
 } from '../src/mobile/index.js'
 import { deriveProviderIdentities } from '../src/providers/identity.js'
 import {
-  buildProviderMeasurementBundle,
+  buildProviderExchangeGraph,
   parseNormalizedProviderRecord,
-  parseProviderMeasurementBundleInput,
   providerOutputCoordinates,
-  type ProviderMeasurementBundleInput,
+  type NormalizedProviderRecord,
 } from '../src/providers/index.js'
 import {
   providerMeasurementDefinition,
@@ -43,21 +42,42 @@ import {
   providerObservationProfile,
 } from '../src/providers/measurement-definition.js'
 
+const heartRate = record('withings', 'getmeas:11', heartRateMeasurement)
+const withSource = (
+  base: NormalizedProviderRecord,
+  source: Record<string, unknown>,
+): NormalizedProviderRecord =>
+  ({
+    ...base,
+    source: { ...base.source, ...source },
+  }) as NormalizedProviderRecord
+const withMeasurement = (
+  base: NormalizedProviderRecord,
+  measurement: unknown,
+): NormalizedProviderRecord =>
+  ({ ...base, measurements: [measurement] }) as NormalizedProviderRecord
+
 describe('Provider R4 graph builder', () => {
   it('rounds Mobile effective instants before enforcing ordering and catalog-owned duration rules', () => {
-    const collapsed = baseInput('oura', 'sleep', {
-      kind: 'sleep-duration',
-      value: 0.1,
-      effective: {
-        kind: 'period',
-        start: instant('2026-08-20T12:00:00.0001Z'),
-        end: instant('2026-08-20T12:00:00.0002Z'),
-      },
-    })
-    expect(buildProviderMeasurementBundle(collapsed).ok).toBe(true)
+    const sleep = (startValue: string, endValue: string) =>
+      record('oura', 'sleep', {
+        kind: 'sleep-duration',
+        value: 0.1,
+        effective: {
+          kind: 'period',
+          start: instant(startValue),
+          end: instant(endValue),
+        },
+      })
     expect(
-      buildProviderMeasurementBundle(
-        baseInput('google-health-api', 'steps', {
+      buildProviderExchangeGraph(
+        sleep('2026-08-20T12:00:00.0001Z', '2026-08-20T12:00:00.0002Z'),
+        context('oura'),
+      ).ok,
+    ).toBe(true)
+    expect(
+      buildProviderExchangeGraph(
+        record('google-health-api', 'steps', {
           kind: 'step-count',
           value: 1,
           effective: {
@@ -66,70 +86,51 @@ describe('Provider R4 graph builder', () => {
             end: instant('2026-08-20T12:00:00.0002Z'),
           },
         }),
-      ).ok,
-    ).toBe(false)
-
-    const input = baseInput('oura', 'sleep', {
-      kind: 'sleep-duration',
-      value: 0.1,
-      effective: {
-        kind: 'period',
-        start: instant('2026-08-20T12:00:00.0004Z'),
-        end: instant('2026-08-20T12:00:00.0006Z'),
-      },
+        context('google-health-api'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.effective-period-invalid' }],
     })
-    const result = buildProviderMeasurementBundle(input)
-    expect(result.ok).toBe(true)
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
+
+    const result = buildProviderExchangeGraph(
+      sleep('2026-08-20T12:00:00.0004Z', '2026-08-20T12:00:00.0006Z'),
+      context('oura'),
     )
-    expect(observation?.effectivePeriod).toEqual({
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(observationOf(result.value.graph).effectivePeriod).toEqual({
       start: '2026-08-20T12:00:00.000Z',
       end: '2026-08-20T12:00:00.001Z',
     })
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        measurements: [
-          {
-            ...input.measurements[0],
-            effective: {
-              kind: 'period',
-              start: instant('2026-08-20T12:00:00.0006Z'),
-              end: instant('2026-08-20T12:00:00.0004Z'),
-            },
-          },
-        ],
-      } as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+      buildProviderExchangeGraph(
+        sleep('2026-08-20T12:00:00.0006Z', '2026-08-20T12:00:00.0004Z'),
+        context('oura'),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.effective-period-invalid' }],
+    })
   })
 
-  it('requires identifier-only typed logical subjects', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        subject: 'Patient/example',
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        subject: { ...input.subject, reference: 'Patient/example' },
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        subject: {
-          type: 'Patient',
-          identifier: {
-            system: 'https://example.org/patient-pseudonyms',
-            value: 'patient-example',
-          },
-        },
-      }).ok,
-    ).toBe(false)
+  it('faults a subject that is neither logical nor bundled', () => {
+    for (const subject of [
+      'Patient/example',
+      {
+        kind: 'logical',
+        identifier: context().subject.identifier,
+        reference: 'Patient/x',
+      },
+      { type: 'Patient', identifier: context().subject.identifier },
+    ]) {
+      const result = buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', { subject: subject as never }),
+      )
+      expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.issues[0]?.path[0]).toBe('subject')
+    }
   })
 
   it.each(mobileEffectiveCanonicalizationVectors)(
@@ -142,48 +143,40 @@ describe('Provider R4 graph builder', () => {
     },
   )
 
-  it('fails closed for invalid input and a rounding carry outside FHIR four-digit years', () => {
-    expect(canonicalizeMobileEffectiveInstant('not-an-instant').ok).toBe(false)
-    expect(
-      canonicalizeMobileEffectiveInstant('9999-12-31T23:59:59.9996Z').ok,
-    ).toBe(false)
-  })
-
   it('serializes a canonical effectiveDateTime while preserving its source offset', () => {
-    const input = baseInput('withings', 'getmeas:11', {
+    const input = withMeasurement(heartRate, {
       ...heartRateMeasurement,
       effective: {
         kind: 'date-time',
         value: instant('2026-08-20T08:30:00.251500001-07:00'),
       },
     })
-    const parsed = parseProviderMeasurementBundleInput(input)
+    const parsed = parseNormalizedProviderRecord(input)
     expect(parsed.ok).toBe(true)
     if (!parsed.ok) return
     expect(parsed.value.measurements[0].effective).toEqual({
       kind: 'date-time',
       value: '2026-08-20T08:30:00.252-07:00',
     })
-
-    const result = buildProviderMeasurementBundle(input)
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
+    const result = unwrap(buildProviderExchangeGraph(input, context()))
+    expect(observationOf(result.graph).effectiveDateTime).toBe(
+      '2026-08-20T08:30:00.252-07:00',
     )
-    expect(observation?.effectiveDateTime).toBe('2026-08-20T08:30:00.252-07:00')
+    const provenance = resources(result.graph).find(
+      (r) => r.resourceType === 'Provenance',
+    )
+    if (provenance?.resourceType !== 'Provenance')
+      throw new Error('No Provenance.')
+    expect(provenance.occurredDateTime).toBe('2026-08-20T08:30:00.252-07:00')
+    expect(provenance.recorded).toBe(context().conversionInstant)
+    expect(result.graph.timestamp).toBe(context().conversionInstant)
   })
 
   it('derives every urn:uuid edge from a complete business identifier', () => {
-    const result = buildProviderMeasurementBundle(
-      baseInput('withings', 'getmeas:11', heartRateMeasurement),
-    )
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-
-    for (const entry of result.value.entry) {
+    const result = unwrap(buildProviderExchangeGraph(heartRate, context()))
+    for (const entry of result.graph.entry) {
       expect(entry.fullUrl).toMatch(/^urn:uuid:/u)
       const businessIdentifier = entry.extension?.[0]?.valueIdentifier
-      expect(businessIdentifier?.system).toBeDefined()
-      expect(businessIdentifier?.value).toBeDefined()
       expect(
         deriveEntryFullUrl({
           system: uri(businessIdentifier?.system ?? ''),
@@ -194,70 +187,62 @@ describe('Provider R4 graph builder', () => {
   })
 
   it('constructs one composite Withings blood-pressure panel', () => {
-    const result = buildProviderMeasurementBundle(
-      baseInput('withings', 'getmeas:9+10', bloodPressureMeasurement),
+    const result = unwrap(
+      buildProviderExchangeGraph(
+        record('withings', 'getmeas:9+10', bloodPressureMeasurement),
+        context(),
+      ),
     )
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
-    )
-    expect(observation?.component).toHaveLength(2)
-    expect(observation?.valueQuantity).toBeUndefined()
+    const observation = observationOf(result.graph)
+    expect(observation.component).toHaveLength(2)
+    expect(observation.valueQuantity).toBeUndefined()
   })
 
-  it('uses optional Resource.id values only when supplied by a repository', () => {
-    const result = buildProviderMeasurementBundle({
-      ...baseInput('withings', 'getmeas:11', heartRateMeasurement),
-      repositoryIds: {
-        bundle: unwrap(parseFhirId('bundle-42')),
-        observations: {
-          'heart-rate': unwrap(parseFhirId('observation-42')),
+  it('uses optional Resource.id values only when the context supplies them', () => {
+    const result = buildProviderExchangeGraph(
+      heartRate,
+      context('withings', '1', {
+        repositoryIds: {
+          bundle: unwrap(parseFhirId('bundle-42')),
+          'primary-output': unwrap(parseFhirId('observation-42')),
+          provenance: unwrap(parseFhirId('provenance-42')),
+          'application-device': unwrap(parseFhirId('application-42')),
+          'recording-device': unwrap(parseFhirId('recording-device-42')),
         },
-        provenance: unwrap(parseFhirId('provenance-42')),
-      },
-    })
+      }),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value.id).toBe('bundle-42')
+    expect(result.value.graph.id).toBe('bundle-42')
+    expect(observationOf(result.value.graph).id).toBe('observation-42')
     expect(
-      resources(result).find(
-        (resource) => resource.resourceType === 'Observation',
+      resources(result.value.graph).find((r) => r.resourceType === 'Provenance')
+        ?.id,
+    ).toBe('provenance-42')
+    expect(
+      resources(result.value.graph).find(
+        (r) =>
+          r.resourceType === 'Device' &&
+          r.deviceName?.[0]?.name === application.name,
       )?.id,
-    ).toBe('observation-42')
+    ).toBe('application-42')
   })
 
   it('omits optional attribution and device fields while preserving repository device ids', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildProviderMeasurementBundle({
-      ...input,
-      application: {
-        ...application,
-        id: unwrap(parseFhirId('application-42')),
-        name: application.name,
-      },
-      source: {
-        adapter: input.source.adapter,
-        providerScopeIdentifier: input.source.providerScopeIdentifier,
-        sourceType: input.source.sourceType,
-        sourceNativeId: input.source.sourceNativeId,
-        dataOrigin: input.source.dataOrigin,
-        recordingDevice: {
-          stableUnitToken: 'minimal-device',
-          subjectIdentifier: {
-            system: uri('https://example.org/participants'),
-            value: 'participant-pseudonym-001',
-          },
-          id: unwrap(parseFhirId('recording-device-42')),
-          identityScope: 'deployment-scoped',
+    const result = buildProviderExchangeGraph(
+      withSource(heartRate, {
+        recordingMethod: undefined,
+        recordingDevice: { stableUnitToken: 'minimal-device' },
+      }),
+      context('withings', '1', {
+        repositoryIds: {
+          'recording-device': unwrap(parseFhirId('recording-device-42')),
         },
-      },
-    } as ProviderMeasurementBundleInput)
+      }),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
-    )
-    expect(observation?.extension).toEqual(
+    expect(observationOf(result.value.graph).extension).toEqual(
       expect.arrayContaining([
         {
           url: 'https://grovealliance.org/fhir/providers/StructureDefinition/provider-source-type',
@@ -265,135 +250,149 @@ describe('Provider R4 graph builder', () => {
         },
       ]),
     )
-    const minimalDevice = resources(result).find(
+    const minimalDevice = resources(result.value.graph).find(
       (resource) => resource.id === 'recording-device-42',
     )
+    expect(minimalDevice).toBeDefined()
     expect(minimalDevice).not.toHaveProperty('deviceName')
     expect(minimalDevice).not.toHaveProperty('manufacturer')
     expect(minimalDevice).not.toHaveProperty('modelNumber')
   })
 
-  it('enforces only catalog-owned scalar value domains at the runtime boundary', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
+  it('refuses only catalog-owned scalar value domains at the record boundary', () => {
     expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        measurements: [
-          {
-            ...heartRateMeasurement,
-            effective: { kind: 'date-time', value: 'not-an-instant' },
-          },
-        ],
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        measurements: [{ ...heartRateMeasurement, value: 0 }],
-      }).ok,
-    ).toBe(true)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...baseInput('google-health-api', 'steps', {
-          kind: 'step-count',
-          value: 1,
-          effective: { kind: 'period', start, end },
+      parseNormalizedProviderRecord(
+        withMeasurement(heartRate, {
+          ...heartRateMeasurement,
+          effective: { kind: 'date-time', value: 'not-an-instant' },
         }),
-        measurements: [
-          {
-            kind: 'step-count',
-            value: 1.5,
-            effective: { kind: 'period', start, end },
-          },
-        ],
-      }).ok,
-    ).toBe(false)
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.effective-period-invalid' }],
+    })
     expect(
-      parseProviderMeasurementBundleInput({
-        ...baseInput('withings', 'getmeas:6', {
-          kind: 'body-fat-percentage',
-          value: 0,
-          effective: { kind: 'date-time', value: dateTime },
-        }),
-        measurements: [
-          {
-            kind: 'body-fat-percentage',
-            value: 100.1,
-            effective: { kind: 'date-time', value: dateTime },
-          },
-        ],
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderMeasurementBundleInput(
-        baseInput('withings', 'getmeas:6', {
-          kind: 'body-fat-percentage',
-          value: 0,
-          effective: { kind: 'date-time', value: dateTime },
-        }),
+      parseNormalizedProviderRecord(
+        withMeasurement(heartRate, { ...heartRateMeasurement, value: 0 }),
       ).ok,
     ).toBe(true)
     expect(
-      parseProviderMeasurementBundleInput({
-        ...baseInput('withings', 'getmeas:54', {
-          kind: 'oxygen-saturation',
-          value: 98,
+      parseNormalizedProviderRecord(
+        withMeasurement(
+          record('google-health-api', 'steps', heartRateMeasurement),
+          {
+            kind: 'step-count',
+            value: 1.5,
+            effective: { kind: 'period', start, end: dateTime },
+          },
+        ),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-outside-domain' }],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withMeasurement(record('withings', 'getmeas:6', heartRateMeasurement), {
+          kind: 'body-fat-percentage',
+          value: 100.1,
           effective: { kind: 'date-time', value: dateTime },
         }),
-        measurements: [
-          {
-            kind: 'oxygen-saturation',
-            value: 101,
-            effective: { kind: 'date-time', value: dateTime },
-          },
-        ],
-      }).ok,
-    ).toBe(false)
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-outside-domain' }],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withMeasurement(heartRate, {
+          ...heartRateMeasurement,
+          value: Number.POSITIVE_INFINITY,
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-outside-domain' }],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withMeasurement(heartRate, { ...heartRateMeasurement, value: '64' }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withSource(heartRate, { writer: { name: 'x' } }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [
+        {
+          code: 'mobile-input.required-metadata-missing',
+          path: ['source', 'writer', 'sourceDeviceToken'],
+        },
+      ],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withSource(heartRate, { recordingMethod: 'guessed' }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-value' }],
+    })
   })
 
-  it('rejects a source-native identity containing an isolated surrogate', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const invalid = {
-      ...input,
-      source: { ...input.source, sourceNativeId: 'invalid-\ud800' },
-    } as ProviderMeasurementBundleInput
-    expect(parseProviderMeasurementBundleInput(invalid).ok).toBe(false)
-    expect(buildProviderMeasurementBundle(invalid).ok).toBe(false)
+  it('refuses a source-native identity containing an isolated surrogate', () => {
+    expect(
+      parseNormalizedProviderRecord(
+        withSource(heartRate, { sourceNativeId: 'invalid-\ud800' }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.text-not-unicode-scalar' }],
+    })
   })
 
-  it('rejects Unicode IRIs wherever provider inputs require an absolute URI', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
+  it('rejects Unicode IRIs wherever inputs require an absolute URI', () => {
     expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        source: {
-          ...input.source,
-          providerScopeIdentifier: {
-            ...input.source.providerScopeIdentifier,
-            system: 'https://例え.example/provider-accounts',
+      parseNormalizedProviderRecord(
+        withSource(heartRate, {
+          writerRecord: {
+            applicationIdentifier: {
+              system: 'https://例え.example/apps',
+              value: 'a',
+            },
+            nativeRecordId: 'r',
           },
-        },
-      }).ok,
-    ).toBe(false)
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
     expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        deploymentIdentity: {
-          ...input.deploymentIdentity,
-          eventIdentifierSystem: 'https://例え.example/events',
-        },
-      }).ok,
-    ).toBe(false)
+      buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', {
+          repositoryScope: {
+            system: 'https://例え.example/accounts',
+            value: 'a',
+          } as never,
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-uri', path: ['repositoryScope', 'system'] }],
+    })
   })
 
   it('fails closed at every direct Provider identity primitive boundary', () => {
     const valid = {
       provider: 'withings',
-      providerScopeIdentifier: {
-        system: uri('https://example.org/provider-accounts'),
-        value: 'account-pseudonym',
-        assurance: 'deployment-scoped-account-pseudonym',
-      },
+      repositoryScope: context().repositoryScope,
       sourceType: 'getmeas:11',
       sourceNativeId: 'source-record-1',
       outputs: [
@@ -403,14 +402,15 @@ describe('Provider R4 graph builder', () => {
           outputDiscriminator: 'single',
         },
       ],
-      eventSequence: '1',
-      deployment: deploymentIdentity,
+      event: context().event,
+      scope: identityScope,
     } as const
+    expect(deriveProviderIdentities(valid).ok).toBe(true)
     expect(
       deriveProviderIdentities({
         ...valid,
-        providerScopeIdentifier: {
-          ...valid.providerScopeIdentifier,
+        repositoryScope: {
+          ...valid.repositoryScope,
           system: '/relative' as never,
         },
       }).ok,
@@ -434,51 +434,29 @@ describe('Provider R4 graph builder', () => {
       }).ok,
     ).toBe(false)
     expect(
+      deriveProviderIdentities({ ...valid, scope: { ...identityScope } }).ok,
+    ).toBe(false)
+    expect(
       deriveProviderIdentities({
         ...valid,
-        eventSequence: '0',
+        event: { ...valid.event, value: 'e0:x:1' },
       }).ok,
     ).toBe(false)
-
-    const malformed = [
+    for (const candidate of [
       { ...valid, provider: 42 },
       { ...valid, sourceType: 42 },
       { ...valid, outputs: 42 },
       { ...valid, outputs: [] },
       { ...valid, outputs: [null] },
-      {
-        ...valid,
-        outputs: [{ ...valid.outputs[0], unexpected: true }],
-      },
-      {
-        ...valid,
-        providerScopeIdentifier: {
-          ...valid.providerScopeIdentifier,
-          value: 42,
-        },
-      },
-      {
-        ...valid,
-        providerScopeIdentifier: {
-          ...valid.providerScopeIdentifier,
-          value: '  ',
-        },
-      },
-      {
-        ...valid,
-        providerScopeIdentifier: {
-          ...valid.providerScopeIdentifier,
-          assurance: 'documented-global-key-space',
-        },
-      },
+      { ...valid, outputs: [{ ...valid.outputs[0], unexpected: true }] },
+      { ...valid, repositoryScope: { ...valid.repositoryScope, value: 42 } },
+      { ...valid, repositoryScope: { ...valid.repositoryScope, value: '  ' } },
       { ...valid, sourceNativeId: 42 },
       { ...valid, sourceNativeId: '  ' },
       { ...valid, provenanceNodeRole: 'unknown' },
-    ]
-    for (const candidate of malformed) {
+    ]) {
       expect(deriveProviderIdentities(candidate as never).ok).toBe(false)
     }
-
     expect(
       deriveProviderIdentities({
         ...valid,
@@ -486,15 +464,10 @@ describe('Provider R4 graph builder', () => {
         provenanceNodeRole: 'retraction-provenance',
       }).ok,
     ).toBe(true)
-
     const raw = {
       ...valid,
       provider: 'oura',
       sourceType: 'heartrate',
-      providerScopeIdentifier: {
-        ...valid.providerScopeIdentifier,
-        assurance: 'documented-global-key-space',
-      },
       outputs: [
         {
           kind: 'provider-artifact',
@@ -551,9 +524,20 @@ describe('Provider R4 graph builder', () => {
     for (const invalid of [null, undefined, 42, 'invalid', cyclic]) {
       const operations = [
         () => parseNormalizedProviderRecord(invalid),
-        () => parseProviderMeasurementBundleInput(invalid),
-        () => buildProviderMeasurementBundle(invalid as never),
+        () => buildProviderExchangeGraph(invalid as never, context()),
+        () => buildProviderExchangeGraph(heartRate, invalid as never),
         () => deriveProviderIdentities(invalid as never),
+        // Absent options are the defaults; anything else present must be an options object.
+        ...(invalid === undefined ?
+          []
+        : [
+            () =>
+              buildProviderExchangeGraph(
+                heartRate,
+                context(),
+                invalid as never,
+              ),
+          ]),
       ]
       for (const operation of operations) {
         expect(operation).not.toThrow()
@@ -565,11 +549,7 @@ describe('Provider R4 graph builder', () => {
   it('does not mint identities for selectors outside the pinned Provider catalog', () => {
     const valid = {
       provider: 'withings',
-      providerScopeIdentifier: {
-        system: uri('https://example.org/provider-accounts'),
-        value: 'account-pseudonym',
-        assurance: 'deployment-scoped-account-pseudonym',
-      },
+      repositoryScope: context().repositoryScope,
       sourceType: 'getmeas:11',
       sourceNativeId: 'source-record-1',
       outputs: [
@@ -579,19 +559,25 @@ describe('Provider R4 graph builder', () => {
           outputDiscriminator: 'single',
         },
       ],
-      eventSequence: '1',
-      deployment: deploymentIdentity,
+      event: context().event,
+      scope: identityScope,
     } as const
     expect(deriveProviderIdentities(valid).ok).toBe(true)
     expect(
       deriveProviderIdentities({
         ...valid,
         provider: 'invented-provider',
-      } as never).ok,
-    ).toBe(false)
+      } as never),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-type' }],
+    })
     expect(
-      deriveProviderIdentities({ ...valid, sourceType: 'invented-source' }).ok,
-    ).toBe(false)
+      deriveProviderIdentities({ ...valid, sourceType: 'invented-source' }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-type' }],
+    })
     expect(
       deriveProviderIdentities({
         ...valid,
@@ -602,8 +588,11 @@ describe('Provider R4 graph builder', () => {
             outputDiscriminator: 'single',
           },
         ],
-      }).ok,
-    ).toBe(false)
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.unsupported-source-value' }],
+    })
     expect(
       deriveProviderIdentities({
         ...valid,
@@ -611,7 +600,7 @@ describe('Provider R4 graph builder', () => {
           {
             kind: 'provider-output',
             outputRole: 'heart-rate',
-            outputDiscriminator: 'invented-discriminator',
+            outputDiscriminator: 'invented',
           },
         ],
       }).ok,
@@ -619,11 +608,7 @@ describe('Provider R4 graph builder', () => {
   })
 
   it('uses both exact grouped Withings output coordinates in the HMAC preimage', () => {
-    const input = baseInput(
-      'withings',
-      'getmeas:9+10',
-      bloodPressureMeasurement,
-    )
+    const input = record('withings', 'getmeas:9+10', bloodPressureMeasurement)
     const coordinates = providerOutputCoordinates(
       'withings',
       'getmeas:9+10',
@@ -634,149 +619,91 @@ describe('Provider R4 graph builder', () => {
       outputDiscriminator: 'single',
     })
     if (coordinates === undefined) return
-
     const expected = deriveProviderIdentities({
       provider: 'withings',
-      providerScopeIdentifier: input.source.providerScopeIdentifier,
+      repositoryScope: context().repositoryScope,
       sourceType: input.source.sourceType,
       sourceNativeId: input.source.sourceNativeId,
       outputs: [{ kind: 'provider-output', ...coordinates }],
-      eventSequence: input.eventSequence,
-      deployment: input.deploymentIdentity,
+      event: context().event,
+      scope: identityScope,
     })
-    const bundle = buildProviderMeasurementBundle(input)
-    expect(expected.ok && bundle.ok).toBe(true)
-    if (!expected.ok || !bundle.ok) return
-    const observation = resources(bundle).find(
-      ({ resourceType }) => resourceType === 'Observation',
+    const built = buildProviderExchangeGraph(input, context())
+    expect(expected.ok && built.ok).toBe(true)
+    if (!expected.ok || !built.ok) return
+    const sourceOutput = observationOf(built.value.graph).identifier?.find(
+      (candidate) =>
+        candidate.type?.coding?.some(({ code }) => code === 'source-output'),
     )
-    if (observation?.resourceType !== 'Observation') {
-      throw new Error('The grouped output did not emit an Observation.')
-    }
-    const sourceOutput = observation.identifier?.find((candidate) =>
-      candidate.type?.coding?.some(({ code }) => code === 'source-output'),
-    )
-    const expectedOutput = expected.value.outputs[0]
-    expect(expectedOutput).toBeDefined()
     expect(sourceOutput).toMatchObject({
-      system: expectedOutput?.system,
-      value: expectedOutput?.value,
+      system: expected.value.outputs[0]?.system,
+      value: expected.value.outputs[0]?.value,
     })
+    expect(built.value.identifiers.outputs[0]).toEqual(
+      expected.value.outputs[0],
+    )
   })
 
   it.each([
     [
-      'provider account value',
-      (input: ProviderMeasurementBundleInput) => ({
-        ...input,
-        source: {
-          ...input.source,
-          providerScopeIdentifier: {
-            ...input.source.providerScopeIdentifier,
-            value: ' \t ',
-          },
-        },
-      }),
-    ],
-    [
       'source native id',
-      (input: ProviderMeasurementBundleInput) => ({
-        ...input,
-        source: { ...input.source, sourceNativeId: '\n  ' },
-      }),
+      { sourceNativeId: '\n  ' },
+      'mobile-input.native-identifier-invalid',
     ],
+    ['source type', { sourceType: '   ' }, 'mobile-input.value-shape-invalid'],
     [
-      'source type',
-      (input: ProviderMeasurementBundleInput) => ({
-        ...input,
-        source: { ...input.source, sourceType: '   ' },
-      }),
+      'writer token',
+      { writer: { sourceDeviceToken: '  ', name: 'x' } },
+      'mobile-input.value-shape-invalid',
     ],
-    [
-      'converter source-device token',
-      (input: ProviderMeasurementBundleInput) => ({
-        ...input,
-        application: {
-          ...input.application,
-          sourceDeviceToken: '\t',
-        },
-      }),
-    ],
-    [
-      'data-origin source-device token',
-      (input: ProviderMeasurementBundleInput) => ({
-        ...input,
-        source: {
-          ...input.source,
-          dataOrigin: {
-            ...input.source.dataOrigin,
-            sourceDeviceToken: '  ',
-          },
-        },
-      }),
-    ],
-  ] as const)('rejects a whitespace-only %s', (_name, mutate) => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    expect(parseProviderMeasurementBundleInput(mutate(input)).ok).toBe(false)
+  ] as const)('refuses a whitespace-only %s', (_name, change, code) => {
+    expect(
+      parseNormalizedProviderRecord(withSource(heartRate, change)),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code }],
+    })
   })
 
-  it.each(['converter', 'gateway', 'data-origin', 'recording-device'] as const)(
-    'rejects an invalid Unicode %s business identity',
-    (role) => {
-      const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-      const invalidToken = 'invalid-\ud800'
-      let candidate: ProviderMeasurementBundleInput
-      if (role === 'converter') {
-        candidate = {
-          ...input,
-          application: {
-            ...input.application,
-            sourceDeviceToken: invalidToken,
-          },
-        }
-      } else if (role === 'gateway') {
-        candidate = {
-          ...input,
-          gatewayApplication: {
-            kind: 'distinct-application',
-            roleAssurance: 'mediated-or-routed-measurement',
-            application: {
-              sourceDeviceToken: invalidToken,
-              name: 'Invalid gateway identity',
-            },
-          },
-        }
-      } else if (role === 'data-origin') {
-        candidate = {
-          ...input,
-          source: {
-            ...input.source,
-            dataOrigin: {
-              ...input.source.dataOrigin,
-              sourceDeviceToken: invalidToken,
-            },
-          },
-        } as ProviderMeasurementBundleInput
-      } else {
-        candidate = {
-          ...input,
-          source: {
-            ...input.source,
-            recordingDevice: {
-              stableUnitToken: invalidToken,
-              subjectIdentifier: {
-                system: uri('https://example.org/participants'),
-                value: 'example',
-              },
-              identityScope: 'deployment-scoped',
-            },
-          },
-        } as ProviderMeasurementBundleInput
-      }
-      expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(false)
-      expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
-    },
-  )
+  it('refuses invalid Unicode in the record and faults it in the context', () => {
+    const invalidToken = 'invalid-\ud800'
+    expect(
+      parseNormalizedProviderRecord(
+        withSource(heartRate, {
+          writer: { sourceDeviceToken: invalidToken, name: 'x' },
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.text-not-unicode-scalar' }],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withSource(heartRate, {
+          recordingDevice: { stableUnitToken: invalidToken },
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.text-not-unicode-scalar' }],
+    })
+    for (const overrides of [
+      { application: { ...application, sourceDeviceToken: invalidToken } },
+      {
+        converterRole: {
+          kind: 'gateway-application',
+          application: { sourceDeviceToken: invalidToken, name: 'Gateway' },
+        },
+      },
+    ] as const) {
+      const result = buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', overrides),
+      )
+      expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.issues[0]?.code).toBe('invalid-identifier')
+    }
+  })
 
   it.each([
     ['google-health-api', 'heart-rate', heartRateMeasurement],
@@ -787,12 +714,6 @@ describe('Provider R4 graph builder', () => {
         kind: 'blood-glucose',
         value: 94,
         effective: { kind: 'date-time', value: dateTime },
-        specimen: {
-          identity: resourceIdentity(
-            'https://example.org/specimens',
-            'whole-blood',
-          ),
-        },
       },
     ],
     [
@@ -801,51 +722,42 @@ describe('Provider R4 graph builder', () => {
       {
         kind: 'sleep-stage',
         stage: 'deep',
-        effective: { kind: 'period', start, end },
+        effective: { kind: 'period', start, end: dateTime },
       },
     ],
   ] as const)(
     'fails closed for non-scalar or unsupported %s/%s data',
     (provider, sourceType, measurement) => {
-      const result = buildProviderMeasurementBundle(
-        baseInput(
+      const result = buildProviderExchangeGraph(
+        record(
           provider,
           sourceType,
           measurement as unknown as MobileMeasurement,
         ),
+        context(provider),
       )
       expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.issues[0]?.code).toMatch(/^mobile-input\./u)
     },
   )
 
-  it('rejects non-canonical events and conflicting facts for one device snapshot', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
+  it('rejects conflicting facts for one device snapshot and deduplicates identical ones', () => {
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        eventSequence: '0',
-      }).ok,
-    ).toBe(false)
-    expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        source: {
-          ...input.source,
-          dataOrigin: input.application,
-        },
-      } as unknown as ProviderMeasurementBundleInput).ok,
+      buildProviderExchangeGraph(
+        withSource(heartRate, { writer: application }),
+        context(),
+      ).ok,
     ).toBe(true)
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        source: {
-          ...input.source,
-          dataOrigin: {
-            ...input.source.dataOrigin,
-            sourceDeviceToken: input.application.sourceDeviceToken,
+      buildProviderExchangeGraph(
+        withSource(heartRate, {
+          writer: {
+            ...heartRate.source.writer,
+            sourceDeviceToken: application.sourceDeviceToken,
           },
-        },
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        }),
+        context(),
+      ),
+    ).toMatchObject({ ok: false, issues: [{ code: 'duplicate-identifier' }] })
   })
 })

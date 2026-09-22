@@ -7,42 +7,50 @@
 //
 
 import { EXTENSIONS, PROFILES, SYSTEMS } from './profiles.js'
-import type { GovernedSourceIdentifierInput } from './types.js'
 import { err, ok, type Result } from '../core/index.js'
 import type {
-  ApplicationDeviceInput,
-  CompleteIdentifierInput,
-  HostDeviceInput,
-  IdentifiedEntryIdentityInput,
-  RecordingDeviceInput,
-  ResourceIdentityInput,
+  BusinessIdentifier,
+  EntryIdentity,
+  RoledIdentifier,
+} from '../mobile/identity.js'
+import type {
+  ApplicationDevice,
+  GovernedSourceIdentifierDisclosurePolicy,
+  HostDevice,
+  RecordingDevice,
+  StudyEnrollment,
+  Subject,
 } from '../mobile/types.js'
 import type {
   CodeableConcept,
   Coding,
   Device,
+  ExchangeGraph,
   GraphResource,
-  GroveMobileExchangeBundle,
   Identifier,
+  PlanDefinition,
   Provenance,
+  Reference,
+  ResearchStudy,
+  ResearchSubject,
 } from '../r4/index.js'
 
-type GraphEntry = GroveMobileExchangeBundle['entry'][number]
+type GraphEntry = ExchangeGraph['entry'][number]
 type ProvenanceAgent = Provenance['agent'][number]
 
 export const resourceId = (
-  identity: ResourceIdentityInput,
+  identity: EntryIdentity,
 ): { readonly id?: string } =>
   identity.id === undefined ? {} : { id: identity.id }
 
-export const identifier = (input: CompleteIdentifierInput): Identifier => ({
+export const identifier = (
+  input: BusinessIdentifier | RoledIdentifier,
+): Identifier => ({
   system: input.system,
   value: input.value,
-  ...(input.role === undefined ?
-    {}
-  : {
-      type: concept(SYSTEMS.groveIdentifierRole, input.role),
-    }),
+  ...('role' in input ?
+    { type: concept(SYSTEMS.groveIdentifierRole, input.role) }
+  : {}),
 })
 
 /**
@@ -50,24 +58,28 @@ export const identifier = (input: CompleteIdentifierInput): Identifier => ({
  * It deliberately has no Grove graph-role coding and never participates in identity.
  */
 export const governedSourceIdentifier = (
-  input: GovernedSourceIdentifierInput,
+  policy: Extract<
+    GovernedSourceIdentifierDisclosurePolicy,
+    { kind: 'authorized' }
+  >,
+  nativeId: string,
 ): Identifier => ({
-  system: input.system,
-  value: input.nativeId,
-  ...(input.type === undefined ?
+  system: policy.system,
+  value: nativeId,
+  ...(policy.type === undefined ?
     {}
   : {
       type: {
-        ...(input.type.coding === undefined ?
+        ...(policy.type.coding === undefined ?
           {}
         : {
-            coding: input.type.coding.map(({ system, code, display }) => ({
+            coding: policy.type.coding.map(({ system, code, display }) => ({
               system,
               code,
               ...(display === undefined ? {} : { display }),
             })),
           }),
-        ...(input.type.text === undefined ? {} : { text: input.type.text }),
+        ...(policy.type.text === undefined ? {} : { text: policy.type.text }),
       },
     }),
 })
@@ -91,9 +103,24 @@ export const concept = (
   ...(display === undefined ? {} : { text: display }),
 })
 
+/** The literal reference to a bundled Patient entry, or the identifier-only logical one. */
+export const subjectReference = (
+  subject: Subject,
+  patient: EntryIdentity | undefined,
+): Reference =>
+  patient === undefined ?
+    {
+      type: 'Patient',
+      identifier: {
+        system: subject.identifier.system,
+        value: subject.identifier.value,
+      },
+    }
+  : { reference: patient.fullUrl }
+
 export const makeApplicationDevice = (
-  input: Omit<ApplicationDeviceInput, 'host' | 'id' | 'sourceDeviceToken'> & {
-    readonly identity: IdentifiedEntryIdentityInput
+  input: ApplicationDevice & {
+    readonly identity: EntryIdentity
     readonly parentReference?: string
   },
 ): Device => {
@@ -137,9 +164,6 @@ export const makeApplicationDevice = (
     meta: { profile: [PROFILES.applicationDevice] },
     identifier: [identifier(input.identity.identifier)],
     status: 'active' as const,
-    ...(input.manufacturer === undefined ?
-      {}
-    : { manufacturer: input.manufacturer }),
     deviceName: [{ name: input.name, type: 'user-friendly-name' as const }],
     ...(versions.length === 0 ? {} : { version: versions }),
     ...(input.parentReference === undefined ?
@@ -149,9 +173,7 @@ export const makeApplicationDevice = (
 }
 
 export const makeHostDevice = (
-  input: Omit<HostDeviceInput, 'id' | 'sourceDeviceToken'> & {
-    readonly identity: IdentifiedEntryIdentityInput
-  },
+  input: HostDevice & { readonly identity: EntryIdentity },
 ): Device => ({
   resourceType: 'Device' as const,
   ...resourceId(input.identity),
@@ -182,12 +204,9 @@ export const makeHostDevice = (
 })
 
 export const makeRecordingDevice = (
-  input: Omit<
-    RecordingDeviceInput,
-    'id' | 'stableUnitToken' | 'subjectIdentifier'
-  > & {
-    readonly identity: IdentifiedEntryIdentityInput
-    readonly stableIdentifier: CompleteIdentifierInput
+  input: RecordingDevice & {
+    readonly identity: EntryIdentity
+    readonly stableIdentifier: RoledIdentifier
   },
 ): Device => ({
   resourceType: 'Device' as const,
@@ -211,8 +230,57 @@ export const makeRecordingDevice = (
   : { modelNumber: input.modelNumber }),
 })
 
+/** The three entries one study enrollment adds, keyed by the catalog's node roles. */
+export interface StudyEntries {
+  readonly study: EntryIdentity
+  readonly protocol: EntryIdentity
+  readonly enrollment: EntryIdentity
+}
+
+export const makePlanDefinition = (
+  enrollment: StudyEnrollment,
+  identity: EntryIdentity,
+): PlanDefinition => ({
+  resourceType: 'PlanDefinition' as const,
+  ...resourceId(identity),
+  url: enrollment.protocol.url,
+  version: enrollment.protocol.version,
+  status: 'active' as const,
+})
+
+export const makeResearchStudy = (
+  enrollment: StudyEnrollment,
+  entries: StudyEntries,
+): ResearchStudy => ({
+  resourceType: 'ResearchStudy' as const,
+  ...resourceId(entries.study),
+  identifier: [identifier(enrollment.study)],
+  status: 'active' as const,
+  protocol: [{ reference: entries.protocol.fullUrl }],
+})
+
+export const makeResearchSubject = (
+  enrollment: StudyEnrollment,
+  entries: StudyEntries,
+  individual: Reference,
+): ResearchSubject => ({
+  resourceType: 'ResearchSubject' as const,
+  ...resourceId(entries.enrollment),
+  identifier: [identifier(enrollment.enrollment)],
+  status: 'on-study' as const,
+  study: { reference: entries.study.fullUrl },
+  individual,
+})
+
+export const researchStudyExtension = (
+  entries: StudyEntries,
+): { readonly url: string; readonly valueReference: Reference } => ({
+  url: EXTENSIONS.researchStudy,
+  valueReference: { reference: entries.study.fullUrl },
+})
+
 export const identifiedEntry = (
-  identity: IdentifiedEntryIdentityInput,
+  identity: EntryIdentity,
   resource: GraphResource,
 ): GraphEntry => ({
   fullUrl: identity.fullUrl,

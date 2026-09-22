@@ -365,6 +365,12 @@
       ]
     },
     {
+      "path": "resources/provider-study-context.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"
+      ]
+    },
+    {
       "path": "mobile-exchange/exchange-bundle.json",
       "requiredProfiles": [
         "https://grovealliance.org/fhir/mobile/StructureDefinition/grove-mobile-exchange-bundle"

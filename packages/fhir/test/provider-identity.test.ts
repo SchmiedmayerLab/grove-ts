@@ -8,97 +8,92 @@
 
 import {
   application,
-  baseInput,
   bloodPressureMeasurement,
+  context,
   dailyEnd,
-  dateTime,
-  deploymentIdentity,
-  end,
   heartRateMeasurement,
+  identityScope,
+  observationOf,
+  record,
   resources,
   start,
   study,
+  unwrap,
   uri,
 } from './provider-test-support.js'
 import { parseUrnUuid } from '../src/core/index.js'
 import {
-  groveMobileContract,
+  groveMobileProfileCanonicals,
   sharedMobileMeasurementCatalog,
 } from '../src/mobile/index.js'
 import {
-  buildProviderMeasurementBundle,
-  parseProviderMeasurementBundleInput,
-  type ProviderMeasurementBundleInput,
+  buildProviderExchangeGraph,
+  parseNormalizedProviderRecord,
+  type NormalizedProviderRecord,
+  type ProviderConversionOptions,
 } from '../src/providers/index.js'
+
+const heartRate = record('withings', 'getmeas:11', heartRateMeasurement)
+const withSource = (
+  base: NormalizedProviderRecord,
+  source: Record<string, unknown>,
+): NormalizedProviderRecord =>
+  ({
+    ...base,
+    source: { ...base.source, ...source },
+  }) as NormalizedProviderRecord
 
 describe('Provider R4 graph builder', () => {
   it('does not infer identity disclosure from unrelated substring collisions', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        source: {
-          ...input.source,
-          sourceNativeId: '1',
-        },
-      } as unknown as ProviderMeasurementBundleInput).ok,
+      buildProviderExchangeGraph(
+        withSource(heartRate, { sourceNativeId: '1' }),
+        context(),
+      ).ok,
     ).toBe(true)
   })
 
   it('derives exact source, conversion and exchange identifiers in their proper namespaces', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildProviderMeasurementBundle(input)
+    const result = buildProviderExchangeGraph(heartRate, context())
     expect(result.ok).toBe(true)
     if (!result.ok) return
-
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
-    )
-    if (observation?.resourceType !== 'Observation') {
-      throw new Error('The graph did not contain its Observation.')
-    }
+    const observation = observationOf(result.value.graph)
     expect(observation.identifier?.map(({ system }) => system)).toEqual([
-      deploymentIdentity.opaqueIdentifierSystems['provider-record'],
-      (
-        deploymentIdentity.opaqueIdentifierSystems as Readonly<
-          Record<string, string>
-        >
-      )['provider-output'],
+      identityScope.systems.opaque['provider-record'],
+      identityScope.systems.opaque['provider-output'],
     ])
     for (const identity of observation.identifier ?? []) {
       expect(identity.value).toMatch(/^v0:test-key:1:[A-Za-z0-9_-]{43}$/u)
     }
-    expect(result.value.identifier.system).toBe(
-      deploymentIdentity.eventIdentifierSystem,
+    expect(result.value.graph.identifier.system).toBe(
+      identityScope.systems.event,
     )
-    const provenanceEntry = result.value.entry.find(
-      (entry) => entry.resource.resourceType === 'Provenance',
+    expect(result.value.identifiers.event).toEqual(context().event)
+    expect(result.value.identifiers.provenance.system).toBe(
+      identityScope.systems.entryNode,
     )
-    expect(provenanceEntry?.extension?.[0]?.valueIdentifier?.system).toBe(
-      deploymentIdentity.entryNodeIdentifierSystem,
-    )
-    const serialized = JSON.stringify(result.value)
-    expect(serialized).not.toContain(input.source.sourceNativeId)
-    expect(serialized).not.toContain(input.source.providerScopeIdentifier.value)
+    expect(result.value.identifiers.outputs).toHaveLength(1)
+    expect(result.value.identifiers.writerSnapshot.role).toBe('device-snapshot')
+    expect(result.value.source).toEqual(heartRate.source)
+    const serialized = JSON.stringify(result.value.graph)
+    expect(serialized).not.toContain(heartRate.source.sourceNativeId)
+    expect(serialized).not.toContain(context().repositoryScope.value)
   })
 
   it('places an explicitly governed native Identifier on exactly the designated primary Observation', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     const nativeSystem = uri(
       'https://example.org/repositories/withings-account-7/heart-rate-records',
     )
-    const result = buildProviderMeasurementBundle({
-      ...input,
+    const result = buildProviderExchangeGraph(heartRate, context(), {
       nativeIdentifierDisclosure: {
+        kind: 'authorized',
         system: nativeSystem,
-        nativeId: input.source.sourceNativeId,
         type: { text: 'Withings account-scoped heart-rate id' },
       },
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-
-    const carryingResources = result.value.entry.filter(({ resource }) =>
+    const carrying = result.value.graph.entry.filter(({ resource }) =>
       (
         resource as {
           readonly identifier?: ReadonlyArray<{
@@ -108,13 +103,11 @@ describe('Provider R4 graph builder', () => {
         }
       ).identifier?.some(
         ({ system, value }) =>
-          system === nativeSystem && value === input.source.sourceNativeId,
+          system === nativeSystem && value === heartRate.source.sourceNativeId,
       ),
     )
-    expect(carryingResources).toHaveLength(1)
-    const primary = carryingResources[0]?.resource
-    expect(primary?.resourceType).toBe('Observation')
-    if (primary?.resourceType !== 'Observation') return
+    expect(carrying).toHaveLength(1)
+    const primary = observationOf(result.value.graph)
     expect(primary.code.coding?.[0]?.code).toBe(
       sharedMobileMeasurementCatalog['heart-rate'].code.code,
     )
@@ -122,13 +115,12 @@ describe('Provider R4 graph builder', () => {
       primary.identifier?.find(({ system }) => system === nativeSystem),
     ).toEqual({
       system: nativeSystem,
-      value: input.source.sourceNativeId,
+      value: heartRate.source.sourceNativeId,
       type: { text: 'Withings account-scoped heart-rate id' },
     })
   })
 
   it('emits a writer version only with its writer identity while allowing an unversioned identity', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
     const writerRecord = {
       applicationIdentifier: {
         system: uri('https://example.org/applications'),
@@ -136,121 +128,91 @@ describe('Provider R4 graph builder', () => {
       },
       nativeRecordId: 'writer-record-1',
     } as const
-    const unversioned = buildProviderMeasurementBundle({
-      ...input,
-      source: { ...input.source, writerRecord },
-    } as ProviderMeasurementBundleInput)
-    const versioned = buildProviderMeasurementBundle({
-      ...input,
-      source: {
-        ...input.source,
+    const unversioned = buildProviderExchangeGraph(
+      withSource(heartRate, { writerRecord }),
+      context(),
+    )
+    const versioned = buildProviderExchangeGraph(
+      withSource(heartRate, {
         writerRecord: { ...writerRecord, version: '0' },
-      },
-      eventSequence: '2',
-    } as ProviderMeasurementBundleInput)
+      }),
+      context('withings', '2'),
+    )
     expect(unversioned.ok && versioned.ok).toBe(true)
     if (!unversioned.ok || !versioned.ok) return
-
-    const observation = (result: typeof unversioned) =>
-      resources(result).find(
-        (resource) => resource.resourceType === 'Observation',
-      )
     const writerVersionUrl =
       'https://grovealliance.org/fhir/mobile/StructureDefinition/grove-writer-record-version'
-    const hasWriterIdentity = (resource: ReturnType<typeof observation>) =>
-      resource?.identifier?.some((candidate) =>
+    const hasWriterIdentity = (graph: typeof unversioned.value.graph) =>
+      observationOf(graph).identifier?.some((candidate) =>
         candidate.type?.coding?.some(({ code }) => code === 'writer-record'),
       )
-
-    expect(hasWriterIdentity(observation(unversioned))).toBe(true)
+    expect(hasWriterIdentity(unversioned.value.graph)).toBe(true)
+    expect(unversioned.value.identifiers.writerRecord?.role).toBe(
+      'writer-record',
+    )
     expect(
-      observation(unversioned)?.extension?.some(
+      observationOf(unversioned.value.graph).extension?.some(
         ({ url }) => url === writerVersionUrl,
       ),
     ).not.toBe(true)
-    expect(hasWriterIdentity(observation(versioned))).toBe(true)
-    expect(observation(versioned)?.extension).toEqual(
+    expect(hasWriterIdentity(versioned.value.graph)).toBe(true)
+    expect(observationOf(versioned.value.graph).extension).toEqual(
       expect.arrayContaining([{ url: writerVersionUrl, valueString: '0' }]),
     )
     expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        source: { ...input.source, writerRecordVersion: '1' },
-      }).ok,
-    ).toBe(false)
+      parseNormalizedProviderRecord(
+        withSource(heartRate, { writerRecordVersion: '1' }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
   })
 
   it('treats one supported grouped catalog mapping as one designated Provider output', () => {
-    const input = baseInput(
-      'withings',
-      'getmeas:9+10',
-      bloodPressureMeasurement,
-    )
     const nativeSystem = uri(
       'https://example.org/repositories/withings-account-7/blood-pressure-records',
     )
-    const result = buildProviderMeasurementBundle({
-      ...input,
-      nativeIdentifierDisclosure: {
-        system: nativeSystem,
-        nativeId: input.source.sourceNativeId,
+    const result = buildProviderExchangeGraph(
+      record('withings', 'getmeas:9+10', bloodPressureMeasurement),
+      context(),
+      {
+        nativeIdentifierDisclosure: {
+          kind: 'authorized',
+          system: nativeSystem,
+        },
       },
-    })
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    const carrying = result.value.entry.filter(({ resource }) => {
-      const identifiers = (
-        resource as {
-          readonly identifier?: ReadonlyArray<{
-            readonly system?: string
-            readonly value?: string
-          }>
-        }
-      ).identifier
-      return identifiers?.some(
-        ({ system, value }) =>
-          system === nativeSystem && value === input.source.sourceNativeId,
-      )
-    })
-    expect(carrying).toHaveLength(1)
-    expect(carrying[0]?.resource.resourceType).toBe('Observation')
+    expect(
+      observationOf(result.value.graph).identifier?.some(
+        ({ system }) => system === nativeSystem,
+      ),
+    ).toBe(true)
   })
 
   it.each([
-    {
-      name: 'a value different from the reconciliation source id',
-      disclosure: (input: ProviderMeasurementBundleInput) => ({
-        system: uri('https://example.org/repositories/provider-records'),
-        nativeId: `${input.source.sourceNativeId}-wrong`,
-      }),
-    },
-    {
-      name: 'a relative key-space system',
-      disclosure: (input: ProviderMeasurementBundleInput) => ({
-        system: 'provider-records',
-        nativeId: input.source.sourceNativeId,
-      }),
-    },
-    {
-      name: 'the Grove event identity system',
-      disclosure: (input: ProviderMeasurementBundleInput) => ({
-        system: input.deploymentIdentity.eventIdentifierSystem,
-        nativeId: input.source.sourceNativeId,
-      }),
-    },
-    {
-      name: 'a Grove opaque identity system',
-      disclosure: (input: ProviderMeasurementBundleInput) => ({
-        system:
-          input.deploymentIdentity.opaqueIdentifierSystems['source-record'],
-        nativeId: input.source.sourceNativeId,
-      }),
-    },
-    {
-      name: 'a Grove graph-role Identifier.type coding',
-      disclosure: (input: ProviderMeasurementBundleInput) => ({
-        system: uri('https://example.org/repositories/provider-records'),
-        nativeId: input.source.sourceNativeId,
+    [
+      'a relative key-space system',
+      { kind: 'authorized', system: 'provider-records' },
+    ],
+    [
+      'the Grove event identity system',
+      { kind: 'authorized', system: identityScope.systems.event },
+    ],
+    [
+      'a Grove opaque identity system',
+      {
+        kind: 'authorized',
+        system: identityScope.systems.opaque['source-record'],
+      },
+    ],
+    [
+      'a Grove graph-role Identifier.type coding',
+      {
+        kind: 'authorized',
+        system: 'https://example.org/repositories/provider-records',
         type: {
           coding: [
             {
@@ -260,196 +222,138 @@ describe('Provider R4 graph builder', () => {
             },
           ],
         },
+      },
+    ],
+    [
+      'an unknown policy kind',
+      { kind: 'disclose', system: 'https://example.org/x' },
+    ],
+  ])('faults governed source disclosure using %s', (_name, disclosure) => {
+    const result = buildProviderExchangeGraph(heartRate, context(), {
+      nativeIdentifierDisclosure: disclosure,
+    } as unknown as ProviderConversionOptions)
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    for (const issue of result.issues) expect(issue.code).not.toMatch(/\./u)
+  })
+
+  it('faults native disclosure for a catalog-ambiguous multi-output Provider row', () => {
+    const result = buildProviderExchangeGraph(
+      record('oura', 'daily_activity', {
+        kind: 'distance',
+        value: 6_123,
+        effective: { kind: 'period', start, end: dailyEnd },
       }),
-    },
-  ])('rejects governed source disclosure using $name', ({ disclosure }) => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const candidate = {
-      ...input,
-      nativeIdentifierDisclosure: disclosure(input),
-    } as unknown as ProviderMeasurementBundleInput
-    expect(parseProviderMeasurementBundleInput(candidate).ok).toBe(false)
-    expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
-  })
-
-  it('rejects native disclosure for a catalog-ambiguous multi-output Provider row', () => {
-    const input = baseInput('oura', 'daily_activity', {
-      kind: 'distance',
-      value: 6_123,
-      effective: { kind: 'period', start, end: dailyEnd },
-    })
-    const candidate = {
-      ...input,
-      nativeIdentifierDisclosure: {
-        system: uri(
-          'https://example.org/repositories/oura-account-7/daily-activity-records',
-        ),
-        nativeId: input.source.sourceNativeId,
-      },
-    } as ProviderMeasurementBundleInput
-    const parsed = parseProviderMeasurementBundleInput(candidate)
-    expect(parsed.ok).toBe(false)
-    if (!parsed.ok) {
-      expect(parsed.issues).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            code: 'value-mismatch',
-            path: ['nativeIdentifierDisclosure'],
-          }),
-        ]),
-      )
-    }
-    expect(buildProviderMeasurementBundle(candidate).ok).toBe(false)
-  })
-
-  it.each([
-    ' leading',
-    'trailing ',
-    'two  spaces',
-    'tab\tcode',
-    'control\u0001code',
-  ])('rejects non-lexical FHIR code %p in native Identifier.type', (code) => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
+      context('oura'),
+      {
         nativeIdentifierDisclosure: {
-          system: 'https://example.org/repositories/provider-records',
-          nativeId: input.source.sourceNativeId,
-          type: {
-            coding: [
-              {
-                system: 'https://example.org/fhir/CodeSystem/identifier-type',
-                code,
-              },
-            ],
+          kind: 'authorized',
+          system: uri(
+            'https://example.org/repositories/oura-account-7/daily-activity-records',
+          ),
+        },
+      },
+    )
+    expect(result).toMatchObject({
+      ok: false,
+      issues: [
+        { code: 'value-mismatch', path: ['nativeIdentifierDisclosure'] },
+      ],
+    })
+  })
+
+  it.each([' leading', 'trailing ', 'two  spaces', 'tab\tcode', 'controlcode'])(
+    'rejects non-lexical FHIR code %p in native Identifier.type',
+    (code) => {
+      expect(
+        buildProviderExchangeGraph(heartRate, context(), {
+          nativeIdentifierDisclosure: {
+            kind: 'authorized',
+            system: uri('https://example.org/repositories/provider-records'),
+            type: {
+              coding: [
+                {
+                  system: uri(
+                    'https://example.org/fhir/CodeSystem/identifier-type',
+                  ),
+                  code,
+                },
+              ],
+            },
           },
-        },
-      }).ok,
-    ).toBe(false)
-  })
-
-  it('matches the frozen Provider composed source and output vectors', () => {
-    const input = baseInput('google-health-api', 'steps', {
-      kind: 'step-count',
-      value: 123,
-      effective: { kind: 'period', start, end },
-    })
-    const result = buildProviderMeasurementBundle({
-      ...input,
-      source: {
-        ...input.source,
-        providerScopeIdentifier: {
-          system: uri('https://provider.example.org/accounts'),
-          value: 'account-001',
-          assurance: 'deployment-scoped-account-pseudonym',
-        },
-        sourceNativeId: 'steps-2026-08-20T16:00:00Z',
-      },
-    } as ProviderMeasurementBundleInput)
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
-    )
-    expect(observation?.identifier).toHaveLength(2)
-    expect(observation?.identifier?.map((entry) => entry.value)).toEqual(
-      expect.arrayContaining([
-        expect.stringMatching(/^v0:test-key:1:[A-Za-z0-9_-]{43}$/u),
-      ]),
-    )
-
-    const unicodeInput = baseInput('oura', 'sleep', {
-      kind: 'sleep-duration',
-      value: 7,
-      effective: { kind: 'period', start, end },
-    })
-    const unicodeResult = buildProviderMeasurementBundle({
-      ...unicodeInput,
-      source: {
-        ...unicodeInput.source,
-        providerScopeIdentifier: {
-          system: uri('https://example.org/provider-key-spaces'),
-          value: 'oura-document-uuid-global',
-          assurance: 'documented-global-key-space',
-        },
-        sourceNativeId: 'résumé-\u0001',
-      },
-    } as ProviderMeasurementBundleInput)
-    const unicodeObservation = resources(unicodeResult).find(
-      (resource) => resource.resourceType === 'Observation',
-    )
-    expect(unicodeObservation?.identifier?.[0]?.value).toMatch(
-      /^v0:test-key:1:[A-Za-z0-9_-]{43}$/u,
-    )
-    expect(JSON.stringify(unicodeResult)).not.toContain('résumé-\u0001')
-  })
+        }).ok,
+      ).toBe(false)
+    },
+  )
 
   it('changes only event identities when the durable event sequence changes', () => {
-    const first = buildProviderMeasurementBundle(
-      baseInput('withings', 'getmeas:11', heartRateMeasurement),
+    const first = buildProviderExchangeGraph(heartRate, context())
+    const second = buildProviderExchangeGraph(
+      heartRate,
+      context('withings', '2'),
     )
-    const second = buildProviderMeasurementBundle({
-      ...baseInput('withings', 'getmeas:11', heartRateMeasurement),
-      eventSequence: '2',
-    })
     expect(first.ok && second.ok).toBe(true)
     if (!first.ok || !second.ok) return
-
-    const firstObservation = resources(first).find(
-      (resource) => resource.resourceType === 'Observation',
+    expect(observationOf(first.value.graph).identifier).toEqual(
+      observationOf(second.value.graph).identifier,
     )
-    const secondObservation = resources(second).find(
-      (resource) => resource.resourceType === 'Observation',
+    expect(first.value.graph.identifier).not.toEqual(
+      second.value.graph.identifier,
     )
-    expect(firstObservation?.identifier).toEqual(secondObservation?.identifier)
-    expect(first.value.identifier).not.toEqual(second.value.identifier)
+    expect(first.value.identifiers.applicationSnapshot).not.toEqual(
+      second.value.identifiers.applicationSnapshot,
+    )
   })
 
-  it('adds a gateway reference only with explicit mediation evidence', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const converterGateway = buildProviderMeasurementBundle({
-      ...input,
-      gatewayApplication: {
-        kind: 'converter-application',
-        roleAssurance: 'mediated-or-routed-measurement',
-      },
-    })
-    expect(converterGateway.ok).toBe(true)
-    if (!converterGateway.ok) return
-    expect(converterGateway.value.entry).toHaveLength(4)
-    const converterObservation = resources(converterGateway).find(
-      (resource) => resource.resourceType === 'Observation',
+  it('adds a gateway reference only for an explicit converter role', () => {
+    const assembler = unwrap(buildProviderExchangeGraph(heartRate, context()))
+    expect(
+      observationOf(assembler.graph).extension?.some(({ url }) =>
+        url?.endsWith('observation-gatewayDevice'),
+      ),
+    ).toBe(false)
+    expect(assembler.graph.entry).toHaveLength(5)
+
+    const gateway = unwrap(
+      buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', { converterRole: { kind: 'gateway' } }),
+      ),
     )
-    const converterApplicationEntry = converterGateway.value.entry.find(
-      (entry) =>
-        entry.resource.resourceType === 'Device' &&
-        entry.resource.deviceName?.[0]?.name === application.name,
+    expect(gateway.graph.entry).toHaveLength(5)
+    const converterEntry = gateway.graph.entry.find(
+      ({ resource }) =>
+        resource.resourceType === 'Device' &&
+        resource.deviceName?.[0]?.name === application.name,
     )
     expect(
-      converterObservation?.extension?.find(
-        ({ url }) =>
-          url ===
-          'http://hl7.org/fhir/StructureDefinition/observation-gatewayDevice',
+      observationOf(gateway.graph).extension?.find(({ url }) =>
+        url?.endsWith('observation-gatewayDevice'),
       )?.valueReference?.reference,
-    ).toBe(converterApplicationEntry?.fullUrl)
+    ).toBe(converterEntry?.fullUrl)
 
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        gatewayApplication: {
-          kind: 'converter-application',
-          roleAssurance: 'conversion-only',
-        },
-      } as unknown as ProviderMeasurementBundleInput).ok,
+      buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', {
+          converterRole: { kind: 'gateway', roleAssurance: 'x' } as never,
+        }),
+      ).ok,
     ).toBe(false)
   })
 
-  it('builds a fully attributed graph with distinct gateway and authorized hardware identity', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildProviderMeasurementBundle({
-      ...input,
-      application: {
-        ...input.application,
-        manufacturer: 'Grove Alliance',
+  it('builds a fully attributed graph with a distinct gateway, hardware and a study', () => {
+    const result = buildProviderExchangeGraph(
+      withSource(heartRate, {
+        writer: { ...heartRate.source.writer, version: '3.0.0' },
+        recordingDevice: {
+          stableUnitToken: 'hardware-1',
+          name: 'Chest strap',
+          manufacturer: 'Recorder vendor',
+          modelNumber: 'Model 1',
+        },
+      }),
+      context('withings', '1', {
         host: {
           sourceDeviceToken: 'converter-host',
           name: 'Converter phone',
@@ -457,115 +361,95 @@ describe('Provider R4 graph builder', () => {
           modelNumber: 'Phone 1',
           operatingSystemVersion: '20.0',
         },
-      },
-      gatewayApplication: {
-        kind: 'distinct-application',
-        roleAssurance: 'mediated-or-routed-measurement',
-        application: {
-          sourceDeviceToken: 'gateway-app',
-          name: 'Gateway app',
-          version: '2.1.0',
-          manufacturer: 'Gateway vendor',
-          host: {
-            sourceDeviceToken: 'gateway-host',
-            name: 'Gateway server',
-            operatingSystemVersion: 'Linux 7',
+        converterRole: {
+          kind: 'gateway-application',
+          application: {
+            sourceDeviceToken: 'gateway-app',
+            name: 'Gateway app',
+            version: '2.1.0',
           },
         },
-      },
-      source: {
-        ...input.source,
-        dataOrigin: {
-          ...input.source.dataOrigin,
-          version: '3.0.0',
-          manufacturer: 'Source vendor',
-          host: {
-            sourceDeviceToken: 'source-host',
-            name: 'Source host',
-            operatingSystemVersion: 'Provider runtime 3',
-          },
-        },
-        recordingDevice: {
-          stableUnitToken: 'hardware-1',
-          subjectIdentifier: {
-            system: uri('https://example.org/participants'),
-            value: 'participant-pseudonym-001',
-          },
-          identityScope: 'authorized-hardware',
-          disclosureAuthorization: 'authorized-for-exchange',
-          name: 'Chest strap',
-          manufacturer: 'Recorder vendor',
-          modelNumber: 'Model 1',
-        },
-      },
-      researchStudyReferences: [study('study-1')],
-    } as ProviderMeasurementBundleInput)
+        studies: [study('study-1')],
+      }),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value.entry).toHaveLength(9)
-    const observation = resources(result).find(
-      (resource) => resource.resourceType === 'Observation',
-    )
-    expect(parseUrnUuid(observation?.device?.reference).ok).toBe(true)
     expect(
-      observation?.extension?.some(
-        ({ url }) =>
-          url ===
-          'http://hl7.org/fhir/StructureDefinition/workflow-researchStudy',
-      ),
-    ).toBe(true)
-    const hostEntries = result.value.entry.filter(
+      resources(result.value.graph).map(({ resourceType }) => resourceType),
+    ).toEqual([
+      'Observation',
+      'Device',
+      'ResearchStudy',
+      'PlanDefinition',
+      'ResearchSubject',
+      'Device',
+      'Device',
+      'Device',
+      'Device',
+      'Provenance',
+    ])
+    const observation = observationOf(result.value.graph)
+    expect(parseUrnUuid(observation.device?.reference).ok).toBe(true)
+    expect(observation.device?.reference).toBe(
+      result.value.graph.entry.find(
+        ({ resource }) =>
+          resource.resourceType === 'Device' &&
+          resource.meta?.profile?.[0] ===
+            groveMobileProfileCanonicals['grove-recording-device'],
+      )?.fullUrl,
+    )
+    const gatewayEntry = result.value.graph.entry.find(
+      ({ resource }) =>
+        resource.resourceType === 'Device' &&
+        resource.deviceName?.[0]?.name === 'Gateway app',
+    )
+    expect(
+      observation.extension?.find(({ url }) =>
+        url?.endsWith('observation-gatewayDevice'),
+      )?.valueReference?.reference,
+    ).toBe(gatewayEntry?.fullUrl)
+    expect(result.value.identifiers.gatewayApplicationSnapshot?.value).toBe(
+      gatewayEntry?.extension?.[0]?.valueIdentifier?.value,
+    )
+    const hostEntries = result.value.graph.entry.filter(
       ({ resource }) =>
         resource.resourceType === 'Device' &&
         resource.meta?.profile?.some(
-          (profile) => profile === groveMobileContract.profiles.hostDevice,
+          (profile) =>
+            profile === groveMobileProfileCanonicals['grove-host-device'],
         ),
     )
-    expect(hostEntries).toHaveLength(3)
-    for (const applicationDevice of resources(result)) {
-      if (
-        applicationDevice.resourceType !== 'Device' ||
-        !applicationDevice.meta?.profile?.some(
-          (profile) =>
-            profile === groveMobileContract.profiles.applicationDevice,
-        )
-      ) {
-        continue
-      }
-      expect(parseUrnUuid(applicationDevice.parent?.reference).ok).toBe(true)
-      expect(
-        hostEntries.some(
-          ({ fullUrl }) => fullUrl === applicationDevice.parent?.reference,
-        ),
-      ).toBe(true)
-    }
+    expect(hostEntries).toHaveLength(1)
+    const converter = result.value.graph.entry.find(
+      ({ resource }) =>
+        resource.resourceType === 'Device' &&
+        resource.deviceName?.[0]?.name === application.name,
+    )?.resource
+    expect(
+      converter?.resourceType === 'Device' && converter.parent?.reference,
+    ).toBe(hostEntries[0]?.fullUrl)
+    expect(result.value.identifiers.hostSnapshot.value).toBe(
+      hostEntries[0]?.extension?.[0]?.valueIdentifier?.value,
+    )
   })
 
-  it('requires an explicit privacy scope for recording-device identity and never accepts a serial number', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const result = buildProviderMeasurementBundle({
-      ...input,
-      source: {
-        ...input.source,
+  it('requires a stable per-unit token for recording-device identity and never accepts a serial number', () => {
+    const result = buildProviderExchangeGraph(
+      withSource(heartRate, {
         recordingDevice: {
           stableUnitToken: 'device-pseudonym-1',
-          subjectIdentifier: {
-            system: uri('https://example.org/participants'),
-            value: 'participant-pseudonym-001',
-          },
-          identityScope: 'deployment-scoped',
           name: 'Connected scale',
         },
-      },
-    } as ProviderMeasurementBundleInput)
+      }),
+      context(),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    const recordingDevice = resources(result).find(
+    const recordingDevice = resources(result.value.graph).find(
       (resource) =>
         resource.resourceType === 'Device' &&
         resource.deviceName?.[0]?.name === 'Connected scale',
     )
-    expect(recordingDevice).toBeDefined()
     if (recordingDevice?.resourceType !== 'Device') {
       throw new Error('The graph did not contain its recording Device.')
     }
@@ -573,100 +457,87 @@ describe('Provider R4 graph builder', () => {
     expect(
       recordingDevice.identifier?.map(({ type }) => type?.coding?.[0]?.code),
     ).toEqual(['recording-device', 'device-snapshot'])
-    const recordingEntry = result.value.entry.find(
-      ({ resource }) => resource === recordingDevice,
+    expect(result.value.identifiers.recordingDevice?.role).toBe(
+      'recording-device',
+    )
+    expect(result.value.identifiers.recordingDeviceSnapshot?.value).toBe(
+      recordingDevice.identifier?.[1]?.value,
     )
     expect(
-      recordingEntry?.extension?.[0]?.valueIdentifier?.type?.coding?.[0]?.code,
-    ).toBe('device-snapshot')
-
-    expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        source: {
-          ...input.source,
+      parseNormalizedProviderRecord(
+        withSource(heartRate, {
           recordingDevice: {
             stableUnitToken: 'global-hardware-id',
-            subjectIdentifier: {
-              system: uri('https://example.org/participants'),
-              value: 'example',
-            },
-            identityScope: 'authorized-hardware',
             serialNumber: 'SERIAL-123',
           },
-        },
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
+    expect(
+      parseNormalizedProviderRecord(
+        withSource(heartRate, { recordingDevice: { name: 'No token' } }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.required-metadata-missing' }],
+    })
   })
 
-  it('rejects arbitrary source codings instead of treating lineage as a clinical code', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
+  it('refuses arbitrary source codings instead of treating lineage as a clinical code', () => {
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        source: {
-          ...input.source,
+      parseNormalizedProviderRecord(
+        withSource(heartRate, {
           sourceTypeCoding: {
             system: 'https://provider.example/source-types',
             code: 'broad-summary-record',
           },
-        },
-      } as unknown as ProviderMeasurementBundleInput).ok,
-    ).toBe(false)
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'mobile-input.value-shape-invalid' }],
+    })
   })
 
-  it('accepts only unique, unambiguous typed ResearchStudy references', () => {
-    const input = baseInput('withings', 'getmeas:11', heartRateMeasurement)
-    const local = study('local-1')
-    const absolute = study('remote-1')
+  it('accepts only unique studies with absolute protocol urls', () => {
     expect(
-      buildProviderMeasurementBundle({
-        ...input,
-        researchStudyReferences: [local, absolute],
-      }).ok,
+      buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', {
+          studies: [study('local-1'), study('remote-1')],
+        }),
+      ).ok,
     ).toBe(true)
-
-    const duplicate = parseProviderMeasurementBundleInput({
-      ...input,
-      researchStudyReferences: [local, local],
-    })
-    expect(duplicate.ok).toBe(false)
-    if (!duplicate.ok) {
-      expect(duplicate.issues).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ code: 'duplicate-identifier' }),
-        ]),
+    const duplicated = buildProviderExchangeGraph(
+      heartRate,
+      context('withings', '1', {
+        studies: [study('local-1'), study('local-1')],
+      }),
+    )
+    expect(duplicated.ok).toBe(false)
+    if (!duplicated.ok) {
+      expect(duplicated.issues.map(({ code }) => code)).toContain(
+        'duplicate-identifier',
       )
     }
     expect(
-      parseProviderMeasurementBundleInput({
-        ...input,
-        researchStudyReferences: [
-          {
-            type: 'ResearchStudy',
-            identifier: {
-              system: 'https://research.example/invalid system',
-              value: 'remote-1',
-            },
-          },
-        ],
-      }).ok,
-    ).toBe(false)
-    expect(
-      parseProviderMeasurementBundleInput({
-        ...baseInput('withings', 'getmeas:54', {
-          kind: 'oxygen-saturation',
-          value: 98,
-          effective: { kind: 'date-time', value: dateTime },
+      buildProviderExchangeGraph(
+        heartRate,
+        context('withings', '1', {
+          studies: [
+            {
+              ...study('remote-1'),
+              protocol: {
+                url: 'https://research.example/invalid protocol',
+                version: '1',
+              },
+            } as never,
+          ],
         }),
-        measurements: [
-          {
-            kind: 'oxygen-saturation',
-            value: 0,
-            effective: { kind: 'date-time', value: dateTime },
-          },
-        ],
-      }).ok,
-    ).toBe(true)
+      ).ok,
+    ).toBe(false)
   })
 })

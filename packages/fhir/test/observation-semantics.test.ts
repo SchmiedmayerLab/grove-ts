@@ -230,14 +230,14 @@ describe('catalog-driven Observation semantic boundaries', () => {
       mutate: (observation: Record<string, unknown>) => {
         observation.status = 'preliminary'
       },
-      code: 'mobile-heart-rate.status',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'missing coding list',
       mutate: (observation: Record<string, unknown>) => {
         observation.code = {}
       },
-      code: 'mobile-heart-rate.code',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'duplicate primary code',
@@ -245,7 +245,7 @@ describe('catalog-driven Observation semantic boundaries', () => {
         const code = observation.code as { coding: unknown[] }
         code.coding.push(structuredClone(code.coding[0]))
       },
-      code: 'mobile-heart-rate.code',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'wrong primary code',
@@ -255,14 +255,14 @@ describe('catalog-driven Observation semantic boundaries', () => {
         }
         code.coding[0] = { system: 'http://loinc.org', code: 'not-admitted' }
       },
-      code: 'mobile-heart-rate.code',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'missing category',
       mutate: (observation: Record<string, unknown>) => {
         Reflect.deleteProperty(observation, 'category')
       },
-      code: 'mobile-heart-rate.category',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'additional same-system category',
@@ -275,14 +275,14 @@ describe('catalog-driven Observation semantic boundaries', () => {
           code: 'laboratory',
         })
       },
-      code: 'mobile-heart-rate.category',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'neither flexible effective choice',
       mutate: (observation: Record<string, unknown>) => {
         Reflect.deleteProperty(observation, 'effectiveDateTime')
       },
-      code: 'mobile-heart-rate.effective',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'both flexible effective choices',
@@ -292,7 +292,7 @@ describe('catalog-driven Observation semantic boundaries', () => {
           end: '2026-08-20T01:00:00Z',
         }
       },
-      code: 'mobile-heart-rate.effective',
+      code: 'mobile-output.semantic-profile',
     },
     {
       name: 'missing quantity value',
@@ -329,45 +329,45 @@ describe('catalog-driven Observation semantic boundaries', () => {
     expect(semanticMessages(resting)).toEqual([])
     const restingCode = resting.code as { coding: unknown[] }
     restingCode.coding.pop()
-    expectRule(resting, 'mobile-resting-heart-rate.required-coding')
+    expectRule(resting, 'mobile-output.semantic-profile')
 
     const sleep = observationFor(definition('sleep-duration'))
     sleep.category = [
       { coding: [{ system: 'http://loinc.org', code: 'sleep' }] },
     ]
-    expectRule(sleep, 'mobile-sleep-duration.category')
+    expectRule(sleep, 'mobile-output.semantic-profile')
   })
 
   it('enforces fixed and choice aggregation methods', () => {
     const fixed = observationFor(definition('deep-sleep-duration'))
     fixed.method = undefined
-    expectRule(fixed, 'mobile-deep-sleep-duration.method')
+    expectRule(fixed, 'mobile-output.semantic-profile')
 
     const choice = observationFor(definition('respiratory-rate-average'))
     choice.method = {}
-    expectRule(choice, 'mobile-respiratory-rate-average.method')
+    expectRule(choice, 'mobile-output.semantic-profile')
     choice.method = {
       coding: [
         { system: aggregationSystem, code: 'not-admitted' },
         { system: aggregationSystem, code: 'also-not-admitted' },
       ],
     }
-    expectRule(choice, 'mobile-respiratory-rate-average.method')
+    expectRule(choice, 'mobile-output.semantic-profile')
   })
 
   it('enforces bounded effective periods and quantity value domains', () => {
     const weight = observationFor(definition('body-weight'))
     Reflect.deleteProperty(weight, 'effectiveDateTime')
-    expectRule(weight, 'mobile-body-weight.effective')
+    expectRule(weight, 'mobile-output.semantic-profile')
 
     const steps = observationFor(definition('step-count'))
     steps.effectivePeriod = { start: '2026-08-20T00:00:00Z' }
-    expectRule(steps, 'mobile-step-count.effective')
+    expectRule(steps, 'mobile-output.semantic-profile')
     steps.effectivePeriod = {
       start: '2026-08-20T00:00:00Z',
       end: '2026-08-20T00:00:00Z',
     }
-    expectRule(steps, 'mobile-step-count.nonzero-period')
+    expectRule(steps, 'mobile-output.semantic-profile')
     ;(steps.valueQuantity as Record<string, unknown>).value = -1
     expectRule(steps, 'mobile-output.quantity-value-domain')
     ;(steps.valueQuantity as Record<string, unknown>).value = 0.5
@@ -384,7 +384,7 @@ describe('catalog-driven Observation semantic boundaries', () => {
     const coded = observationFor(definition('intermenstrual-bleeding'))
     expect(semanticMessages(coded)).toEqual([])
     coded.valueCodeableConcept = {}
-    expectRule(coded, 'mobile-intermenstrual-bleeding.coded-result')
+    expectRule(coded, 'mobile-output.semantic-profile')
     coded.valueCodeableConcept = {
       coding: [
         { system: 'https://example.org/other', code: 'present' },
@@ -395,31 +395,31 @@ describe('catalog-driven Observation semantic boundaries', () => {
         },
       ],
     }
-    expectRule(coded, 'mobile-intermenstrual-bleeding.coded-result')
+    expectRule(coded, 'mobile-output.semantic-profile')
 
     const dateOfBirth = observationFor(definition('date-of-birth', 'healthkit'))
     expect(semanticMessages(dateOfBirth)).toEqual([])
     Reflect.deleteProperty(dateOfBirth, 'valueDateTime')
-    expectRule(dateOfBirth, 'mobile-date-of-birth.date-time-result')
+    expectRule(dateOfBirth, 'mobile-output.semantic-profile')
 
     const food = observationFor(definition('food-correlation', 'healthkit'))
     expect(semanticMessages(food)).toEqual([])
     food.hasMember = 'not-a-reference-list'
-    expectRule(food, 'mobile-food-correlation.members')
+    expectRule(food, 'mobile-output.semantic-profile')
     food.hasMember = []
-    expectRule(food, 'mobile-food-correlation.members')
+    expectRule(food, 'mobile-output.semantic-profile')
   })
 
   it('enforces distinct required blood-pressure components and their units', () => {
     const row = definition('blood-pressure')
     const missing = observationFor(row)
     missing.component = []
-    expectRule(missing, 'mobile-blood-pressure.systolic')
+    expectRule(missing, 'mobile-output.semantic-profile')
 
     const duplicate = observationFor(row)
     const components = duplicate.component as unknown[]
     components.push(structuredClone(components[0]))
-    expectRule(duplicate, 'mobile-blood-pressure.systolic')
+    expectRule(duplicate, 'mobile-output.semantic-profile')
 
     const shared = observationFor(row)
     const sharedComponents = shared.component as Array<Record<string, unknown>>
@@ -434,7 +434,7 @@ describe('catalog-driven Observation semantic boundaries', () => {
       ],
     }
     shared.component = [first]
-    expectRule(shared, 'mobile-blood-pressure.diastolic')
+    expectRule(shared, 'mobile-output.semantic-profile')
 
     const malformed = observationFor(row)
     const malformedComponent = (
@@ -453,7 +453,7 @@ describe('catalog-driven Observation semantic boundaries', () => {
     quantity.system = 'https://example.org/not-ucum'
     quantity.code = 'not-admitted'
     quantity.unit = 'not-admitted'
-    expectRule(malformed, 'mobile-blood-pressure.systolic')
+    expectRule(malformed, 'mobile-output.semantic-profile')
 
     const audiogram = observationFor(definition('audiogram-panel', 'healthkit'))
     const optionalComponent = definition('audiogram-panel', 'healthkit')
@@ -470,6 +470,6 @@ describe('catalog-driven Observation semantic boundaries', () => {
         valueQuantity: {},
       },
     ]
-    expectRule(audiogram, `mobile-audiogram-panel.${optionalComponent.id}`)
+    expectRule(audiogram, 'mobile-output.semantic-profile')
   })
 })

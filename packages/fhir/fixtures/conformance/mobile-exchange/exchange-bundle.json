@@ -95,7 +95,10 @@
           }
         ],
         "deviceName": [
-          { "type": "user-friendly-name", "name": "Mobile Study" }
+          {
+            "type": "user-friendly-name",
+            "name": "Mobile Study"
+          }
         ],
         "status": "active"
       }
@@ -187,10 +190,14 @@
           "reference": "urn:uuid:d5137e30-79b1-5110-a09c-bd2528e25085"
         },
         "performer": [
-          { "reference": "urn:uuid:d5137e30-79b1-5110-a09c-bd2528e25085" }
+          {
+            "reference": "urn:uuid:d5137e30-79b1-5110-a09c-bd2528e25085"
+          }
         ],
         "derivedFrom": [
-          { "reference": "urn:uuid:e516dd51-04d0-502d-abcf-b5c870915c17" }
+          {
+            "reference": "urn:uuid:e516dd51-04d0-502d-abcf-b5c870915c17"
+          }
         ],
         "effectiveDateTime": "2026-08-20T08:30:00.251-07:00",
         "issued": "2026-08-20T17:30:02Z",
@@ -276,7 +283,9 @@
           }
         ],
         "target": [
-          { "reference": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5" }
+          {
+            "reference": "urn:uuid:a9b76bbc-f523-5ef4-9919-813ec70553e5"
+          }
         ],
         "occurredDateTime": "2026-08-20T10:30:02-07:00",
         "recorded": "2026-08-20T17:30:02Z"

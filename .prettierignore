@@ -19,3 +19,6 @@ packages/design-system/docs/docs/api
 node_modules
 
 packages/fhir/.fhir-cache/
+packages/fhir/fixtures/conformance/mobile-exchange/
+packages/fhir/fixtures/conformance/receiver-lifecycle/
+packages/fhir/fixtures/conformance/study-attribution/

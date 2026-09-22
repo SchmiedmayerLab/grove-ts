@@ -6,7 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-export { buildProviderMeasurementBundle } from './builder.js'
+export {
+  buildProviderExchangeGraph,
+  buildProviderExchangeGraphs,
+} from './builder.js'
 export {
   adapterMeasurementCatalog,
   groveRecordingFormatRegistry,
@@ -30,41 +33,26 @@ export {
   type ProviderScalarOutputRoles,
 } from '../contract/providers.generated.js'
 export {
-  parseProviderMeasurementBundleInput,
   parseNormalizedProviderRecord,
+  parseProviderConversionOptions,
   providerOutputCoordinates,
   providerOutputRole,
+  type ProviderOutputCoordinates,
 } from './provider.js'
-export type { ProviderOutputCoordinates } from './provider.js'
 export {
-  buildProviderRecordingBundle,
+  buildProviderRecordingGraph,
   encodeRecordingBytes,
   parseCanonicalBase64,
-  parseProviderRecordingBundleInput,
   parseImmutableRecordingUrl,
   parseMediaType,
+  parseProviderRecordingAttachment,
+  parseProviderRecordingSource,
   parseSha1Base64,
 } from './recording.js'
-export {
-  buildProviderRetractionBundle,
-  parseProviderRetractionInput,
-} from './retraction.js'
-export type {
-  ProviderRetractionInput,
-  ProviderRetractionTargetInput,
-  ProviderRetractionTargetNativeIdentifierInput,
-  RetractionTargetRole,
-} from './retraction.js'
+export { buildProviderRetractionEvent } from './retraction.js'
 export type { DeviceSnapshotRole } from './identity.js'
 export type {
   CanonicalBase64,
-  ProviderAdapter,
-  ProviderMeasurementBundleInput,
-  ProviderRecordingAttachmentInput,
-  ProviderRecordingBundleInput,
-  ProviderRecordingSource,
-  ProviderRecordingSourceRecord,
-  ProviderSourceRecord,
   ConnectedProvider,
   ConnectedProviderMeasurement,
   ConnectedProviderMeasurementKind,
@@ -73,37 +61,40 @@ export type {
   ConnectedRawProvider,
   ConnectedRawSourceType,
   ConnectedSourceType,
-  EmbeddedRecordingAttachmentInput,
-  ExternalRecordingAttachmentInput,
-  GovernedSourceIdentifierInput,
-  GovernedSourceIdentifierTypeCodingInput,
-  GovernedSourceIdentifierTypeInput,
+  EmbeddedRecordingAttachment,
+  ExternalRecordingAttachment,
   ImmutableRecordingUrl,
-  MeasurementRepositoryAssignedResourceIds,
   MediaType,
   NormalizedProviderRecord,
   NormalizedSourceRecord,
-  ProviderAccountScopeIdentifierInput,
-  ProviderGlobalScopeIdentifierInput,
-  ProviderScopeIdentifierInput,
+  ProviderAdapter,
+  ProviderConversion,
+  ProviderConversionFailure,
+  ProviderConversionOptions,
   ProviderExclusiveMeasurement,
   ProviderExclusiveMeasurementKind,
-  ProviderPatientReferenceInput,
-  ProviderResearchStudyReferenceInput,
+  ProviderRecordingAttachment,
+  ProviderRecordingConversion,
   ProviderRecordingFormat,
+  ProviderRecordingSource,
+  ProviderRecordingSourceRecord,
+  ProviderSourceRecord,
   RawPayloadAdmissionAssertion,
-  RecordingRepositoryAssignedResourceIds,
   Sha1Base64,
   SupportedConnectedProviderMeasurementKind,
-  WriterRecordInput,
+  WriterRecord,
 } from './types.js'
 export type {
-  ApplicationDeviceInput,
-  DeploymentIdentityInput,
-  GatewayApplicationInput,
-  HostDeviceInput,
+  ApplicationDevice,
+  ConversionBatch,
+  ConverterRole,
+  ExchangeEventContext,
+  ExchangeGraphIdentifiers,
+  GovernedSourceIdentifierDisclosurePolicy,
+  HostDevice,
   MobileMeasurement,
-  RecordingDeviceInput,
+  RecordingDevice,
   RecordingMethod,
-  ResourceIdentityInput,
+  StudyEnrollment,
+  Subject,
 } from '../mobile/types.js'
