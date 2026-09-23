@@ -320,6 +320,7 @@
             "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response"
           ]
         },
+        "language": "en-US",
         "extension": [
           {
             "url": "http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode",
