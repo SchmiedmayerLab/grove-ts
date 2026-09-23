@@ -14,7 +14,6 @@ import {
   type MeasurementDefinition,
 } from './measurement-definition.js'
 import {
-  applicationDeviceSchema,
   conversionOptionsSchema,
   effectiveTimeSchema,
   instantEffectiveSchema,
@@ -25,6 +24,7 @@ import {
   refusal,
   sourceAbsoluteUri,
   writerRecordSchema,
+  writerSchema,
 } from './provider-input-schemas.js'
 import type {
   ConnectedProvider,
@@ -51,6 +51,7 @@ import {
   type Issue,
   type Result,
 } from '../core/index.js'
+import type { OutputCoordinates } from '../mobile/identity.js'
 import type { MobileMeasurement } from '../mobile/types.js'
 import {
   groveRuleIssue,
@@ -150,7 +151,7 @@ const sourceSchema = z.strictObject({
   }),
   sourceType: nonBlankText,
   sourceNativeId: nativeIdentifierText,
-  writer: applicationDeviceSchema,
+  writer: writerSchema,
   recordingMethod: z
     .enum(['actively-recorded', 'automatically-recorded', 'manual-entry'])
     .optional(),
@@ -376,11 +377,6 @@ const providerSourceDiscriminatorMapping = (
   return providerMappings[sourceType]
 }
 
-export interface ProviderOutputCoordinates {
-  readonly outputRole: string
-  readonly outputDiscriminator: string
-}
-
 interface RecordEffectiveRule {
   readonly kind: 'complete-civil-day-period'
   readonly measurementIds: readonly string[]
@@ -475,15 +471,15 @@ export const providerOutputCoordinates = (
   provider: ConnectedProvider,
   sourceType: string,
   kind: string,
-): ProviderOutputCoordinates | undefined => {
-  const outputRole = providerSourceMapping(provider, sourceType)?.[kind]
-  const outputDiscriminator = providerSourceDiscriminatorMapping(
+): OutputCoordinates | undefined => {
+  const role = providerSourceMapping(provider, sourceType)?.[kind]
+  const discriminator = providerSourceDiscriminatorMapping(
     provider,
     sourceType,
   )?.[kind]
-  return outputRole === undefined || outputDiscriminator === undefined ?
+  return role === undefined || discriminator === undefined ?
       undefined
-    : { outputRole, outputDiscriminator }
+    : { role, discriminator }
 }
 
 const recordMappingIssues = (record: ParsedRecord): readonly Issue[] => {

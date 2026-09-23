@@ -12,6 +12,7 @@ import {
   context,
   dateTime,
   heartRateMeasurement,
+  identifierSystem,
   identityScope,
   instant,
   observationOf,
@@ -19,9 +20,8 @@ import {
   resources,
   start,
   unwrap,
-  uri,
 } from './provider-test-support.js'
-import { parseFhirId } from '../src/index.js'
+import { parseFhirId, parsePartIndex } from '../src/index.js'
 import {
   canonicalizeMobileEffectiveInstant,
   deriveEntryFullUrl,
@@ -32,6 +32,7 @@ import {
 import { deriveProviderIdentities } from '../src/providers/identity.js'
 import {
   buildProviderExchangeGraph,
+  deriveProviderRecordIdentity,
   parseNormalizedProviderRecord,
   providerOutputCoordinates,
   type NormalizedProviderRecord,
@@ -179,7 +180,7 @@ describe('Provider R4 graph builder', () => {
       const businessIdentifier = entry.extension?.[0]?.valueIdentifier
       expect(
         deriveEntryFullUrl({
-          system: uri(businessIdentifier?.system ?? ''),
+          system: identifierSystem(businessIdentifier?.system ?? ''),
           value: businessIdentifier?.value ?? '',
         }),
       ).toEqual({ ok: true, value: entry.fullUrl })
@@ -398,8 +399,8 @@ describe('Provider R4 graph builder', () => {
       outputs: [
         {
           kind: 'provider-output',
-          outputRole: 'heart-rate',
-          outputDiscriminator: 'single',
+          role: 'heart-rate',
+          discriminator: 'single',
         },
       ],
       event: context().event,
@@ -421,8 +422,8 @@ describe('Provider R4 graph builder', () => {
         outputs: [
           {
             kind: 'provider-output',
-            outputRole: 'heart-rate',
-            outputDiscriminator: '  ',
+            role: 'heart-rate',
+            discriminator: '  ',
           },
         ],
       }).ok,
@@ -472,7 +473,7 @@ describe('Provider R4 graph builder', () => {
         {
           kind: 'provider-artifact',
           formatCode: 'provider-recording',
-          partIndex: '0',
+          partIndex: unwrap(parsePartIndex('0')),
         },
       ],
     } as const
@@ -480,7 +481,7 @@ describe('Provider R4 graph builder', () => {
     expect(
       deriveProviderIdentities({
         ...raw,
-        outputs: [{ ...raw.outputs[0], partIndex: '01' }],
+        outputs: [{ ...raw.outputs[0], partIndex: '01' as never }],
       }).ok,
     ).toBe(false)
     expect(
@@ -555,8 +556,8 @@ describe('Provider R4 graph builder', () => {
       outputs: [
         {
           kind: 'provider-output',
-          outputRole: 'heart-rate',
-          outputDiscriminator: 'single',
+          role: 'heart-rate',
+          discriminator: 'single',
         },
       ],
       event: context().event,
@@ -584,8 +585,8 @@ describe('Provider R4 graph builder', () => {
         outputs: [
           {
             kind: 'provider-output',
-            outputRole: 'invented-output',
-            outputDiscriminator: 'single',
+            role: 'invented-output',
+            discriminator: 'single',
           },
         ],
       }),
@@ -599,8 +600,8 @@ describe('Provider R4 graph builder', () => {
         outputs: [
           {
             kind: 'provider-output',
-            outputRole: 'heart-rate',
-            outputDiscriminator: 'invented',
+            role: 'heart-rate',
+            discriminator: 'invented',
           },
         ],
       }).ok,
@@ -615,33 +616,30 @@ describe('Provider R4 graph builder', () => {
       'blood-pressure',
     )
     expect(coordinates).toEqual({
-      outputRole: 'blood-pressure-panel',
-      outputDiscriminator: 'single',
+      role: 'blood-pressure-panel',
+      discriminator: 'single',
     })
     if (coordinates === undefined) return
-    const expected = deriveProviderIdentities({
-      provider: 'withings',
-      repositoryScope: context().repositoryScope,
-      sourceType: input.source.sourceType,
-      sourceNativeId: input.source.sourceNativeId,
-      outputs: [{ kind: 'provider-output', ...coordinates }],
-      event: context().event,
-      scope: identityScope,
-    })
-    const built = buildProviderExchangeGraph(input, context())
-    expect(expected.ok && built.ok).toBe(true)
-    if (!expected.ok || !built.ok) return
-    const sourceOutput = observationOf(built.value.graph).identifier?.find(
+    const sourceRecord = unwrap(
+      deriveProviderRecordIdentity(identityScope, {
+        providerCode: 'withings',
+        sourceType: input.source.sourceType,
+        providerScope: context().repositoryScope,
+        nativeRecordId: input.source.sourceNativeId,
+      }),
+    )
+    const expected = unwrap(sourceRecord.output(coordinates))
+    const built = unwrap(buildProviderExchangeGraph(input, context()))
+    const sourceOutput = observationOf(built.graph).identifier?.find(
       (candidate) =>
         candidate.type?.coding?.some(({ code }) => code === 'source-output'),
     )
     expect(sourceOutput).toMatchObject({
-      system: expected.value.outputs[0]?.system,
-      value: expected.value.outputs[0]?.value,
+      system: expected.system,
+      value: expected.value,
     })
-    expect(built.value.identifiers.outputs[0]).toEqual(
-      expected.value.outputs[0],
-    )
+    expect(built.identifiers.sourceRecord).toEqual(sourceRecord.identifier)
+    expect(built.identifiers.outputs[0]).toEqual(expected)
   })
 
   it.each([
@@ -692,7 +690,11 @@ describe('Provider R4 graph builder', () => {
       {
         converterRole: {
           kind: 'gateway-application',
-          application: { sourceDeviceToken: invalidToken, name: 'Gateway' },
+          application: {
+            sourceDeviceToken: invalidToken,
+            name: 'Gateway',
+            version: '1',
+          },
         },
       },
     ] as const) {

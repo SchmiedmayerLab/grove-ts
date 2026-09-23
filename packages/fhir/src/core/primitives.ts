@@ -16,6 +16,8 @@ export type Branded<Name extends string> = string & {
 }
 
 export type AbsoluteUri = Branded<'AbsoluteUri'>
+/** The absolute URI naming the namespace an Identifier.value is unique within. */
+export type IdentifierSystem = Branded<'IdentifierSystem'>
 export type Canonical = Branded<'Canonical'>
 /** Canonical positive decimal naming one key epoch of a deployment's identity scope. */
 export type KeyEpoch = Branded<'KeyEpoch'>
@@ -23,6 +25,8 @@ export type KeyEpoch = Branded<'KeyEpoch'>
 export type EventSequence = Branded<'EventSequence'>
 /** Canonical unsigned decimal position of an entry among those sharing its node role. */
 export type EntryNodeOrdinal = Branded<'EntryNodeOrdinal'>
+/** Canonical unsigned decimal zero-based position of one part of a source artifact. */
+export type PartIndex = Branded<'PartIndex'>
 export type FhirId = Branded<'FhirId'>
 export type FhirInstant = Branded<'FhirInstant'>
 export type PatientReference = Branded<'PatientReference'>
@@ -274,6 +278,18 @@ export const parseAbsoluteUri = (value: unknown): Result<AbsoluteUri> => {
   return ok(value as AbsoluteUri)
 }
 
+export const parseIdentifierSystem = (
+  value: unknown,
+): Result<IdentifierSystem> => {
+  if (typeof value !== 'string' || !isAbsoluteUri(value)) {
+    return err(
+      'invalid-uri',
+      'Expected an identifier system: an absolute ASCII RFC 3986 URI with valid percent encoding.',
+    )
+  }
+  return ok(value as IdentifierSystem)
+}
+
 export const parseCanonical = (value: unknown): Result<Canonical> => {
   if (typeof value !== 'string') {
     return err('invalid-uri', 'Expected a canonical URI string.')
@@ -406,6 +422,16 @@ export const parseEntryNodeOrdinal = (
     )
   }
   return ok(value as EntryNodeOrdinal)
+}
+
+export const parsePartIndex = (value: unknown): Result<PartIndex> => {
+  if (typeof value !== 'string' || !UNSIGNED_DECIMAL.test(value)) {
+    return err(
+      'invalid-identifier',
+      'Expected a canonical unsigned decimal part index.',
+    )
+  }
+  return ok(value as PartIndex)
 }
 
 export const parseUrnUuid = (value: unknown): Result<UrnUuid> => {

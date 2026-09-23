@@ -20,7 +20,7 @@ import {
   groveProducerDiagnostics,
 } from '../contract/measurement-catalog.generated.js'
 import { healthKitApplicationDeviceIdentity } from '../contract/providers.generated.js'
-import { parseAbsoluteUri } from '../core/index.js'
+import { parseIdentifierSystem } from '../core/index.js'
 import { identityValuePrefixes } from '../mobile/identity.js'
 
 export type UnknownRecord = Readonly<Record<string, unknown>>
@@ -303,7 +303,7 @@ const validateGovernedReferenceShape = (
   const validLogical =
     !hasLiteral &&
     completeIdentifier(identifier) &&
-    parseAbsoluteUri(identifier.system).ok &&
+    parseIdentifierSystem(identifier.system).ok &&
     typeof declaredType === 'string' &&
     allowedTypes.has(declaredType)
   if (hasLiteral && hasIdentifier) {

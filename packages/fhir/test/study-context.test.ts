@@ -162,7 +162,7 @@ describe('study context', () => {
     )
     if (planResource?.resourceType !== 'PlanDefinition')
       throw new Error('No plan.')
-    expect(planResource.url).toBe(study('a').protocol.url)
+    expect(planResource.url).toBe(study('a').protocolUrl)
     expect(planResource.version).toBe('1')
     const subjectResource = resources(graph).find(
       (r) => r.resourceType === 'ResearchSubject',

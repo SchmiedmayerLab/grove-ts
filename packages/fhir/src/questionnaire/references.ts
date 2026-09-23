@@ -7,7 +7,7 @@
 //
 
 import { isR4ResourceType } from './r4-resource-types.js'
-import { parseAbsoluteUri } from '../core/index.js'
+import { parseAbsoluteUri, parseIdentifierSystem } from '../core/index.js'
 
 type UnknownRecord = Readonly<Record<string, unknown>>
 
@@ -79,7 +79,7 @@ const literalTargetType = (
 const completeLogicalIdentifier = (value: unknown): boolean => {
   const identifier = asRecord(value)
   return (
-    parseAbsoluteUri(identifier?.system).ok &&
+    parseIdentifierSystem(identifier?.system).ok &&
     typeof identifier?.value === 'string' &&
     identifier.value.trim() !== ''
   )

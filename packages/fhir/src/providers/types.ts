@@ -15,7 +15,6 @@ import type {
 import type { Branded, Issue } from '../core/index.js'
 import type { BusinessIdentifier } from '../mobile/identity.js'
 import type {
-  ApplicationDevice,
   ExchangeGraphIdentifiers,
   GovernedSourceIdentifierDisclosurePolicy,
   InstantEffectiveTime,
@@ -132,6 +131,18 @@ export interface ProviderAdapter<
   readonly provider: Provider
 }
 
+/**
+ * The application that wrote the source record at the provider, emitted as its own
+ * application snapshot; unlike the converter, a provider rarely reports its version.
+ */
+export interface Writer {
+  /** A stable token naming the writer; never emitted in clear. */
+  readonly sourceDeviceToken: string
+  readonly name: string
+  readonly version?: string | undefined
+  readonly build?: string | undefined
+}
+
 /** The logical record identity the application that wrote the source record assigned. */
 export interface WriterRecord {
   readonly applicationIdentifier: BusinessIdentifier
@@ -160,7 +171,7 @@ export interface ProviderSourceRecord<
   readonly sourceType: SourceType
   readonly sourceNativeId: string
   /** The application that entered the record at the connected provider. */
-  readonly writer: ApplicationDevice
+  readonly writer: Writer
 }
 
 export type ConnectedProviderMeasurements<
@@ -223,7 +234,7 @@ export interface ProviderRecordingSourceRecord<
   /** Opaque-identity digest input, disclosed only through the conversion options. */
   readonly sourceNativeId: string
   /** The application that entered the already-obtained record at the provider. */
-  readonly writer: ApplicationDevice
+  readonly writer: Writer
   /** The source activity time the recording covers. */
   readonly effective: InstantEffectiveTime | PeriodEffectiveTime
   readonly writerRecord?: WriterRecord | undefined

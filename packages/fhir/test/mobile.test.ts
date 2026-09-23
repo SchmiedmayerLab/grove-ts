@@ -10,12 +10,12 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { expectTypeOf } from 'expect-type'
 import {
   context,
+  identifierSystem,
   identityScope,
   scopeInput,
   study,
   subject,
   unwrap,
-  uri,
 } from './provider-test-support.js'
 import * as mobileContract from '../src/contract/measurement-catalog.generated.js'
 import {
@@ -147,7 +147,7 @@ describe('Mobile exchange entry identity', () => {
     const vector = mobile.groveExchangeProtocol.testVectors.fullUrls[0]
     expect(
       deriveEntryFullUrl({
-        system: uri(vector.system),
+        system: identifierSystem(vector.system),
         value: vector.value,
       }),
     ).toEqual({
@@ -158,7 +158,7 @@ describe('Mobile exchange entry identity', () => {
 
   it('retains a complete roled Identifier and optional repository id', () => {
     const identifier = {
-      system: uri('https://example.org/identifiers'),
+      system: identifierSystem('https://example.org/identifiers'),
       value: 'record-1',
       role: 'source-output' as const,
     }
@@ -172,7 +172,7 @@ describe('Mobile exchange entry identity', () => {
     expect(result.ok && result.value.identifier.value).toBe('record-1')
     expect(
       createEntryIdentity({
-        system: uri('https://example.org/identifiers'),
+        system: identifierSystem('https://example.org/identifiers'),
         value: 'record-1',
         role: 'not-a-role',
       } as never).ok,
@@ -198,7 +198,7 @@ describe('Mobile exchange entry identity', () => {
 
   it('rejects an invalid repository id and accepts a valid surrogate pair', () => {
     const identifier = {
-      system: uri('https://example.org/identifiers'),
+      system: identifierSystem('https://example.org/identifiers'),
       value: 'valid-😀',
       role: 'source-output' as const,
     }
@@ -211,7 +211,7 @@ describe('Mobile exchange entry identity', () => {
   it('preserves nonempty whitespace because Identifier.value is lexical data', () => {
     expect(
       entryIdentifierName({
-        system: uri('https://example.org/identifiers'),
+        system: identifierSystem('https://example.org/identifiers'),
         value: ' \t\n ',
       }).ok,
     ).toBe(true)
@@ -282,11 +282,66 @@ describe('exchange event context', () => {
       converterRole: undefined,
       studies: undefined,
       repositoryIds: undefined,
-      application: { ...context().application, version: undefined },
+      application: { ...context().application, build: undefined },
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.value.application).not.toHaveProperty('version')
+    expect(result.value.application).not.toHaveProperty('build')
+  })
+
+  it('requires the application version, a flat protocol revision and a known graph node', () => {
+    const { protocolUrl, protocolVersion, ...enrollment } = study('a')
+    const faults: ReadonlyArray<
+      readonly [unknown, ReadonlyArray<string | number>]
+    > = [
+      [
+        { ...context(), application: { sourceDeviceToken: 'a', name: 'A' } },
+        ['application', 'version'],
+      ],
+      [
+        {
+          ...context(),
+          converterRole: {
+            kind: 'gateway-application',
+            application: { sourceDeviceToken: 'g', name: 'G' },
+          },
+        },
+        ['converterRole', 'application', 'version'],
+      ],
+      [
+        {
+          ...context(),
+          studies: [
+            {
+              ...enrollment,
+              protocol: { url: protocolUrl, version: protocolVersion },
+            },
+          ],
+        },
+        ['studies', 0, 'protocol'],
+      ],
+      [
+        { ...context(), studies: [{ ...study('a'), protocolVersion: ' ' }] },
+        ['studies', 0, 'protocolVersion'],
+      ],
+      [
+        { ...context(), repositoryIds: { 'writer-host': 'x' } },
+        ['repositoryIds', 'writer-host'],
+      ],
+    ]
+    for (const [candidate, path] of faults) {
+      const result = parseExchangeEventContext(candidate)
+      expect(result.ok).toBe(false)
+      if (!result.ok) {
+        expect(result.issues.map((issue) => issue.path)).toContainEqual(path)
+      }
+    }
+    expect(
+      parseExchangeEventContext({
+        ...context(),
+        repositoryIds: { writer: 'writer-1' },
+      }).ok,
+    ).toBe(true)
   })
 
   it('reports deployment faults under schema codes, never registry codes', () => {
@@ -314,7 +369,10 @@ describe('exchange event context', () => {
       ['a missing host', { ...context(), host: undefined }, 'host'],
       [
         'a blank application name',
-        { ...context(), application: { sourceDeviceToken: 'a', name: ' ' } },
+        {
+          ...context(),
+          application: { sourceDeviceToken: 'a', name: ' ', version: '1' },
+        },
         'application',
       ],
       [

@@ -6,11 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { ConnectedProvider, WriterRecord } from './types.js'
-import {
-  groveExchangeProtocol,
-  groveProfileClaims,
-} from '../contract/measurement-catalog.generated.js'
+import type { ConnectedProvider, Writer, WriterRecord } from './types.js'
+import { groveProfileClaims } from '../contract/measurement-catalog.generated.js'
 import {
   providerAdapterCatalog,
   providerRawOutputDiscriminators,
@@ -19,11 +16,12 @@ import {
   providerScalarOutputRoles,
 } from '../contract/providers.generated.js'
 import {
+  collectResults,
   deepFreeze,
   err,
   issues,
   ok,
-  parseAbsoluteUri,
+  parseIdentifierSystem,
   type EntryNodeOrdinal,
   type FhirId,
   type Issue,
@@ -34,15 +32,17 @@ import {
   createEntryIdentity,
   deriveEntryNodeIdentifier,
   deriveOpaqueIdentifier,
+  deriveRecordIdentity,
   isEventOfScope,
   isOpaqueIdentityScope,
+  parseRecordCoordinates,
+  type ArtifactCoordinates,
   type BusinessIdentifier,
   type EntryIdentity,
   type EntryNodeIdentifier,
   type ExchangeEventIdentifier,
-  type OpaqueIdentityComponents,
-  type OpaqueIdentityKind,
   type OpaqueIdentityScope,
+  type OutputCoordinates,
   type RoledIdentifier,
 } from '../mobile/identity.js'
 import type {
@@ -58,22 +58,6 @@ export type DeviceSnapshotRole = 'application' | 'host' | 'recording-device'
 const PROVIDER_CODES: ReadonlySet<string> = new Set(
   providerAdapterCatalog.providers.map(({ id }) => id),
 )
-// A kind's coordinate family is written in its components: the first names the adapter
-// space, and only source-record coordinates carry a native record id.
-const identityKindsCoordinatedBy = (
-  adapterComponent: string,
-): ReadonlySet<string> =>
-  new Set(
-    groveExchangeProtocol.opaqueIdentity.identityKinds
-      .filter(
-        ({ components }) =>
-          components[0] === adapterComponent &&
-          (components as readonly string[]).includes('native-record-id'),
-      )
-      .map(({ kind }) => kind),
-  )
-const PROVIDER_IDENTITY_KINDS = identityKindsCoordinatedBy('provider-code')
-const GENERIC_SOURCE_IDENTITY_KINDS = identityKindsCoordinatedBy('adapter-id')
 
 const recordingDeviceAdapters: ReadonlySet<string> = new Set([
   ...groveProfileClaims.adapterConversionProvenanceClaims.map(
@@ -91,54 +75,66 @@ const ordinal = (index: number): EntryNodeOrdinal =>
   String(index) as EntryNodeOrdinal
 
 /**
- * The provider coordinate guard: a provider identity kind opens with one catalog provider
- * code, and a provider code never enters a generic source identity kind.
+ * The provider coordinate guard: a provider record opens with one catalog provider code, and a
+ * provider code never opens a generic source record.
  */
 export const providerCoordinateIssue = (
-  identityKind: OpaqueIdentityKind,
-  components: readonly string[],
+  kind: 'provider-record' | 'source-record',
+  adapter: string,
 ): Issue | undefined => {
-  const first = components[0]
-  if (
-    PROVIDER_IDENTITY_KINDS.has(identityKind) &&
-    !PROVIDER_CODES.has(first ?? '')
-  ) {
+  if (kind === 'provider-record' && !PROVIDER_CODES.has(adapter)) {
     return {
       severity: 'error',
       code: 'invalid-code',
-      path: ['components', 0],
-      message:
-        'A Provider identity kind requires one exact catalog provider code as its first component.',
+      path: ['providerCode'],
+      message: 'A provider record requires one exact catalog provider code.',
     }
   }
-  if (
-    GENERIC_SOURCE_IDENTITY_KINDS.has(identityKind) &&
-    PROVIDER_CODES.has(first ?? '')
-  ) {
+  if (kind === 'source-record' && PROVIDER_CODES.has(adapter)) {
     return {
       severity: 'error',
       code: 'invalid-code',
-      path: ['components', 0],
-      message:
-        'Provider coordinates require the matching provider-record, provider-output, or provider-artifact identity kind.',
+      path: ['adapterId'],
+      message: 'Provider coordinates require a provider record.',
     }
   }
   return undefined
 }
 
-/** Mints one opaque identifier after the provider coordinate guard admits its components. */
-export const deriveProviderOpaqueIdentifier = <Kind extends OpaqueIdentityKind>(
+/** The coordinates of one record at a connected provider. */
+export interface ProviderRecordCoordinates {
+  readonly providerCode: ConnectedProvider
+  readonly sourceType: string
+  readonly providerScope: BusinessIdentifier
+  readonly nativeRecordId: string
+}
+
+/**
+ * The opaque identity of one provider record, which its output and artifact identities extend.
+ *
+ * The scope and the record's coordinates stay private to it; only the identifier serializes.
+ */
+export interface ProviderRecordIdentity {
+  /** The `provider-record` identifier, typed in the `source-record` role. */
+  readonly identifier: RoledIdentifier
+  /** Mints the `provider-output` identifier of one output this record yields. */
+  readonly output: (coordinates: OutputCoordinates) => Result<RoledIdentifier>
+  /** Mints the `provider-artifact` identifier of one part of a recording this record carries. */
+  readonly artifact: (
+    coordinates: ArtifactCoordinates,
+  ) => Result<RoledIdentifier>
+}
+
+/** Derives the identity of one provider record; its outputs and artifacts mint through it. */
+export const deriveProviderRecordIdentity = (
   scope: OpaqueIdentityScope,
-  identityKind: Kind,
-  components: OpaqueIdentityComponents[Kind],
-): Result<RoledIdentifier> => {
-  const guard =
-    Array.isArray(components) ?
-      providerCoordinateIssue(identityKind, components as readonly string[])
-    : undefined
-  return guard === undefined ?
-      deriveOpaqueIdentifier(scope, identityKind, components)
-    : issues([guard])
+  record: ProviderRecordCoordinates,
+): Result<ProviderRecordIdentity> => {
+  const components = parseRecordCoordinates('provider-record', record)
+  if (!components.ok) return components
+  const guard = providerCoordinateIssue('provider-record', components.value[0])
+  if (guard !== undefined) return issues([guard])
+  return deriveRecordIdentity(scope, 'provider-record', components.value)
 }
 
 /** Derives an immutable event-scoped Device snapshot identity. */
@@ -174,7 +170,7 @@ const deriveDeviceSnapshotEntryIdentity = (
 export const deriveApplicationEntryIdentity = (
   scope: OpaqueIdentityScope,
   event: ExchangeEventIdentifier,
-  application: ApplicationDevice,
+  application: ApplicationDevice | Writer,
   id?: FhirId,
 ): Result<EntryIdentity> =>
   deriveDeviceSnapshotEntryIdentity(
@@ -217,7 +213,7 @@ export const deriveRecordingDeviceEntryIdentity = (
   if (
     !recordingDeviceAdapters.has(adapterId) ||
     !isNonBlank(device.stableUnitToken) ||
-    !parseAbsoluteUri(subject.system).ok ||
+    !parseIdentifierSystem(subject.system).ok ||
     !isNonBlank(subject.value)
   ) {
     return err(
@@ -258,16 +254,8 @@ export const deriveWriterRecordIdentifier = (
   ])
 
 export type ProviderOutputIdentityInput =
-  | {
-      readonly kind: 'provider-artifact'
-      readonly formatCode: string
-      readonly partIndex: string
-    }
-  | {
-      readonly kind: 'provider-output'
-      readonly outputRole: string
-      readonly outputDiscriminator: string
-    }
+  | (ArtifactCoordinates & { readonly kind: 'provider-artifact' })
+  | (OutputCoordinates & { readonly kind: 'provider-output' })
 
 export interface ProviderIdentityInput<
   Provider extends ConnectedProvider = ConnectedProvider,
@@ -309,7 +297,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const OUTPUT_SELECTOR_KEYS: Readonly<Record<string, readonly string[]>> = {
   'provider-artifact': ['kind', 'formatCode', 'partIndex'],
-  'provider-output': ['kind', 'outputRole', 'outputDiscriminator'],
+  'provider-output': ['kind', 'role', 'discriminator'],
 }
 
 const isClosedSelector = (candidate: Record<string, unknown>): boolean => {
@@ -336,10 +324,8 @@ const admittedProviderOutput = (
       output.partIndex === '0'
     )
   }
-  if (rawRole === output.outputRole) {
-    return (
-      rawDiscriminators[provider]?.[sourceType] === output.outputDiscriminator
-    )
+  if (rawRole === output.role) {
+    return rawDiscriminators[provider]?.[sourceType] === output.discriminator
   }
   const mapping = scalarRoles[provider]?.[sourceType]
   const discriminators = scalarDiscriminators[provider]?.[sourceType]
@@ -348,8 +334,8 @@ const admittedProviderOutput = (
     discriminators !== undefined &&
     Object.keys(mapping).some(
       (measurementId) =>
-        mapping[measurementId] === output.outputRole &&
-        discriminators[measurementId] === output.outputDiscriminator,
+        mapping[measurementId] === output.role &&
+        discriminators[measurementId] === output.discriminator,
     )
   )
 }
@@ -458,7 +444,7 @@ export const deriveProviderIdentities = (
   const findings = selectorIssues(input)
   if (findings.length > 0) return issues(findings)
   if (
-    !parseAbsoluteUri(input.repositoryScope.system).ok ||
+    !parseIdentifierSystem(input.repositoryScope.system).ok ||
     !isNonBlank(input.repositoryScope.value)
   ) {
     return err(
@@ -477,37 +463,27 @@ export const deriveProviderIdentities = (
       ['event'],
     )
   }
-  const source = [
-    input.provider,
-    input.sourceType,
-    input.repositoryScope.system,
-    input.repositoryScope.value,
-    input.sourceNativeId,
-  ] as const
-  const sourceRecord = deriveProviderOpaqueIdentifier(
-    input.scope,
-    'provider-record',
-    source,
-  )
-  if (!sourceRecord.ok) return sourceRecord
-
-  const outputs: RoledIdentifier[] = []
-  for (const output of input.outputs) {
-    const derived =
+  const record = deriveProviderRecordIdentity(input.scope, {
+    providerCode: input.provider,
+    sourceType: input.sourceType,
+    providerScope: input.repositoryScope,
+    nativeRecordId: input.sourceNativeId,
+  })
+  if (!record.ok) return record
+  const outputs = collectResults(
+    input.outputs.map((output) =>
       output.kind === 'provider-output' ?
-        deriveProviderOpaqueIdentifier(input.scope, 'provider-output', [
-          ...source,
-          output.outputRole,
-          output.outputDiscriminator,
-        ])
-      : deriveProviderOpaqueIdentifier(input.scope, 'provider-artifact', [
-          ...source,
-          output.formatCode,
-          output.partIndex,
-        ])
-    if (!derived.ok) return derived
-    outputs.push(derived.value)
-  }
+        record.value.output({
+          role: output.role,
+          discriminator: output.discriminator,
+        })
+      : record.value.artifact({
+          formatCode: output.formatCode,
+          partIndex: output.partIndex,
+        }),
+    ),
+  )
+  if (!outputs.ok) return outputs
   const provenanceNode = deriveEntryNodeIdentifier(input.scope, {
     event: input.event,
     role: input.provenanceNodeRole ?? 'conversion-provenance',
@@ -516,8 +492,8 @@ export const deriveProviderIdentities = (
   if (!provenanceNode.ok) return provenanceNode
   return ok(
     deepFreeze({
-      sourceRecord: sourceRecord.value,
-      outputs,
+      sourceRecord: record.value.identifier,
+      outputs: outputs.value,
       event: input.event,
       provenanceNode: provenanceNode.value,
     }),

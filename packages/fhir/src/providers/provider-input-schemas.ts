@@ -8,11 +8,17 @@
 
 import { z } from 'zod'
 import { SYSTEMS } from './profiles.js'
-import type { ProviderConversionOptions, WriterRecord } from './types.js'
+import type {
+  ProviderConversionOptions,
+  Writer,
+  WriterRecord,
+} from './types.js'
 import {
   parseAbsoluteUri,
   parseFhirInstant,
+  parseIdentifierSystem,
   type AbsoluteUri,
+  type IdentifierSystem,
   type Issue,
 } from '../core/index.js'
 import {
@@ -21,7 +27,6 @@ import {
 } from '../mobile/identity.js'
 import { canonicalizeMobileEffectiveInstant } from '../mobile/time.js'
 import type {
-  ApplicationDevice,
   GovernedSourceIdentifierDisclosurePolicy,
   InstantEffectiveTime,
   PeriodEffectiveTime,
@@ -79,14 +84,29 @@ export const sourceAbsoluteUri: z.ZodType<AbsoluteUri> = z.custom<AbsoluteUri>(
   ),
 )
 
+/** An identifier system inside a source record; a malformed one is a refused record. */
+const sourceIdentifierSystem = z.custom<IdentifierSystem>(
+  (value) => parseIdentifierSystem(value).ok,
+  refusal(
+    'mobile-input.value-shape-invalid',
+    'Expected an identifier system: an absolute ASCII RFC 3986 URI.',
+  ),
+)
+
 /** An absolute URI inside deployment configuration; a malformed one is a fault. */
 const absoluteUriSchema = z.custom<AbsoluteUri>(
   (value) => parseAbsoluteUri(value).ok,
   { message: 'Expected an absolute ASCII RFC 3986 URI.' },
 )
 
+/** An identifier system inside deployment configuration; a malformed one is a fault. */
+const identifierSystemSchema = z.custom<IdentifierSystem>(
+  (value) => parseIdentifierSystem(value).ok,
+  { message: 'Expected an identifier system: an absolute ASCII RFC 3986 URI.' },
+)
+
 const sourceIdentifierSchema = z.strictObject({
-  system: sourceAbsoluteUri,
+  system: sourceIdentifierSystem,
   value: unicodeScalarText.refine(
     (value) => value !== '',
     refusal(
@@ -145,14 +165,13 @@ export const effectiveTimeSchema: z.ZodType<
   periodEffectiveSchemaValue,
 ])
 
-const applicationDeviceSchemaValue = z.strictObject({
+const writerSchemaValue = z.strictObject({
   sourceDeviceToken: nonBlankText,
   name: nonBlankText,
   version: nonBlankText.optional(),
   build: nonBlankText.optional(),
 })
-export const applicationDeviceSchema: z.ZodType<ApplicationDevice> =
-  applicationDeviceSchemaValue
+export const writerSchema: z.ZodType<Writer> = writerSchemaValue
 
 const recordingDeviceSchemaValue = z.strictObject({
   stableUnitToken: nonBlankText,
@@ -204,7 +223,7 @@ const disclosurePolicySchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('omit') }),
   z.strictObject({
     kind: z.literal('authorized'),
-    system: absoluteUriSchema,
+    system: identifierSystemSchema,
     type: z
       .strictObject({
         coding: z

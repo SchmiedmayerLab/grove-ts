@@ -38,10 +38,10 @@ import {
   cloneJsonValue,
   issue,
   issues,
-  parseAbsoluteUri,
   parseCanonical,
   parseFhirId,
   parseFhirInstant,
+  parseIdentifierSystem,
   parseSemVer,
   zodIssueToIssue,
   type Issue,
@@ -184,7 +184,7 @@ const validateResponseInput = (
     )
   }
   if (
-    !parseAbsoluteUri(input.identifier.system).ok ||
+    !parseIdentifierSystem(input.identifier.system).ok ||
     input.identifier.value.trim() === ''
   ) {
     failures.push(

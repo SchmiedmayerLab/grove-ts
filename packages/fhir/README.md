@@ -23,7 +23,7 @@ Any receiver can deduplicate, correct and retract that graph without knowing whi
 Grove adds what plain FHIR lacks: stable identities that never leak the provider's own record ids, provenance that says which application assembled the graph on which host, and optional study context.
 The receiver gets a record it can store, match to a retry, replace with a later revision and retract, all through identifiers it can verify and none it can reverse.
 
-If FHIR is new to you, the [New to FHIR](https://grovealliance.org/fhir/mobile/fhir-basics.html) page of the Grove Mobile guide explains the resources this package emits in about ten minutes.
+If FHIR is new to you, the [New to FHIR](https://schmiedmayerlab.github.io/grove-fhir/fhir-basics.html) page of the Grove Mobile guide explains the resources this package emits in about ten minutes.
 
 ## What you need and why
 
@@ -60,11 +60,11 @@ Persist the account pseudonym with the linked account.
 
 ### The application
 
-The application is the software assembling the graph: a stable token for this build, a name and a version, as an `ApplicationDevice`.
+The application is the software assembling the graph: a name, a version and a token for this build of the form `<application id>|<version>`, as an `ApplicationDevice`.
 Provenance names the assembler, so a receiver knows which code produced a graph and can act on a defect in one version.
 It is a constant of your build; nothing to persist beyond your release history.
 
-> **Note:** `host` is required on TypeScript, unlike the Swift and Kotlin producers: a phone reads its own facts from the operating system, a server states them, so you pass a stable token for the machine and its operating system version.
+> **Note:** `host` is required on TypeScript, unlike the Swift and Kotlin producers: a phone reads its own facts from the operating system, a server states them, so you pass its operating system version and a token of the form `<hardware facts>|<operating system version>`.
 > The conversion instant defaults to the moment the builder runs; pass `conversionInstant` when you replay a stored export or when one batch must share one instant.
 > `converterRole` defaults to the assembler, `studies` to none and `repositoryIds` to none.
 
@@ -76,6 +76,7 @@ Once per installation: derive the identifier systems, validate the scope and des
 import {
   deriveOpaqueIdentitySystems,
   parseAbsoluteUri,
+  parseIdentifierSystem,
   parseKeyEpoch,
   validateOpaqueIdentityScope,
   type ApplicationDevice,
@@ -90,6 +91,7 @@ const unwrap = <Value>(result: Result<Value>): Value => {
   return result.value
 }
 const uri = (value: string) => unwrap(parseAbsoluteUri(value))
+const identifierSystem = (value: string) => unwrap(parseIdentifierSystem(value))
 
 // From your secret store: the HMAC key as base64url, and the UUID generated for this installation.
 const identitySecret = process.env.GROVE_IDENTITY_SECRET_BASE64URL
@@ -116,7 +118,7 @@ const identityScope = unwrap(
 )
 
 const application: ApplicationDevice = {
-  sourceDeviceToken: 'org.example.mystudy-server/2.1.0',
+  sourceDeviceToken: 'org.example.mystudy-server|2.1.0',
   name: 'MyStudy server',
   version: '2.1.0',
 }
@@ -125,7 +127,7 @@ const application: ApplicationDevice = {
 Per export: reserve the next event sequence and create the context, using every default.
 
 ```typescript
-import { hostname, release, type } from 'node:os'
+import { machine, release, type } from 'node:os'
 import {
   deriveEventIdentifier,
   parseEventSequence,
@@ -139,21 +141,23 @@ const context: ExchangeEventContext = {
   subject: {
     kind: 'logical',
     identifier: {
-      system: uri('https://mystudy.example.org/fhir/identifiers/participants'),
+      system: identifierSystem(
+        'https://mystudy.example.org/fhir/identifiers/participants',
+      ),
       value: participant.pseudonym,
     },
   },
   event: unwrap(deriveEventIdentifier(identityScope, sequence)),
   identityScope,
   repositoryScope: {
-    system: uri(
+    system: identifierSystem(
       'https://mystudy.example.org/fhir/identifiers/withings-accounts',
     ),
     value: participant.withingsAccountPseudonym,
   },
   application,
   host: {
-    sourceDeviceToken: hostname(),
+    sourceDeviceToken: `${machine()}|${type()} ${release()}`,
     operatingSystemVersion: `${type()} ${release()}`,
   },
 }
@@ -218,7 +222,7 @@ What to persist, and why:
 
 When you know the participant's enrollment, name the study, its exact protocol revision and the enrollment; the graph bundles them as ResearchStudy, PlanDefinition and ResearchSubject entries and references the study from every output.
 A bundled subject adds your own Patient entry.
-Reference: [The exchange event context](#the-exchange-event-context) and the guide's [Study context](https://grovealliance.org/fhir/mobile/study.html).
+Reference: [The exchange event context](#the-exchange-event-context) and the guide's [Study context](https://schmiedmayerlab.github.io/grove-fhir/study.html).
 
 ```typescript
 const enrolled: ExchangeEventContext = {
@@ -234,15 +238,19 @@ const enrolled: ExchangeEventContext = {
   studies: [
     {
       study: {
-        system: uri('https://mystudy.example.org/fhir/identifiers/studies'),
+        system: identifierSystem(
+          'https://mystudy.example.org/fhir/identifiers/studies',
+        ),
         value: 'heart-2026',
       },
-      protocol: {
-        url: uri('https://mystudy.example.org/fhir/PlanDefinition/heart-2026'),
-        version: '3',
-      },
+      protocolUrl: uri(
+        'https://mystudy.example.org/fhir/PlanDefinition/heart-2026',
+      ),
+      protocolVersion: '3',
       enrollment: {
-        system: uri('https://mystudy.example.org/fhir/identifiers/enrollments'),
+        system: identifierSystem(
+          'https://mystudy.example.org/fhir/identifiers/enrollments',
+        ),
         value: 'enrollment-7f3a',
       },
     },
@@ -260,7 +268,7 @@ Reference: [Governed source identifiers](#governed-source-identifiers).
 const disclosed = buildProviderExchangeGraph(record, context, {
   nativeIdentifierDisclosure: {
     kind: 'authorized',
-    system: uri(
+    system: identifierSystem(
       'https://mystudy.example.org/fhir/identifiers/withings-measure-groups',
     ),
     type: { text: 'Withings measure group id' },
@@ -296,7 +304,7 @@ const relayed: ExchangeEventContext = {
   converterRole: {
     kind: 'gateway-application',
     application: {
-      sourceDeviceToken: 'org.example.mystudy-app/4.2.0',
+      sourceDeviceToken: 'org.example.mystudy-app|4.2.0',
       name: 'MyStudy app',
       version: '4.2.0',
     },
@@ -307,6 +315,7 @@ const relayed: ExchangeEventContext = {
 ### Warnings
 
 An accepted record can still lose something, and `warnings` says what, with a registered `mobile-omission.*` code: `recording-device` when the source names a device without a stable per-unit token, so no Device is emitted; `source-offset` when an instant came without a UTC offset, so it is serialized in UTC; `unmodeled-metadata` when the source carried fields outside the adapter's allowlist, so they were withheld.
+A `source-offset` warning names the element that lost its offset in `location`: `Observation.effectiveDateTime`, `Observation.effectivePeriod.start` or `Observation.effectivePeriod.end`.
 Log them with the event so a receiver's question has an answer.
 Reference: [Diagnostics](#diagnostics).
 
@@ -402,21 +411,21 @@ npm run conformance -- --ig /path/to/grove-fhir
 
 The guide's vocabulary and the TypeScript type that carries it.
 
-| Term in the guide                                 | Here                                                                                                              |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Exchange event                                    | `ExchangeEventIdentifier`, minted by `deriveEventIdentifier`                                                      |
-| Exchange graph                                    | `ExchangeGraph`, built by `buildProviderExchangeGraph` and checked by `parseExchangeGraph`                        |
-| Business identifier                               | `BusinessIdentifier`                                                                                              |
-| Identifier role                                   | `GroveIdentifierRole`, carried by a `RoledIdentifier`                                                             |
-| Opaque identity                                   | minted by an `OpaqueIdentityScope` under `DeploymentIdentifierSystems`                                            |
-| Entry-node key                                    | `EntryNodeKey`, rendered as an `EntryNodeIdentifier`                                                              |
-| Subject                                           | `Subject`                                                                                                         |
-| Study enrollment                                  | `StudyEnrollment`                                                                                                 |
-| Application device, host device, recording device | `ApplicationDevice`, `HostDevice`, `RecordingDevice`                                                              |
-| Writer                                            | `writer` on the source record, an `ApplicationDevice`; `WriterRecord` when the platform assigns a record identity |
-| Retraction event and retraction target            | `RetractionEvent` and `RetractionTarget`, derived by `retractionTargets`                                          |
-| Governed source identifier                        | `GovernedSourceIdentifierDisclosurePolicy`                                                                        |
-| Producer diagnostic                               | `ProducerDiagnosticCode`, described by `groveProducerDiagnostics`, reported as an `Issue`                         |
+| Term in the guide                                 | Here                                                                                                                                         |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exchange event                                    | `ExchangeEventIdentifier`, minted by `deriveEventIdentifier`                                                                                 |
+| Exchange graph                                    | `ExchangeGraph`, built by `buildProviderExchangeGraph` and checked by `parseExchangeGraph`                                                   |
+| Business identifier                               | `BusinessIdentifier`, whose `system` is an `IdentifierSystem`                                                                                |
+| Identifier role                                   | `GroveIdentifierRole`, carried by a `RoledIdentifier`                                                                                        |
+| Opaque identity                                   | minted by an `OpaqueIdentityScope` under `DeploymentIdentifierSystems`; a record's as a `SourceRecordIdentity` or `ProviderRecordIdentity`   |
+| Entry-node key                                    | `EntryNodeKey`, rendered as an `EntryNodeIdentifier`                                                                                         |
+| Subject                                           | `Subject`                                                                                                                                    |
+| Study enrollment                                  | `StudyEnrollment`                                                                                                                            |
+| Application device, host device, recording device | `ApplicationDevice`, `HostDevice`, `RecordingDevice`                                                                                         |
+| Writer                                            | `Writer`, the source record's `writer`; `WriterRecord` when the platform assigns a record identity                                           |
+| Retraction event and retraction target            | `RetractionEvent` and `RetractionTarget`, derived by `retractionTargets`                                                                     |
+| Governed source identifier                        | `GovernedSourceIdentifierDisclosurePolicy`                                                                                                   |
+| Producer diagnostic                               | `ProducerDiagnostic`, an `Issue` narrowed by `isProducerDiagnostic`; its `ProducerDiagnosticCode` is described by `groveProducerDiagnostics` |
 
 ## Reference
 
@@ -450,18 +459,19 @@ The published JavaScript uses portable ES2022 and Web Platform APIs.
 - Runtime schemas are strict and reject unknown properties instead of silently removing them.
 - The supported R4 closure is intentionally bounded to the resources Grove constructs and validates.
 - Expected input failures use a discriminated `Result<T>` with stable issue codes and paths; successful results may carry non-blocking warnings.
-- Validated strings use branded types for instants, canonical URLs, FHIR ids, Patient references, `urn:uuid` full URLs, key epochs, event sequences, and entry-node ordinals.
+- Validated strings use branded types for instants, canonical URLs, identifier systems, FHIR ids, Patient references, `urn:uuid` full URLs, key epochs, event sequences, entry-node ordinals, and part indexes.
+- `IdentifierSystem` and `AbsoluteUri` validate alike but are distinct brands: an identifier system names the key space of an `Identifier.value`, while an absolute URI is anything else, such as a deployment root, a code system, or a canonical url; a value crosses from one to the other only through its parser.
 - The identity scope, event identifier, repository scope, device snapshots, conversion instant, and studies are caller-owned context; the source record is the adapter's normalized handoff.
 - Source/output/artifact/writer/device identifiers use HMAC-SHA-256 over unsigned-32-bit length-framed UTF-8 fields with an explicit protocol domain, key id, and positive key epoch.
 - `Bundle.identifier` is the sole business identifier for one immutable source-record revision event; Provenance uses a typed event-scoped node key because R4 Provenance has no business-identifier element.
 - Every Bundle `fullUrl` is lowercase UUIDv5 over the length-framed selected Identifier `(system, value)` pair. UUIDv5 formats an internal link; it is not a privacy mechanism.
 - Every emitted output carries matching typed `source-record` and `source-output` identifiers. Source-preservation documents additionally carry one typed `source-artifact` identifier.
 - `Resource.id` is omitted unless the context supplies a repository-assigned id for that graph node.
-- Every public concept is named after the Mobile guide's vocabulary: exchange graph, business identifier, identifier role, opaque identity, entry-node key, subject, study enrollment, application device, host device, recording device, retraction event, retraction target, governed source identifier, and producer diagnostic.
+- Every public concept is named after the Mobile guide's vocabulary: exchange graph, business identifier, identifier role, opaque identity, entry-node key, subject, study enrollment, application device, host device, recording device, writer, retraction event, retraction target, governed source identifier, and producer diagnostic.
 
 ### Deployment identity
 
-`deriveOpaqueIdentitySystems(root, keyId, epoch)` names all twelve deployment-owned identifier systems by the catalog's recommended form: `<root>/NamingSystem/grove-<identity-kind>-v0/<key-id>/<epoch>` for the ten opaque identity kinds, `<root>/NamingSystem/grove-event-v0` for events, and `<root>/NamingSystem/grove-entry-node-v0` for entry-node keys.
+`deriveOpaqueIdentitySystems(root, keyId, epoch)` takes the root as an `AbsoluteUri` and names all twelve deployment-owned `IdentifierSystem` values by the catalog's recommended form: `<root>/NamingSystem/grove-<identity-kind>-v0/<key-id>/<epoch>` for the ten opaque identity kinds, `<root>/NamingSystem/grove-event-v0` for events, and `<root>/NamingSystem/grove-entry-node-v0` for entry-node keys.
 The normative test vectors are derived from `https://study.example.org/fhir`, so a deployment that adopts the form names its identities exactly as every other Grove producer does.
 A deployment that already governs its own namespaces supplies them explicitly instead.
 
@@ -469,7 +479,11 @@ A deployment that already governs its own namespaces supplies them explicitly in
 The handle prints its systems, key id, epoch, and producer instance; the decoded key stays private to the module, and every minting function accepts only a handle it validated.
 A rotated key uses a new epoch and therefore new systems, and a deployment retains old epochs while identifiers minted under them can still be replayed or retracted.
 
-`deriveOpaqueIdentifier(scope, kind, components)`, `deriveEventIdentifier(scope, sequence)`, and `deriveEntryNodeIdentifier(scope, key)` mint the three identifier families from a scope; `createEntryIdentity` and `deriveEntryFullUrl` derive the deterministic Bundle `fullUrl` for any complete identifier pair.
+`deriveSourceRecordIdentity(scope, record)` derives the `SourceRecordIdentity` of one record from its `adapterId`, `sourceType`, `repositoryScope`, and `nativeRecordId`.
+Its `identifier` is the typed `source-record` identifier, `output({ role, discriminator })` mints the `source-output` identifier of one output the record yields, and `artifact({ formatCode, partIndex })` mints the `source-artifact` identifier of one part of a recording it carries.
+`deriveProviderRecordIdentity(scope, record)` on the providers entry point does the same for a connected provider's record, named by its catalog `providerCode` and `providerScope`, and returns a `ProviderRecordIdentity`.
+Output and artifact identities extend their record's components, so they are minted only through it; the record identity keeps the scope and its coordinates private and serializes as its identifier alone.
+`deriveOpaqueIdentifier(scope, kind, components)` mints the other kinds, `deriveEventIdentifier(scope, sequence)` and `deriveEntryNodeIdentifier(scope, key)` the event and entry-node identifiers, and `createEntryIdentity` and `deriveEntryFullUrl` derive the deterministic Bundle `fullUrl` for any complete identifier pair.
 
 ### The exchange event context
 
@@ -483,7 +497,7 @@ A bundled study context is held to `mobile-support.study-context` by `parseExcha
 The subject is logical by default: the identifier-only deployment pseudonym reference the guide admits, with no fabricated Patient entry.
 A bundled subject adds the deployment's own Patient resource as an entry keyed by the `patient` node role, and every output references that entry.
 
-A `StudyEnrollment` names one ResearchStudy by business identifier, the exact protocol revision as a PlanDefinition `url` and `version`, and one ResearchSubject enrollment identifier.
+A `StudyEnrollment` names one ResearchStudy by business identifier, the exact protocol revision by its PlanDefinition `protocolUrl` and `protocolVersion`, and one ResearchSubject enrollment identifier.
 For each enrollment the graph bundles those three entries under the catalog's `research-study`, `plan-definition`, and `research-subject` node roles, references the study from every output through `workflow-researchStudy`, and references the protocol from `ResearchStudy.protocol`.
 `workflow-instantiatesCanonical` is not an admitted extension and is never emitted.
 A native recording document cannot carry the study extension, so a context that names studies is a fault for the recording builder rather than a silent omission.
@@ -572,7 +586,8 @@ Omission remains conformant.
 
 #### Devices and writers
 
-The converter application and its host always appear as separate Device snapshots linked through `Device.parent`, and the writer appears as its own application snapshot.
+The converter application and its host always appear as separate Device snapshots linked through `Device.parent`.
+The writer appears as its own application snapshot under the `writer` graph node; a provider reports no host for it and rarely its version, so a `Writer` has no host and an optional `version`, where an `ApplicationDevice` requires one.
 A single snapshot can fill multiple Provenance or gateway roles and is emitted only once; two different devices supplying the same source device token are an identity collision and refuse the conversion.
 
 Recording-device identity requires a governed stable per-unit token on the record's `recordingDevice` and emits both a stable `recording-device` identity, derived with the subject, and an event-scoped `device-snapshot` identity; without that evidence the record names no device.
@@ -591,10 +606,14 @@ The synchronized normative catalog and its resolved development reference live u
 
 ### Diagnostics
 
-Every issue code is closed over the exchange protocol's producer-diagnostic registry plus the package's own schema codes; `groveProducerDiagnostics` publishes each registered code with its normative `reason`, its `severity`, and the side that emits it.
+Every `Issue` is either a schema issue or a producer diagnostic, reported through the one `Result` channel.
+A schema issue is this package's own input contract: its `SchemaIssueCode` is an undotted code such as `invalid-uri`, and grove-fhir does not define it.
+A producer diagnostic is a grove-fhir registry rule: its `ProducerDiagnosticCode` is registered in the exchange protocol, and `groveProducerDiagnostics` publishes each code with its normative `reason`, its `severity`, and the side that emits it.
+`isProducerDiagnostic(issue)` narrows an `Issue` to a `ProducerDiagnostic`, whose registered `code` and `reason` are always present.
 A refused source record carries exactly one `mobile-input.*` code per countable reason: an unsupported source type, an unsupported source value, a value outside its catalog domain, a malformed value shape, missing required metadata, an invalid effective period, text with an unpaired surrogate, an invalid native identifier, an oversized recording payload, or an empty recording series.
 `Issue.reason` is the registry text and `Issue.message` the typed detail of that particular refusal.
-A graph rule reported by `parseExchangeGraph` or `parseRetractionEvent` additionally carries the stable FHIR-facing `Issue.location` the shared corpus pins; a rule about a refused or trimmed record has no location, because no FHIR element exists yet.
+A graph rule reported by `parseExchangeGraph` or `parseRetractionEvent` additionally carries the stable FHIR-facing `Issue.location` the shared corpus pins; a rule about a refused or trimmed record has no location, because no FHIR element exists yet, except a `source-offset` warning, which names the effective element that lost its offset.
+A producer diagnostic's `location` is therefore present for a graph rule and absent for a refusal or an omission, the `source-offset` warning aside.
 Deployment faults, such as an invalid identity scope, an event another producer minted, or a disclosure policy naming a Grove system, use the package's undotted schema codes, because no record can cause them.
 
 `Result.warnings` and `ProviderConversion.warnings` carry the non-blocking findings of an accepted record under the registry's `mobile-omission.*` rows, each of severity `warning`; the graph stays valid, and an omission a disclosure policy chose is never reported.
@@ -606,10 +625,11 @@ A source removal is a new append-only Provenance event, never a mutation of the 
 
 `retractionTargets(graph)` derives every node of an accepted graph a retraction must name, typed by the catalog's closed target roles: `primary-output`, `child-output`, `source-artifact`, `specimen`, and `device-snapshot`, each with its admitted resource type and the exact opaque identity previously emitted.
 An Observation another Observation lists in `hasMember` is a child output; every other output is primary.
-A governed source identifier disclosed on the primary output travels along as the target's `nativeIdentifier`, and an application may also supply the adapter's own record key there itself.
+A governed source identifier disclosed on the primary output travels along as the target's `nativeRecordIdentifier`, and an application may also supply the adapter's own record key there itself.
 It is emitted verbatim as a target-carried native record Identifier, must use an absolute system outside every Grove namespace, and never carries a Grove identifier-role coding.
 
 `buildProviderRetractionEvent(targets, context, sourceRecord, retractedAt)` accepts only targets and a source record the context's own scope minted.
+Without the earlier conversion at hand, `deriveProviderRecordIdentity(scope, record).identifier` derives the same source record again from its coordinates.
 Each target has a closed role and a typed Identifier; it never carries a literal reference or a copied prior resource.
 `retractedAt` is the time the producer learned the source no longer exposes the record and becomes Provenance.occurred[x]; the conversion instant becomes its recorded time and the Bundle timestamp.
 The resulting event contains one retraction Provenance plus its immutable assembler application and host snapshots.

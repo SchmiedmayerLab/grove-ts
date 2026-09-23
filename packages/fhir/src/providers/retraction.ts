@@ -24,8 +24,8 @@ import { EXTENSIONS, PROFILES, SYSTEMS } from './profiles.js'
 import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
 import {
   issues,
-  parseAbsoluteUri,
   parseFhirInstant,
+  parseIdentifierSystem,
   type FhirInstant,
   type Issue,
   type Result,
@@ -109,7 +109,7 @@ const opaqueIdentifierIssues = (
   return []
 }
 
-const nativeIdentifierIssues = (
+const nativeRecordIdentifierIssues = (
   value: unknown,
   scope: OpaqueIdentityScope,
   path: Path,
@@ -118,7 +118,7 @@ const nativeIdentifierIssues = (
   const candidate = value as Partial<BusinessIdentifier>
   if (
     typeof candidate !== 'object' ||
-    !parseAbsoluteUri(candidate.system).ok ||
+    !parseIdentifierSystem(candidate.system).ok ||
     !isNonBlank(candidate.value) ||
     Object.keys(candidate).length !== 2
   ) {
@@ -184,14 +184,19 @@ const targetIssues = (
       scope,
       [...path, 'identifier'],
     ),
-    ...nativeIdentifierIssues(candidate.nativeIdentifier, scope, [
+    ...nativeRecordIdentifierIssues(candidate.nativeRecordIdentifier, scope, [
       ...path,
-      'nativeIdentifier',
+      'nativeRecordIdentifier',
     ]),
   )
   const keys = Object.keys(candidate).filter(
     (key) =>
-      !['role', 'resourceType', 'identifier', 'nativeIdentifier'].includes(key),
+      ![
+        'role',
+        'resourceType',
+        'identifier',
+        'nativeRecordIdentifier',
+      ].includes(key),
   )
   if (keys.length > 0) {
     findings.push(
@@ -278,13 +283,13 @@ const compareTargetReferences = (
 
 const targetReference = (target: RetractionTarget): TargetReference => ({
   extension:
-    target.nativeIdentifier === undefined ?
+    target.nativeRecordIdentifier === undefined ?
       [{ url: EXTENSIONS.retractionTargetRole, valueCode: target.role }]
     : [
         { url: EXTENSIONS.retractionTargetRole, valueCode: target.role },
         {
           url: EXTENSIONS.retractionTargetNativeIdentifier,
-          valueIdentifier: identifier(target.nativeIdentifier),
+          valueIdentifier: identifier(target.nativeRecordIdentifier),
         },
       ],
   type: target.resourceType,

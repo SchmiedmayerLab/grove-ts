@@ -80,12 +80,14 @@ assert.equal(
   'org.grovealliance.fhir.questionnaire',
 )
 assert.equal(typeof root.parseFhirInstant, 'function')
+assert.equal(typeof mobile.deriveSourceRecordIdentity, 'function')
 assert.equal(typeof r4.parseR4CollectionBundle, 'function')
 assert.equal(typeof r4.parseExchangeGraph, 'function')
 assert.equal(typeof r4.parseRetractionEvent, 'function')
 assert.equal(typeof provider.buildProviderRetractionEvent, 'function')
 assert.equal(typeof provider.buildProviderExchangeGraphs, 'function')
 assert.equal(typeof provider.providerOutputCoordinates, 'function')
+assert.equal(typeof provider.deriveProviderRecordIdentity, 'function')
 assert.equal(typeof provider.providerOutputRole, 'function')
 assert.equal(typeof questionnaire.buildQuestionnaire, 'function')
 

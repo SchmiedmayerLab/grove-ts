@@ -31,6 +31,7 @@ import {
   parseAbsoluteUri,
   parseFhirId,
   parseFhirInstant,
+  parseIdentifierSystem,
   type FhirId,
   type FhirInstant,
   type Issue,
@@ -104,7 +105,7 @@ const identifierIssues = (value: unknown, path: Path): readonly Issue[] => {
   }
   return [
     ...shapeIssues(record, ['system', 'value'], [], path),
-    ...(parseAbsoluteUri(record.system).ok ?
+    ...(parseIdentifierSystem(record.system).ok ?
       []
     : [
         fault(
@@ -212,7 +213,7 @@ const deviceIssues = (
 }
 
 const applicationIssues = (value: unknown, path: Path): readonly Issue[] =>
-  deviceIssues(value, ['sourceDeviceToken', 'name'], ['version', 'build'], path)
+  deviceIssues(value, ['sourceDeviceToken', 'name', 'version'], ['build'], path)
 
 const hostIssues = (value: unknown, path: Path): readonly Issue[] =>
   deviceIssues(
@@ -268,33 +269,34 @@ const studyIssues = (value: unknown, path: Path): readonly Issue[] => {
     findings.push(
       ...shapeIssues(
         record,
-        ['study', 'protocol', 'enrollment'],
+        ['study', 'protocolUrl', 'protocolVersion', 'enrollment'],
         [],
         entryPath,
       ),
       ...identifierIssues(record.study, [...entryPath, 'study']),
       ...identifierIssues(record.enrollment, [...entryPath, 'enrollment']),
     )
-    const protocol = asRecord(record.protocol)
     if (
-      protocol === undefined ||
-      !parseAbsoluteUri(protocol.url).ok ||
-      !isNonBlank(protocol.version)
+      record.protocolUrl !== undefined &&
+      !parseAbsoluteUri(record.protocolUrl).ok
     ) {
       findings.push(
         fault(
           'invalid-uri',
-          [...entryPath, 'protocol'],
-          'A protocol names its PlanDefinition by absolute url and non-blank version.',
+          [...entryPath, 'protocolUrl'],
+          'A protocol names its PlanDefinition by absolute canonical url.',
         ),
       )
-    } else {
+    }
+    if (
+      record.protocolVersion !== undefined &&
+      !isNonBlank(record.protocolVersion)
+    ) {
       findings.push(
-        ...shapeIssues(
-          protocol,
-          ['url', 'version'],
-          [],
-          [...entryPath, 'protocol'],
+        fault(
+          'invalid-identifier',
+          [...entryPath, 'protocolVersion'],
+          'A protocol version is a non-blank Unicode-scalar string.',
         ),
       )
     }

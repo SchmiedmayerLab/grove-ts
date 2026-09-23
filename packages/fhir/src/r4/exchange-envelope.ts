@@ -29,11 +29,7 @@ import {
 import { validateProfiledResource } from './profile-semantics.js'
 import type { R4CollectionBundle } from './types.js'
 import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
-import {
-  parseAbsoluteUri,
-  type AbsoluteUri,
-  type EntryNodeOrdinal,
-} from '../core/index.js'
+import { parseIdentifierSystem, type EntryNodeOrdinal } from '../core/index.js'
 import {
   deriveEntryFullUrl,
   deriveEntryNodeValue,
@@ -360,7 +356,7 @@ const resourceIdentityRoleCounts = (
     }
     if (
       !completeIdentifier(candidate) ||
-      !parseAbsoluteUri(candidate.system).ok ||
+      !parseIdentifierSystem(candidate.system).ok ||
       !isOpaqueIdentityValue(candidate.value)
     ) {
       addIssue(context, 'mobile-exchange.opaque-resource-identity', path, {
@@ -498,10 +494,11 @@ const validateDerivedFullUrl = (
   index: number,
   context: z.core.$RefinementCtx,
 ): void => {
-  const derived = deriveEntryFullUrl({
-    system: key.system as AbsoluteUri,
-    value: key.value,
-  })
+  const system = parseIdentifierSystem(key.system)
+  const derived =
+    system.ok ?
+      deriveEntryFullUrl({ system: system.value, value: key.value })
+    : system
   if (!derived.ok || derived.value !== fullUrl) {
     addIssue(context, 'mobile-exchange.deterministic-full-url', [
       'entry',
@@ -621,7 +618,7 @@ export const validateExchangeEnvelope = (
   }
   if (
     !completeIdentifier(bundle.identifier) ||
-    !parseAbsoluteUri(bundle.identifier.system).ok ||
+    !parseIdentifierSystem(bundle.identifier.system).ok ||
     identifierRole(bundle.identifier) !== 'event' ||
     !isEventIdentityValue(bundle.identifier.value)
   ) {

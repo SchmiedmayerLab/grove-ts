@@ -29,6 +29,7 @@ const {
   parseCanonical,
   parseEventSequence,
   parseFhirInstant,
+  parseIdentifierSystem,
   parseKeyEpoch,
   parseSemVer,
   retractionTargets,
@@ -172,12 +173,15 @@ const unwrap = (result) => {
 }
 
 const uri = (value) => unwrap(parseAbsoluteUri(value))
+const identifierSystem = (value) => unwrap(parseIdentifierSystem(value))
 const instant = (value) => unwrap(parseFhirInstant(value))
 const sequence = (value) => unwrap(parseEventSequence(value))
 const subject = {
   kind: 'logical',
   identifier: {
-    system: uri('https://grovealliance.org/fhir/testing/patient-pseudonyms'),
+    system: identifierSystem(
+      'https://grovealliance.org/fhir/testing/patient-pseudonyms',
+    ),
     value: 'patient-example',
   },
 }
@@ -201,7 +205,7 @@ const repositoryScope = (provider) => {
   )?.identifierScope
   if (scope === 'account') {
     return {
-      system: uri(
+      system: identifierSystem(
         'https://example.org/deployments/provider-account-pseudonyms',
       ),
       value: `account-${provider}`,
@@ -209,7 +213,7 @@ const repositoryScope = (provider) => {
   }
   if (scope === 'global' || scope === 'none') {
     return {
-      system: uri('https://example.org/provider-key-spaces'),
+      system: identifierSystem('https://example.org/provider-key-spaces'),
       value: `${provider}-document-id-global`,
     }
   }
@@ -631,7 +635,7 @@ const questionnaireResponse = unwrap(
       parseCanonical(`${questionnaireUrl}|${questionnaireVersion}`),
     ),
     identifier: {
-      system: uri(
+      system: identifierSystem(
         'https://grovealliance.org/fhir/testing/questionnaire-responses',
       ),
       value: 'grove-ts-conformance-response',
@@ -762,17 +766,17 @@ resources.set(
           studies: [
             {
               study: {
-                system: uri('https://grovealliance.org/fhir/testing/studies'),
+                system: identifierSystem(
+                  'https://grovealliance.org/fhir/testing/studies',
+                ),
                 value: 'grove-ts-conformance-study',
               },
-              protocol: {
-                url: uri(
-                  'https://grovealliance.org/fhir/testing/PlanDefinition/grove-ts-conformance',
-                ),
-                version: '1',
-              },
+              protocolUrl: uri(
+                'https://grovealliance.org/fhir/testing/PlanDefinition/grove-ts-conformance',
+              ),
+              protocolVersion: '1',
               enrollment: {
-                system: uri(
+                system: identifierSystem(
                   'https://grovealliance.org/fhir/testing/enrollments',
                 ),
                 value: 'grove-ts-conformance-enrollment',

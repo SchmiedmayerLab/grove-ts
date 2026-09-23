@@ -10,13 +10,13 @@ import {
   context,
   conversionInstant,
   heartRateMeasurement,
+  identifierSystem,
   identityScope,
   instant,
   record,
   scopeInput,
   study,
   unwrap,
-  uri,
 } from './provider-test-support.js'
 import { groveExchangeProtocol } from '../src/contract/measurement-catalog.generated.js'
 import {
@@ -265,13 +265,15 @@ describe('Provider source-record retraction', () => {
   })
 
   it('carries the adapter native record identifier on its target', () => {
-    const nativeIdentifier = {
-      system: uri('https://study.example.org/fhir/NamingSystem/native-record'),
+    const nativeRecordIdentifier = {
+      system: identifierSystem(
+        'https://study.example.org/fhir/NamingSystem/native-record',
+      ),
       value: 'record-heart-001',
     }
     const retraction = unwrap(
       buildProviderRetractionEvent(
-        [{ ...primary, nativeIdentifier }],
+        [{ ...primary, nativeRecordIdentifier }],
         context('withings', '101'),
         active.identifiers.sourceRecord,
         retractedAt,
@@ -279,14 +281,17 @@ describe('Provider source-record retraction', () => {
     )
     expect(provenanceOf(retraction).target[0]?.extension).toEqual([
       { url: roleExtension, valueCode: 'primary-output' },
-      { url: nativeExtension, valueIdentifier: nativeIdentifier },
+      { url: nativeExtension, valueIdentifier: nativeRecordIdentifier },
     ])
     expect(
       buildProviderRetractionEvent(
         [
           {
             ...primary,
-            nativeIdentifier: { system: primary.identifier.system, value: 'x' },
+            nativeRecordIdentifier: {
+              system: primary.identifier.system,
+              value: 'x',
+            },
           },
         ],
         context('withings', '101'),
@@ -298,8 +303,21 @@ describe('Provider source-record retraction', () => {
       issues: [
         {
           code: 'value-mismatch',
-          path: ['targets', 0, 'nativeIdentifier', 'system'],
+          path: ['targets', 0, 'nativeRecordIdentifier', 'system'],
         },
+      ],
+    })
+    expect(
+      buildProviderRetractionEvent(
+        [{ ...primary, nativeIdentifier: nativeRecordIdentifier } as never],
+        context('withings', '101'),
+        active.identifiers.sourceRecord,
+        retractedAt,
+      ),
+    ).toMatchObject({
+      ok: false,
+      issues: [
+        { code: 'schema-invalid', path: ['targets', 0, 'nativeIdentifier'] },
       ],
     })
   })
@@ -312,7 +330,7 @@ describe('Provider source-record retraction', () => {
         {
           nativeIdentifierDisclosure: {
             kind: 'authorized',
-            system: uri(
+            system: identifierSystem(
               'https://example.org/repositories/withings-account-7/heart-rate-records',
             ),
           },
@@ -322,7 +340,7 @@ describe('Provider source-record retraction', () => {
     const target = unwrap(retractionTargets(disclosed.graph)).find(
       ({ role }) => role === 'primary-output',
     )
-    expect(target?.nativeIdentifier).toEqual({
+    expect(target?.nativeRecordIdentifier).toEqual({
       system:
         'https://example.org/repositories/withings-account-7/heart-rate-records',
       value: 'native-withings-getmeas:11',
@@ -384,7 +402,9 @@ describe('Provider source-record retraction', () => {
           ...scopeInput.systems,
           opaque: {
             ...scopeInput.systems.opaque,
-            'provider-output': uri('https://other.example.org/provider-output'),
+            'provider-output': identifierSystem(
+              'https://other.example.org/provider-output',
+            ),
           },
         },
       }),

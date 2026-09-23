@@ -27,6 +27,7 @@ import {
   deriveEntryNodeEntryIdentity,
   deriveHostEntryIdentity,
 } from './identity.js'
+import type { Writer } from './types.js'
 import {
   err,
   issues,
@@ -44,7 +45,6 @@ import type {
   RoledIdentifier,
 } from '../mobile/identity.js'
 import type {
-  ApplicationDevice,
   ExchangeEventContext,
   InstantEffectiveTime,
   PeriodEffectiveTime,
@@ -128,10 +128,7 @@ const studyEntries = (
   return ok(entries)
 }
 
-const sameApplication = (
-  left: ApplicationDevice,
-  right: ApplicationDevice,
-): boolean =>
+const sameApplication = (left: Writer, right: Writer): boolean =>
   left.sourceDeviceToken === right.sourceDeviceToken &&
   left.name === right.name &&
   left.version === right.version &&
@@ -140,9 +137,9 @@ const sameApplication = (
 // The writer may be the converter itself; the same token then names one snapshot,
 // and differing facts under one token are a collision, not a second Device.
 const writerEntries = (
-  writer: ApplicationDevice,
+  writer: Writer,
   author: EntryIdentity,
-  converters: ReadonlyArray<readonly [ApplicationDevice, EntryIdentity]>,
+  converters: ReadonlyArray<readonly [Writer, EntryIdentity]>,
 ): Result<readonly GraphEntry[]> => {
   const shared = converters.find(
     ([, identity]) => identity.fullUrl === author.fullUrl,
@@ -202,7 +199,7 @@ const gatewayIdentity = (
  */
 export const resolveContextGraph = (
   context: ExchangeEventContext,
-  writer: ApplicationDevice,
+  writer: Writer,
   admitsStudies: boolean,
 ): Result<ContextGraph> => {
   const parsed = parseExchangeEventContext(context)

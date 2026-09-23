@@ -40,6 +40,38 @@ export interface Issue {
   readonly location?: string
 }
 
+/**
+ * An issue under a grove-fhir registry rule, as opposed to a schema issue of this package's
+ * own input contract: its code is registered and carries the registry's reason.
+ */
+export interface ProducerDiagnostic extends Issue {
+  readonly code: ProducerDiagnosticCode
+  readonly reason: string
+}
+
+// IssueCode is closed over both halves, so a code outside the schema half is registered.
+const schemaIssueCodes: Readonly<Record<SchemaIssueCode, true>> = {
+  'duplicate-identifier': true,
+  'external-validation-required': true,
+  'invalid-choice': true,
+  'invalid-code': true,
+  'invalid-date-time': true,
+  'invalid-identifier': true,
+  'invalid-reference': true,
+  'invalid-type': true,
+  'invalid-uri': true,
+  'missing-required': true,
+  'out-of-range': true,
+  'schema-invalid': true,
+  'value-mismatch': true,
+}
+
+export const isProducerDiagnostic = (
+  issue: Issue,
+): issue is ProducerDiagnostic =>
+  !Object.hasOwn(schemaIssueCodes, issue.code) &&
+  typeof issue.reason === 'string'
+
 export type Result<T> =
   | {
       readonly ok: true

@@ -137,6 +137,7 @@ try {
       application: {
         sourceDeviceToken: 'browser-converter',
         name: 'Browser converter',
+        version: '1.0.0',
       },
       host: {
         sourceDeviceToken: 'browser-host',
@@ -169,12 +170,29 @@ try {
       },
       context('1', accountScope),
     )
+    const heartRateRecord = unwrap(
+      provider.deriveProviderRecordIdentity(identityScope, {
+        providerCode: 'withings',
+        sourceType: 'getmeas:11',
+        providerScope: accountScope,
+        nativeRecordId: 'browser-heart-rate',
+      }),
+    )
+    const heartRateOutput = unwrap(
+      heartRateRecord.output(
+        provider.providerOutputCoordinates(
+          'withings',
+          'getmeas:11',
+          'heart-rate',
+        ),
+      ),
+    )
     const retraction =
       measurementGraph.ok ?
         provider.buildProviderRetractionEvent(
           unwrap(grove.retractionTargets(measurementGraph.value.graph)),
           context('3', accountScope),
-          measurementGraph.value.identifiers.sourceRecord,
+          heartRateRecord.identifier,
           '2026-08-21T12:00:00Z',
         )
       : { ok: false }
@@ -259,6 +277,13 @@ try {
       measurementCount: Object.keys(mobile.sharedMobileMeasurementCatalog)
         .length,
       measurementGraph: measurementGraph.ok,
+      recordIdentity:
+        measurementGraph.ok &&
+        JSON.stringify([heartRateRecord.identifier, heartRateOutput]) ===
+          JSON.stringify([
+            measurementGraph.value.identifiers.sourceRecord,
+            measurementGraph.value.identifiers.outputs[0],
+          ]),
       recordingGraph: recording.ok,
       retractionGraph:
         retraction.ok &&
@@ -298,6 +323,7 @@ try {
     result.hasNodeProcess ||
     result.measurementCount !== 84 ||
     result.measurementGraph !== true ||
+    result.recordIdentity !== true ||
     result.recordingGraph !== true ||
     result.retractionGraph !== true ||
     result.replayed !== true ||

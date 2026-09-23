@@ -14,6 +14,7 @@ export {
   deriveEventIdentifier,
   deriveOpaqueIdentifier,
   deriveOpaqueIdentitySystems,
+  deriveSourceRecordIdentity,
   encodeLengthFramedUtf8,
   entryIdentifierName,
   isEntryNodeIdentityValue,
@@ -21,6 +22,7 @@ export {
   isOpaqueIdentityScope,
   isOpaqueIdentityValue,
   validateOpaqueIdentityScope,
+  type ArtifactCoordinates,
   type BusinessIdentifier,
   type DeploymentIdentifierSystems,
   type EntryIdentity,
@@ -33,7 +35,11 @@ export {
   type OpaqueIdentityScope,
   type OpaqueIdentityScopeInput,
   type OpaqueIdentitySystems,
+  type OutputCoordinates,
+  type RecordIdentityKind,
   type RoledIdentifier,
+  type SourceRecordCoordinates,
+  type SourceRecordIdentity,
 } from './identity.js'
 export { parseExchangeEventContext } from './context.js'
 export {

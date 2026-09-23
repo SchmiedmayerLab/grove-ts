@@ -12,6 +12,7 @@ import type {
   Canonical,
   FhirId,
   FhirInstant,
+  IdentifierSystem,
   SemVer,
 } from '../core/index.js'
 import type {
@@ -163,7 +164,7 @@ export interface QuestionnaireInput {
 }
 
 export interface QuestionnaireResponseIdentifierInput {
-  readonly system: AbsoluteUri
+  readonly system: IdentifierSystem
   readonly value: string
 }
 

@@ -34,13 +34,13 @@ import {
   PROVIDER_RECORDING_OUTPUT_ROLE,
 } from './profiles.js'
 import {
-  applicationDeviceSchema,
   governedSourceIdentifierIssues,
   effectiveTimeSchema,
   nativeIdentifierText,
   nonBlankText,
   refusal,
   writerRecordSchema,
+  writerSchema,
 } from './provider-input-schemas.js'
 import { parseProviderConversionOptions, refusalIssues } from './provider.js'
 import type {
@@ -69,6 +69,7 @@ import {
   decodeCanonicalBase64,
   encodeBase64,
   type Issue,
+  type PartIndex,
   type Result,
 } from '../core/index.js'
 import {
@@ -194,7 +195,7 @@ const recordingSourceSchema = z.strictObject({
   }),
   sourceType: nonBlankText,
   sourceNativeId: nativeIdentifierText,
-  writer: applicationDeviceSchema,
+  writer: writerSchema,
   effective: effectiveTimeSchema,
   writerRecord: writerRecordSchema.optional(),
 })
@@ -334,6 +335,9 @@ export const parseProviderRecordingAttachment = (
   return ok(deepFreeze(parsed.data) as unknown as ProviderRecordingAttachment)
 }
 
+// A provider recording is the sole part of its source artifact.
+const RECORDING_PART_INDEX = '0' as PartIndex
+
 interface RecordingGraphIdentities {
   readonly connected: ProviderIdentities
   readonly document: EntryIdentity
@@ -357,13 +361,13 @@ const resolveRecordingIdentities = (
     outputs: [
       {
         kind: 'provider-output',
-        outputRole: PROVIDER_RECORDING_OUTPUT_ROLE,
-        outputDiscriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
+        role: PROVIDER_RECORDING_OUTPUT_ROLE,
+        discriminator: PROVIDER_RECORDING_OUTPUT_DISCRIMINATOR,
       },
       {
         kind: 'provider-artifact',
         formatCode: attachment.format,
-        partIndex: '0',
+        partIndex: RECORDING_PART_INDEX,
       },
     ],
     event: context.event,

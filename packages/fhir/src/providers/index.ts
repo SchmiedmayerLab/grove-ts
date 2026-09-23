@@ -37,7 +37,6 @@ export {
   parseProviderConversionOptions,
   providerOutputCoordinates,
   providerOutputRole,
-  type ProviderOutputCoordinates,
 } from './provider.js'
 export {
   buildProviderRecordingGraph,
@@ -50,7 +49,12 @@ export {
   parseSha1Base64,
 } from './recording.js'
 export { buildProviderRetractionEvent } from './retraction.js'
-export type { DeviceSnapshotRole } from './identity.js'
+export {
+  deriveProviderRecordIdentity,
+  type DeviceSnapshotRole,
+  type ProviderRecordCoordinates,
+  type ProviderRecordIdentity,
+} from './identity.js'
 export type {
   CanonicalBase64,
   ConnectedProvider,
@@ -82,8 +86,13 @@ export type {
   RawPayloadAdmissionAssertion,
   Sha1Base64,
   SupportedConnectedProviderMeasurementKind,
+  Writer,
   WriterRecord,
 } from './types.js'
+export type {
+  ArtifactCoordinates,
+  OutputCoordinates,
+} from '../mobile/identity.js'
 export type {
   ApplicationDevice,
   ConversionBatch,

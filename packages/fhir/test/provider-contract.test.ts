@@ -12,11 +12,11 @@ import {
   context,
   dateTime,
   heartRateMeasurement,
+  identifierSystem,
   observationOf,
   record,
   start,
   unwrap,
-  uri,
 } from './provider-test-support.js'
 import { parseExchangeGraph } from '../src/index.js'
 import {
@@ -51,7 +51,10 @@ describe('Exchange entry identity', () => {
     'matches the protocol $id vector',
     (vector) => {
       expect(
-        deriveEntryFullUrl({ system: uri(vector.system), value: vector.value }),
+        deriveEntryFullUrl({
+          system: identifierSystem(vector.system),
+          value: vector.value,
+        }),
       ).toEqual({ ok: true, value: vector.fullUrl })
     },
   )
@@ -59,7 +62,7 @@ describe('Exchange entry identity', () => {
   it('length framing admits separators without collisions', () => {
     expect(
       deriveEntryFullUrl({
-        system: uri('https://example.org/a;b'),
+        system: identifierSystem('https://example.org/a;b'),
         value: 'x|y',
       }).ok,
     ).toBe(true)
@@ -105,7 +108,7 @@ describe('Exchange entry identity', () => {
   })
 
   it('rejects isolated UTF-16 surrogates before UUID derivation', () => {
-    const system = uri('https://example.org/identifiers')
+    const system = identifierSystem('https://example.org/identifiers')
     expect(deriveEntryFullUrl({ system, value: 'invalid-\ud800' }).ok).toBe(
       false,
     )
@@ -122,20 +125,20 @@ describe('Exchange entry identity', () => {
     ).toBe(false)
     expect(
       entryIdentifierName({
-        system: uri('https://example.org/identifiers'),
+        system: identifierSystem('https://example.org/identifiers'),
         value: '',
       }).ok,
     ).toBe(false)
     expect(
       entryIdentifierName({
-        system: uri('https://example.org/identifiers'),
+        system: identifierSystem('https://example.org/identifiers'),
         value: ' \t\n ',
       }).ok,
     ).toBe(true)
     expect(
       createEntryIdentity(
         {
-          system: uri('https://example.org/identifiers'),
+          system: identifierSystem('https://example.org/identifiers'),
           value: 'record-1',
           role: 'source-output',
         },

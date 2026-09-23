@@ -7,7 +7,7 @@
 //
 
 import { readFileSync } from 'node:fs'
-import { hostname, release, type } from 'node:os'
+import { machine, release, type } from 'node:os'
 import typeSurface from './type-surface.json' with { type: 'json' }
 import * as root from '../src/index.js'
 import {
@@ -25,6 +25,7 @@ import {
   parseExchangeGraph,
   parseFhirId,
   parseFhirInstant,
+  parseIdentifierSystem,
   parseKeyEpoch,
   parseObservation,
   retractionTargets,
@@ -68,6 +69,7 @@ const unwrap = <Value>(result: Result<Value>): Value => {
   return result.value
 }
 const uri = (value: string) => unwrap(parseAbsoluteUri(value))
+const identifierSystem = (value: string) => unwrap(parseIdentifierSystem(value))
 
 // From your secret store: the HMAC key as base64url, and the UUID generated for this installation.
 const identitySecret = process.env.GROVE_IDENTITY_SECRET_BASE64URL
@@ -94,7 +96,7 @@ const identityScope = unwrap(
 )
 
 const application: ApplicationDevice = {
-  sourceDeviceToken: 'org.example.mystudy-server/2.1.0',
+  sourceDeviceToken: 'org.example.mystudy-server|2.1.0',
   name: 'MyStudy server',
   version: '2.1.0',
 }
@@ -118,21 +120,23 @@ const context: ExchangeEventContext = {
   subject: {
     kind: 'logical',
     identifier: {
-      system: uri('https://mystudy.example.org/fhir/identifiers/participants'),
+      system: identifierSystem(
+        'https://mystudy.example.org/fhir/identifiers/participants',
+      ),
       value: participant.pseudonym,
     },
   },
   event: unwrap(deriveEventIdentifier(identityScope, sequence)),
   identityScope,
   repositoryScope: {
-    system: uri(
+    system: identifierSystem(
       'https://mystudy.example.org/fhir/identifiers/withings-accounts',
     ),
     value: participant.withingsAccountPseudonym,
   },
   application,
   host: {
-    sourceDeviceToken: hostname(),
+    sourceDeviceToken: `${machine()}|${type()} ${release()}`,
     operatingSystemVersion: `${type()} ${release()}`,
   },
 }
@@ -189,15 +193,19 @@ const enrolled: ExchangeEventContext = {
   studies: [
     {
       study: {
-        system: uri('https://mystudy.example.org/fhir/identifiers/studies'),
+        system: identifierSystem(
+          'https://mystudy.example.org/fhir/identifiers/studies',
+        ),
         value: 'heart-2026',
       },
-      protocol: {
-        url: uri('https://mystudy.example.org/fhir/PlanDefinition/heart-2026'),
-        version: '3',
-      },
+      protocolUrl: uri(
+        'https://mystudy.example.org/fhir/PlanDefinition/heart-2026',
+      ),
+      protocolVersion: '3',
       enrollment: {
-        system: uri('https://mystudy.example.org/fhir/identifiers/enrollments'),
+        system: identifierSystem(
+          'https://mystudy.example.org/fhir/identifiers/enrollments',
+        ),
         value: 'enrollment-7f3a',
       },
     },
@@ -209,7 +217,7 @@ const enrolled: ExchangeEventContext = {
 const disclosed = buildProviderExchangeGraph(record, context, {
   nativeIdentifierDisclosure: {
     kind: 'authorized',
-    system: uri(
+    system: identifierSystem(
       'https://mystudy.example.org/fhir/identifiers/withings-measure-groups',
     ),
     type: { text: 'Withings measure group id' },
@@ -233,7 +241,7 @@ const relayed: ExchangeEventContext = {
   converterRole: {
     kind: 'gateway-application',
     application: {
-      sourceDeviceToken: 'org.example.mystudy-app/4.2.0',
+      sourceDeviceToken: 'org.example.mystudy-app|4.2.0',
       name: 'MyStudy app',
       version: '4.2.0',
     },

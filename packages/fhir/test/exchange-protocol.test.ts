@@ -6,19 +6,24 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { inspect } from 'node:util'
 import {
-  parseAbsoluteUri,
+  ok,
   parseEntryNodeOrdinal,
   parseEventSequence,
+  parseIdentifierSystem,
   parseKeyEpoch,
-  type AbsoluteUri,
+  parsePartIndex,
   type EntryNodeOrdinal,
   type EventSequence,
+  type IdentifierSystem,
+  type PartIndex,
   type Result,
 } from '../src/core/index.js'
 import {
   containsIsolatedSurrogate,
   deriveConformanceVectorOpaqueIdentifier,
+  deriveConformanceVectorRecordIdentity,
 } from '../src/mobile/identity.js'
 import {
   createEntryIdentity,
@@ -27,6 +32,7 @@ import {
   deriveEntryNodeValue,
   deriveEventIdentifier,
   deriveOpaqueIdentifier,
+  deriveSourceRecordIdentity,
   entryIdentifierName,
   encodeLengthFramedUtf8,
   groveExchangeProtocol,
@@ -35,22 +41,26 @@ import {
   isOpaqueIdentityScope,
   isOpaqueIdentityValue,
   validateOpaqueIdentityScope,
-  type OpaqueIdentityComponents,
   type OpaqueIdentityKind,
   type OpaqueIdentityScopeInput,
   type OpaqueIdentitySystems,
+  type RoledIdentifier,
+  type SourceRecordCoordinates,
+  type SourceRecordIdentity,
 } from '../src/mobile/index.js'
+import { providerCoordinateIssue } from '../src/providers/identity.js'
 import {
-  deriveProviderOpaqueIdentifier,
-  providerCoordinateIssue,
-} from '../src/providers/identity.js'
+  deriveProviderRecordIdentity,
+  type ProviderRecordCoordinates,
+} from '../src/providers/index.js'
 
 const unwrap = <Value>(result: Result<Value>): Value => {
   if (!result.ok) throw new Error(result.issues[0]?.message)
   return result.value
 }
 
-const uri = (value: string): AbsoluteUri => unwrap(parseAbsoluteUri(value))
+const identifierSystem = (value: string): IdentifierSystem =>
+  unwrap(parseIdentifierSystem(value))
 const sequence = (value: string): EventSequence =>
   unwrap(parseEventSequence(value))
 const ordinal = (value: string): EntryNodeOrdinal =>
@@ -60,15 +70,15 @@ const vectors = groveExchangeProtocol.testVectors
 const vectorSystems = Object.fromEntries(
   vectors.identitySystems.map(({ identityKind, system }) => [
     identityKind,
-    uri(system),
+    identifierSystem(system),
   ]),
 ) as OpaqueIdentitySystems
 
 const conformanceScope: OpaqueIdentityScopeInput = {
   systems: {
     opaque: vectorSystems,
-    event: uri(vectors.event.system),
-    entryNode: uri(vectors.entryNode.system),
+    event: identifierSystem(vectors.event.system),
+    entryNode: identifierSystem(vectors.entryNode.system),
   },
   keyId: vectors.keyId,
   keyEpoch: unwrap(parseKeyEpoch(vectors.epoch)),
@@ -85,13 +95,153 @@ const runtimeScope = unwrap(validateOpaqueIdentityScope(runtimeInput))
 const identityVectors = vectors.identities
 const invalidIdentityVectors = vectors.invalidIdentities
 
-const deriveVectorIdentity = <Kind extends OpaqueIdentityKind>(
-  kind: Kind,
-  components: OpaqueIdentityComponents[Kind],
-) => deriveConformanceVectorOpaqueIdentifier(conformanceScope, kind, components)
+type RecordKind = 'provider-record' | 'source-record'
+type RecordExtension = 'artifact' | 'output'
+
+// A record-family vector lists its record's five components, then its output's or artifact's two.
+const recordFamilies: Partial<
+  Record<OpaqueIdentityKind, readonly [RecordKind, RecordExtension?]>
+> = {
+  'source-record': ['source-record'],
+  'source-output': ['source-record', 'output'],
+  'source-artifact': ['source-record', 'artifact'],
+  'provider-record': ['provider-record'],
+  'provider-output': ['provider-record', 'output'],
+  'provider-artifact': ['provider-record', 'artifact'],
+}
+
+const recordCoordinates = (
+  kind: RecordKind,
+  [
+    adapter = '',
+    sourceType = '',
+    system = '',
+    value = '',
+    nativeRecordId = '',
+  ]: readonly string[],
+) =>
+  kind === 'source-record' ?
+    {
+      adapterId: adapter,
+      sourceType,
+      repositoryScope: { system: system as IdentifierSystem, value },
+      nativeRecordId,
+    }
+  : {
+      providerCode: adapter,
+      sourceType,
+      providerScope: { system: system as IdentifierSystem, value },
+      nativeRecordId,
+    }
+
+const extendRecord = (
+  record: SourceRecordIdentity,
+  extension: RecordExtension | undefined,
+  [first = '', second = '']: readonly string[],
+): Result<RoledIdentifier> => {
+  if (extension === undefined) return ok(record.identifier)
+  return extension === 'output' ?
+      record.output({ role: first, discriminator: second })
+    : record.artifact({ formatCode: first, partIndex: second as PartIndex })
+}
+
+const deriveVectorIdentity = (
+  kind: OpaqueIdentityKind,
+  components: readonly string[],
+): Result<RoledIdentifier> => {
+  const family = recordFamilies[kind]
+  if (family === undefined) {
+    return deriveConformanceVectorOpaqueIdentifier(
+      conformanceScope,
+      kind as never,
+      components as never,
+    )
+  }
+  const [recordKind, extension] = family
+  const record = deriveConformanceVectorRecordIdentity(
+    conformanceScope,
+    recordKind,
+    recordCoordinates(recordKind, components),
+  )
+  return record.ok ?
+      extendRecord(record.value, extension, components.slice(5))
+    : record
+}
+
+const deriveRuntimeIdentity = (
+  kind: OpaqueIdentityKind,
+  components: readonly string[],
+): Result<RoledIdentifier> => {
+  const family = recordFamilies[kind]
+  if (family === undefined) {
+    return deriveOpaqueIdentifier(
+      runtimeScope,
+      kind as never,
+      components as never,
+    )
+  }
+  const [recordKind, extension] = family
+  const coordinates = recordCoordinates(recordKind, components)
+  const record =
+    recordKind === 'source-record' ?
+      deriveSourceRecordIdentity(
+        runtimeScope,
+        coordinates as SourceRecordCoordinates,
+      )
+    : deriveProviderRecordIdentity(
+        runtimeScope,
+        coordinates as ProviderRecordCoordinates,
+      )
+  return record.ok ?
+      extendRecord(record.value, extension, components.slice(5))
+    : record
+}
+
+const vectorOf = (kind: OpaqueIdentityKind) => {
+  const vector = identityVectors.find(
+    ({ identityKind }) => identityKind === kind,
+  )
+  if (vector === undefined) throw new Error(`Missing ${kind} vector.`)
+  return vector
+}
+
+const part = (value: string): PartIndex => unwrap(parsePartIndex(value))
+
+const sourceRecordPaths = [
+  ['adapterId'],
+  ['sourceType'],
+  ['repositoryScope', 'system'],
+  ['repositoryScope', 'value'],
+  ['nativeRecordId'],
+]
+
+const heartRateRecord: SourceRecordCoordinates = {
+  adapterId: 'healthkit',
+  sourceType: 'HKQuantityTypeIdentifierHeartRate',
+  repositoryScope: {
+    system: identifierSystem(
+      'https://study.example.org/fhir/NamingSystem/participant',
+    ),
+    value: 'participant-1',
+  },
+  nativeRecordId: 'native-1',
+}
+
+const withingsRecord: ProviderRecordCoordinates = {
+  providerCode: 'withings',
+  sourceType: 'getmeas:11',
+  providerScope: {
+    system: identifierSystem('https://accounts.example.org'),
+    value: 'patient-001',
+  },
+  nativeRecordId: '17348211',
+}
 
 describe('Grove exchange protocol identity', () => {
   it('fails closed without throwing at every untyped identity boundary', () => {
+    const record = unwrap(
+      deriveSourceRecordIdentity(runtimeScope, heartRateRecord),
+    )
     const invalidValues = [null, undefined, 42, 'wrong-shape', Symbol('x')]
     for (const invalid of invalidValues) {
       const operations = [
@@ -100,18 +250,15 @@ describe('Grove exchange protocol identity', () => {
         () => deriveEntryFullUrl(invalid as never),
         () => entryIdentifierName(invalid as never),
         () => createEntryIdentity(invalid as never),
-        () =>
-          deriveOpaqueIdentifier(invalid as never, 'source-record', [
-            'healthkit',
-            'type',
-            'scope-system',
-            'scope-value',
-            'native-id',
-          ]),
+        () => deriveSourceRecordIdentity(invalid as never, heartRateRecord),
+        () => deriveSourceRecordIdentity(runtimeScope, invalid as never),
+        () => deriveProviderRecordIdentity(runtimeScope, invalid as never),
+        () => record.output(invalid as never),
+        () => record.artifact(invalid as never),
         () =>
           deriveOpaqueIdentifier(
             runtimeScope,
-            'source-record',
+            'writer-record',
             invalid as never,
           ),
         () => deriveEventIdentifier(runtimeScope, invalid as never),
@@ -139,15 +286,7 @@ describe('Grove exchange protocol identity', () => {
     )
     const forged = { ...runtimeScope }
     expect(isOpaqueIdentityScope(forged)).toBe(false)
-    expect(
-      deriveOpaqueIdentifier(forged, 'source-record', [
-        'healthkit',
-        'HKQuantityTypeIdentifierHeartRate',
-        'https://study.example.org/fhir/NamingSystem/participant',
-        'participant-1',
-        'native-1',
-      ]),
-    ).toMatchObject({
+    expect(deriveSourceRecordIdentity(forged, heartRateRecord)).toMatchObject({
       ok: false,
       issues: [{ code: 'invalid-identifier', path: ['scope'] }],
     })
@@ -155,16 +294,9 @@ describe('Grove exchange protocol identity', () => {
   })
 
   it('keeps a reused scope handle immune to mutation', () => {
-    const components: OpaqueIdentityComponents['source-record'] = [
-      'healthkit',
-      'HKQuantityTypeIdentifierHeartRate',
-      'https://study.example.org/fhir/NamingSystem/participant',
-      'participant-1',
-      'native-1',
-    ]
     const before = unwrap(
-      deriveOpaqueIdentifier(runtimeScope, 'source-record', components),
-    )
+      deriveSourceRecordIdentity(runtimeScope, heartRateRecord),
+    ).identifier
     const event = unwrap(deriveEventIdentifier(runtimeScope, sequence('1')))
     const mutable = runtimeScope as { keyId: string; secret?: Uint8Array }
     for (const mutate of [
@@ -183,8 +315,9 @@ describe('Grove exchange protocol identity', () => {
     }
     expect(runtimeScope.keyId).toBe(runtimeInput.keyId)
     expect(
-      deriveOpaqueIdentifier(runtimeScope, 'source-record', components),
-    ).toEqual({ ok: true, value: before })
+      unwrap(deriveSourceRecordIdentity(runtimeScope, heartRateRecord))
+        .identifier,
+    ).toEqual(before)
     expect(deriveEventIdentifier(runtimeScope, sequence('1'))).toEqual({
       ok: true,
       value: event,
@@ -237,7 +370,7 @@ describe('Grove exchange protocol identity', () => {
     const fullUrlVector = vectors.fullUrls[0]
     expect(
       deriveEntryFullUrl({
-        system: uri(fullUrlVector.system),
+        system: identifierSystem(fullUrlVector.system),
         value: fullUrlVector.value,
       }),
     ).toEqual({ ok: true, value: fullUrlVector.fullUrl })
@@ -288,12 +421,18 @@ describe('Grove exchange protocol identity', () => {
         keyUse: 'conformance-testing',
       } as never).ok,
     ).toBe(false)
-    const sourceVector = identityVectors[0]
+    expect(
+      deriveConformanceVectorRecordIdentity(
+        runtimeInput,
+        'source-record',
+        heartRateRecord,
+      ).ok,
+    ).toBe(false)
     expect(
       deriveConformanceVectorOpaqueIdentifier(
         runtimeInput,
-        sourceVector.identityKind,
-        sourceVector.components as never,
+        'writer-record',
+        vectorOf('writer-record').components as never,
       ).ok,
     ).toBe(false)
     expect(
@@ -331,7 +470,10 @@ describe('Grove exchange protocol identity', () => {
       expect(
         validateOpaqueIdentityScope({
           ...runtimeInput,
-          systems: { ...runtimeInput.systems, event: badSystem as AbsoluteUri },
+          systems: {
+            ...runtimeInput.systems,
+            event: badSystem as IdentifierSystem,
+          },
         }).ok,
       ).toBe(false)
     }
@@ -362,43 +504,52 @@ describe('Grove exchange protocol identity', () => {
   })
 
   it('rejects unknown identity kinds and every wrong component arity at runtime', () => {
-    const source = identityVectors.find(
-      ({ identityKind }) => identityKind === 'source-output',
-    )
-    if (source === undefined) throw new Error('Missing source-output vector.')
+    const writer = vectorOf('writer-record')
     expect(
       deriveOpaqueIdentifier(
         runtimeScope,
-        'unknown-kind' as OpaqueIdentityKind,
-        source.components as never,
+        'unknown-kind' as never,
+        writer.components as never,
       ).ok,
     ).toBe(false)
     expect(
       deriveOpaqueIdentifier(
         runtimeScope,
-        'source-output',
-        source.components.slice(0, -1) as never,
+        'writer-record',
+        writer.components.slice(0, -1) as never,
       ).ok,
     ).toBe(false)
     expect(
-      deriveOpaqueIdentifier(runtimeScope, 'source-output', [
-        ...source.components,
+      deriveOpaqueIdentifier(runtimeScope, 'writer-record', [
+        ...writer.components,
         'extra',
       ] as never).ok,
     ).toBe(false)
   })
 
+  it('mints every record kind only through its record identity', () => {
+    for (const vector of identityVectors) {
+      if (recordFamilies[vector.identityKind] === undefined) continue
+      expect(
+        deriveOpaqueIdentifier(
+          runtimeScope,
+          vector.identityKind as never,
+          vector.components as never,
+        ),
+      ).toMatchObject({
+        ok: false,
+        issues: [{ code: 'invalid-code', path: ['identityKind'] }],
+      })
+    }
+  })
+
   it('rejects non-string identity components after validating their arity', () => {
-    const source = identityVectors.find(
-      ({ identityKind }) => identityKind === 'source-output',
-    )
-    if (source === undefined) throw new Error('Missing source-output vector.')
-    const components: unknown[] = [...source.components]
+    const components: unknown[] = [...vectorOf('writer-record').components]
     components[1] = 42
     expect(
       deriveOpaqueIdentifier(
         runtimeScope,
-        'source-output',
+        'writer-record',
         components as never,
       ),
     ).toMatchObject({
@@ -408,103 +559,207 @@ describe('Grove exchange protocol identity', () => {
   })
 
   it('rejects empty or malformed Unicode only at the typed opaque-identity boundary', () => {
-    for (const vector of identityVectors) {
-      for (const invalid of ['', 'prefix\ud800suffix']) {
+    const record = unwrap(
+      deriveSourceRecordIdentity(runtimeScope, heartRateRecord),
+    )
+    for (const invalid of ['', 'prefix\ud800suffix']) {
+      for (const vector of identityVectors) {
+        if (recordFamilies[vector.identityKind] !== undefined) continue
         const components: string[] = [...vector.components]
         components[0] = invalid
-        const result = deriveOpaqueIdentifier(
-          runtimeScope,
-          vector.identityKind,
-          components as never,
-        )
-        expect(result.ok).toBe(false)
-        if (!result.ok) {
-          expect(result.issues[0]?.path).toEqual(['components', 0])
-        }
+        expect(
+          deriveOpaqueIdentifier(
+            runtimeScope,
+            vector.identityKind as never,
+            components as never,
+          ),
+        ).toMatchObject({ ok: false, issues: [{ path: ['components', 0] }] })
+      }
+      const refusals = [
+        [
+          deriveSourceRecordIdentity(runtimeScope, {
+            ...heartRateRecord,
+            adapterId: invalid,
+          }),
+          ['adapterId'],
+        ],
+        [
+          deriveSourceRecordIdentity(runtimeScope, {
+            ...heartRateRecord,
+            repositoryScope: {
+              ...heartRateRecord.repositoryScope,
+              value: invalid,
+            },
+          }),
+          ['repositoryScope', 'value'],
+        ],
+        [
+          deriveProviderRecordIdentity(runtimeScope, {
+            ...withingsRecord,
+            nativeRecordId: invalid,
+          }),
+          ['nativeRecordId'],
+        ],
+        [record.output({ role: invalid, discriminator: 'single' }), ['role']],
+        [
+          record.output({ role: 'sample', discriminator: invalid }),
+          ['discriminator'],
+        ],
+        [
+          record.artifact({ formatCode: invalid, partIndex: part('0') }),
+          ['formatCode'],
+        ],
+      ] as const
+      for (const [result, path] of refusals) {
+        expect(result).toMatchObject({
+          ok: false,
+          issues: [{ code: 'invalid-identifier', path }],
+        })
       }
     }
   })
 
-  it('rejects provider coordinates under every generic source identity kind', () => {
-    const invalidProviderCoordinates = [
-      {
-        kind: 'source-record',
-        components: [
-          'oura',
-          'daily_activity',
-          'https://accounts.example.org',
-          'patient-001',
-          'activity-001',
-        ],
-      },
-      {
-        kind: 'source-output',
-        components: [
-          'withings',
-          'getmeas:9+10',
-          'https://accounts.example.org',
-          'patient-001',
-          '17348211',
-          'blood-pressure-panel',
-          'single',
-        ],
-      },
-      {
-        kind: 'source-artifact',
-        components: [
-          'google-health-api',
-          'heart-rate',
-          'https://accounts.example.org',
-          'patient-001',
-          'recording-001',
-          'provider-recording',
-          '0',
-        ],
-      },
-    ] as const
-
-    for (const { kind, components } of invalidProviderCoordinates) {
+  it('admits exactly the named coordinates and a canonical part index', () => {
+    const record = unwrap(
+      deriveSourceRecordIdentity(runtimeScope, heartRateRecord),
+    )
+    expect(
+      deriveSourceRecordIdentity(runtimeScope, {
+        ...heartRateRecord,
+        version: '2',
+      } as never),
+    ).toMatchObject({ ok: false, issues: [{ code: 'schema-invalid' }] })
+    expect(
+      deriveSourceRecordIdentity(runtimeScope, {
+        ...heartRateRecord,
+        repositoryScope: {
+          ...heartRateRecord.repositoryScope,
+          system: 'participants' as IdentifierSystem,
+        },
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-uri', path: ['repositoryScope', 'system'] }],
+    })
+    expect(
+      record.output({
+        role: 'sample',
+        discriminator: 'single',
+        index: '0',
+      } as never),
+    ).toMatchObject({ ok: false, issues: [{ code: 'schema-invalid' }] })
+    expect(
+      record.artifact({ formatCode: 'native-recording', partIndex: part('7') })
+        .ok,
+    ).toBe(true)
+    for (const partIndex of ['0', '10']) {
+      expect(parsePartIndex(partIndex)).toEqual({ ok: true, value: partIndex })
+    }
+    for (const partIndex of ['01', '-1', '1.0', 0]) {
+      expect(parsePartIndex(partIndex).ok).toBe(false)
       expect(
-        deriveProviderOpaqueIdentifier(runtimeScope, kind, components as never),
-      ).toMatchObject({
-        ok: false,
-        issues: [{ code: 'invalid-code', path: ['components', 0] }],
+        record.artifact({
+          formatCode: 'native-recording',
+          partIndex: partIndex as never,
+        }),
+      ).toMatchObject({ ok: false, issues: [{ path: ['partIndex'] }] })
+    }
+  })
+
+  it('holds its scope and coordinates privately and serializes only its identifier', () => {
+    const coordinates = { ...heartRateRecord }
+    const record = unwrap(deriveSourceRecordIdentity(runtimeScope, coordinates))
+    const output = unwrap(
+      record.output({ role: 'sample', discriminator: 'single' }),
+    )
+    Object.assign(coordinates, { nativeRecordId: 'native-2' })
+    expect(Object.isFrozen(record)).toBe(true)
+    expect(record.output({ role: 'sample', discriminator: 'single' })).toEqual({
+      ok: true,
+      value: output,
+    })
+    expect(JSON.parse(JSON.stringify(record))).toEqual({
+      identifier: record.identifier,
+    })
+    for (const printed of [
+      JSON.stringify(record),
+      inspect(record, { depth: null, showHidden: true }),
+    ]) {
+      expect(printed).not.toContain(heartRateRecord.nativeRecordId)
+      expect(printed).not.toContain(heartRateRecord.repositoryScope.value)
+      expect(printed).not.toContain(runtimeInput.secretBase64Url)
+    }
+  })
+
+  it('keeps provider codes and generic adapters in their own record families', () => {
+    for (const provider of ['google-health-api', 'oura', 'withings']) {
+      expect(providerCoordinateIssue('source-record', provider)).toMatchObject({
+        code: 'invalid-code',
+        path: ['adapterId'],
       })
+      expect(
+        providerCoordinateIssue('provider-record', provider),
+      ).toBeUndefined()
     }
     expect(
-      providerCoordinateIssue('provider-record', [
-        'not-a-provider',
-        'type',
-        's',
-        'v',
-        'id',
-      ]),
-    ).toMatchObject({ code: 'invalid-code' })
+      providerCoordinateIssue('source-record', 'healthkit'),
+    ).toBeUndefined()
+    expect(
+      deriveProviderRecordIdentity(runtimeScope, {
+        ...withingsRecord,
+        providerCode: 'healthkit' as never,
+      }),
+    ).toMatchObject({
+      ok: false,
+      issues: [{ code: 'invalid-code', path: ['providerCode'] }],
+    })
   })
 
   it('rejects every shared invalid opaque-identity vector', () => {
-    expect(invalidIdentityVectors).toHaveLength(4)
+    expect(invalidIdentityVectors).toHaveLength(6)
     for (const vector of invalidIdentityVectors) {
-      const result =
-        vector.expectedError === 'provider-kind-required' ?
-          deriveProviderOpaqueIdentifier(
-            runtimeScope,
-            vector.identityKind,
+      const [recordKind = 'source-record'] =
+        recordFamilies[vector.identityKind] ?? []
+      if (vector.expectedError === 'provider-kind-required') {
+        expect(
+          providerCoordinateIssue(recordKind, vector.components[0]),
+        ).toMatchObject({ code: 'invalid-code', path: ['adapterId'] })
+      } else if (vector.expectedError === 'non-canonical-part-index') {
+        const names: readonly string[] =
+          groveExchangeProtocol.opaqueIdentity.identityKinds.find(
+            ({ kind }) => kind === vector.identityKind,
+          )?.components ?? []
+        const partIndex = names.indexOf('part-index')
+        expect(
+          deriveConformanceVectorOpaqueIdentifier(
+            conformanceScope,
+            vector.identityKind as never,
             vector.components as never,
-          )
-        : deriveOpaqueIdentifier(
-            runtimeScope,
-            vector.identityKind,
-            vector.components as never,
-          )
-      expect(result.ok).toBe(false)
-      if (!result.ok) {
-        expect(result.issues[0]?.path).toEqual([
-          'components',
-          vector.expectedError === 'empty-component' ?
-            vector.components.indexOf('')
-          : 0,
-        ])
+          ),
+        ).toMatchObject({
+          ok: false,
+          issues: [
+            { code: 'invalid-identifier', path: ['components', partIndex] },
+          ],
+        })
+        expect(
+          deriveRuntimeIdentity(vector.identityKind, vector.components),
+        ).toMatchObject({
+          ok: false,
+          issues: [{ code: 'invalid-identifier', path: ['partIndex'] }],
+        })
+      } else {
+        expect(
+          deriveRuntimeIdentity(vector.identityKind, vector.components),
+        ).toMatchObject({
+          ok: false,
+          issues: [
+            {
+              code: 'invalid-identifier',
+              path: sourceRecordPaths[vector.components.indexOf('')],
+            },
+          ],
+        })
       }
     }
   })

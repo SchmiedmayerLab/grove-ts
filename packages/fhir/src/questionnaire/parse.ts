@@ -40,6 +40,7 @@ import {
   ok,
   parseAbsoluteUri,
   parseCanonical,
+  parseIdentifierSystem,
   parseSemVer,
   zodIssueToIssue,
   type Issue,
@@ -262,7 +263,7 @@ const responseContractIssues = (
   const identifierSystem = objectPart(response.identifier, 'system')
   const identifierValue = objectPart(response.identifier, 'value')
   if (
-    !parseAbsoluteUri(identifierSystem).ok ||
+    !parseIdentifierSystem(identifierSystem).ok ||
     typeof identifierValue !== 'string' ||
     identifierValue.trim() === ''
   ) {

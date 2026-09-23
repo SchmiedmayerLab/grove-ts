@@ -13,8 +13,10 @@ import {
   application,
   context,
   conversionInstant,
+  identifierSystem,
   identityScope,
   instant,
+  repositoryScope,
   unwrap,
   uri,
 } from './provider-test-support.js'
@@ -22,11 +24,13 @@ import { adapterSourceMarkerClaims } from '../src/contract/measurement-catalog.g
 import {
   parseFhirId,
   parseExchangeGraph,
+  parsePartIndex,
   parsePositiveInteger,
   type Result,
 } from '../src/index.js'
 import {
   buildProviderRecordingGraph,
+  deriveProviderRecordIdentity,
   groveRecordingFormatRegistry,
   healthKitClinicalRecordAdmission,
   providerRawOutputRoles,
@@ -195,6 +199,31 @@ describe('Provider native recording graph', () => {
         'source-artifact',
       )
       expect(result.value.identifiers.outputs).toHaveLength(1)
+      const sourceRecord = unwrap(
+        deriveProviderRecordIdentity(identityScope, {
+          providerCode: provider as ConnectedRawProvider,
+          sourceType,
+          providerScope: repositoryScope(provider as ConnectedRawProvider),
+          nativeRecordId: `native-record-${provider}-${sourceType}`,
+        }),
+      )
+      expect(result.value.identifiers).toMatchObject({
+        sourceRecord: sourceRecord.identifier,
+        outputs: [
+          unwrap(
+            sourceRecord.output({
+              role: 'native-recording',
+              discriminator: 'single',
+            }),
+          ),
+        ],
+        sourceArtifact: unwrap(
+          sourceRecord.artifact({
+            formatCode: 'provider-recording',
+            partIndex: unwrap(parsePartIndex('0')),
+          }),
+        ),
+      })
     },
   )
 
@@ -214,7 +243,7 @@ describe('Provider native recording graph', () => {
     const input = rawSource('withings', 'activityIntraday')
     const writerRecord = {
       applicationIdentifier: {
-        system: uri('https://example.org/applications'),
+        system: identifierSystem('https://example.org/applications'),
         value: 'writer-app',
       },
       nativeRecordId: 'writer-record-1',
@@ -552,7 +581,7 @@ describe('Provider native recording graph', () => {
 
   it('places an explicitly governed native Identifier only on the sole recording DocumentReference', () => {
     const source = rawSource('google-health-api', 'heart-rate')
-    const nativeSystem = uri(
+    const nativeSystem = identifierSystem(
       'https://example.org/repositories/google-account-4/recordings',
     )
     const result = buildProviderRecordingGraph(

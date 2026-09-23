@@ -7,6 +7,7 @@
 //
 
 import { EXTENSIONS, PROFILES, SYSTEMS } from './profiles.js'
+import type { Writer } from './types.js'
 import { err, ok, type Result } from '../core/index.js'
 import type {
   BusinessIdentifier,
@@ -119,7 +120,7 @@ export const subjectReference = (
   : { reference: patient.fullUrl }
 
 export const makeApplicationDevice = (
-  input: ApplicationDevice & {
+  input: (ApplicationDevice | Writer) & {
     readonly identity: EntryIdentity
     readonly parentReference?: string
   },
@@ -243,8 +244,8 @@ export const makePlanDefinition = (
 ): PlanDefinition => ({
   resourceType: 'PlanDefinition' as const,
   ...resourceId(identity),
-  url: enrollment.protocol.url,
-  version: enrollment.protocol.version,
+  url: enrollment.protocolUrl,
+  version: enrollment.protocolVersion,
   status: 'active' as const,
 })
 

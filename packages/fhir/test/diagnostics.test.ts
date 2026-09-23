@@ -7,10 +7,17 @@
 //
 
 import { readdirSync, readFileSync } from 'node:fs'
+import { expectTypeOf } from 'expect-type'
 import {
   groveExchangeProtocol,
   groveProducerDiagnostics,
 } from '../src/contract/measurement-catalog.generated.js'
+import { issue as schemaIssue } from '../src/core/index.js'
+import {
+  isProducerDiagnostic,
+  type Issue,
+  type ProducerDiagnostic,
+} from '../src/index.js'
 import {
   groveRuleIssue,
   groveRuleIssueFromParameters,
@@ -147,6 +154,59 @@ describe('stable Grove rule diagnostics', () => {
       { groveRuleCode: 'mobile-step-count.nonzero-period' },
     ]) {
       expect(groveRuleIssueFromParameters(parameters, [])).toBeUndefined()
+    }
+  })
+})
+
+describe('producer diagnostics', () => {
+  it('narrows a graph rule with its reason and location', () => {
+    const issue: Issue = groveRuleIssue('mobile-exchange.entry-node-key', [
+      'entry',
+      1,
+    ])
+    expect(isProducerDiagnostic(issue)).toBe(true)
+    if (!isProducerDiagnostic(issue)) return
+    expectTypeOf(issue).toEqualTypeOf<ProducerDiagnostic>()
+    expect(issue.reason).toBe(
+      groveProducerDiagnostics['mobile-exchange.entry-node-key'].reason,
+    )
+    expect(issue.location).toBe('Bundle.entry[1]')
+    for (const code of ruleCodes) {
+      expect(isProducerDiagnostic(groveRuleIssue(code, []))).toBe(true)
+    }
+  })
+
+  it('narrows a refusal and an omission, which carry no location', () => {
+    for (const code of [
+      'mobile-input.value-outside-domain',
+      'mobile-omission.recording-device',
+    ] as const) {
+      const issue = groveRuleIssue(code, [])
+      expect(issue).not.toHaveProperty('location')
+      expect(isProducerDiagnostic(issue)).toBe(true)
+    }
+  })
+
+  it('never narrows a schema issue, even one carrying a reason and location', () => {
+    const issue = schemaIssue('invalid-uri', ['system'], 'Not absolute.')
+    expect(isProducerDiagnostic(issue)).toBe(false)
+    expect(
+      isProducerDiagnostic({
+        ...issue,
+        reason: 'Not absolute.',
+        location: 'Identifier.system',
+      }),
+    ).toBe(false)
+  })
+
+  it('never narrows a registry issue missing its reason', () => {
+    for (const code of [
+      'mobile-exchange.entry-node-key',
+      'mobile-input.value-outside-domain',
+    ] as const) {
+      const { reason, ...unreasoned } = groveRuleIssue(code, [])
+      expect(reason).toBeDefined()
+      expect(isProducerDiagnostic(unreasoned)).toBe(false)
     }
   })
 })

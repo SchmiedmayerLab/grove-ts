@@ -15,8 +15,8 @@ import {
 import {
   buildQuestionnaire,
   buildQuestionnaireResponse,
-  parseAbsoluteUri,
   parseFhirId,
+  parseIdentifierSystem,
   parseQuestionnaireResponse,
   type QuestionnaireInput,
   type QuestionnaireResponseInput,
@@ -134,7 +134,7 @@ describe('Questionnaire R4 builders', () => {
         type: 'PractitionerRole',
         identifier: {
           system: unwrap(
-            parseAbsoluteUri('https://example.org/practitioner-roles'),
+            parseIdentifierSystem('https://example.org/practitioner-roles'),
           ),
           value: 'role-7',
         },
@@ -142,7 +142,9 @@ describe('Questionnaire R4 builders', () => {
       source: {
         type: 'RelatedPerson',
         identifier: {
-          system: unwrap(parseAbsoluteUri('https://example.org/respondents')),
+          system: unwrap(
+            parseIdentifierSystem('https://example.org/respondents'),
+          ),
           value: 'respondent-9',
         },
       },

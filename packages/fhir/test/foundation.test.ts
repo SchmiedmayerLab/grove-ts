@@ -23,6 +23,7 @@ import {
   parseDocumentReference,
   parseFhirId,
   parseFhirInstant,
+  parseIdentifierSystem,
   parseObservation,
   parsePatientReference,
   parseProvenance,
@@ -30,6 +31,8 @@ import {
   parseSpecimen,
   parseSupportedR4Resource,
   parseUrnUuid,
+  type AbsoluteUri,
+  type IdentifierSystem,
   type R4CollectionBundle,
   type DocumentReference,
   type Observation,
@@ -405,6 +408,7 @@ describe('validated primitives', () => {
     [parseCanonical, 'https://example.org/Questionnaire/example|1.2.3'],
     [parseFhirId, 'repository-assigned.1'],
     [parseFhirInstant, '2026-08-20T12:00:00-07:00'],
+    [parseIdentifierSystem, 'https://example.org/identifiers/participants'],
     [parsePatientReference, 'Patient/example'],
     [parsePatientReference, 'https://care.example/fhir/Patient/example'],
     [parseResearchStudyReference, 'ResearchStudy/example'],
@@ -419,6 +423,7 @@ describe('validated primitives', () => {
 
   it.each([
     [parseAbsoluteUri, '/relative'],
+    [parseIdentifierSystem, '/relative'],
     [parseCanonical, 42],
     [parseCanonical, 'https://example.org|'],
     [parseFhirId, 'invalid/id'],
@@ -453,6 +458,20 @@ describe('validated primitives', () => {
     [parseUrnUuid, 'urn:uuid:NOT-A-UUID'],
   ] as const)('rejects an invalid branded value', (parser, value) => {
     expect(parser(value).ok).toBe(false)
+  })
+
+  it('brands an identifier system apart from any other absolute URI', () => {
+    for (const value of [
+      42,
+      'https://example.org/identifiers',
+      'urn:oid:1.2.3',
+      'https://example.org/%ZZ',
+      'https://example.org/white space',
+    ]) {
+      expect(parseIdentifierSystem(value).ok).toBe(parseAbsoluteUri(value).ok)
+    }
+    expectTypeOf<IdentifierSystem>().not.toExtend<AbsoluteUri>()
+    expectTypeOf<AbsoluteUri>().not.toExtend<IdentifierSystem>()
   })
 
   it('rejects an invalid instant comparison before ordering', () => {

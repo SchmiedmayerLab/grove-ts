@@ -35,7 +35,7 @@ import {
   groveProfileClaims,
   healthConnectDataOriginApplication,
 } from '../contract/measurement-catalog.generated.js'
-import { parseAbsoluteUri } from '../core/index.js'
+import { parseIdentifierSystem } from '../core/index.js'
 import { isOpaqueIdentityValue } from '../mobile/identity.js'
 
 export { hasAdmittedMobileObservationProfile } from './active-observation-semantics.js'
@@ -105,7 +105,7 @@ export const validateAssemblerAgent = (
   const logicalApplication =
     who?.type === 'Device' &&
     completeIdentifier(logicalIdentifier) &&
-    parseAbsoluteUri(logicalIdentifier.system).ok &&
+    parseIdentifierSystem(logicalIdentifier.system).ok &&
     identifierRole(logicalIdentifier) === 'device-snapshot' &&
     isOpaqueIdentityValue(logicalIdentifier.value)
   if (
@@ -298,7 +298,7 @@ const conversionSourceIdentifier = (
     sourceEntity?.role !== 'source' ||
     sourceWhat?.reference !== undefined ||
     !completeIdentifier(identifier) ||
-    !parseAbsoluteUri(identifier.system).ok ||
+    !parseIdentifierSystem(identifier.system).ok ||
     identifierRole(identifier) !== 'source-record' ||
     !isOpaqueIdentityValue(identifier.value)
   ) {
@@ -355,11 +355,11 @@ const validateOutputIdentities = (
   const output = identifierWithRole(entry.resource, 'source-output')
   if (
     !completeIdentifier(source) ||
-    !parseAbsoluteUri(source.system).ok ||
+    !parseIdentifierSystem(source.system).ok ||
     !isOpaqueIdentityValue(source.value) ||
     !identifierPairEqual(source, sourceIdentifier) ||
     !completeIdentifier(output) ||
-    !parseAbsoluteUri(output.system).ok ||
+    !parseIdentifierSystem(output.system).ok ||
     !isOpaqueIdentityValue(output.value)
   ) {
     addIssue(context, 'mobile-output.source-output-required', [

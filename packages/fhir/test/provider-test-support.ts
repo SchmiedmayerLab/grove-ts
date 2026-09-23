@@ -10,9 +10,11 @@ import {
   parseAbsoluteUri,
   parseEventSequence,
   parseFhirInstant,
+  parseIdentifierSystem,
   parseKeyEpoch,
   type AbsoluteUri,
   type FhirInstant,
+  type IdentifierSystem,
   type Result,
 } from '../src/core/index.js'
 import {
@@ -33,6 +35,7 @@ import {
 import type {
   ConnectedProvider,
   NormalizedProviderRecord,
+  Writer,
 } from '../src/providers/index.js'
 import type { ExchangeGraph, Observation } from '../src/r4/index.js'
 
@@ -45,28 +48,32 @@ export const unwrap = <T>(result: Result<T>): T => {
 
 export const uri = (value: string): AbsoluteUri =>
   unwrap(parseAbsoluteUri(value))
+export const identifierSystem = (value: string): IdentifierSystem =>
+  unwrap(parseIdentifierSystem(value))
 export const instant = (value: string): FhirInstant =>
   unwrap(parseFhirInstant(value))
 
 export const subject: Subject = {
   kind: 'logical',
   identifier: {
-    system: uri('https://example.org/deployments/patient-pseudonyms'),
+    system: identifierSystem(
+      'https://example.org/deployments/patient-pseudonyms',
+    ),
     value: 'patient-example',
   },
 }
 
 export const study = (value: string): StudyEnrollment => ({
   study: {
-    system: uri('https://example.org/deployments/research-studies'),
+    system: identifierSystem(
+      'https://example.org/deployments/research-studies',
+    ),
     value,
   },
-  protocol: {
-    url: uri(`https://example.org/PlanDefinition/${value}`),
-    version: '1',
-  },
+  protocolUrl: uri(`https://example.org/PlanDefinition/${value}`),
+  protocolVersion: '1',
   enrollment: {
-    system: uri('https://example.org/deployments/enrollments'),
+    system: identifierSystem('https://example.org/deployments/enrollments'),
     value: `${value}-enrollment`,
   },
 })
@@ -103,12 +110,12 @@ export const identityScope: OpaqueIdentityScope = unwrap(
 )
 
 export const accountScope: BusinessIdentifier = {
-  system: uri('https://example.org/deployments/provider-accounts'),
+  system: identifierSystem('https://example.org/deployments/provider-accounts'),
   value: 'pseudonym-account-001',
 }
 
 export const globalScope: BusinessIdentifier = {
-  system: uri('https://example.org/provider-key-spaces'),
+  system: identifierSystem('https://example.org/provider-key-spaces'),
   value: 'oura-document-uuid-global',
 }
 
@@ -135,7 +142,7 @@ export const context = (
   ...overrides,
 })
 
-export const writer = (provider: string): ApplicationDevice => ({
+export const writer = (provider: string): Writer => ({
   sourceDeviceToken: `writer-${provider}`,
   name: provider,
 })

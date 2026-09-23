@@ -17,13 +17,7 @@ import {
 import { parseExchangeGraph } from './parse.js'
 import type { ExchangeGraph } from './types.js'
 import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
-import {
-  err,
-  ok,
-  parseAbsoluteUri,
-  type AbsoluteUri,
-  type Result,
-} from '../core/index.js'
+import { err, ok, parseIdentifierSystem, type Result } from '../core/index.js'
 import {
   isGroveIdentifierRole,
   type BusinessIdentifier,
@@ -41,15 +35,15 @@ export type RetractionTargetResourceType<Role extends RetractionTargetRole> =
 /**
  * One prior graph node a retraction names by its typed logical identifier.
  *
- * `nativeIdentifier` is the adapter's own record key, disclosed under the same policy as
- * a governed source identifier; it never addresses the target.
+ * `nativeRecordIdentifier` is the adapter's own record key, disclosed under the same
+ * policy as a governed source identifier; it never addresses the target.
  */
 export type RetractionTarget = {
   readonly [Role in RetractionTargetRole]: {
     readonly role: Role
     readonly resourceType: RetractionTargetResourceType<Role>
     readonly identifier: RoledIdentifier
-    readonly nativeIdentifier?: BusinessIdentifier | undefined
+    readonly nativeRecordIdentifier?: BusinessIdentifier | undefined
   }
 }[RetractionTargetRole]
 
@@ -80,8 +74,12 @@ const roledIdentifier = (
   const candidate = identifiersOf(resource).find(
     (identifier) => identifierRole(identifier) === role,
   )
-  return completeIdentifier(candidate) && isGroveIdentifierRole(role) ?
-      { system: candidate.system as AbsoluteUri, value: candidate.value, role }
+  if (!completeIdentifier(candidate) || !isGroveIdentifierRole(role)) {
+    return undefined
+  }
+  const system = parseIdentifierSystem(candidate.system)
+  return system.ok ?
+      { system: system.value, value: candidate.value, role }
     : undefined
 }
 
@@ -89,16 +87,17 @@ const roledIdentifier = (
 const governedIdentifier = (
   resource: unknown,
 ): BusinessIdentifier | undefined => {
-  const candidates = identifiersOf(resource).filter(
-    (identifier) =>
-      completeIdentifier(identifier) &&
-      groveIdentifierRoles(identifier).length === 0 &&
-      parseAbsoluteUri(identifier.system).ok,
-  )
-  const candidate = candidates[0]
-  return candidates.length === 1 && completeIdentifier(candidate) ?
-      { system: candidate.system as AbsoluteUri, value: candidate.value }
-    : undefined
+  const candidates = identifiersOf(resource).flatMap((identifier) => {
+    if (
+      !completeIdentifier(identifier) ||
+      groveIdentifierRoles(identifier).length > 0
+    ) {
+      return []
+    }
+    const system = parseIdentifierSystem(identifier.system)
+    return system.ok ? [{ system: system.value, value: identifier.value }] : []
+  })
+  return candidates.length === 1 ? candidates[0] : undefined
 }
 
 const targetRoleFor = (
@@ -138,13 +137,13 @@ const targetOf = (
   ) {
     return undefined
   }
-  const nativeIdentifier =
+  const nativeRecordIdentifier =
     role === 'primary-output' ? governedIdentifier(resource) : undefined
   return {
     role,
     resourceType,
     identifier,
-    ...(nativeIdentifier === undefined ? {} : { nativeIdentifier }),
+    ...(nativeRecordIdentifier === undefined ? {} : { nativeRecordIdentifier }),
   } as RetractionTarget
 }
 
@@ -153,7 +152,7 @@ const targetOf = (
  *
  * An Observation another Observation lists in `hasMember` is a child output; every other
  * output is primary. A governed source identifier on the primary output travels along as
- * the target's native identifier.
+ * the target's native record identifier.
  */
 export const retractionTargets = (
   graph: ExchangeGraph,

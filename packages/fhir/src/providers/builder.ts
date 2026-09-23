@@ -43,7 +43,6 @@ import {
   parseProviderConversionOptions,
   providerOutputCoordinates,
   providerSourceKinds,
-  type ProviderOutputCoordinates,
 } from './provider.js'
 import type {
   NormalizedProviderRecord,
@@ -56,6 +55,7 @@ import { collectResults, issues, ok, type Result } from '../core/index.js'
 import {
   createEntryIdentity,
   type EntryIdentity,
+  type OutputCoordinates,
   type RoledIdentifier,
 } from '../mobile/identity.js'
 import type {
@@ -345,9 +345,7 @@ const makeObservation = (input: ObservationInput): Observation => {
 
 const outputCoordinates = (
   record: NormalizedProviderRecord,
-): Result<
-  readonly [ProviderOutputCoordinates, ...ProviderOutputCoordinates[]]
-> => {
+): Result<readonly [OutputCoordinates, ...OutputCoordinates[]]> => {
   const coordinates = record.measurements.map(({ kind }) =>
     providerOutputCoordinates(
       record.source.adapter.provider,
@@ -359,7 +357,7 @@ const outputCoordinates = (
   if (first === undefined || coordinates.some((entry) => entry === undefined)) {
     throw new Error('Validated Provider measurements name no catalog output.')
   }
-  return ok([first, ...(rest as ProviderOutputCoordinates[])])
+  return ok([first, ...(rest as OutputCoordinates[])])
 }
 
 // A disclosure is admitted only where the catalog row designates one one-to-one output.

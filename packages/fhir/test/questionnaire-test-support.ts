@@ -12,6 +12,7 @@ import {
   parseAbsoluteUri,
   parseCanonical,
   parseFhirInstant,
+  parseIdentifierSystem,
   parsePatientReference,
   parseSemVer,
   preflightQuestionnairePair,
@@ -177,7 +178,7 @@ export const responseInput = (
 ): QuestionnaireResponseInput => ({
   questionnaire: questionnaireCanonical,
   identifier: {
-    system: unwrap(parseAbsoluteUri('https://example.org/submissions')),
+    system: unwrap(parseIdentifierSystem('https://example.org/submissions')),
     value: 'submission-1',
   },
   status: 'completed',

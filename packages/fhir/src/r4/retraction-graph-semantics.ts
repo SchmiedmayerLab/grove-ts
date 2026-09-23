@@ -25,7 +25,7 @@ import {
 } from './graph-schema-utils.js'
 import type { R4CollectionBundle } from './types.js'
 import { groveExchangeProtocol } from '../contract/measurement-catalog.generated.js'
-import { parseAbsoluteUri } from '../core/index.js'
+import { parseIdentifierSystem } from '../core/index.js'
 import { isOpaqueIdentityValue } from '../mobile/identity.js'
 
 const RETRACTION = groveExchangeProtocol.lifecycle.retraction
@@ -140,7 +140,7 @@ const validateRetractionTargetIdentity = (
 ): void => {
   if (
     !completeIdentifier(targetIdentifier) ||
-    !parseAbsoluteUri(targetIdentifier.system).ok ||
+    !parseIdentifierSystem(targetIdentifier.system).ok ||
     identifierRole(targetIdentifier) !== expectedRole ||
     !isOpaqueIdentityValue(targetIdentifier.value)
   ) {
@@ -193,7 +193,7 @@ const validateRetractionTargetNativeIdentifier = (
   if (
     matches.length !== 1 ||
     !completeIdentifier(native) ||
-    !parseAbsoluteUri(native.system).ok ||
+    !parseIdentifierSystem(native.system).ok ||
     groveIdentifierRoles(native).length > 0
   ) {
     addIssue(context, 'mobile-retraction.native-record-identifier', [
@@ -292,7 +292,7 @@ const validateRetractionSource = (
     sourceEntity?.role !== 'source' ||
     sourceWhat?.reference !== undefined ||
     !completeIdentifier(source) ||
-    !parseAbsoluteUri(source.system).ok ||
+    !parseIdentifierSystem(source.system).ok ||
     identifierRole(source) !== 'source-record' ||
     !isOpaqueIdentityValue(source.value)
   ) {

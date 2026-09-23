@@ -12,6 +12,7 @@ import {
   context,
   dailyEnd,
   heartRateMeasurement,
+  identifierSystem,
   identityScope,
   observationOf,
   record,
@@ -81,7 +82,7 @@ describe('Provider R4 graph builder', () => {
   })
 
   it('places an explicitly governed native Identifier on exactly the designated primary Observation', () => {
-    const nativeSystem = uri(
+    const nativeSystem = identifierSystem(
       'https://example.org/repositories/withings-account-7/heart-rate-records',
     )
     const result = buildProviderExchangeGraph(heartRate, context(), {
@@ -123,7 +124,7 @@ describe('Provider R4 graph builder', () => {
   it('emits a writer version only with its writer identity while allowing an unversioned identity', () => {
     const writerRecord = {
       applicationIdentifier: {
-        system: uri('https://example.org/applications'),
+        system: identifierSystem('https://example.org/applications'),
         value: 'writer-app',
       },
       nativeRecordId: 'writer-record-1',
@@ -170,7 +171,7 @@ describe('Provider R4 graph builder', () => {
   })
 
   it('treats one supported grouped catalog mapping as one designated Provider output', () => {
-    const nativeSystem = uri(
+    const nativeSystem = identifierSystem(
       'https://example.org/repositories/withings-account-7/blood-pressure-records',
     )
     const result = buildProviderExchangeGraph(
@@ -248,7 +249,7 @@ describe('Provider R4 graph builder', () => {
       {
         nativeIdentifierDisclosure: {
           kind: 'authorized',
-          system: uri(
+          system: identifierSystem(
             'https://example.org/repositories/oura-account-7/daily-activity-records',
           ),
         },
@@ -269,7 +270,9 @@ describe('Provider R4 graph builder', () => {
         buildProviderExchangeGraph(heartRate, context(), {
           nativeIdentifierDisclosure: {
             kind: 'authorized',
-            system: uri('https://example.org/repositories/provider-records'),
+            system: identifierSystem(
+              'https://example.org/repositories/provider-records',
+            ),
             type: {
               coding: [
                 {
@@ -530,10 +533,7 @@ describe('Provider R4 graph builder', () => {
           studies: [
             {
               ...study('remote-1'),
-              protocol: {
-                url: 'https://research.example/invalid protocol',
-                version: '1',
-              },
+              protocolUrl: 'https://research.example/invalid protocol',
             } as never,
           ],
         }),

@@ -13,7 +13,12 @@ import type {
   RoledIdentifier,
 } from './identity.js'
 import type { SharedMobileMeasurementKind } from '../contract/measurement-catalog.generated.js'
-import type { AbsoluteUri, FhirId, FhirInstant } from '../core/index.js'
+import type {
+  AbsoluteUri,
+  FhirId,
+  FhirInstant,
+  IdentifierSystem,
+} from '../core/index.js'
 import type { Patient } from '../r4/types.js'
 
 type SharedCatalog =
@@ -163,23 +168,30 @@ export type Subject =
 /** One ResearchStudy, its exact-revision PlanDefinition and one ResearchSubject. */
 export interface StudyEnrollment {
   readonly study: BusinessIdentifier
-  readonly protocol: {
-    readonly url: AbsoluteUri
-    readonly version: string
-  }
+  /** The PlanDefinition's canonical url; with `protocolVersion` it names one exact revision. */
+  readonly protocolUrl: AbsoluteUri
+  readonly protocolVersion: string
   readonly enrollment: BusinessIdentifier
 }
 
-/** The immutable snapshot of one application build; the token never appears in clear. */
+/** The immutable snapshot of one application build. */
 export interface ApplicationDevice {
+  /**
+   * Recommended as `<application id>|<version>[|<build>]`, such as `com.example.app|1.2.3`;
+   * never emitted in clear.
+   */
   readonly sourceDeviceToken: string
   readonly name: string
-  readonly version?: string | undefined
+  readonly version: string
   readonly build?: string | undefined
 }
 
 /** The immutable snapshot of the hardware and OS hosting the converter. */
 export interface HostDevice {
+  /**
+   * Recommended as `<hardware facts>|<operating system version>`, such as `iPhone17,1|26.0`;
+   * never emitted in clear.
+   */
   readonly sourceDeviceToken: string
   readonly operatingSystemVersion: string
   readonly name?: string | undefined
@@ -209,7 +221,12 @@ export type ConverterRole =
       readonly application: ApplicationDevice
     }
 
-/** The graph nodes a repository may have assigned a Resource.id to. */
+/**
+ * The graph nodes a repository may have assigned a Resource.id to.
+ *
+ * `writer` is the snapshot of the application that wrote the source record; providers report
+ * no host for it, so there is no `writer-host` node.
+ */
 export type ExchangeGraphNode =
   | 'bundle'
   | 'primary-output'
@@ -275,7 +292,7 @@ export type GovernedSourceIdentifierDisclosurePolicy =
   | { readonly kind: 'omit' }
   | {
       readonly kind: 'authorized'
-      readonly system: AbsoluteUri
+      readonly system: IdentifierSystem
       readonly type?: GovernedSourceIdentifierType | undefined
     }
 

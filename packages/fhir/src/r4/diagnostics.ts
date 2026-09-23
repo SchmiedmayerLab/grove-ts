@@ -16,7 +16,10 @@ export type { ProducerDiagnosticCode }
 
 type LocationPath = ReadonlyArray<number | string>
 
-/** Rules a producer reports about a record it refused or trimmed; they have no FHIR element. */
+/**
+ * Rules a producer reports about a record it refused or trimmed; they have no FHIR element,
+ * except a source-offset warning, whose emitter passes the effective element as its location.
+ */
 export type ClientRecordRule = Extract<
   ProducerDiagnosticCode,
   `${string}-input.${string}` | `${string}-omission.${string}`

@@ -41,7 +41,7 @@ import type {
 import {
   issues,
   ok,
-  parseAbsoluteUri,
+  parseIdentifierSystem,
   parseSemVer,
   type Issue,
   type Result,
@@ -107,7 +107,7 @@ const validateQuestionnaireResponseEnvelope = (
   const identifierSystem = codingPart(response.identifier, 'system')
   const identifierValue = codingPart(response.identifier, 'value')
   if (
-    !parseAbsoluteUri(identifierSystem).ok ||
+    !parseIdentifierSystem(identifierSystem).ok ||
     typeof identifierValue !== 'string' ||
     identifierValue.trim() === ''
   ) {

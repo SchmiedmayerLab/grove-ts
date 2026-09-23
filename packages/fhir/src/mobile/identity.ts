@@ -21,14 +21,18 @@ import {
   parseEntryNodeOrdinal,
   parseEventSequence,
   parseFhirId,
+  parseIdentifierSystem,
   parseKeyEpoch,
+  parsePartIndex,
   parseUrnUuid,
   type AbsoluteUri,
   type EntryNodeOrdinal,
   type EventSequence,
   type FhirId,
+  type IdentifierSystem,
   type JsonValue,
   type KeyEpoch,
+  type PartIndex,
   type Result,
   type UrnUuid,
 } from '../core/index.js'
@@ -45,7 +49,7 @@ export type GroveIdentifierRole =
 
 /** A complete Identifier.system and Identifier.value pair; never a repository id. */
 export interface BusinessIdentifier {
-  readonly system: AbsoluteUri
+  readonly system: IdentifierSystem
   readonly value: string
 }
 
@@ -71,14 +75,14 @@ export interface EntryNodeKey {
 
 /** One deployment-owned Identifier.system for each opaque identity kind. */
 export type OpaqueIdentitySystems = Readonly<
-  Record<OpaqueIdentityKind, AbsoluteUri>
+  Record<OpaqueIdentityKind, IdentifierSystem>
 >
 
 /** All twelve deployment-owned identifier systems of one key id and epoch. */
 export interface DeploymentIdentifierSystems {
   readonly opaque: OpaqueIdentitySystems
-  readonly event: AbsoluteUri
-  readonly entryNode: AbsoluteUri
+  readonly event: IdentifierSystem
+  readonly entryNode: IdentifierSystem
 }
 
 /**
@@ -122,6 +126,78 @@ export type OpaqueIdentityComponents = Readonly<{
     Extract<OpaqueIdentityDefinition, { readonly kind: Kind }>['components']
   >
 }>
+
+/** The coordinates of one record in an adapter's repository. */
+export interface SourceRecordCoordinates {
+  readonly adapterId: string
+  readonly sourceType: string
+  readonly repositoryScope: BusinessIdentifier
+  readonly nativeRecordId: string
+}
+
+/** The coordinates that set one output apart from the others its record yields. */
+export interface OutputCoordinates {
+  readonly role: string
+  readonly discriminator: string
+}
+
+/** The coordinates of one part of a recording its record carries. */
+export interface ArtifactCoordinates {
+  readonly formatCode: string
+  readonly partIndex: PartIndex
+}
+
+/**
+ * The opaque identity of one source record, which its output and artifact identities extend.
+ *
+ * The scope and the record's coordinates stay private to it; only the identifier serializes.
+ */
+export interface SourceRecordIdentity {
+  /** The typed `source-record` identifier. */
+  readonly identifier: RoledIdentifier
+  /** Mints the `source-output` identifier of one output this record yields. */
+  readonly output: (coordinates: OutputCoordinates) => Result<RoledIdentifier>
+  /** Mints the `source-artifact` identifier of one part of a recording this record carries. */
+  readonly artifact: (
+    coordinates: ArtifactCoordinates,
+  ) => Result<RoledIdentifier>
+}
+
+/** The opaque identity kinds only a source- or provider-record identity mints. */
+export type RecordIdentityKind =
+  | 'provider-artifact'
+  | 'provider-output'
+  | 'provider-record'
+  | 'source-artifact'
+  | 'source-output'
+  | 'source-record'
+
+type RecordKind = 'provider-record' | 'source-record'
+type RecordComponents = OpaqueIdentityComponents[RecordKind]
+
+interface RecordFamily {
+  readonly adapter: string
+  readonly scope: string
+  readonly output: RecordIdentityKind
+  readonly artifact: RecordIdentityKind
+}
+
+// Each family names its adapter and scope coordinates its own way; its output and artifact kinds
+// extend the record kind's components with two of their own.
+const RECORD_IDENTITIES: Readonly<Record<RecordKind, RecordFamily>> = {
+  'source-record': {
+    adapter: 'adapterId',
+    scope: 'repositoryScope',
+    output: 'source-output',
+    artifact: 'source-artifact',
+  },
+  'provider-record': {
+    adapter: 'providerCode',
+    scope: 'providerScope',
+    output: 'provider-output',
+    artifact: 'provider-artifact',
+  },
+}
 
 const ASCII_TOKEN = /^[A-Za-z\d._-]+$/u
 const LOWERCASE_ROLE = /^[a-z][a-z\d-]*$/u
@@ -169,11 +245,15 @@ const identityKinds = groveExchangeProtocol.opaqueIdentity.identityKinds.map(
   ({ kind }) => kind,
 ) as readonly OpaqueIdentityKind[]
 
-const identityComponentCounts = Object.fromEntries(
+const identityComponentNames = Object.fromEntries(
   groveExchangeProtocol.opaqueIdentity.identityKinds.map(
-    ({ kind, components }) => [kind, components.length],
+    ({ kind, components }): [string, readonly string[]] => [kind, components],
   ),
-) as Readonly<Record<OpaqueIdentityKind, number>>
+) as Readonly<Record<OpaqueIdentityKind, readonly string[]>>
+
+const UNSIGNED_DECIMAL_COMPONENTS: ReadonlySet<string> = new Set(
+  groveExchangeProtocol.opaqueIdentity.componentRequirements.unsignedDecimal,
+)
 
 const identifierRoleByKind = Object.fromEntries(
   groveExchangeProtocol.opaqueIdentity.identityKinds.map(
@@ -188,6 +268,14 @@ const IDENTIFIER_ROLES: ReadonlySet<string> = new Set([
   'entry-node',
   'event',
 ])
+
+const RECORD_IDENTITY_KINDS: ReadonlySet<unknown> = new Set(
+  Object.entries(RECORD_IDENTITIES).flatMap(([kind, { output, artifact }]) => [
+    kind,
+    output,
+    artifact,
+  ]),
+)
 
 export const isGroveIdentifierRole = (
   value: unknown,
@@ -330,9 +418,9 @@ export const deriveOpaqueIdentitySystems = (
   const parsedEpoch = parseKeyEpoch(epoch)
   if (!parsedEpoch.ok) return parsedEpoch
 
-  const opaque: Partial<Record<OpaqueIdentityKind, AbsoluteUri>> = {}
+  const opaque: Partial<Record<OpaqueIdentityKind, IdentifierSystem>> = {}
   for (const kind of identityKinds) {
-    const system = parseAbsoluteUri(
+    const system = parseIdentifierSystem(
       renderSystemForm(
         groveExchangeProtocol.opaqueIdentity.recommendedSystemForm,
         {
@@ -346,14 +434,14 @@ export const deriveOpaqueIdentitySystems = (
     if (!system.ok) return system
     opaque[kind] = system.value
   }
-  const event = parseAbsoluteUri(
+  const event = parseIdentifierSystem(
     renderSystemForm(
       groveExchangeProtocol.event.bundleIdentifier.recommendedSystemForm,
       { 'deployment-root': root },
     ),
   )
   if (!event.ok) return event
-  const entryNode = parseAbsoluteUri(
+  const entryNode = parseIdentifierSystem(
     renderSystemForm(
       groveExchangeProtocol.entryIdentity.entryNode.recommendedSystemForm,
       { 'deployment-root': root },
@@ -431,9 +519,9 @@ const validateSystems = (
   const opaqueEntries = Object.entries(opaque)
   if (
     !hasExactKeys(opaque, identityKinds) ||
-    opaqueEntries.some(([, system]) => !parseAbsoluteUri(system).ok) ||
-    !parseAbsoluteUri(systems.event).ok ||
-    !parseAbsoluteUri(systems.entryNode).ok
+    opaqueEntries.some(([, system]) => !parseIdentifierSystem(system).ok) ||
+    !parseIdentifierSystem(systems.event).ok ||
+    !parseIdentifierSystem(systems.entryNode).ok
   ) {
     return err(
       'invalid-uri',
@@ -568,7 +656,7 @@ const deriveOpaqueIdentifierWith = <Kind extends OpaqueIdentityKind>(
 ): Result<RoledIdentifier> => {
   if (
     typeof identityKind !== 'string' ||
-    !Object.hasOwn(identityComponentCounts, identityKind)
+    !Object.hasOwn(identityComponentNames, identityKind)
   ) {
     return err(
       'invalid-code',
@@ -578,13 +666,14 @@ const deriveOpaqueIdentifierWith = <Kind extends OpaqueIdentityKind>(
   }
   const componentSnapshot = cloneJsonValue(components)
   if (!componentSnapshot.ok) return componentSnapshot
+  const componentNames = identityComponentNames[identityKind]
   if (
     !Array.isArray(componentSnapshot.value) ||
-    componentSnapshot.value.length !== identityComponentCounts[identityKind]
+    componentSnapshot.value.length !== componentNames.length
   ) {
     return err(
       'value-mismatch',
-      `${identityKind} requires exactly ${identityComponentCounts[identityKind]} ordered components.`,
+      `${identityKind} requires exactly ${componentNames.length} ordered components.`,
       ['components'],
     )
   }
@@ -610,6 +699,18 @@ const deriveOpaqueIdentifierWith = <Kind extends OpaqueIdentityKind>(
       ['components', invalidComponentIndex],
     )
   }
+  const nonCanonicalIndex = componentSnapshot.value.findIndex(
+    (component, index) =>
+      UNSIGNED_DECIMAL_COMPONENTS.has(componentNames[index] ?? '') &&
+      !parsePartIndex(component).ok,
+  )
+  if (nonCanonicalIndex >= 0) {
+    return err(
+      'invalid-identifier',
+      `${identityKind}.${componentNames[nonCanonicalIndex]} must be a canonical unsigned decimal.`,
+      ['components', nonCanonicalIndex],
+    )
+  }
   const preimage = encodeLengthFramedUtf8([
     groveExchangeProtocol.opaqueIdentity.domain,
     identityKind,
@@ -627,29 +728,163 @@ const deriveOpaqueIdentifierWith = <Kind extends OpaqueIdentityKind>(
   )
 }
 
-/** Mints one deployment-owned, role-typed opaque identifier. */
-export const deriveOpaqueIdentifier = <Kind extends OpaqueIdentityKind>(
+/** Mints one deployment-owned, role-typed opaque identifier of a kind no record identity mints. */
+export const deriveOpaqueIdentifier = <
+  Kind extends Exclude<OpaqueIdentityKind, RecordIdentityKind>,
+>(
   scope: OpaqueIdentityScope,
   identityKind: Kind,
   components: OpaqueIdentityComponents[Kind],
 ): Result<RoledIdentifier> => {
   const resolved = resolveScope(scope)
   if (!resolved.ok) return resolved
+  if (RECORD_IDENTITY_KINDS.has(identityKind)) {
+    return err(
+      'invalid-code',
+      `${identityKind} is minted only through its record identity.`,
+      ['identityKind'],
+    )
+  }
   return deriveOpaqueIdentifierWith(resolved.value, identityKind, components)
 }
 
-/**
- * Internal test seam for the exact published normative vector key.
- *
- * Deliberately omitted from every package entry point; application code cannot opt into it.
- */
-export const deriveConformanceVectorOpaqueIdentifier = <
-  Kind extends OpaqueIdentityKind,
->(
+const isComponent = (value: JsonValue | undefined): value is string =>
+  typeof value === 'string' && value !== '' && !containsIsolatedSurrogate(value)
+
+const COMPONENT_MESSAGE =
+  'Opaque identity components must be nonempty Unicode-scalar strings.'
+
+// A snapshot of exactly the named fields, so a later edit of the caller's object never reaches
+// an identity derived from it.
+const closedCoordinates = (
+  input: unknown,
+  fields: readonly string[],
+): Result<Readonly<Record<string, JsonValue>>> => {
+  const snapshot = cloneJsonValue(input)
+  if (!snapshot.ok) return snapshot
+  const candidate = asJsonObject(snapshot.value)
+  if (candidate === undefined || !hasExactKeys(candidate, fields)) {
+    return err(
+      'schema-invalid',
+      `Identity coordinates name exactly ${fields.join(', ')}.`,
+    )
+  }
+  return ok(candidate)
+}
+
+/** Internal: the ordered components of one record's coordinates under its family's names. */
+export const parseRecordCoordinates = (
+  kind: RecordKind,
+  record: unknown,
+): Result<RecordComponents> => {
+  const { adapter, scope } = RECORD_IDENTITIES[kind]
+  const candidate = closedCoordinates(record, [
+    adapter,
+    'sourceType',
+    scope,
+    'nativeRecordId',
+  ])
+  if (!candidate.ok) return candidate
+  const recordScope = asJsonObject(candidate.value[scope])
+  const components = [
+    [candidate.value[adapter], [adapter]],
+    [candidate.value.sourceType, ['sourceType']],
+    [recordScope?.system, [scope, 'system']],
+    [recordScope?.value, [scope, 'value']],
+    [candidate.value.nativeRecordId, ['nativeRecordId']],
+  ] as const
+  const invalid = components.find(([value]) => !isComponent(value))
+  if (invalid !== undefined) {
+    return err('invalid-identifier', COMPONENT_MESSAGE, invalid[1])
+  }
+  if (!parseIdentifierSystem(recordScope?.system).ok) {
+    return err('invalid-uri', `${scope}.system must be an absolute URI.`, [
+      scope,
+      'system',
+    ])
+  }
+  return ok(components.map(([value]) => value) as unknown as RecordComponents)
+}
+
+const recordIdentityWith = (
+  resolved: ResolvedScope,
+  kind: RecordKind,
+  components: RecordComponents,
+): Result<SourceRecordIdentity> => {
+  const identifier = deriveOpaqueIdentifierWith(resolved, kind, components)
+  if (!identifier.ok) return identifier
+  const { output, artifact } = RECORD_IDENTITIES[kind]
+  return ok(
+    deepFreeze({
+      identifier: identifier.value,
+      output: (coordinates: OutputCoordinates) => {
+        const fields = closedCoordinates(coordinates, ['role', 'discriminator'])
+        if (!fields.ok) return fields
+        const { role, discriminator } = fields.value
+        if (!isComponent(role)) {
+          return err('invalid-identifier', COMPONENT_MESSAGE, ['role'])
+        }
+        if (!isComponent(discriminator)) {
+          return err('invalid-identifier', COMPONENT_MESSAGE, ['discriminator'])
+        }
+        return deriveOpaqueIdentifierWith(resolved, output, [
+          ...components,
+          role,
+          discriminator,
+        ])
+      },
+      artifact: (coordinates: ArtifactCoordinates) => {
+        const fields = closedCoordinates(coordinates, [
+          'formatCode',
+          'partIndex',
+        ])
+        if (!fields.ok) return fields
+        const { formatCode } = fields.value
+        if (!isComponent(formatCode)) {
+          return err('invalid-identifier', COMPONENT_MESSAGE, ['formatCode'])
+        }
+        const partIndex = parsePartIndex(fields.value.partIndex)
+        if (!partIndex.ok) {
+          return err(
+            'invalid-identifier',
+            'A part index is a canonical unsigned decimal.',
+            ['partIndex'],
+          )
+        }
+        return deriveOpaqueIdentifierWith(resolved, artifact, [
+          ...components,
+          formatCode,
+          partIndex.value,
+        ])
+      },
+    }),
+  )
+}
+
+/** Internal: the identity of one record whose coordinates `parseRecordCoordinates` validated. */
+export const deriveRecordIdentity = (
+  scope: OpaqueIdentityScope,
+  kind: RecordKind,
+  components: RecordComponents,
+): Result<SourceRecordIdentity> => {
+  const resolved = resolveScope(scope)
+  if (!resolved.ok) return resolved
+  return recordIdentityWith(resolved.value, kind, components)
+}
+
+/** Derives the identity of one source record; its outputs and artifacts mint through it. */
+export const deriveSourceRecordIdentity = (
+  scope: OpaqueIdentityScope,
+  record: SourceRecordCoordinates,
+): Result<SourceRecordIdentity> => {
+  const components = parseRecordCoordinates('source-record', record)
+  if (!components.ok) return components
+  return deriveRecordIdentity(scope, 'source-record', components.value)
+}
+
+const resolveConformanceVectorScope = (
   input: OpaqueIdentityScopeInput,
-  identityKind: Kind,
-  components: OpaqueIdentityComponents[Kind],
-): Result<RoledIdentifier> => {
+): Result<ResolvedScope> => {
   const secret = decodeBase64UrlWithoutPadding(input.secretBase64Url)
   if (
     secret === undefined ||
@@ -663,9 +898,36 @@ export const deriveConformanceVectorOpaqueIdentifier = <
       ['secretBase64Url'],
     )
   }
-  const resolved = validateScopeInternal(input, true)
+  return validateScopeInternal(input, true)
+}
+
+/**
+ * Internal test seams for the exact published normative vector key.
+ *
+ * Deliberately omitted from every package entry point; application code cannot opt into them.
+ */
+export const deriveConformanceVectorOpaqueIdentifier = <
+  Kind extends Exclude<OpaqueIdentityKind, RecordIdentityKind>,
+>(
+  input: OpaqueIdentityScopeInput,
+  identityKind: Kind,
+  components: OpaqueIdentityComponents[Kind],
+): Result<RoledIdentifier> => {
+  const resolved = resolveConformanceVectorScope(input)
   if (!resolved.ok) return resolved
   return deriveOpaqueIdentifierWith(resolved.value, identityKind, components)
+}
+
+export const deriveConformanceVectorRecordIdentity = (
+  input: OpaqueIdentityScopeInput,
+  kind: RecordKind,
+  record: unknown,
+): Result<SourceRecordIdentity> => {
+  const resolved = resolveConformanceVectorScope(input)
+  if (!resolved.ok) return resolved
+  const components = parseRecordCoordinates(kind, record)
+  if (!components.ok) return components
+  return recordIdentityWith(resolved.value, kind, components.value)
 }
 
 /** Mints the sole event business identifier for one immutable exchange assertion. */
@@ -694,7 +956,7 @@ const validateEntryNodeKey = (key: unknown): Result<EntryNodeKey> => {
   if (
     candidate === undefined ||
     event?.role !== 'event' ||
-    !parseAbsoluteUri(event.system).ok ||
+    !parseIdentifierSystem(event.system).ok ||
     typeof event.value !== 'string' ||
     !EVENT_VALUE.test(event.value)
   ) {
@@ -796,7 +1058,7 @@ export const entryIdentifierName = (
   if (identifier === undefined) {
     return err('invalid-type', 'Expected one complete Identifier.')
   }
-  if (!parseAbsoluteUri(identifier.system).ok) {
+  if (!parseIdentifierSystem(identifier.system).ok) {
     return err('invalid-uri', 'Identifier.system must be an absolute URI.', [
       'system',
     ])
