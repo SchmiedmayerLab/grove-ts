@@ -971,7 +971,7 @@ npm run conformance:structural -- --ig /path/to/grove-fhir
 ```
 
 `npm run conformance` additionally requires the checksum-pinned official FHIR Validator and the Mobile, Sensor, Provider, Questionnaire, Google Health, Oura, and Withings packages built in that checkout.
-It validates the generated Mobile measurement graphs, the study-context graph, every admitted native-recording graph, both retraction events, the shared active/retraction exchange corpus, and the Questionnaire/Response pair.
+It validates the generated Mobile measurement graphs, the study-context graph, every admitted native-recording graph, both retraction events, the shared active/retraction exchange corpus, and a multilingual Questionnaire with one base-language and one translated response.
 Every admitted scalar fixture is generated from the IG's versioned Mobile semantic corpus and bound through an exact RFC 6901 resource pointer, so the generic producer kit compares the emitted profile, clinical code, effective time, and result projection, not only the resource shape.
 The unit tests bind the same contract from the committed fixtures: the protocol vectors and the derived identifier systems, every negative case of the mobile-exchange corpus with its exact code and location, every equality decision of the receiver-lifecycle sequences, the study-attribution events, and the registry's severities.
 

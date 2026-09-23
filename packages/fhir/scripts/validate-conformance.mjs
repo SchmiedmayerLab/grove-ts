@@ -190,18 +190,23 @@ if (structuralOnly) {
 run('python3', producerArguments, igRoot)
 
 const questionnaire = resolve(fixtureRoot, 'resources/questionnaire.json')
-const response = resolve(fixtureRoot, 'resources/questionnaire-response.json')
-run(
-  'python3',
-  [
-    resolve(igRoot, 'Scripts/validate-questionnaire.py'),
-    '--questionnaire',
-    questionnaire,
-    '--response',
-    response,
-  ],
-  igRoot,
-)
+const responses = [
+  'resources/questionnaire-response.json',
+  'resources/questionnaire-response-translated.json',
+].map((path) => resolve(fixtureRoot, path))
+for (const response of responses) {
+  run(
+    'python3',
+    [
+      resolve(igRoot, 'Scripts/validate-questionnaire.py'),
+      '--questionnaire',
+      questionnaire,
+      '--response',
+      response,
+    ],
+    igRoot,
+  )
+}
 
 if (!structuralOnly) {
   run(
@@ -214,8 +219,7 @@ if (!structuralOnly) {
       resolve(igRoot, 'questionnaire/output/package.tgz'),
       '--resource',
       questionnaire,
-      '--resource',
-      response,
+      ...responses.flatMap((response) => ['--resource', response]),
       '--allow-example-urls',
     ],
     igRoot,

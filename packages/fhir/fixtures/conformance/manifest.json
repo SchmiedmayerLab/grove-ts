@@ -393,6 +393,12 @@
       "requiredProfiles": [
         "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response"
       ]
+    },
+    {
+      "path": "resources/questionnaire-response-translated.json",
+      "requiredProfiles": [
+        "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire-response"
+      ]
     }
   ],
   "semanticVectors": [

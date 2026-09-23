@@ -19,12 +19,37 @@
   "version": "1.0.0",
   "name": "GroveTsConformance",
   "title": "Grove TypeScript conformance instrument",
+  "_title": {
+    "extension": [
+      {
+        "extension": [
+          { "url": "lang", "valueCode": "es" },
+          {
+            "url": "content",
+            "valueString": "Instrumento de conformidad de Grove TypeScript"
+          }
+        ],
+        "url": "http://hl7.org/fhir/StructureDefinition/translation"
+      }
+    ]
+  },
   "status": "active",
   "subjectType": ["Patient"],
   "item": [
     {
       "linkId": "wellbeing",
       "text": "How are you feeling?",
+      "_text": {
+        "extension": [
+          {
+            "extension": [
+              { "url": "lang", "valueCode": "es" },
+              { "url": "content", "valueString": "¿Cómo se siente?" }
+            ],
+            "url": "http://hl7.org/fhir/StructureDefinition/translation"
+          }
+        ]
+      },
       "type": "choice",
       "required": true,
       "answerOption": [
@@ -32,14 +57,36 @@
           "valueCoding": {
             "system": "https://grovealliance.org/fhir/testing/CodeSystem/wellbeing",
             "code": "well",
-            "display": "Well"
+            "display": "Well",
+            "_display": {
+              "extension": [
+                {
+                  "extension": [
+                    { "url": "lang", "valueCode": "es" },
+                    { "url": "content", "valueString": "Bien" }
+                  ],
+                  "url": "http://hl7.org/fhir/StructureDefinition/translation"
+                }
+              ]
+            }
           }
         },
         {
           "valueCoding": {
             "system": "https://grovealliance.org/fhir/testing/CodeSystem/wellbeing",
             "code": "unwell",
-            "display": "Unwell"
+            "display": "Unwell",
+            "_display": {
+              "extension": [
+                {
+                  "extension": [
+                    { "url": "lang", "valueCode": "es" },
+                    { "url": "content", "valueString": "Mal" }
+                  ],
+                  "url": "http://hl7.org/fhir/StructureDefinition/translation"
+                }
+              ]
+            }
           }
         }
       ]

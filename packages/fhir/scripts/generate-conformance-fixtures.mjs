@@ -590,6 +590,20 @@ const questionnaireUrl = uri(
   'https://grovealliance.org/fhir/testing/Questionnaire/grove-ts-conformance',
 )
 const questionnaireVersion = unwrap(parseSemVer('1.0.0'))
+const wellbeingSystem = uri(
+  'https://grovealliance.org/fhir/testing/CodeSystem/wellbeing',
+)
+const inSpanish = (content) => ({
+  extension: [
+    {
+      url: 'http://hl7.org/fhir/StructureDefinition/translation',
+      extension: [
+        { url: 'lang', valueCode: 'es' },
+        { url: 'content', valueString: content },
+      ],
+    },
+  ],
+})
 const questionnaire = unwrap(
   buildQuestionnaire({
     url: questionnaireUrl,
@@ -597,31 +611,31 @@ const questionnaire = unwrap(
     language: 'en-US',
     name: 'GroveTsConformance',
     title: 'Grove TypeScript conformance instrument',
+    _title: inSpanish('Instrumento de conformidad de Grove TypeScript'),
     status: 'active',
     subjectTypes: ['Patient'],
     items: [
       {
         linkId: 'wellbeing',
         text: 'How are you feeling?',
+        _text: inSpanish('¿Cómo se siente?'),
         type: 'choice',
         required: true,
         answerOption: [
           {
             valueCoding: {
-              system: uri(
-                'https://grovealliance.org/fhir/testing/CodeSystem/wellbeing',
-              ),
+              system: wellbeingSystem,
               code: 'well',
               display: 'Well',
+              _display: inSpanish('Bien'),
             },
           },
           {
             valueCoding: {
-              system: uri(
-                'https://grovealliance.org/fhir/testing/CodeSystem/wellbeing',
-              ),
+              system: wellbeingSystem,
               code: 'unwell',
               display: 'Unwell',
+              _display: inSpanish('Mal'),
             },
           },
         ],
@@ -629,38 +643,45 @@ const questionnaire = unwrap(
     ],
   }),
 )
-const questionnaireResponse = unwrap(
-  buildQuestionnaireResponse(
-    {
-      language: 'en-US',
-      identifier: {
-        system: identifierSystem(
-          'https://grovealliance.org/fhir/testing/questionnaire-responses',
-        ),
-        value: 'grove-ts-conformance-response',
-      },
-      status: 'completed',
-      subject: { type: 'Patient', reference: 'Patient/example' },
-      authored: instant('2026-08-20T12:00:00Z'),
-      items: [
-        {
-          linkId: 'wellbeing',
-          answer: [
-            {
-              valueCoding: {
-                system: uri(
-                  'https://grovealliance.org/fhir/testing/CodeSystem/wellbeing',
-                ),
-                code: 'well',
-                display: 'Well',
-              },
-            },
-          ],
+const questionnaireResponseIn = (language, value) =>
+  unwrap(
+    buildQuestionnaireResponse(
+      {
+        language,
+        identifier: {
+          system: identifierSystem(
+            'https://grovealliance.org/fhir/testing/questionnaire-responses',
+          ),
+          value,
         },
-      ],
-    },
-    questionnaire,
-  ),
+        status: 'completed',
+        subject: { type: 'Patient', reference: 'Patient/example' },
+        authored: instant('2026-08-20T12:00:00Z'),
+        items: [
+          {
+            linkId: 'wellbeing',
+            answer: [
+              {
+                valueCoding: {
+                  system: wellbeingSystem,
+                  code: 'well',
+                  display: 'Well',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      questionnaire,
+    ),
+  )
+const questionnaireResponse = questionnaireResponseIn(
+  'en-US',
+  'grove-ts-conformance-response',
+)
+const translatedQuestionnaireResponse = questionnaireResponseIn(
+  'es',
+  'grove-ts-conformance-response-es',
 )
 
 const resources = new Map(
@@ -790,6 +811,10 @@ resources.set(
 )
 resources.set('resources/questionnaire.json', questionnaire)
 resources.set('resources/questionnaire-response.json', questionnaireResponse)
+resources.set(
+  'resources/questionnaire-response-translated.json',
+  translatedQuestionnaireResponse,
+)
 for (const [path, text] of sharedCorpora) resources.set(path, JSON.parse(text))
 
 const abstractProviderObservationProfile = providerAdapterCatalog.adapterProfile
@@ -885,6 +910,10 @@ const manifest = {
     },
     {
       path: 'resources/questionnaire-response.json',
+      requiredProfiles: [questionnaireResponseProfile],
+    },
+    {
+      path: 'resources/questionnaire-response-translated.json',
       requiredProfiles: [questionnaireResponseProfile],
     },
   ],
