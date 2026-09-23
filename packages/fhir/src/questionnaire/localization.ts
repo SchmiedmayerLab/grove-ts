@@ -45,15 +45,16 @@ const translationLanguage = (
 }
 
 interface QuestionnaireTranslations {
-  /** Every language a well-formed `translation` extension offers. */
+  /** Every language a well-formed `translation` extension offers, lowercased. */
   readonly languages: ReadonlySet<string>
   readonly failures: readonly Issue[]
 }
 
-/** Collects and checks the `translation` extensions on every element of a resource. */
-export const questionnaireTranslations = (
-  resource: unknown,
-): QuestionnaireTranslations => {
+/** Collects and checks the `translation` extensions on every element of a Questionnaire. */
+export const questionnaireTranslations = (questionnaire: {
+  readonly language: string
+}): QuestionnaireTranslations => {
+  const base = questionnaire.language.toLowerCase()
   const languages = new Set<string>()
   const failures: Issue[] = []
   const visit = (value: unknown, path: ReadonlyArray<number | string>) => {
@@ -67,11 +68,12 @@ export const questionnaireTranslations = (
     const candidates: unknown = Reflect.get(value, 'extension')
     const extensions =
       Array.isArray(candidates) ? (candidates as ExtensionCandidate[]) : []
-    const elementLanguages = new Set<string>()
+    // BCP 47 tags compare case-insensitively.
+    const elementLanguages = new Set([base])
     for (const [index, extension] of extensions.entries()) {
       if (extension.url !== QUESTIONNAIRE_EXTENSIONS.translation) continue
       const translationPath = [...path, 'extension', index]
-      const language = translationLanguage(extension)
+      const language = translationLanguage(extension)?.toLowerCase()
       if (language === undefined) {
         failures.push(
           issue(
@@ -85,7 +87,7 @@ export const questionnaireTranslations = (
           issue(
             'duplicate-identifier',
             translationPath,
-            `Translation ${language} occurs more than once on one element.`,
+            `Translation ${language} repeats the base language or another translation of the same string.`,
           ),
         )
       } else {
@@ -97,15 +99,14 @@ export const questionnaireTranslations = (
       visit(child, [...path, key])
     }
   }
-  visit(resource, [])
+  visit(questionnaire, [])
   return { languages, failures }
 }
 
-/** The base language and every translation language a Questionnaire offers. */
-export const offeredLanguages = (questionnaire: {
-  readonly language: string
-}): ReadonlySet<string> =>
-  new Set([
-    questionnaire.language,
-    ...questionnaireTranslations(questionnaire).languages,
-  ])
+/** Whether a language is the Questionnaire's base language or one of its translations. */
+export const offersLanguage = (
+  questionnaire: { readonly language: string },
+  language: string,
+): boolean =>
+  language.toLowerCase() === questionnaire.language.toLowerCase() ||
+  questionnaireTranslations(questionnaire).languages.has(language.toLowerCase())

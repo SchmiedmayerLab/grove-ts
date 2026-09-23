@@ -155,7 +155,8 @@ describe('Questionnaire localization', () => {
     ).toEqual(new Set(['invalid-type']))
     const duplicated = withTitleExtensions([
       translation('es', 'Dolor'),
-      translation('es', 'Dolores'),
+      translation('ES', 'Dolores'),
+      translation('en-us', 'Pain'),
     ])
     expect(duplicated.ok).toBe(false)
     if (duplicated.ok) return
@@ -163,6 +164,10 @@ describe('Questionnaire localization', () => {
       expect.objectContaining({
         code: 'duplicate-identifier',
         path: ['_title', 'extension', 1],
+      }),
+      expect.objectContaining({
+        code: 'duplicate-identifier',
+        path: ['_title', 'extension', 2],
       }),
     ])
   })
@@ -209,6 +214,21 @@ describe('Questionnaire localization', () => {
     for (const pair of [base, translated]) {
       expect(preflightQuestionnairePair(multilingual, pair).ok).toBe(true)
     }
+
+    // BCP 47 tags compare case-insensitively.
+    const recased = unwrap(
+      buildQuestionnaireResponse(
+        { ...answers, language: 'EN-us' },
+        multilingual,
+      ),
+    )
+    expect(recased.item?.[0]?.text).toBe('Are you in pain?')
+    expect(
+      preflightQuestionnairePair(multilingual, {
+        ...translated,
+        language: 'ES',
+      }).ok,
+    ).toBe(true)
   })
 
   it('writes nested group and answer-child text from the base Questionnaire', () => {

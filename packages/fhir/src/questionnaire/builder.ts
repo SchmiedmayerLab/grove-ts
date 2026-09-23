@@ -11,7 +11,7 @@ import {
   validateQuestionnaireContract,
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
-import { isLanguageTag, offeredLanguages } from './localization.js'
+import { isLanguageTag, offersLanguage } from './localization.js'
 import { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
 import { prefixed } from './preflight-diagnostics.js'
 import {
@@ -182,7 +182,7 @@ const validateResponseInput = (
   questionnaire: GroveQuestionnaire,
 ): readonly Issue[] => {
   const failures: Issue[] = []
-  if (!offeredLanguages(questionnaire).has(input.language)) {
+  if (!offersLanguage(questionnaire, input.language)) {
     failures.push(
       issue(
         'value-mismatch',
@@ -333,7 +333,8 @@ export const buildQuestionnaireResponse = (
     : itemsWithText(
         validatedInput.items,
         instrument.item,
-        validatedInput.language === instrument.language,
+        validatedInput.language.toLowerCase() ===
+          instrument.language.toLowerCase(),
         ['items'],
         failures,
       )

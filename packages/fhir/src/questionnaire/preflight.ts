@@ -14,7 +14,7 @@ import {
   QUESTIONNAIRE_SYSTEMS,
   validateQuestionnaireContract,
 } from './contract.js'
-import { offeredLanguages } from './localization.js'
+import { offersLanguage } from './localization.js'
 import {
   isExactQuestionnaireCanonical,
   parseQuestionnaire,
@@ -448,7 +448,7 @@ export const preflightQuestionnairePair = (
       ),
     )
   }
-  if (!offeredLanguages(questionnaire.value).has(response.value.language)) {
+  if (!offersLanguage(questionnaire.value, response.value.language)) {
     failures.push(
       issue(
         'value-mismatch',

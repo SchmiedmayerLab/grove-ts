@@ -720,7 +720,7 @@ Both builders and both parsers enforce this, as does the exchange-graph validato
 One Questionnaire holds every language of an instrument under its one `url|version`.
 `language` is required and names the BCP 47 language of every base string.
 Each other language is a standard `translation` extension on the string's primitive element: `_title`, `_description`, an item's `_text` or `_prefix`, a coding's `_display`, or an extension's string value.
-Each translation needs one BCP 47 `lang` and one non-empty `content`, and one element translates into each language at most once.
+Each translation needs one BCP 47 `lang` other than the base language and one non-empty `content`, and one string translates into each language at most once; language tags compare case-insensitively.
 A `valueString` answer option is data, not display: a translation may sit on its `_valueString`, but a response always stores the base value.
 Changing a translation changes the content, so it needs a new `version`.
 
