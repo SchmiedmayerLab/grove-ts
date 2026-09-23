@@ -58,14 +58,14 @@
   "devDependencies": {
     "@schmiedmayerlab/grove-configurations": "0.0.0",
     "@types/node": "^24.10.0",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "eslint": "^10.8.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "prettier": "^3.6.2",
     "rimraf": "^6.1.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=24"

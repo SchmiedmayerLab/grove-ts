@@ -8,7 +8,12 @@
 
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { auditExceptions, validateAuditReport } from './audit-docs.mjs'
+import { validateAuditReport } from './audit-docs.mjs'
+
+const exceptions = new Map([
+  ['GHSA-5p2g-fcmc-qvqq', 'Build-time only; no patched release exists.'],
+  ['GHSA-w3rx-r6r6-pgpr', 'Build-time only; no patched release exists.'],
+])
 
 const advisory = (id) => ({
   title: id,
@@ -48,8 +53,12 @@ const report = ({
 })
 
 describe('documentation audit exceptions', () => {
+  it('accepts a clean report under the standing exceptions', () => {
+    assert.deepEqual(validateAuditReport({ vulnerabilities: {} }), [])
+  })
+
   it('accepts only the documented, unfixable advisories', () => {
-    assert.deepEqual(validateAuditReport(report()), [
+    assert.deepEqual(validateAuditReport(report(), exceptions), [
       'GHSA-5p2g-fcmc-qvqq',
       'GHSA-w3rx-r6r6-pgpr',
     ])
@@ -57,7 +66,8 @@ describe('documentation audit exceptions', () => {
 
   it('rejects unexpected advisories', () => {
     assert.throws(
-      () => validateAuditReport(report({ includeUnexpected: true })),
+      () =>
+        validateAuditReport(report({ includeUnexpected: true }), exceptions),
       /Unexpected npm audit findings: GHSA-xxxx-yyyy-zzzz/,
     )
   })
@@ -74,7 +84,7 @@ describe('documentation audit exceptions', () => {
 
   it('rejects stale exceptions and advisories with fixes', () => {
     const oneException = new Map([
-      ...auditExceptions,
+      ...exceptions,
       ['GHSA-resolved-advisory', 'Resolved.'],
     ])
     assert.throws(
@@ -82,18 +92,18 @@ describe('documentation audit exceptions', () => {
       /Remove resolved npm audit exceptions/,
     )
     assert.throws(
-      () => validateAuditReport(report({ fixAvailable: true })),
+      () => validateAuditReport(report({ fixAvailable: true }), exceptions),
       /Fixes are now available/,
     )
     assert.throws(
-      () => validateAuditReport(report({ rootFixAvailable: true })),
+      () => validateAuditReport(report({ rootFixAvailable: true }), exceptions),
       /Fixes are now available/,
     )
   })
 
   it('ignores fixAvailable on transitive, non-direct dependencies', () => {
     assert.deepEqual(
-      validateAuditReport(report({ transitiveFixAvailable: true })),
+      validateAuditReport(report({ transitiveFixAvailable: true }), exceptions),
       ['GHSA-5p2g-fcmc-qvqq', 'GHSA-w3rx-r6r6-pgpr'],
     )
   })
