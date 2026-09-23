@@ -664,6 +664,9 @@ const groveExchangeProtocolValue = {
       valueType: 'unicode-scalar-string',
       nonEmpty: true,
       arity: 'exactly-kind-components',
+      unsignedDecimal: ['part-index'],
+      unsignedDecimalForm:
+        'A canonical unsigned decimal: 0, or a nonzero digit followed by digits, with no sign, whitespace, or leading zero.',
     },
     privacy:
       'HMAC reduces disclosure of native identifiers. It does not de-identify subjects, times, clinical data, graph relationships, or attachments.',
@@ -1969,6 +1972,34 @@ const groveExchangeProtocolValue = {
           '0',
         ],
         expectedError: 'provider-kind-required',
+      },
+      {
+        id: 'negative-part-index',
+        identityKind: 'source-artifact',
+        components: [
+          'health-connect',
+          'HeartRateRecord',
+          'urn:uuid:1f5c58aa-6ec6-4e79-a682-829a9debd3f5',
+          'default',
+          'record-heart-001',
+          'heart-rate-samples',
+          '-1',
+        ],
+        expectedError: 'non-canonical-part-index',
+      },
+      {
+        id: 'leading-zero-part-index',
+        identityKind: 'provider-artifact',
+        components: [
+          'google-health-api',
+          'heart-rate',
+          'https://accounts.example.org',
+          'patient|α',
+          'recording-001',
+          'provider-recording',
+          '01',
+        ],
+        expectedError: 'non-canonical-part-index',
       },
     ],
     event: {

@@ -1290,6 +1290,15 @@ const identityKindsByName = new Map(
 const protocolIdentifierRoles = new Set(
   (protocolIdentityKinds ?? []).map(({ identifierRole }) => identifierRole),
 )
+const unsignedDecimalComponents =
+  exchangeProtocol.opaqueIdentity?.componentRequirements?.unsignedDecimal
+const canonicalUnsignedDecimal = /^(?:0|[1-9][0-9]*)$/u
+const nonCanonicalComponentCount = (definition, components) =>
+  definition.components.filter(
+    (name, index) =>
+      unsignedDecimalComponents?.includes(name) === true &&
+      !canonicalUnsignedDecimal.test(components[index]),
+  ).length
 const identityVectors = exchangeProtocol.testVectors?.identities
 const invalidIdentityVectors = exchangeProtocol.testVectors?.invalidIdentities
 const providerCodes = new Set(providerAdapter.providers.map(({ id }) => id))
@@ -1633,6 +1642,13 @@ if (
   ) ||
   !Array.isArray(protocolIdentityKinds) ||
   protocolIdentityKinds.length === 0 ||
+  !uniqueNonemptyStrings(unsignedDecimalComponents) ||
+  unsignedDecimalComponents.some(
+    (name) =>
+      !protocolIdentityKinds.some(({ components }) =>
+        components?.includes(name),
+      ),
+  ) ||
   identityKindsByName.size !== protocolIdentityKinds.length ||
   protocolIdentityKinds?.some(
     ({ kind, identifierRole, components }) =>
@@ -1661,11 +1677,12 @@ if (
         !providerCodes.has(vector.components[0])) ||
       (genericSourceIdentityKinds.has(vector.identityKind) &&
         providerCodes.has(vector.components[0])) ||
+      nonCanonicalComponentCount(definition, vector.components) !== 0 ||
       !opaqueIdentityValue.test(vector.value)
     )
   }) ||
   !Array.isArray(invalidIdentityVectors) ||
-  invalidIdentityVectors.length !== 4 ||
+  invalidIdentityVectors.length !== 6 ||
   new Set(invalidIdentityVectors.map(({ id }) => id)).size !==
     invalidIdentityVectors.length ||
   invalidIdentityVectors.some((vector) => {
@@ -1688,7 +1705,10 @@ if (
       !(
         (vector.expectedError === 'empty-component' &&
           emptyComponentCount === 1) ||
-        providerKindRequired
+        providerKindRequired ||
+        (vector.expectedError === 'non-canonical-part-index' &&
+          emptyComponentCount === 0 &&
+          nonCanonicalComponentCount(definition, vector.components) === 1)
       )
     )
   }) ||
