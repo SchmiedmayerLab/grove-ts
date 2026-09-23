@@ -245,7 +245,7 @@ const validateMatchedResponseItem = (
   ) {
     failures.push(
       issue(
-        'value-mismatch',
+        'pair-item-text',
         [...path, 'text'],
         'Response item text, when present, must exactly match the base Questionnaire.item.text.',
       ),
@@ -451,7 +451,7 @@ export const preflightQuestionnairePair = (
   if (!offersLanguage(questionnaire.value, response.value.language)) {
     failures.push(
       issue(
-        'value-mismatch',
+        'pair-response-language',
         ['response', 'language'],
         'QuestionnaireResponse.language must be the Questionnaire base language or one of its translation languages.',
       ),

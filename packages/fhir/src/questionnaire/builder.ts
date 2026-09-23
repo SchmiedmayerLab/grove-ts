@@ -12,7 +12,13 @@ import {
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
 import { isLanguageTag, offersLanguage } from './localization.js'
-import { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
+import {
+  parseQuestionnaire,
+  parseQuestionnaireResponse,
+  questionnaireLanguageRequired,
+  responseLanguageRequired,
+  withLanguageRule,
+} from './parse.js'
 import { prefixed } from './preflight-diagnostics.js'
 import {
   QUESTIONNAIRE_EXTENSIONS,
@@ -126,9 +132,13 @@ const validateQuestionnaireInput = (
 export const buildQuestionnaire = (
   input: QuestionnaireInput,
 ): Result<GroveQuestionnaire> => {
-  const parsedInput = parseBuilderInput<QuestionnaireInput>(
-    questionnaireBuilderInputSchema,
-    input,
+  const parsedInput = withLanguageRule(
+    parseBuilderInput<QuestionnaireInput>(
+      questionnaireBuilderInputSchema,
+      input,
+    ),
+    'qg-language-required',
+    questionnaireLanguageRequired,
   )
   if (!parsedInput.ok) return parsedInput
   const validatedInput = parsedInput.value
@@ -185,7 +195,7 @@ const validateResponseInput = (
   if (!offersLanguage(questionnaire, input.language)) {
     failures.push(
       issue(
-        'value-mismatch',
+        'pair-response-language',
         ['language'],
         'Response.language must be the Questionnaire base language or one of its translation languages.',
       ),
@@ -247,12 +257,41 @@ const validateResponseInput = (
 }
 
 type QuestionnaireItem = GroveQuestionnaire['item'][number]
+type ResponseAnswer = NonNullable<
+  QuestionnaireResponseItemInput['answer']
+>[number]
+
+const withoutDisplay = (coding: object): object =>
+  Object.fromEntries(
+    Object.entries(coding).filter(
+      ([key]) => key !== 'display' && key !== '_display',
+    ),
+  )
+
+// A translated response names a coded answer by system and code alone; a base-language one
+// repeats the inline option's base display.
+const localizedCoding = (
+  coding: NonNullable<ResponseAnswer['valueCoding']>,
+  definition: QuestionnaireItem,
+  baseLanguage: boolean,
+): object => {
+  if (!baseLanguage) return withoutDisplay(coding)
+  const option = definition.answerOption?.find(
+    ({ valueCoding }) =>
+      valueCoding?.system === coding.system &&
+      valueCoding?.code === coding.code,
+  )?.valueCoding
+  if (option === undefined) return coding
+  return option.display === undefined ?
+      withoutDisplay(coding)
+    : { ...coding, display: option.display }
+}
 
 // Response text repeats the base Questionnaire text, so only a base-language response carries it.
-const itemsWithText = (
+const localizedItems = (
   items: readonly QuestionnaireResponseItemInput[],
   definitions: readonly QuestionnaireItem[],
-  writeText: boolean,
+  baseLanguage: boolean,
   path: ReadonlyArray<number | string>,
   failures: Issue[],
 ): readonly object[] =>
@@ -272,37 +311,43 @@ const itemsWithText = (
       return item
     }
     const children = definition.item ?? []
+    const localizedAnswer = (answer: ResponseAnswer, answerIndex: number) => ({
+      ...answer,
+      ...(answer.valueCoding === undefined ?
+        {}
+      : {
+          valueCoding: localizedCoding(
+            answer.valueCoding,
+            definition,
+            baseLanguage,
+          ),
+        }),
+      ...(answer.item === undefined ?
+        {}
+      : {
+          item: localizedItems(
+            answer.item,
+            children,
+            baseLanguage,
+            [...itemPath, 'answer', answerIndex, 'item'],
+            failures,
+          ),
+        }),
+    })
     const { answer, item: nested, ...element } = item
     return {
       ...element,
-      ...(writeText && definition.text !== undefined ?
+      ...(baseLanguage && definition.text !== undefined ?
         { text: definition.text }
       : {}),
-      ...(answer === undefined ?
-        {}
-      : {
-          answer: answer.map((entry, answerIndex) =>
-            entry.item === undefined ?
-              entry
-            : {
-                ...entry,
-                item: itemsWithText(
-                  entry.item,
-                  children,
-                  writeText,
-                  [...itemPath, 'answer', answerIndex, 'item'],
-                  failures,
-                ),
-              },
-          ),
-        }),
+      ...(answer === undefined ? {} : { answer: answer.map(localizedAnswer) }),
       ...(nested === undefined ?
         {}
       : {
-          item: itemsWithText(
+          item: localizedItems(
             nested,
             children,
-            writeText,
+            baseLanguage,
             [...itemPath, 'item'],
             failures,
           ),
@@ -320,9 +365,13 @@ export const buildQuestionnaireResponse = (
     return issues(prefixed(parsedQuestionnaire.issues, 'questionnaire'))
   }
   const instrument = parsedQuestionnaire.value
-  const parsedInput = parseBuilderInput<QuestionnaireResponseInput>(
-    questionnaireResponseBuilderInputSchema,
-    input,
+  const parsedInput = withLanguageRule(
+    parseBuilderInput<QuestionnaireResponseInput>(
+      questionnaireResponseBuilderInputSchema,
+      input,
+    ),
+    'gqr-language-required',
+    responseLanguageRequired,
   )
   if (!parsedInput.ok) return parsedInput
   const validatedInput = parsedInput.value
@@ -330,7 +379,7 @@ export const buildQuestionnaireResponse = (
   const items =
     validatedInput.items === undefined ?
       undefined
-    : itemsWithText(
+    : localizedItems(
         validatedInput.items,
         instrument.item,
         validatedInput.language.toLowerCase() ===

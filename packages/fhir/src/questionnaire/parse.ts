@@ -45,6 +45,7 @@ import {
   parseSemVer,
   zodIssueToIssue,
   type Issue,
+  type QuestionnaireRuleCode,
   type Result,
 } from '../core/index.js'
 import type { Extension } from '../r4/index.js'
@@ -366,10 +367,35 @@ const parseWith = <T>(schema: z.ZodType<T>, input: unknown): Result<T> => {
   return ok(deepFreeze(result.data) as T)
 }
 
+// A missing or blank language fails the schema, but it is the contract's named rule.
+export const withLanguageRule = <T>(
+  result: Result<T>,
+  code: QuestionnaireRuleCode,
+  message: string,
+): Result<T> =>
+  result.ok ? result : (
+    issues(
+      result.issues.map((entry) =>
+        entry.path.length === 1 && entry.path[0] === 'language' ?
+          { ...entry, code, message }
+        : entry,
+      ),
+    )
+  )
+
+export const questionnaireLanguageRequired =
+  'Questionnaire.language names the base language of every string and is required.'
+export const responseLanguageRequired =
+  'QuestionnaireResponse.language names the language the participant saw and is required.'
+
 export const parseQuestionnaire = (
   input: unknown,
 ): Result<GroveQuestionnaire> => {
-  const parsed = parseWith(questionnaireSchema, input)
+  const parsed = withLanguageRule(
+    parseWith(questionnaireSchema, input),
+    'qg-language-required',
+    questionnaireLanguageRequired,
+  )
   if (!parsed.ok) return parsed
   const failures = questionnaireContractIssues(parsed.value)
   return failures.length === 0 ? parsed : issues(failures)
@@ -378,7 +404,11 @@ export const parseQuestionnaire = (
 export const parseQuestionnaireResponse = (
   input: unknown,
 ): Result<GroveQuestionnaireResponse> => {
-  const parsed = parseWith(questionnaireResponseSchema, input)
+  const parsed = withLanguageRule(
+    parseWith(questionnaireResponseSchema, input),
+    'gqr-language-required',
+    responseLanguageRequired,
+  )
   if (!parsed.ok) return parsed
   const failures = responseContractIssues(parsed.value)
   return failures.length === 0 ? parsed : issues(failures)

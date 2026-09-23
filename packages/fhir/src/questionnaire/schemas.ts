@@ -557,7 +557,7 @@ export const questionnaireBuilderInputSchema: z.ZodType = z.strictObject({
   id: z.string().optional(),
   url: z.string(),
   version: z.string(),
-  language: z.string(),
+  language: z.string().min(1),
   name: z.string().optional(),
   title: z.string().optional(),
   _title: primitiveMetadata,
@@ -622,7 +622,7 @@ const actorReferenceInputSchema = builderReferenceSchema(
 export const questionnaireResponseBuilderInputSchema: z.ZodType =
   z.strictObject({
     id: z.string().optional(),
-    language: z.string(),
+    language: z.string().min(1),
     identifier: questionnaireResponseIdentifierInputSchema,
     status: z.enum([
       'in-progress',

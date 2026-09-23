@@ -274,7 +274,7 @@ describe('Questionnaire R4 builders', () => {
     if (result.ok) return
     expect(new Set(result.issues.map(({ code }) => code))).toEqual(
       new Set([
-        'value-mismatch',
+        'pair-response-language',
         'invalid-identifier',
         'invalid-date-time',
         'invalid-reference',

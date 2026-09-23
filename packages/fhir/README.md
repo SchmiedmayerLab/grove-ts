@@ -608,6 +608,7 @@ The synchronized normative catalog and its resolved development reference live u
 
 Every `Issue` is either a schema issue or a producer diagnostic, reported through the one `Result` channel.
 A schema issue is this package's own input contract: its `SchemaIssueCode` is an undotted code such as `invalid-uri`, and grove-fhir does not define it.
+A Questionnaire rule issue carries the `QuestionnaireRuleCode` grove-fhir's Questionnaire validator reports for the same rule, such as `pair-item-text`.
 A producer diagnostic is a grove-fhir registry rule: its `ProducerDiagnosticCode` is registered in the exchange protocol, and `groveProducerDiagnostics` publishes each code with its normative `reason`, its `severity`, and the side that emits it.
 `isProducerDiagnostic(issue)` narrows an `Issue` to a `ProducerDiagnostic`, whose registered `code` and `reason` are always present.
 A refused source record carries exactly one `mobile-input.*` code per countable reason: an unsupported source type, an unsupported source value, a value outside its catalog domain, a malformed value shape, missing required metadata, an invalid effective period, text with an unpaired surrogate, an invalid native identifier, an oversized recording payload, or an empty recording series.
@@ -727,8 +728,10 @@ Changing a translation changes the content, so it needs a new `version`.
 `buildQuestionnaireResponse` takes the Questionnaire it answers and derives `questionnaire` from its `url|version`.
 The response `language` is required and must be the base language or a translation language the Questionnaire offers.
 The builder writes each item's `text` from the base Questionnaire only when the response uses the base language; a response to a translation omits it.
+Likewise, a coded answer to an inline option carries the option's base `display` in the base language, and a response to a translation omits `display`, so `system` and `code` identify the answer.
+A missing language is reported as `qg-language-required` or `gqr-language-required`, a repeated or base-language translation as `qg-translation-1`, and a language the Questionnaire does not offer as `pair-response-language`.
 
-The pair preflight checks the exact `url|version`, the offered response language, global link identity, response nesting, answer types, inline options, repeats, response text (omitted, or exactly the base text), conditional enablement, and required enabled items for completed or amended responses.
+The pair preflight checks the exact `url|version`, the offered response language, global link identity, response nesting, answer types, inline options, repeats, response text (omitted, or exactly the base text, else `pair-item-text`), conditional enablement, and required enabled items for completed or amended responses.
 It also enforces text length and decimal-place limits, scalar and quantity bounds, inline or ValueSet-backed quantity units, attachment MIME and size limits, repeated-answer occurrence bounds, and exclusive options.
 
 Terminology is never fetched. For a coded item backed by `answerValueSet`, the

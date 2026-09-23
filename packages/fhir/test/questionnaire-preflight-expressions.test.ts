@@ -451,7 +451,7 @@ describe('Questionnaire pair preflight', () => {
         'invalid-reference',
         'invalid-type',
         'out-of-range',
-        'value-mismatch',
+        'pair-item-text',
       ]),
     )
   })

@@ -47,6 +47,7 @@ export {
   type ProducerDiagnostic,
   type QuantityComparator,
   type QuantityValue,
+  type QuestionnaireRuleCode,
   type ResearchStudyReference,
   type ReadonlyDeep,
   type Result,

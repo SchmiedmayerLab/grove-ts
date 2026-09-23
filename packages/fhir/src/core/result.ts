@@ -27,7 +27,16 @@ export type SchemaIssueCode =
   | 'schema-invalid'
   | 'value-mismatch'
 
-export type IssueCode = SchemaIssueCode | ProducerDiagnosticCode
+/** A Questionnaire rule, under the id grove-fhir's Questionnaire validator reports it with. */
+export type QuestionnaireRuleCode =
+  | 'gqr-language-required'
+  | 'pair-item-text'
+  | 'pair-response-language'
+  | 'qg-language-required'
+  | 'qg-translation-1'
+
+export type IssueCode =
+  SchemaIssueCode | QuestionnaireRuleCode | ProducerDiagnosticCode
 
 export interface Issue {
   readonly severity: IssueSeverity
@@ -49,8 +58,10 @@ export interface ProducerDiagnostic extends Issue {
   readonly reason: string
 }
 
-// IssueCode is closed over both halves, so a code outside the schema half is registered.
-const schemaIssueCodes: Readonly<Record<SchemaIssueCode, true>> = {
+// IssueCode is closed, so a code outside the schema and Questionnaire rule codes is registered.
+const unregisteredIssueCodes: Readonly<
+  Record<SchemaIssueCode | QuestionnaireRuleCode, true>
+> = {
   'duplicate-identifier': true,
   'external-validation-required': true,
   'invalid-choice': true,
@@ -64,12 +75,17 @@ const schemaIssueCodes: Readonly<Record<SchemaIssueCode, true>> = {
   'out-of-range': true,
   'schema-invalid': true,
   'value-mismatch': true,
+  'gqr-language-required': true,
+  'pair-item-text': true,
+  'pair-response-language': true,
+  'qg-language-required': true,
+  'qg-translation-1': true,
 }
 
 export const isProducerDiagnostic = (
   issue: Issue,
 ): issue is ProducerDiagnostic =>
-  !Object.hasOwn(schemaIssueCodes, issue.code) &&
+  !Object.hasOwn(unregisteredIssueCodes, issue.code) &&
   typeof issue.reason === 'string'
 
 export type Result<T> =

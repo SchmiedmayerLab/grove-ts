@@ -85,6 +85,18 @@ const answers = {
   items: [
     { linkId: 'has-pain', answer: [{ valueBoolean: true }] },
     { linkId: 'location', answer: [{ valueString: 'Head' }] },
+    {
+      linkId: 'severity',
+      answer: [
+        {
+          valueCoding: {
+            system: codingSystem,
+            code: 'mild',
+            display: 'Slight',
+          },
+        },
+      ],
+    },
   ],
 }
 
@@ -121,11 +133,14 @@ describe('Questionnaire localization', () => {
 
   it('requires a BCP 47 base language on both resources', () => {
     expect(codes(parseQuestionnaire(withoutLanguage(questionnaire)))).toEqual(
-      new Set(['schema-invalid']),
+      new Set(['qg-language-required']),
     )
     expect(
       codes(parseQuestionnaireResponse(withoutLanguage(response))),
-    ).toEqual(new Set(['schema-invalid']))
+    ).toEqual(new Set(['gqr-language-required']))
+    expect(
+      codes(parseQuestionnaireResponse({ ...response, language: '' })),
+    ).toEqual(new Set(['gqr-language-required']))
     expect(
       codes(parseQuestionnaire({ ...questionnaire, language: 'en_US' })),
     ).toEqual(new Set(['invalid-code']))
@@ -134,7 +149,18 @@ describe('Questionnaire localization', () => {
     ).toEqual(new Set(['invalid-code']))
     expect(
       codes(buildQuestionnaire({ ...questionnaireInput, language: '' })),
+    ).toEqual(new Set(['qg-language-required']))
+    expect(
+      codes(buildQuestionnaire({ ...questionnaireInput, language: 'en_US' })),
     ).toEqual(new Set(['invalid-code']))
+    expect(
+      codes(
+        buildQuestionnaireResponse(
+          withoutLanguage(responseInput()) as typeof answers,
+          questionnaire,
+        ),
+      ),
+    ).toEqual(new Set(['gqr-language-required']))
   })
 
   it('rejects malformed and ambiguous translations', () => {
@@ -162,11 +188,11 @@ describe('Questionnaire localization', () => {
     if (duplicated.ok) return
     expect(duplicated.issues).toEqual([
       expect.objectContaining({
-        code: 'duplicate-identifier',
+        code: 'qg-translation-1',
         path: ['_title', 'extension', 1],
       }),
       expect.objectContaining({
-        code: 'duplicate-identifier',
+        code: 'qg-translation-1',
         path: ['_title', 'extension', 2],
       }),
     ])
@@ -202,7 +228,13 @@ describe('Questionnaire localization', () => {
     expect(base.item?.map(({ text }) => text)).toEqual([
       'Are you in pain?',
       'Where?',
+      'How severe?',
     ])
+    expect(base.item?.[2]?.answer?.[0]?.valueCoding).toEqual({
+      system: codingSystem,
+      code: 'mild',
+      display: 'Mild',
+    })
 
     const translated = unwrap(
       buildQuestionnaireResponse({ ...answers, language: 'es' }, multilingual),
@@ -210,6 +242,10 @@ describe('Questionnaire localization', () => {
     expect(translated.language).toBe('es')
     expect(translated.item?.some((item) => 'text' in item)).toBe(false)
     expect(translated.item?.[1]?.answer).toEqual([{ valueString: 'Head' }])
+    expect(translated.item?.[2]?.answer?.[0]?.valueCoding).toEqual({
+      system: codingSystem,
+      code: 'mild',
+    })
 
     for (const pair of [base, translated]) {
       expect(preflightQuestionnairePair(multilingual, pair).ok).toBe(true)
@@ -247,7 +283,10 @@ describe('Questionnaire localization', () => {
     expect(unoffered.ok).toBe(false)
     if (unoffered.ok) return
     expect(unoffered.issues).toEqual([
-      expect.objectContaining({ code: 'value-mismatch', path: ['language'] }),
+      expect.objectContaining({
+        code: 'pair-response-language',
+        path: ['language'],
+      }),
     ])
 
     const undeclared = buildQuestionnaireResponse(
@@ -283,7 +322,7 @@ describe('Questionnaire localization', () => {
           withoutLanguage(multilingual) as typeof multilingual,
         ),
       ),
-    ).toEqual(new Set(['schema-invalid']))
+    ).toEqual(new Set(['qg-language-required']))
   })
 
   it('reports translated response text and an unoffered language as pair errors', () => {
@@ -308,8 +347,8 @@ describe('Questionnaire localization', () => {
       result.issues.map(({ code, path }) => [code, path.join('.')]),
     ).toEqual(
       expect.arrayContaining([
-        ['value-mismatch', 'response.language'],
-        ['value-mismatch', 'response.item.0.text'],
+        ['pair-response-language', 'response.language'],
+        ['pair-item-text', 'response.item.0.text'],
         ['value-mismatch', 'response.item.1.answer.0'],
       ]),
     )

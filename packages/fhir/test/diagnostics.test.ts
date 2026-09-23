@@ -199,6 +199,11 @@ describe('producer diagnostics', () => {
     ).toBe(false)
   })
 
+  it('never narrows a Questionnaire rule issue carrying a reason', () => {
+    const issue = schemaIssue('pair-item-text', ['item', 0, 'text'], 'Differs.')
+    expect(isProducerDiagnostic({ ...issue, reason: 'Differs.' })).toBe(false)
+  })
+
   it('never narrows a registry issue missing its reason', () => {
     for (const code of [
       'mobile-exchange.entry-node-key',

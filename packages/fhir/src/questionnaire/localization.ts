@@ -85,7 +85,7 @@ export const questionnaireTranslations = (questionnaire: {
       } else if (elementLanguages.has(language)) {
         failures.push(
           issue(
-            'duplicate-identifier',
+            'qg-translation-1',
             translationPath,
             `Translation ${language} repeats the base language or another translation of the same string.`,
           ),

@@ -65,6 +65,7 @@ export {
   type IssueCode,
   type IssueSeverity,
   type ProducerDiagnostic,
+  type QuestionnaireRuleCode,
   type Result,
   type SchemaIssueCode,
 } from './result.js'

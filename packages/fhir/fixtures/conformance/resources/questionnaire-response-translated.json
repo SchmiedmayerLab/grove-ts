@@ -34,8 +34,7 @@
         {
           "valueCoding": {
             "system": "https://grovealliance.org/fhir/testing/CodeSystem/wellbeing",
-            "code": "well",
-            "display": "Well"
+            "code": "well"
           }
         }
       ]
