@@ -400,7 +400,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "eslint": "^10",
     "eslint-plugin-jsdoc": "^63.3.2",
     "jsdom": "^30.0.1",
@@ -414,7 +414,7 @@
     "vite": "^8.2.0",
     "vite-plugin-dts": "^5.0.0",
     "vite-plugin-static-copy": "^4.0.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5",

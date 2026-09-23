@@ -1,0 +1,27 @@
+{
+  "source": {
+    "adapter": {
+      "kind": "providers",
+      "provider": "oura"
+    },
+    "sourceType": "heartrate",
+    "sourceNativeId": "synthetic-oura-heart-rate-series-001",
+    "effective": {
+      "kind": "period",
+      "start": "2026-08-19T00:00:00Z",
+      "end": "2026-08-20T00:00:00Z"
+    },
+    "writer": {
+      "sourceDeviceToken": "origin-instance-oura-001",
+      "name": "Oura"
+    }
+  },
+  "attachment": {
+    "kind": "embedded",
+    "contentType": "application/json",
+    "title": "Sanitized Oura heart-rate recording",
+    "format": "provider-recording",
+    "payloadAssertion": "verified-sanitized-input",
+    "dataBase64": "eyJzeW50aGV0aWMiOnRydWV9"
+  }
+}

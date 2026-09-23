@@ -23,16 +23,20 @@ const config = {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  collectCoverage: true,
-  collectCoverageFrom: ['src/**/*.ts'],
+  collectCoverage: false,
+  // Generated files are excluded: an uncovered branch there is a FHIR type no example happened
+  // to use, not untested logic. What guards them is regeneration parity (`check:zod`,
+  // `check:catalog`), the pinned generation invariants, and validation against both releases'
+  // published examples.
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.generated.ts'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'json-summary', 'lcov'],
   coverageThreshold: {
     global: {
-      branches: 28,
-      functions: 34,
-      lines: 64,
-      statements: 63,
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
     },
   },
 }

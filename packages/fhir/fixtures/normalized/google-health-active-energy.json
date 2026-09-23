@@ -1,0 +1,26 @@
+{
+  "source": {
+    "adapter": {
+      "kind": "providers",
+      "provider": "google-health-api"
+    },
+    "sourceType": "active-energy-burned",
+    "sourceNativeId": "synthetic-active-energy-2026-08-20",
+    "writer": {
+      "sourceDeviceToken": "origin-instance-google-001",
+      "name": "Google Health"
+    },
+    "recordingMethod": "automatically-recorded"
+  },
+  "measurements": [
+    {
+      "kind": "active-energy",
+      "value": 430.5,
+      "effective": {
+        "kind": "period",
+        "start": "2026-08-20T00:00:00Z",
+        "end": "2026-08-20T12:00:00Z"
+      }
+    }
+  ]
+}
