@@ -11,6 +11,7 @@ import {
   codingSystem,
   preflightItems,
   questionnaire,
+  questionnaireDeclaring,
   questionnaireInput,
   response,
   responseInput,
@@ -185,7 +186,6 @@ describe('Questionnaire R4 builders', () => {
         items: [
           {
             linkId: 'strict-item',
-            text: 'Strict item',
             answer: [{ valueString: 'answer', unknownAnswerField: true }],
           },
         ],
@@ -193,7 +193,10 @@ describe('Questionnaire R4 builders', () => {
     ]
     for (const candidate of malformedResponses) {
       const invoke = () =>
-        buildQuestionnaireResponse(candidate as QuestionnaireResponseInput)
+        buildQuestionnaireResponse(
+          candidate as QuestionnaireResponseInput,
+          questionnaireDeclaring('strict-item'),
+        )
       expect(invoke).not.toThrow()
       expect(invoke().ok).toBe(false)
     }
@@ -279,18 +282,17 @@ describe('Questionnaire R4 builders', () => {
 
     const mixedItem = {
       linkId: 'mixed',
-      text: 'Mixed',
       answer: [{ valueString: 'answer' }],
-      item: [{ linkId: 'child', text: 'Child' }],
+      item: [{ linkId: 'child' }],
     }
     expect(
       parseQuestionnaireResponse({ ...response, item: [mixedItem] }).ok,
     ).toBe(false)
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: [mixedItem],
-      }).ok,
+      buildQuestionnaireResponse(
+        { ...responseInput(), items: [mixedItem] },
+        questionnaireDeclaring('mixed'),
+      ).ok,
     ).toBe(false)
   })
 
@@ -576,12 +578,15 @@ describe('Questionnaire R4 builders', () => {
       }).ok,
     ).toBe(false)
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        extensions: [
-          { url: 'https://example.org/fhir/StructureDefinition/empty' },
-        ],
-      }).ok,
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          extensions: [
+            { url: 'https://example.org/fhir/StructureDefinition/empty' },
+          ],
+        },
+        questionnaire,
+      ).ok,
     ).toBe(false)
   })
 
@@ -609,13 +614,17 @@ describe('Questionnaire R4 builders', () => {
     expect(
       buildQuestionnaireResponse(
         withoutSubject(responseInput()) as QuestionnaireResponseInput,
+        questionnaire,
       ).ok,
     ).toBe(false)
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        subject: { type: 'Group', reference: 'Group/example' },
-      } as unknown as QuestionnaireResponseInput).ok,
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          subject: { type: 'Group', reference: 'Group/example' },
+        } as unknown as QuestionnaireResponseInput,
+        questionnaire,
+      ).ok,
     ).toBe(false)
     expect(parseQuestionnaireResponse(withoutSubject(response)).ok).toBe(false)
   })

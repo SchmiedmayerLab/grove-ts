@@ -44,6 +44,12 @@ interface BackboneInput {
   readonly modifierExtension?: readonly Extension[]
 }
 
+/** The element beside a primitive, which carries its `translation` extensions. */
+interface PrimitiveElementInput {
+  readonly id?: string
+  readonly extension?: readonly Extension[]
+}
+
 interface AnswerValues {
   readonly valueBoolean: boolean
   readonly valueDecimal: number
@@ -105,9 +111,13 @@ export type QuestionnaireEnableWhenInput = WithBackbone<
   }
 >
 
+/** A `valueString` option is data: a response stores its base value, whatever language rendered it. */
 export type QuestionnaireAnswerOptionInput = WithBackbone<
   ExactlyOne<AnswerOptionValues>,
-  { readonly initialSelected?: boolean }
+  {
+    readonly _valueString?: PrimitiveElementInput
+    readonly initialSelected?: boolean
+  }
 >
 
 export type QuestionnaireInitialInput =
@@ -119,7 +129,10 @@ export interface QuestionnaireItemInput extends BackboneInput {
   readonly definition?: string
   readonly code?: readonly Coding[]
   readonly prefix?: string
+  readonly _prefix?: PrimitiveElementInput
+  /** Base-language text; other languages are `translation` extensions on `_text`. */
   readonly text?: string
+  readonly _text?: PrimitiveElementInput
   readonly type: QuestionnaireItemType
   readonly enableWhen?: readonly QuestionnaireEnableWhenInput[]
   readonly enableBehavior?: 'all' | 'any'
@@ -138,11 +151,10 @@ export type QuestionnaireResponseAnswerInput = WithBackbone<
   { readonly item?: readonly QuestionnaireResponseItemInput[] }
 >
 
-/** Bounded R4 QuestionnaireResponse item surface supported by the Grove profile. */
+/** Bounded R4 QuestionnaireResponse item surface; the builder writes `text` from the Questionnaire. */
 export interface QuestionnaireResponseItemInput extends BackboneInput {
   readonly linkId: string
   readonly definition?: string
-  readonly text?: string
   readonly answer?: readonly QuestionnaireResponseAnswerInput[]
   readonly item?: readonly QuestionnaireResponseItemInput[]
 }
@@ -151,13 +163,17 @@ export interface QuestionnaireInput {
   readonly id?: FhirId
   readonly url: AbsoluteUri
   readonly version: SemVer
+  /** BCP 47 tag of every base string; other languages are `translation` extensions. */
+  readonly language: string
   readonly name?: string
   readonly title?: string
+  readonly _title?: PrimitiveElementInput
   readonly status: Questionnaire['status']
   /** Fixed by the Grove Questionnaire profile to exactly `Patient`. */
   readonly subjectTypes: readonly ['Patient']
   readonly date?: FhirInstant
   readonly description?: string
+  readonly _description?: PrimitiveElementInput
   readonly purpose?: string
   readonly extensions?: readonly Extension[]
   readonly items: readonly [QuestionnaireItemInput, ...QuestionnaireItemInput[]]
@@ -201,8 +217,8 @@ export type QuestionnaireResponseSourceInput =
 
 export interface QuestionnaireResponseInput {
   readonly id?: FhirId
-  /** Exact `Questionnaire.url|Questionnaire.version` canonical. */
-  readonly questionnaire: Canonical
+  /** BCP 47 tag the participant saw: the Questionnaire's base language or one of its translations. */
+  readonly language: string
   readonly identifier: QuestionnaireResponseIdentifierInput
   readonly status: QuestionnaireResponse['status']
   readonly subject: QuestionnaireResponseSubjectInput
@@ -214,7 +230,8 @@ export interface QuestionnaireResponseInput {
 }
 
 export type GroveQuestionnaire = Readonly<
-  Omit<Questionnaire, 'item'> & {
+  Omit<Questionnaire, 'item' | 'language'> & {
+    readonly language: string
     readonly item: NonNullable<Questionnaire['item']>
   }
 >
@@ -222,8 +239,9 @@ export type GroveQuestionnaire = Readonly<
 export type GroveQuestionnaireResponse = Readonly<
   Omit<
     QuestionnaireResponse,
-    'authored' | 'identifier' | 'item' | 'questionnaire'
+    'authored' | 'identifier' | 'item' | 'language' | 'questionnaire'
   > & {
+    readonly language: string
     readonly identifier: Identifier
     readonly questionnaire: string
     readonly authored: string

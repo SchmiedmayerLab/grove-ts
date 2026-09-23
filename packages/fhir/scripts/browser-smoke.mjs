@@ -236,6 +236,7 @@ try {
     const instrument = questionnaire.buildQuestionnaire({
       url: 'https://example.org/Questionnaire/browser',
       version: '1.0.0',
+      language: 'en-US',
       status: 'active',
       subjectTypes: ['Patient'],
       items: [
@@ -247,25 +248,25 @@ try {
         },
       ],
     })
-    const response = questionnaire.buildQuestionnaireResponse({
-      questionnaire: 'https://example.org/Questionnaire/browser|1.0.0',
-      identifier: {
-        system: 'https://example.org/responses',
-        value: 'browser-1',
-      },
-      status: 'completed',
-      subject: { type: 'Patient', reference: 'Patient/browser' },
-      authored: '2026-08-20T12:00:00Z',
-      items: [
-        {
-          linkId: 'ready',
-          text: 'Are you ready?',
-          answer: [{ valueBoolean: true }],
-        },
-      ],
-    })
+    const response =
+      instrument.ok ?
+        questionnaire.buildQuestionnaireResponse(
+          {
+            language: 'en-US',
+            identifier: {
+              system: 'https://example.org/responses',
+              value: 'browser-1',
+            },
+            status: 'completed',
+            subject: { type: 'Patient', reference: 'Patient/browser' },
+            authored: '2026-08-20T12:00:00Z',
+            items: [{ linkId: 'ready', answer: [{ valueBoolean: true }] }],
+          },
+          instrument.value,
+        )
+      : undefined
     const pair =
-      instrument.ok && response.ok ?
+      response?.ok === true ?
         questionnaire.preflightQuestionnairePair(
           instrument.value,
           response.value,

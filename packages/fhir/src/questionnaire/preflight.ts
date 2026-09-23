@@ -14,6 +14,7 @@ import {
   QUESTIONNAIRE_SYSTEMS,
   validateQuestionnaireContract,
 } from './contract.js'
+import { offeredLanguages } from './localization.js'
 import {
   isExactQuestionnaireCanonical,
   parseQuestionnaire,
@@ -46,6 +47,9 @@ import {
   type Issue,
   type Result,
 } from '../core/index.js'
+
+// Parsed response items keep the optional text the builder input omits.
+type ResponseItem = QuestionnaireResponseItemInput & { readonly text?: string }
 
 const completedStatuses = new Set(['amended', 'completed'])
 const VERSION_ALGORITHM = QUESTIONNAIRE_EXTENSIONS.versionAlgorithm
@@ -151,7 +155,7 @@ const validateQuestionnaireResponseEnvelope = (
 
 const validateOmittedGroupChildren = (
   item: QuestionnaireItemInput,
-  responseItem: QuestionnaireResponseItemInput | undefined,
+  responseItem: ResponseItem | undefined,
   enabled: boolean,
   context: PreflightContext,
   path: ReadonlyArray<number | string>,
@@ -171,7 +175,7 @@ const validateOmittedGroupChildren = (
 
 const validateRequiredItems = (
   questionnaireItems: readonly QuestionnaireItemInput[],
-  responseByLinkId: ReadonlyMap<string, QuestionnaireResponseItemInput>,
+  responseByLinkId: ReadonlyMap<string, ResponseItem>,
   context: PreflightContext,
   path: ReadonlyArray<number | string>,
 ): readonly Issue[] => {
@@ -229,18 +233,21 @@ const validateRequiredItems = (
 
 const validateMatchedResponseItem = (
   questionnaireItem: QuestionnaireItemInput,
-  responseItem: QuestionnaireResponseItemInput,
+  responseItem: ResponseItem,
   context: PreflightContext,
   path: ReadonlyArray<number | string>,
 ): readonly Issue[] => {
   const failures: Issue[] = []
   const answers = responseItem.answer ?? []
-  if (responseItem.text !== questionnaireItem.text) {
+  if (
+    responseItem.text !== undefined &&
+    responseItem.text !== questionnaireItem.text
+  ) {
     failures.push(
       issue(
         'value-mismatch',
         [...path, 'text'],
-        'Response item text must exactly match Questionnaire.item.text.',
+        'Response item text, when present, must exactly match the base Questionnaire.item.text.',
       ),
     )
   }
@@ -341,7 +348,7 @@ const validateMatchedResponseItem = (
 
 const validateResponseItems = (
   questionnaireItems: readonly QuestionnaireItemInput[],
-  responseItems: readonly QuestionnaireResponseItemInput[],
+  responseItems: readonly ResponseItem[],
   context: PreflightContext,
   path: ReadonlyArray<number | string> = ['response', 'item'],
 ): readonly Issue[] => {
@@ -349,7 +356,7 @@ const validateResponseItems = (
   const questionnaireByLinkId = new Map(
     questionnaireItems.map((item) => [item.linkId, item]),
   )
-  const responseByLinkId = new Map<string, QuestionnaireResponseItemInput>()
+  const responseByLinkId = new Map<string, ResponseItem>()
 
   for (const [responseIndex, responseItem] of responseItems.entries()) {
     const itemPath = [...path, responseIndex]
@@ -400,11 +407,11 @@ const validateResponseItems = (
 
 /**
  * Strictly parses and cross-checks one Questionnaire/QuestionnaireResponse pair.
- * It validates exact canonical version identity, nesting, answer types, options,
- * portable answer constraints, status-aware required items, expressions, and
- * response text fidelity. Warning-severity target constraints are returned in
- * the successful Result's `warnings`; unexecuted behavior that can change
- * completion acceptance fails closed.
+ * It validates exact canonical version identity, the offered response language,
+ * nesting, answer types, options, portable answer constraints, status-aware
+ * required items, expressions, and response text fidelity. Warning-severity
+ * target constraints are returned in the successful Result's `warnings`;
+ * unexecuted behavior that can change completion acceptance fails closed.
  */
 export const preflightQuestionnairePair = (
   questionnaireInput: unknown,
@@ -438,6 +445,15 @@ export const preflightQuestionnairePair = (
         'value-mismatch',
         ['response', 'questionnaire'],
         'QuestionnaireResponse must name the exact Questionnaire url|version.',
+      ),
+    )
+  }
+  if (!offeredLanguages(questionnaire.value).has(response.value.language)) {
+    failures.push(
+      issue(
+        'value-mismatch',
+        ['response', 'language'],
+        'QuestionnaireResponse.language must be the Questionnaire base language or one of its translation languages.',
       ),
     )
   }
@@ -500,7 +516,7 @@ export const preflightQuestionnairePair = (
   const questionnaireItems = questionnaire.value
     .item as unknown as readonly QuestionnaireItemInput[]
   const responseItems = (response.value.item ??
-    []) as unknown as readonly QuestionnaireResponseItemInput[]
+    []) as unknown as readonly ResponseItem[]
   failures.push(
     ...prefixed(
       validateQuestionnaireContract(

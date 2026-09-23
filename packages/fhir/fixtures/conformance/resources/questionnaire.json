@@ -5,6 +5,7 @@
       "https://grovealliance.org/fhir/questionnaire/StructureDefinition/grove-questionnaire"
     ]
   },
+  "language": "en-US",
   "extension": [
     {
       "url": "http://hl7.org/fhir/StructureDefinition/artifact-versionAlgorithm",

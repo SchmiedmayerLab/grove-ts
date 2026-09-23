@@ -28,6 +28,7 @@ import {
   parseIdentifierSystem,
   parseKeyEpoch,
   parseObservation,
+  parseSemVer,
   retractionTargets,
   validateOpaqueIdentityScope,
   type ApplicationDevice,
@@ -44,6 +45,11 @@ import {
   type NormalizedProviderRecord,
 } from '../src/providers/index.js'
 import * as questionnaire from '../src/questionnaire/index.js'
+import {
+  buildQuestionnaire,
+  buildQuestionnaireResponse,
+  preflightQuestionnairePair,
+} from '../src/questionnaire/index.js'
 import * as r4 from '../src/r4/index.js'
 import * as zodR4 from '../src/zod/r4/index.js'
 import * as zodR4b from '../src/zod/r4b/index.js'
@@ -329,6 +335,55 @@ const value = observationNumericValue(observation)
 const label = codeableConceptDisplay(observation.code)
 // readme:end extract-values
 
+// readme:begin questionnaire
+const translation = (lang: string, content: string) => ({
+  url: 'http://hl7.org/fhir/StructureDefinition/translation',
+  extension: [
+    { url: 'lang', valueCode: lang },
+    { url: 'content', valueString: content },
+  ],
+})
+
+// One Questionnaire carries every language: base strings plus their translations.
+const instrument = unwrap(
+  buildQuestionnaire({
+    url: uri('https://mystudy.example.org/fhir/Questionnaire/wellbeing'),
+    version: unwrap(parseSemVer('1.0.0')),
+    language: 'en-US',
+    status: 'active',
+    subjectTypes: ['Patient'],
+    items: [
+      {
+        linkId: 'feeling',
+        text: 'How are you feeling today?',
+        _text: { extension: [translation('es', '¿Cómo se siente hoy?')] },
+        type: 'string',
+        required: true,
+      },
+    ],
+  }),
+)
+
+// The participant read Spanish, so the response names it and repeats no base text.
+const answers = unwrap(
+  buildQuestionnaireResponse(
+    {
+      language: 'es',
+      identifier: {
+        system: identifierSystem('https://mystudy.example.org/fhir/responses'),
+        value: 'wellbeing-1',
+      },
+      status: 'completed',
+      subject: { type: 'Patient', reference: 'Patient/participant-1' },
+      authored: unwrap(parseFhirInstant('2026-08-19T17:30:00Z')),
+      items: [{ linkId: 'feeling', answer: [{ valueString: 'Bien' }] }],
+    },
+    instrument,
+  ),
+)
+const pair = preflightQuestionnairePair(instrument, answers)
+// readme:end questionnaire
+
 const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8')
 const source = readFileSync(new URL(import.meta.url), 'utf8')
 interface EntryPoint {
@@ -450,6 +505,13 @@ describe('README walkthrough', () => {
     expect(sameEvent).toBe(true)
     expect(retraction.ok).toBe(true)
     expect(parseExchangeGraph(graph).ok).toBe(true)
+  })
+
+  it('answers a multilingual Questionnaire in a translation', () => {
+    expect(instrument.item[0]?._text?.extension).toHaveLength(1)
+    expect(answers.language).toBe('es')
+    expect(answers.item?.[0]?.text).toBeUndefined()
+    expect(pair.ok).toBe(true)
   })
 
   it('keeps every README code block in this file', () => {

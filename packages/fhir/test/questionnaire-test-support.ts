@@ -10,14 +10,12 @@ import {
   buildQuestionnaire,
   buildQuestionnaireResponse,
   parseAbsoluteUri,
-  parseCanonical,
   parseFhirInstant,
   parseIdentifierSystem,
   parsePatientReference,
   parseSemVer,
   preflightQuestionnairePair,
   type AbsoluteUri,
-  type Canonical,
   type FhirInstant,
   type GroveQuestionnaire,
   type GroveQuestionnaireResponse,
@@ -41,9 +39,6 @@ export const url: AbsoluteUri = unwrap(
   parseAbsoluteUri('https://example.org/fhir/Questionnaire/pain'),
 )
 export const version: SemVer = unwrap(parseSemVer('2.0.0'))
-export const questionnaireCanonical: Canonical = unwrap(
-  parseCanonical(`${url}|${version}`),
-)
 export const authored: FhirInstant = unwrap(
   parseFhirInstant('2026-08-20T12:00:00-07:00'),
 )
@@ -127,6 +122,7 @@ export const targetConstraint = (
 export const questionnaireInput: QuestionnaireInput = {
   url,
   version,
+  language: 'en-US',
   name: 'PainQuestionnaire',
   title: 'Pain Questionnaire',
   status: 'active',
@@ -176,7 +172,7 @@ export const questionnaireInput: QuestionnaireInput = {
 export const responseInput = (
   note = 'Rest helps.',
 ): QuestionnaireResponseInput => ({
-  questionnaire: questionnaireCanonical,
+  language: 'en-US',
   identifier: {
     system: unwrap(parseIdentifierSystem('https://example.org/submissions')),
     value: 'submission-1',
@@ -187,18 +183,15 @@ export const responseInput = (
   items: [
     {
       linkId: 'health',
-      text: 'Health',
       item: [
         {
           linkId: 'has-pain',
-          text: 'Are you in pain?',
           answer: [
             {
               valueBoolean: true,
               item: [
                 {
                   linkId: 'pain-severity',
-                  text: 'How severe is the pain?',
                   answer: [
                     {
                       valueCoding: { system: codingSystem, code: 'mild' },
@@ -213,7 +206,6 @@ export const responseInput = (
     },
     {
       linkId: 'notes',
-      text: 'Additional notes',
       answer: [{ valueString: note }],
     },
   ],
@@ -223,8 +215,17 @@ export const questionnaire: GroveQuestionnaire = unwrap(
   buildQuestionnaire(questionnaireInput),
 )
 export const response: GroveQuestionnaireResponse = unwrap(
-  buildQuestionnaireResponse(responseInput()),
+  buildQuestionnaireResponse(responseInput(), questionnaire),
 )
+
+/** Declares one string item, so a response builder test reaches the rule it names. */
+export const questionnaireDeclaring = (linkId: string): GroveQuestionnaire =>
+  unwrap(
+    buildQuestionnaire({
+      ...questionnaireInput,
+      items: [{ linkId, text: linkId, type: 'string' }],
+    }),
+  )
 
 export const preflightItems = (
   questionnaireItems: ReadonlyArray<Readonly<Record<string, unknown>>>,

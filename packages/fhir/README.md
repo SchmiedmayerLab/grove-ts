@@ -656,11 +656,59 @@ The `questionnaire` entry point builds strict, versioned R4
 submission:
 
 ```typescript
+import { parseFhirInstant, parseSemVer } from '@schmiedmayerlab/grove-fhir'
 import {
   buildQuestionnaire,
   buildQuestionnaireResponse,
   preflightQuestionnairePair,
 } from '@schmiedmayerlab/grove-fhir/questionnaire'
+
+const translation = (lang: string, content: string) => ({
+  url: 'http://hl7.org/fhir/StructureDefinition/translation',
+  extension: [
+    { url: 'lang', valueCode: lang },
+    { url: 'content', valueString: content },
+  ],
+})
+
+// One Questionnaire carries every language: base strings plus their translations.
+const instrument = unwrap(
+  buildQuestionnaire({
+    url: uri('https://mystudy.example.org/fhir/Questionnaire/wellbeing'),
+    version: unwrap(parseSemVer('1.0.0')),
+    language: 'en-US',
+    status: 'active',
+    subjectTypes: ['Patient'],
+    items: [
+      {
+        linkId: 'feeling',
+        text: 'How are you feeling today?',
+        _text: { extension: [translation('es', '¿Cómo se siente hoy?')] },
+        type: 'string',
+        required: true,
+      },
+    ],
+  }),
+)
+
+// The participant read Spanish, so the response names it and repeats no base text.
+const answers = unwrap(
+  buildQuestionnaireResponse(
+    {
+      language: 'es',
+      identifier: {
+        system: identifierSystem('https://mystudy.example.org/fhir/responses'),
+        value: 'wellbeing-1',
+      },
+      status: 'completed',
+      subject: { type: 'Patient', reference: 'Patient/participant-1' },
+      authored: unwrap(parseFhirInstant('2026-08-19T17:30:00Z')),
+      items: [{ linkId: 'feeling', answer: [{ valueString: 'Bien' }] }],
+    },
+    instrument,
+  ),
+)
+const pair = preflightQuestionnairePair(instrument, answers)
 ```
 
 The builders own the exact Grove profile declarations, Semantic Versioning
@@ -668,12 +716,20 @@ algorithm extension, and electronic completion-mode extension. Answer values
 are an exactly-one `value[x]` union in TypeScript and in the runtime schema.
 The Grove profiles fix both subjects to `Patient`, so `subjectTypes` is required and is exactly `['Patient']`, and a response requires one `Patient`-typed `subject`.
 Both builders and both parsers enforce this, as does the exchange-graph validator for every mandatory governed subject.
-The pair preflight checks the exact `url|version`, global link identity,
-response nesting, answer types, inline options, repeats, response text,
-conditional enablement, and required enabled items for completed or amended
-responses. It also enforces text length and decimal-place limits, scalar and
-quantity bounds, inline or ValueSet-backed quantity units, attachment MIME and
-size limits, repeated-answer occurrence bounds, and exclusive options.
+
+One Questionnaire holds every language of an instrument under its one `url|version`.
+`language` is required and names the BCP 47 language of every base string.
+Each other language is a standard `translation` extension on the string's primitive element: `_title`, `_description`, an item's `_text` or `_prefix`, a coding's `_display`, or an extension's string value.
+Each translation needs one BCP 47 `lang` and one non-empty `content`, and one element translates into each language at most once.
+A `valueString` answer option is data, not display: a translation may sit on its `_valueString`, but a response always stores the base value.
+Changing a translation changes the content, so it needs a new `version`.
+
+`buildQuestionnaireResponse` takes the Questionnaire it answers and derives `questionnaire` from its `url|version`.
+The response `language` is required and must be the base language or a translation language the Questionnaire offers.
+The builder writes each item's `text` from the base Questionnaire only when the response uses the base language; a response to a translation omits it.
+
+The pair preflight checks the exact `url|version`, the offered response language, global link identity, response nesting, answer types, inline options, repeats, response text (omitted, or exactly the base text), conditional enablement, and required enabled items for completed or amended responses.
+It also enforces text length and decimal-place limits, scalar and quantity bounds, inline or ValueSet-backed quantity units, attachment MIME and size limits, repeated-answer occurrence bounds, and exclusive options.
 
 Terminology is never fetched. For a coded item backed by `answerValueSet`, the
 caller supplies a normalized resolved concept list through

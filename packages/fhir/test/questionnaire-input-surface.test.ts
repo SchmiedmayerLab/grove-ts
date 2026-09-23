@@ -8,6 +8,7 @@
 
 import {
   authored,
+  questionnaire,
   questionnaireInput,
   responseInput,
   unwrap,
@@ -28,6 +29,7 @@ describe('Questionnaire R4 builders', () => {
       ...questionnaireInput,
       url: '/relative',
       version: '01.0.0',
+      language: 'not a tag',
       id: 'invalid/id',
       date: 'not-an-instant',
       extensions: [
@@ -109,18 +111,21 @@ describe('Questionnaire R4 builders', () => {
       'A complete test instrument.',
     )
 
-    const fullResponse = buildQuestionnaireResponse({
-      ...responseInput(),
-      id: unwrap(parseFhirId('response-1')),
-      author: { type: 'Practitioner', reference: 'Practitioner/author' },
-      source: { type: 'Patient', reference: 'Patient/example' },
-      extensions: [
-        {
-          url: 'https://example.org/fhir/StructureDefinition/response-note',
-          valueString: 'note',
-        },
-      ],
-    })
+    const fullResponse = buildQuestionnaireResponse(
+      {
+        ...responseInput(),
+        id: unwrap(parseFhirId('response-1')),
+        author: { type: 'Practitioner', reference: 'Practitioner/author' },
+        source: { type: 'Patient', reference: 'Patient/example' },
+        extensions: [
+          {
+            url: 'https://example.org/fhir/StructureDefinition/response-note',
+            valueString: 'note',
+          },
+        ],
+      },
+      questionnaire,
+    )
     expect(fullResponse.ok).toBe(true)
     if (!fullResponse.ok) return
     expect(fullResponse.value.author?.reference).toBe('Practitioner/author')
@@ -128,27 +133,30 @@ describe('Questionnaire R4 builders', () => {
   })
 
   it('supports identifier-only typed response actors and rejects disallowed source targets', () => {
-    const logical = buildQuestionnaireResponse({
-      ...responseInput(),
-      author: {
-        type: 'PractitionerRole',
-        identifier: {
-          system: unwrap(
-            parseIdentifierSystem('https://example.org/practitioner-roles'),
-          ),
-          value: 'role-7',
+    const logical = buildQuestionnaireResponse(
+      {
+        ...responseInput(),
+        author: {
+          type: 'PractitionerRole',
+          identifier: {
+            system: unwrap(
+              parseIdentifierSystem('https://example.org/practitioner-roles'),
+            ),
+            value: 'role-7',
+          },
+        },
+        source: {
+          type: 'RelatedPerson',
+          identifier: {
+            system: unwrap(
+              parseIdentifierSystem('https://example.org/respondents'),
+            ),
+            value: 'respondent-9',
+          },
         },
       },
-      source: {
-        type: 'RelatedPerson',
-        identifier: {
-          system: unwrap(
-            parseIdentifierSystem('https://example.org/respondents'),
-          ),
-          value: 'respondent-9',
-        },
-      },
-    })
+      questionnaire,
+    )
     expect(logical.ok).toBe(true)
     if (!logical.ok) return
     expect(logical.value.author?.type).toBe('PractitionerRole')
@@ -163,7 +171,7 @@ describe('Questionnaire R4 builders', () => {
   })
 
   it('parses literal, historical, absolute, and contained response references without redundant type', () => {
-    const built = buildQuestionnaireResponse(responseInput())
+    const built = buildQuestionnaireResponse(responseInput(), questionnaire)
     expect(built.ok).toBe(true)
     if (!built.ok) return
 
@@ -187,7 +195,7 @@ describe('Questionnaire R4 builders', () => {
   })
 
   it('rejects conflicting, unresolved, and untyped logical response references', () => {
-    const built = buildQuestionnaireResponse(responseInput())
+    const built = buildQuestionnaireResponse(responseInput(), questionnaire)
     expect(built.ok).toBe(true)
     if (!built.ok) return
     const invalid = [
@@ -229,58 +237,48 @@ describe('Questionnaire R4 builders', () => {
   })
 
   it('reports the complete bounded QuestionnaireResponse input validation surface', () => {
-    const result = buildQuestionnaireResponse({
-      questionnaire: 'https://example.org/Questionnaire/pain',
-      identifier: { system: '/relative', value: ' ' },
-      status: 'completed',
-      id: 'invalid/id',
-      subject: {
-        type: 'Patient',
-        reference: 'Patient/example/_history/2',
-      },
-      authored: 'not-an-instant',
-      author: { type: 'Device', reference: ' ' },
-      source: { type: 'Organization', reference: '' },
-      extensions: [
-        {
-          url: 'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode',
-          valueCodeableConcept: { text: 'duplicate' },
+    const result = buildQuestionnaireResponse(
+      {
+        language: 'fr-FR',
+        identifier: { system: '/relative', value: ' ' },
+        status: 'completed',
+        id: 'invalid/id',
+        subject: {
+          type: 'Patient',
+          reference: 'Patient/example/_history/2',
         },
-      ],
-      items: [
-        {
-          linkId: 'parent',
-          item: [
-            {
-              linkId: 'direct-child',
-              answer: [{ valueString: 'missing repeated text' }],
-            },
-          ],
-          answer: [
-            {
-              valueString: 'parent answer',
-              item: [
-                {
-                  linkId: 'answer-child',
-                  answer: [{ valueString: 'also missing repeated text' }],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    } as unknown as QuestionnaireResponseInput)
+        authored: 'not-an-instant',
+        author: { type: 'Device', reference: ' ' },
+        source: { type: 'Organization', reference: '' },
+        extensions: [
+          {
+            url: 'http://hl7.org/fhir/StructureDefinition/questionnaireresponse-completionMode',
+            valueCodeableConcept: { text: 'duplicate' },
+          },
+        ],
+        items: [
+          {
+            linkId: 'health',
+            item: [
+              {
+                linkId: 'undeclared-child',
+                answer: [{ valueString: 'undeclared answer' }],
+              },
+            ],
+          },
+        ],
+      } as unknown as QuestionnaireResponseInput,
+      questionnaire,
+    )
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(new Set(result.issues.map(({ code }) => code))).toEqual(
       new Set([
-        'invalid-uri',
-        'invalid-code',
+        'value-mismatch',
         'invalid-identifier',
         'invalid-date-time',
         'invalid-reference',
         'duplicate-identifier',
-        'missing-required',
       ]),
     )
   })

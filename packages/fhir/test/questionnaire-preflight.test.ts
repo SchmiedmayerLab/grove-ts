@@ -316,16 +316,18 @@ describe('Questionnaire pair preflight', () => {
       }),
     )
     const valueSetResponse = unwrap(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: [
-          {
-            linkId: 'mood',
-            text: 'Mood',
-            answer: [{ valueCoding: { system: moodSystem, code: 'calm' } }],
-          },
-        ],
-      }),
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          items: [
+            {
+              linkId: 'mood',
+              answer: [{ valueCoding: { system: moodSystem, code: 'calm' } }],
+            },
+          ],
+        },
+        valueSetQuestionnaire,
+      ),
     )
     expect(
       preflightQuestionnairePair(valueSetQuestionnaire, valueSetResponse).ok,

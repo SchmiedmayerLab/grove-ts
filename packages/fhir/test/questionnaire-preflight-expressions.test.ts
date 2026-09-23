@@ -505,7 +505,7 @@ describe('Questionnaire pair preflight', () => {
       assert(
         property(string({ minLength: 1 }), (value) => {
           const candidate = unwrap(
-            buildQuestionnaireResponse(responseInput(value)),
+            buildQuestionnaireResponse(responseInput(value), questionnaire),
           )
           const result = preflightQuestionnairePair(questionnaire, candidate)
           return result.ok

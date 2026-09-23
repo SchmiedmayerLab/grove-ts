@@ -149,6 +149,23 @@ const answerOptionFields = {
 
 const answerOptionKeys = Object.keys(answerOptionFields)
 
+const answerOptionChoice = (
+  value: {
+    readonly valueString?: string | undefined
+    readonly _valueString?: object | undefined
+  },
+  context: z.RefinementCtx,
+) => {
+  exactlyOneAnswerChoice(value, answerOptionKeys, context)
+  if (value._valueString !== undefined && value.valueString === undefined) {
+    context.addIssue({
+      code: 'custom',
+      path: ['_valueString'],
+      message: 'answerOption._valueString requires valueString.',
+    })
+  }
+}
+
 const populatedCount = (value: object, keys: readonly string[]): number =>
   keys.filter((key) => Reflect.get(value, key) !== undefined).length
 
@@ -211,12 +228,11 @@ const answerOptionSchema = z
     extension: z.array(extensionSchema).optional(),
     modifierExtension: z.array(extensionSchema).optional(),
     ...answerOptionFields,
+    _valueString: primitiveMetadata,
     initialSelected: z.boolean().optional(),
     _initialSelected: primitiveMetadata,
   })
-  .superRefine((value, context) =>
-    exactlyOneAnswerChoice(value, answerOptionKeys, context),
-  )
+  .superRefine(answerOptionChoice)
 
 const initialSchema = z
   .strictObject({
@@ -325,6 +341,7 @@ export const questionnaireItemSchema: z.ZodType<FhirJson<R4QuestionnaireItem>> =
 const questionnaireSchemaValue = z.strictObject({
   resourceType: z.literal('Questionnaire'),
   ...resourceFields,
+  language: z.string().min(1),
   url: z.url(),
   _url: primitiveMetadata,
   version: z.string().min(1),
@@ -410,6 +427,7 @@ export const questionnaireResponseItemSchema: z.ZodType<
 const questionnaireResponseSchemaValue = z.strictObject({
   resourceType: z.literal('QuestionnaireResponse'),
   ...resourceFields,
+  language: z.string().min(1),
   identifier: identifierSchema,
   basedOn: z.array(resolvableReferenceSchema).optional(),
   partOf: z.array(resolvableReferenceSchema).optional(),
@@ -480,11 +498,10 @@ const builderAnswerOptionSchema = z
   .strictObject({
     ...builderBackboneFields,
     ...answerOptionFields,
+    _valueString: primitiveMetadata,
     initialSelected: z.boolean().optional(),
   })
-  .superRefine((value, context) =>
-    exactlyOneAnswerChoice(value, answerOptionKeys, context),
-  )
+  .superRefine(answerOptionChoice)
 
 const builderInitialSchema = z
   .strictObject({
@@ -502,7 +519,9 @@ const questionnaireBuilderItemSchema: z.ZodType = z.lazy(() =>
     definition: z.string().optional(),
     code: z.array(codingSchema).optional(),
     prefix: z.string().optional(),
+    _prefix: primitiveMetadata,
     text: z.string().optional(),
+    _text: primitiveMetadata,
     type: z.enum([
       'group',
       'display',
@@ -538,12 +557,15 @@ export const questionnaireBuilderInputSchema: z.ZodType = z.strictObject({
   id: z.string().optional(),
   url: z.string(),
   version: z.string(),
+  language: z.string(),
   name: z.string().optional(),
   title: z.string().optional(),
+  _title: primitiveMetadata,
   status: z.enum(['draft', 'active', 'retired', 'unknown']),
   subjectTypes: z.tuple([z.literal('Patient')]),
   date: z.string().optional(),
   description: z.string().optional(),
+  _description: primitiveMetadata,
   purpose: z.string().optional(),
   extensions: z.array(extensionSchema).optional(),
   items: z.array(questionnaireBuilderItemSchema).min(1),
@@ -554,7 +576,6 @@ const questionnaireResponseBuilderItemSchema: z.ZodType = z.lazy(() =>
     ...builderBackboneFields,
     linkId: z.string(),
     definition: z.string().optional(),
-    text: z.string().optional(),
     answer: z
       .array(
         z
@@ -601,7 +622,7 @@ const actorReferenceInputSchema = builderReferenceSchema(
 export const questionnaireResponseBuilderInputSchema: z.ZodType =
   z.strictObject({
     id: z.string().optional(),
-    questionnaire: z.string(),
+    language: z.string(),
     identifier: questionnaireResponseIdentifierInputSchema,
     status: z.enum([
       'in-progress',

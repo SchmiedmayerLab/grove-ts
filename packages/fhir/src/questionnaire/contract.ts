@@ -834,15 +834,6 @@ export const validateQuestionnaireResponseItemContract = (
   for (const [itemIndex, item] of items.entries()) {
     const itemPath = [...path, itemIndex]
     const answered = (item.answer?.length ?? 0) > 0
-    if (answered && (item.text?.trim() ?? '') === '') {
-      failures.push(
-        issue(
-          'missing-required',
-          [...itemPath, 'text'],
-          'Every answered response item must repeat the question text.',
-        ),
-      )
-    }
     if (answered && answeredLinkIds.has(item.linkId)) {
       failures.push(
         issue(

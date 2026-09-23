@@ -13,6 +13,7 @@ import {
   validateQuestionnaireContract,
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
+import { isLanguageTag, questionnaireTranslations } from './localization.js'
 import {
   QUESTIONNAIRE_EXTENSIONS,
   QUESTIONNAIRE_SYSTEMS,
@@ -175,6 +176,20 @@ const validateElementExtensions = (
   return failures
 }
 
+const languageIssues = (
+  resource: { readonly language: string },
+  resourceType: string,
+): readonly Issue[] =>
+  isLanguageTag(resource.language) ?
+    []
+  : [
+      issue(
+        'invalid-code',
+        ['language'],
+        `${resourceType}.language must be a BCP 47 language tag.`,
+      ),
+    ]
+
 const questionnaireContractIssues = (
   questionnaire: GroveQuestionnaire,
 ): readonly Issue[] => {
@@ -184,6 +199,8 @@ const questionnaireContractIssues = (
       groveQuestionnaireProfileCanonicals['grove-questionnaire'],
     ),
     ...validateElementExtensions(questionnaire),
+    ...languageIssues(questionnaire, 'Questionnaire'),
+    ...questionnaireTranslations(questionnaire).failures,
   ]
   if (!isExactQuestionnaireUrl(questionnaire.url)) {
     failures.push(
@@ -250,6 +267,7 @@ const responseContractIssues = (
       groveQuestionnaireProfileCanonicals['grove-questionnaire-response'],
     ),
     ...validateElementExtensions(response),
+    ...languageIssues(response, 'QuestionnaireResponse'),
   ]
   if (!isExactQuestionnaireCanonical(response.questionnaire)) {
     failures.push(

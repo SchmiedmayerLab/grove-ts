@@ -11,7 +11,9 @@ import {
   validateQuestionnaireContract,
   validateQuestionnaireResponseItemContract,
 } from './contract.js'
+import { isLanguageTag, offeredLanguages } from './localization.js'
 import { parseQuestionnaire, parseQuestionnaireResponse } from './parse.js'
+import { prefixed } from './preflight-diagnostics.js'
 import {
   QUESTIONNAIRE_EXTENSIONS,
   QUESTIONNAIRE_SYSTEMS,
@@ -32,13 +34,13 @@ import type {
   GroveQuestionnaireResponse,
   QuestionnaireInput,
   QuestionnaireResponseInput,
+  QuestionnaireResponseItemInput,
 } from './types.js'
 import { groveQuestionnaireProfileCanonicals } from '../contract/questionnaire.generated.js'
 import {
   cloneJsonValue,
   issue,
   issues,
-  parseCanonical,
   parseFhirId,
   parseFhirInstant,
   parseIdentifierSystem,
@@ -88,6 +90,15 @@ const validateQuestionnaireInput = (
       ),
     )
   }
+  if (!isLanguageTag(input.language)) {
+    failures.push(
+      issue(
+        'invalid-code',
+        ['language'],
+        'Questionnaire.language must be a BCP 47 language tag.',
+      ),
+    )
+  }
   if (input.id !== undefined && !parseFhirId(input.id).ok) {
     failures.push(
       issue('invalid-identifier', ['id'], 'Questionnaire.id is invalid.'),
@@ -130,6 +141,7 @@ export const buildQuestionnaire = (
     meta: {
       profile: [groveQuestionnaireProfileCanonicals['grove-questionnaire']],
     },
+    language: validatedInput.language,
     extension: [
       ...(validatedInput.extensions ?? []),
       {
@@ -146,12 +158,18 @@ export const buildQuestionnaire = (
     ...(validatedInput.title === undefined ?
       {}
     : { title: validatedInput.title }),
+    ...(validatedInput._title === undefined ?
+      {}
+    : { _title: validatedInput._title }),
     status: validatedInput.status,
     subjectType: validatedInput.subjectTypes,
     ...(validatedInput.date === undefined ? {} : { date: validatedInput.date }),
     ...(validatedInput.description === undefined ?
       {}
     : { description: validatedInput.description }),
+    ...(validatedInput._description === undefined ?
+      {}
+    : { _description: validatedInput._description }),
     ...(validatedInput.purpose === undefined ?
       {}
     : { purpose: validatedInput.purpose }),
@@ -161,25 +179,15 @@ export const buildQuestionnaire = (
 
 const validateResponseInput = (
   input: QuestionnaireResponseInput,
+  questionnaire: GroveQuestionnaire,
 ): readonly Issue[] => {
   const failures: Issue[] = []
-  const canonical = parseCanonical(input.questionnaire)
-  if (!canonical.ok || !/^[^|#]+\|[^|#]+$/u.test(input.questionnaire)) {
+  if (!offeredLanguages(questionnaire).has(input.language)) {
     failures.push(
       issue(
-        'invalid-uri',
-        ['questionnaire'],
-        'Response.questionnaire must be an exact url|version canonical.',
-      ),
-    )
-  }
-  const version = input.questionnaire.split('|')[1]
-  if (!parseSemVer(version).ok) {
-    failures.push(
-      issue(
-        'invalid-code',
-        ['questionnaire'],
-        'Response.questionnaire version must be SemVer.',
+        'value-mismatch',
+        ['language'],
+        'Response.language must be the Questionnaire base language or one of its translation languages.',
       ),
     )
   }
@@ -238,17 +246,97 @@ const validateResponseInput = (
   return failures
 }
 
-/** Builds a Grove R4 QuestionnaireResponse for one exact instrument version. */
+type QuestionnaireItem = GroveQuestionnaire['item'][number]
+
+// Response text repeats the base Questionnaire text, so only a base-language response carries it.
+const itemsWithText = (
+  items: readonly QuestionnaireResponseItemInput[],
+  definitions: readonly QuestionnaireItem[],
+  writeText: boolean,
+  path: ReadonlyArray<number | string>,
+  failures: Issue[],
+): readonly object[] =>
+  items.map((item, index) => {
+    const itemPath = [...path, index]
+    const definition = definitions.find(
+      (candidate) => candidate.linkId === item.linkId,
+    )
+    if (definition === undefined) {
+      failures.push(
+        issue(
+          'invalid-reference',
+          [...itemPath, 'linkId'],
+          `Response linkId ${item.linkId} is not valid at this nesting level.`,
+        ),
+      )
+      return item
+    }
+    const children = definition.item ?? []
+    const { answer, item: nested, ...element } = item
+    return {
+      ...element,
+      ...(writeText && definition.text !== undefined ?
+        { text: definition.text }
+      : {}),
+      ...(answer === undefined ?
+        {}
+      : {
+          answer: answer.map((entry, answerIndex) =>
+            entry.item === undefined ?
+              entry
+            : {
+                ...entry,
+                item: itemsWithText(
+                  entry.item,
+                  children,
+                  writeText,
+                  [...itemPath, 'answer', answerIndex, 'item'],
+                  failures,
+                ),
+              },
+          ),
+        }),
+      ...(nested === undefined ?
+        {}
+      : {
+          item: itemsWithText(
+            nested,
+            children,
+            writeText,
+            [...itemPath, 'item'],
+            failures,
+          ),
+        }),
+    }
+  })
+
+/** Builds a Grove R4 QuestionnaireResponse to one exact Questionnaire in one of its languages. */
 export const buildQuestionnaireResponse = (
   input: QuestionnaireResponseInput,
+  questionnaire: GroveQuestionnaire,
 ): Result<GroveQuestionnaireResponse> => {
+  const parsedQuestionnaire = parseQuestionnaire(questionnaire)
+  if (!parsedQuestionnaire.ok) {
+    return issues(prefixed(parsedQuestionnaire.issues, 'questionnaire'))
+  }
+  const instrument = parsedQuestionnaire.value
   const parsedInput = parseBuilderInput<QuestionnaireResponseInput>(
     questionnaireResponseBuilderInputSchema,
     input,
   )
   if (!parsedInput.ok) return parsedInput
   const validatedInput = parsedInput.value
-  const failures = validateResponseInput(validatedInput)
+  const failures = [...validateResponseInput(validatedInput, instrument)]
+  const items =
+    validatedInput.items === undefined ?
+      undefined
+    : itemsWithText(
+        validatedInput.items,
+        instrument.item,
+        validatedInput.language === instrument.language,
+        ['items'],
+        failures,
+      )
   if (failures.length > 0) return issues(failures)
 
   return parseQuestionnaireResponse({
@@ -259,6 +347,7 @@ export const buildQuestionnaireResponse = (
         groveQuestionnaireProfileCanonicals['grove-questionnaire-response'],
       ],
     },
+    language: validatedInput.language,
     extension: [
       ...(validatedInput.extensions ?? []),
       {
@@ -269,7 +358,7 @@ export const buildQuestionnaireResponse = (
       },
     ],
     identifier: validatedInput.identifier,
-    questionnaire: validatedInput.questionnaire,
+    questionnaire: `${instrument.url}|${instrument.version}`,
     status: validatedInput.status,
     subject: validatedInput.subject,
     authored: validatedInput.authored,
@@ -279,8 +368,6 @@ export const buildQuestionnaireResponse = (
     ...(validatedInput.source === undefined ?
       {}
     : { source: validatedInput.source }),
-    ...(validatedInput.items === undefined ?
-      {}
-    : { item: validatedInput.items }),
+    ...(items === undefined ? {} : { item: items }),
   })
 }

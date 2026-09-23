@@ -26,7 +26,6 @@ const {
   groveMobilePackageMetadata,
   groveRecordingFormatRegistry,
   parseAbsoluteUri,
-  parseCanonical,
   parseEventSequence,
   parseFhirInstant,
   parseIdentifierSystem,
@@ -595,6 +594,7 @@ const questionnaire = unwrap(
   buildQuestionnaire({
     url: questionnaireUrl,
     version: questionnaireVersion,
+    language: 'en-US',
     name: 'GroveTsConformance',
     title: 'Grove TypeScript conformance instrument',
     status: 'active',
@@ -630,37 +630,37 @@ const questionnaire = unwrap(
   }),
 )
 const questionnaireResponse = unwrap(
-  buildQuestionnaireResponse({
-    questionnaire: unwrap(
-      parseCanonical(`${questionnaireUrl}|${questionnaireVersion}`),
-    ),
-    identifier: {
-      system: identifierSystem(
-        'https://grovealliance.org/fhir/testing/questionnaire-responses',
-      ),
-      value: 'grove-ts-conformance-response',
-    },
-    status: 'completed',
-    subject: { type: 'Patient', reference: 'Patient/example' },
-    authored: instant('2026-08-20T12:00:00Z'),
-    items: [
-      {
-        linkId: 'wellbeing',
-        text: 'How are you feeling?',
-        answer: [
-          {
-            valueCoding: {
-              system: uri(
-                'https://grovealliance.org/fhir/testing/CodeSystem/wellbeing',
-              ),
-              code: 'well',
-              display: 'Well',
-            },
-          },
-        ],
+  buildQuestionnaireResponse(
+    {
+      language: 'en-US',
+      identifier: {
+        system: identifierSystem(
+          'https://grovealliance.org/fhir/testing/questionnaire-responses',
+        ),
+        value: 'grove-ts-conformance-response',
       },
-    ],
-  }),
+      status: 'completed',
+      subject: { type: 'Patient', reference: 'Patient/example' },
+      authored: instant('2026-08-20T12:00:00Z'),
+      items: [
+        {
+          linkId: 'wellbeing',
+          answer: [
+            {
+              valueCoding: {
+                system: uri(
+                  'https://grovealliance.org/fhir/testing/CodeSystem/wellbeing',
+                ),
+                code: 'well',
+                display: 'Well',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    questionnaire,
+  ),
 )
 
 const resources = new Map(

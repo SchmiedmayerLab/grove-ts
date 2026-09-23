@@ -10,6 +10,7 @@ import {
   codingSystem,
   preflightItems,
   questionnaire,
+  questionnaireDeclaring,
   questionnaireExtensions,
   questionnaireInput,
   response,
@@ -65,55 +66,59 @@ describe('Questionnaire R4 builders', () => {
     ).toBe(false)
 
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: [
-          {
-            linkId: 'answer-weight',
-            text: 'Answer weight',
-            answer: [
-              {
-                extension: [
-                  {
-                    url: questionnaireExtensions.itemWeight,
-                    valueInteger: 1,
-                  },
-                ],
-                valueCoding: { system: codingSystem, code: 'answer-weight' },
-              },
-            ],
-          },
-        ],
-      }).ok,
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          items: [
+            {
+              linkId: 'answer-weight',
+              answer: [
+                {
+                  extension: [
+                    {
+                      url: questionnaireExtensions.itemWeight,
+                      valueInteger: 1,
+                    },
+                  ],
+                  valueCoding: { system: codingSystem, code: 'answer-weight' },
+                },
+              ],
+            },
+          ],
+        },
+        questionnaireDeclaring('answer-weight'),
+      ).ok,
     ).toBe(false)
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: [
-          {
-            linkId: 'duplicate-answer-weight',
-            text: 'Duplicate answer weight',
-            answer: [
-              {
-                extension: [
-                  {
-                    url: questionnaireExtensions.itemWeight,
-                    valueDecimal: 1,
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          items: [
+            {
+              linkId: 'duplicate-answer-weight',
+              answer: [
+                {
+                  extension: [
+                    {
+                      url: questionnaireExtensions.itemWeight,
+                      valueDecimal: 1,
+                    },
+                    {
+                      url: questionnaireExtensions.itemWeight,
+                      valueDecimal: 2,
+                    },
+                  ],
+                  valueCoding: {
+                    system: codingSystem,
+                    code: 'duplicate-answer-weight',
                   },
-                  {
-                    url: questionnaireExtensions.itemWeight,
-                    valueDecimal: 2,
-                  },
-                ],
-                valueCoding: {
-                  system: codingSystem,
-                  code: 'duplicate-answer-weight',
                 },
-              },
-            ],
-          },
-        ],
-      }).ok,
+              ],
+            },
+          ],
+        },
+        questionnaireDeclaring('duplicate-answer-weight'),
+      ).ok,
     ).toBe(false)
 
     const weightedCoding = {
@@ -143,28 +148,32 @@ describe('Questionnaire R4 builders', () => {
       }).ok,
     ).toBe(false)
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: [
-          {
-            linkId: 'weighted',
-            text: 'Weighted',
-            answer: [{ valueCoding: weightedCoding }],
-          },
-        ],
-      }).ok,
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          items: [
+            {
+              linkId: 'weighted',
+              answer: [{ valueCoding: weightedCoding }],
+            },
+          ],
+        },
+        questionnaireDeclaring('weighted'),
+      ).ok,
     ).toBe(false)
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: [
-          {
-            linkId: 'duplicate-weight',
-            text: 'Duplicate weight',
-            answer: [{ valueCoding: duplicateWeightedCoding }],
-          },
-        ],
-      }).ok,
+      buildQuestionnaireResponse(
+        {
+          ...responseInput(),
+          items: [
+            {
+              linkId: 'duplicate-weight',
+              answer: [{ valueCoding: duplicateWeightedCoding }],
+            },
+          ],
+        },
+        questionnaireDeclaring('duplicate-weight'),
+      ).ok,
     ).toBe(false)
   })
 
@@ -185,24 +194,16 @@ describe('Questionnaire R4 builders', () => {
     }
   })
 
-  it('enforces answered text and qrs-2 outside pair preflight', () => {
+  it('enforces qrs-2 and admits omitted text outside pair preflight', () => {
     const duplicateAnswers = [
-      {
-        linkId: 'duplicate',
-        text: 'Duplicate',
-        answer: [{ valueString: 'one' }],
-      },
-      {
-        linkId: 'duplicate',
-        text: 'Duplicate',
-        answer: [{ valueString: 'two' }],
-      },
+      { linkId: 'duplicate', answer: [{ valueString: 'one' }] },
+      { linkId: 'duplicate', answer: [{ valueString: 'two' }] },
     ]
     expect(
-      buildQuestionnaireResponse({
-        ...responseInput(),
-        items: duplicateAnswers,
-      }).ok,
+      buildQuestionnaireResponse(
+        { ...responseInput(), items: duplicateAnswers },
+        questionnaireDeclaring('duplicate'),
+      ).ok,
     ).toBe(false)
     expect(
       parseQuestionnaireResponse({
@@ -221,7 +222,7 @@ describe('Questionnaire R4 builders', () => {
           },
         ],
       }).ok,
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('validates authored and answer temporal values as R4 primitives', () => {

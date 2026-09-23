@@ -49,6 +49,7 @@ export const QUESTIONNAIRE_EXTENSIONS = {
   styleSensitive:
     'http://hl7.org/fhir/StructureDefinition/rendering-styleSensitive',
   targetConstraint: 'http://hl7.org/fhir/StructureDefinition/targetConstraint',
+  translation: 'http://hl7.org/fhir/StructureDefinition/translation',
   unitOption:
     'http://hl7.org/fhir/StructureDefinition/questionnaire-unitOption',
   unitValueSet:
