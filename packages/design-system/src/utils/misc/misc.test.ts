@@ -61,7 +61,6 @@ describe("isEmpty", () => {
     [true, false],
     ["", true],
     ["some", false],
-    ["", true],
     [new Set(["one"]), false],
     [new Set(), true],
   ])("checks if %s is empty -> %s", (a, result) => {

@@ -43,6 +43,24 @@ describe("useForm", () => {
     expect(result.current.formError).toBe(undefined);
   });
 
+  it("preserves submit results and reports rejected submissions as form errors", async () => {
+    const { result } = renderHook(() => useForm({ formSchema: z.object({}) }));
+
+    await act(async () => {
+      await expect(
+        result.current.handleSubmit(() => Promise.resolve("saved"))(),
+      ).resolves.toBe("saved");
+    });
+    await act(async () => {
+      await expect(
+        result.current.handleSubmit(() =>
+          Promise.reject(new Error("Save failed")),
+        )(),
+      ).resolves.toBeUndefined();
+    });
+    expect(result.current.formError).toMatchObject({ message: "Save failed" });
+  });
+
   it("exposes submitAsync utility", async () => {
     const { result } = renderHook(() =>
       useForm({

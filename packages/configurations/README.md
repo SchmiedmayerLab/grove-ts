@@ -119,3 +119,9 @@ This project is licensed under the MIT License. See [Licenses](https://github.co
 
 This project is developed as part of the Schmiedmayer Lab at Stanford University.
 See the repository's [CONTRIBUTORS.md](../../CONTRIBUTORS.md).
+
+## Declaration dependencies
+
+The package declares `type-fest` 4 as a peer dependency for the published declarations of `eslint-import-context`, which does not declare that dependency itself.
+Install this peer alongside the shared lint configuration so its dependency declarations resolve compatible types, without disabling declaration checking.
+The workspace root mirrors this requirement because npm can otherwise hoist an incompatible version from Jest above workspace peers.

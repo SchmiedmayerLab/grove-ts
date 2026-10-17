@@ -75,17 +75,18 @@
     "playwright": "^1.62.1",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "publint": "^0.3.22"
+    "publint": "^0.3.22",
+    "type-fest": "^4.41.0"
   },
   "allowScripts": {
-    "@firebase/util@1.15.2": true,
+    "@firebase/util@1.15.3": true,
     "@parcel/watcher@2.6.0": true,
-    "@swc/core@1.15.47": true,
-    "esbuild@0.28.1": true,
+    "@swc/core@1.16.13": true,
+    "esbuild@0.28.2": true,
     "fsevents@2.3.3": true,
     "lmdb@2.8.5": true,
     "msgpackr-extract@3.0.4": true,
-    "protobufjs@7.6.5": true,
+    "protobufjs@7.6.6": true,
     "unrs-resolver@1.12.2": true
   },
   "knip": {
@@ -100,7 +101,8 @@
         "ignoreDependencies": [
           "@arethetypeswrong/cli",
           "@storybook/react-vite",
-          "publint"
+          "publint",
+          "type-fest"
         ]
       },
       "packages/configurations": {
@@ -111,7 +113,8 @@
           "src/**/*.ts"
         ],
         "ignoreDependencies": [
-          "prettier-plugin-tailwindcss"
+          "prettier-plugin-tailwindcss",
+          "type-fest"
         ]
       },
       "packages/design-system": {

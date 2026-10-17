@@ -76,6 +76,11 @@ export default defineConfig({
         "vite.config.ts",
       ],
       insertTypesEntry: true,
+      afterDiagnostic: (diagnostics) => {
+        if (diagnostics.length > 0) {
+          throw new Error("Design-system declaration generation failed.");
+        }
+      },
     }),
     viteStaticCopy({
       targets: [

@@ -26,9 +26,9 @@ export const Default = () => (
 );
 
 export const Controlled = () => {
-  const [tab, setTab] = useState(Tab.lorem);
+  const [tab, setTab] = useState<string>(Tab.lorem);
   return (
-    <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
+    <Tabs value={tab} onValueChange={setTab}>
       {elements.triggers}
       <p>active tab: {tab}</p>
       {elements.content}
@@ -37,9 +37,9 @@ export const Controlled = () => {
 };
 
 export const CustomPositioning = () => {
-  const [tab, setTab] = useState(Tab.lorem);
+  const [tab, setTab] = useState<string>(Tab.lorem);
   return (
-    <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
+    <Tabs value={tab} onValueChange={setTab}>
       <nav className="fixed top-0 left-0">{elements.triggers}</nav>
       {elements.content}
     </Tabs>

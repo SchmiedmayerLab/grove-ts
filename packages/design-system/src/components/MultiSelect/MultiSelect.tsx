@@ -268,7 +268,7 @@ export const MultiSelectValue = ({
       overflowElement?.style.removeProperty("display");
     }
     // The state reflects a DOM measurement and must be synchronized after layout.
-    // eslint-disable-next-line @eslint-react/set-state-in-effect
+
     setOverflowAmount(amount);
   }, []);
 

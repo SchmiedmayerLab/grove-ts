@@ -56,6 +56,39 @@ Grove Design System is part of a larger ecosystem of tools and packages:
 
 For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://schmiedmayerlab.github.io/grove-ts/docs/docs/getting-started)**.
 
+## TanStack Table v9 migration
+
+`DataTable` uses TanStack Table v9 and exports its shared `DataTableFeatures` type and `dataTableFeatures` configuration.
+Consumers that import TanStack Table directly must also use v9; v8 column and table types are incompatible.
+Define columns with the shared feature type and wrap heterogeneous column arrays with TanStack's `columns()` helper to preserve inferred cell types:
+
+```tsx
+import { createColumnHelper } from '@tanstack/react-table'
+import {
+  DataTable,
+  type DataTableFeatures,
+} from '@schmiedmayerlab/grove-design-system/components/DataTable'
+
+type Person = { name: string; age: number }
+const columnHelper = createColumnHelper<DataTableFeatures, Person>()
+const columns = columnHelper.columns([
+  columnHelper.accessor('name', { header: 'Name' }),
+  columnHelper.accessor('age', { header: 'Age' }),
+])
+
+export const People = ({ people }: { people: Person[] }) => (
+  <DataTable columns={columns} data={people} pageSize={20} />
+)
+```
+
+Filtering, sorting, pagination, custom views, selection, and `meta.cellClassName` remain available.
+Controlled state still uses `state` with the corresponding `onSortingChange`, `onPaginationChange`, or other slice callback.
+Custom render functions read current state from `table.store.state` instead of `table.getState()`.
+Rename column `sortingFn` to `sortFn` and add `DataTableFeatures` as the first generic parameter of TanStack table, row, header, and cell types.
+Custom row models and filter/sort registries now belong on `features`; extend `dataTableFeatures` when replacing those defaults.
+The default keeps stock feature APIs and built-in filter/sort names available, but does not opt callers into the new Shift range-selection behavior.
+See the [upstream v9 migration guide](https://tanstack.com/table/latest/docs/framework/react/guide/migrating) for other advanced option changes.
+
 ## Why Grove?
 
 Grove Design System strikes a balance between highly opinionated frameworks and copy-paste patterns. It provides package-based distribution for automatic updates, strong defaults for faster development, and escape hatches for deep customization.

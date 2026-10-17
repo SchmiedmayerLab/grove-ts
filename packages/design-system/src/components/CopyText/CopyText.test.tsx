@@ -9,10 +9,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { type ComponentProps } from "react";
-import { Toaster } from "../Toaster";
+import { Toaster, toast } from "../Toaster";
 import { CopyText } from ".";
 
 describe("CopyText", () => {
+  afterEach(() => {
+    toast.dismiss();
+  });
+
   const expectCopyValue = async (value: string) => {
     const user = userEvent.setup();
     const button = screen.getByRole("button");
