@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { flexRender } from "@tanstack/react-table";
+import { flexRender, type RowData } from "@tanstack/react-table";
 import { isFunction } from "es-toolkit";
 import { type MouseEvent } from "react";
 import { ToggleSortButton } from "@/components/DataTable/ToggleSortButton";
@@ -21,7 +21,7 @@ import {
 import { cn } from "@/utils/className";
 import type { DataTableViewProps } from "./DataTable";
 
-export interface DataTableTableViewSpecificProps<Data> {
+export interface DataTableTableViewSpecificProps<Data extends RowData> {
   /**
    * Row event click handler. Row is clicked only if it passes {@link DataTableTableViewSpecificProps#isRowClicked|isRowClicked} check.
    */
@@ -47,7 +47,7 @@ export interface DataTableTableViewSpecificProps<Data> {
 const isRowClickedDefault = (event: MouseEvent) =>
   (event.target as HTMLElement).tagName === "TD";
 
-interface DataTableTableViewProps<Data>
+interface DataTableTableViewProps<Data extends RowData>
   extends DataTableViewProps<Data>, DataTableTableViewSpecificProps<Data> {}
 
 /**
@@ -57,7 +57,7 @@ interface DataTableTableViewProps<Data>
  * Renders a fully-featured table with headers, sortable columns, and row click handling.
  * Automatically applies proper styling and accessibility attributes to the table elements.
  */
-export const DataTableTableView = <Data,>({
+export const DataTableTableView = <Data extends RowData>({
   table,
   rows,
   onRowClick,
@@ -74,7 +74,7 @@ export const DataTableTableView = <Data,>({
               );
             return (
               <TableHead key={header.id}>
-                {header.column.getCanFilter() ?
+                {header.column.getCanSort() ?
                   <ToggleSortButton header={header}>
                     {columnContent}
                   </ToggleSortButton>

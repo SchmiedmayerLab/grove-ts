@@ -9,29 +9,43 @@
 import { type RankingInfo, rankItem } from "@tanstack/match-sorter-utils";
 import {
   type CellContext,
-  type FilterFn,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
+  type CellData,
   type RowData,
-  useReactTable,
+  type TableFeatures,
+  type TableOptions,
+  constructFilterFn,
+  createFilteredRowModel,
+  createPaginatedRowModel,
+  createSortedRowModel,
+  filterFn_includesString,
+  filterFn_includesStringSensitive,
+  filterFn_equalsString,
+  filterFn_arrIncludes,
+  filterFn_arrIncludesAll,
+  filterFn_arrIncludesSome,
+  filterFn_equals,
+  filterFn_weakEquals,
+  filterFn_inNumberRange,
+  metaHelper,
+  sortFn_alphanumeric,
+  sortFn_alphanumericCaseSensitive,
+  sortFn_text,
+  sortFn_textCaseSensitive,
+  sortFn_datetime,
+  sortFn_basic,
+  stockFeatures,
+  tableFeatures,
+  useTable,
 } from "@tanstack/react-table";
-import type { TableOptions } from "@tanstack/table-core";
-import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { ensureString, type PartialSome } from "@/utils/misc";
 
 declare module "@tanstack/react-table" {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>;
-  }
-
-  interface FilterMeta {
-    itemRank: RankingInfo;
-  }
-
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<
+    TFeatures extends TableFeatures,
+    TData extends RowData,
+    TValue extends CellData = CellData,
+  > {
     /**
      * Applies custom CSS classes to the cell's `<td>` element.
      * Can be a static string or a function that receives the cell context
@@ -51,33 +65,67 @@ declare module "@tanstack/react-table" {
      * ```
      */
     cellClassName?:
-      string | ((context: CellContext<TData, TValue>) => string | undefined);
+      | string
+      | ((
+          context: CellContext<TFeatures, TData, TValue>,
+        ) => string | undefined);
   }
 }
 
 /**
  * Default fuzzyFilter implementation, used for global text filtering.
  */
-export const fuzzyFilter: FilterFn<unknown> = (
-  row,
-  columnId,
-  filterValue,
-  addMeta,
-) => {
-  const itemRank = rankItem(row.getValue(columnId), filterValue as string);
+export const fuzzyFilter = constructFilterFn({
+  filter: (
+    dataValue: unknown,
+    filterValue: unknown,
+    _row,
+    _columnId,
+    addMeta,
+  ) => {
+    const itemRank = rankItem(dataValue, ensureString(filterValue) ?? "");
+    addMeta?.({ itemRank });
+    return itemRank.passed;
+  },
+});
 
-  // Store the itemRank info
-  addMeta({
-    itemRank,
-  });
+/**
+ * Shared feature contract for DataTable and consumer column definitions.
+ * Keep the stock features and function registries available to existing callers.
+ */
+export const dataTableFeatures = tableFeatures({
+  ...stockFeatures,
+  filteredRowModel: createFilteredRowModel(),
+  sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
+  filterFns: {
+    includesString: filterFn_includesString,
+    includesStringSensitive: filterFn_includesStringSensitive,
+    equalsString: filterFn_equalsString,
+    arrIncludes: filterFn_arrIncludes,
+    arrIncludesAll: filterFn_arrIncludesAll,
+    arrIncludesSome: filterFn_arrIncludesSome,
+    equals: filterFn_equals,
+    weakEquals: filterFn_weakEquals,
+    inNumberRange: filterFn_inNumberRange,
+    fuzzy: fuzzyFilter,
+  },
+  sortFns: {
+    alphanumeric: sortFn_alphanumeric,
+    alphanumericCaseSensitive: sortFn_alphanumericCaseSensitive,
+    text: sortFn_text,
+    textCaseSensitive: sortFn_textCaseSensitive,
+    datetime: sortFn_datetime,
+    basic: sortFn_basic,
+  },
+  filterMeta: metaHelper<{ itemRank?: RankingInfo }>(),
+});
 
-  // Return if the item should be filtered in/out
-  return itemRank.passed;
-};
+export type DataTableFeatures = typeof dataTableFeatures;
 
-export interface UseDataTableProps<Data> extends PartialSome<
-  TableOptions<Data>,
-  "getCoreRowModel" | "filterFns"
+export interface UseDataTableProps<Data extends RowData> extends PartialSome<
+  TableOptions<DataTableFeatures, Data>,
+  "features"
 > {
   /**
    * Defines how many items are displayed per one page.
@@ -88,44 +136,34 @@ export interface UseDataTableProps<Data> extends PartialSome<
 }
 
 /**
- * Composes useReactTable usage, contains core data table logic.
+ * Composes useTable usage, contains core data table logic.
  */
-export const useDataTable = <Data>({
+export const useDataTable = <Data extends RowData>({
   columns,
   data,
   pageSize = 50,
-  state,
   initialState,
   ...props
 }: UseDataTableProps<Data>) => {
-  const [globalFilter, setGlobalFilter] = useState("");
-  const setGlobalFilterDebounced = useDebouncedCallback(
-    (value: string) => setGlobalFilter(value),
-    200,
-  );
-
-  // Acknowledge, but ignore
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     columns,
     data,
-    filterFns: {
-      fuzzy: fuzzyFilter,
-    },
     globalFilterFn: "fuzzy",
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    state: { globalFilter, ...state },
+    enableRowRangeSelection: false,
     initialState: {
-      pagination: {
-        pageSize,
-      },
       ...initialState,
+      pagination: {
+        pageIndex: 0,
+        pageSize,
+        ...initialState?.pagination,
+      },
     },
     ...props,
   });
+  const globalFilter = ensureString(table.state.globalFilter) ?? "";
+  const setGlobalFilter = table.setGlobalFilter;
+  const setGlobalFilterDebounced = useDebouncedCallback(setGlobalFilter, 200);
 
   const rows = table.getRowModel().rows;
 
@@ -133,8 +171,8 @@ export const useDataTable = <Data>({
 
   const emptyProps = {
     show: isEmpty,
-    textFilter: ensureString(table.getState().globalFilter),
-    hasFilters: data.length !== 0 && table.getState().columnFilters.length > 0,
+    textFilter: globalFilter,
+    hasFilters: data.length !== 0 && table.state.columnFilters.length > 0,
   };
 
   return {

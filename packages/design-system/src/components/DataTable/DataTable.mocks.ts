@@ -7,6 +7,7 @@
 //
 
 import { createColumnHelper } from "@tanstack/react-table";
+import type { DataTableFeatures } from "./DataTable.utils";
 
 export const peopleData = [
   {
@@ -48,7 +49,7 @@ export const peopleData = [
 
 export type Person = (typeof peopleData)[number];
 
-export const columnHelper = createColumnHelper<Person>();
+export const columnHelper = createColumnHelper<DataTableFeatures, Person>();
 
 export const peopleColumn = {
   name: columnHelper.accessor("name", { header: "Name", id: "name" }),
@@ -59,4 +60,7 @@ export const peopleColumn = {
   }),
 };
 
-export const peopleColumns = [peopleColumn.name, peopleColumn.age];
+export const peopleColumns = columnHelper.columns([
+  peopleColumn.name,
+  peopleColumn.age,
+]);

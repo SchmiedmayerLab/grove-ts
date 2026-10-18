@@ -6,21 +6,22 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Header } from "@tanstack/react-table";
+import { type Header, type RowData } from "@tanstack/react-table";
 import { ArrowDownAZ, ArrowUpZA } from "lucide-react";
 import { type ReactNode } from "react";
 import { Button } from "../Button";
+import type { DataTableFeatures } from "./DataTable.utils";
 
-interface ToggleSortButtonProps<Data> {
+interface ToggleSortButtonProps<Data extends RowData> {
   children?: ReactNode;
-  header: Header<Data, unknown>;
+  header: Header<DataTableFeatures, Data>;
 }
 
 /**
  * Button displayed over sortable column header name.
  * Shows the current sorting direction and allows toggling it.
  */
-export const ToggleSortButton = <Data,>({
+export const ToggleSortButton = <Data extends RowData>({
   children,
   header,
 }: ToggleSortButtonProps<Data>) => {

@@ -14,16 +14,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const executeFile = promisify(execFile)
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 
-export const auditExceptions = new Map([
-  [
-    'GHSA-5p2g-fcmc-qvqq',
-    'image-size is used only while building version-controlled documentation; no patched release exists.',
-  ],
-  [
-    'GHSA-w3rx-r6r6-pgpr',
-    'image-size is used only while building version-controlled documentation; no patched release exists.',
-  ],
-])
+export const auditExceptions = new Map()
 
 const advisoryId = (advisory) =>
   advisory.url?.match(/\/advisories\/(GHSA-[A-Za-z0-9-]+)$/)?.[1]

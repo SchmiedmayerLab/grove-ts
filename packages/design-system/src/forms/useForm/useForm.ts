@@ -11,8 +11,10 @@ import { useCallback } from "react";
 import {
   type DeepRequired,
   type FieldErrorsImpl,
+  type GlobalError,
   useForm as useFormHook,
   type UseFormProps,
+  type UseFormReturn,
 } from "react-hook-form";
 import { type z } from "zod";
 import { parseUnknownError } from "@/utils/query";
@@ -66,7 +68,15 @@ export const useForm = <
   ...props
 }: UseFormProps<Input, Context, Output> & {
   formSchema: z.ZodType<Output, Input>;
-}) => {
+}): UseFormReturn<Input, Context, Output> & {
+  submitAsync: () => Promise<Output>;
+  formError: (Record<string, GlobalError> & GlobalError) | undefined;
+  setFormError: (
+    error: unknown,
+    options?: Parameters<UseFormReturn<Input, Context, Output>["setError"]>[2],
+  ) => void;
+  isSubmitDisabled: boolean;
+} => {
   const form = useFormHook<Input, Context, Output>({
     resolver: zodResolver<Input, Context, Output>(formSchema),
     ...props,
@@ -120,9 +130,10 @@ export const useForm = <
   ) =>
     form.handleSubmit(async (...args) => {
       try {
-        await successHandler(...args);
+        return await successHandler(...args);
       } catch (error) {
         setFormError(error);
+        return undefined;
       }
     }, negativeHandler);
 

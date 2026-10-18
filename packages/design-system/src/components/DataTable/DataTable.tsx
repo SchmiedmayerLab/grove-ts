@@ -6,7 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Row, type Table as TableType } from "@tanstack/table-core";
+import {
+  type Row,
+  type RowData,
+  type Table as TableType,
+} from "@tanstack/table-core";
 import { isBoolean } from "es-toolkit";
 import { type ReactNode } from "react";
 import {
@@ -20,18 +24,24 @@ import {
 } from "@/components/DataTable/DataTableTableView";
 import { cn } from "@/utils/className";
 import { isObject } from "@/utils/misc";
-import { useDataTable, type UseDataTableProps } from "./DataTable.utils";
+import {
+  useDataTable,
+  type UseDataTableProps,
+  type DataTableFeatures,
+} from "./DataTable.utils";
 import { DataTablePagination } from "./DataTablePagination";
 import { GlobalFilterInput } from "./GlobalFilterInput";
 
-export type DataTableViewProps<Data> = {
-  table: TableType<Data>;
-  rows: Array<Row<Data>>;
+export type DataTableViewProps<Data extends RowData> = {
+  table: TableType<DataTableFeatures, Data>;
+  rows: Array<Row<DataTableFeatures, Data>>;
 } & Pick<DataTableProps<Data>, "entityName">;
 
-type ViewRenderProp<Data> = (props: DataTableViewProps<Data>) => ReactNode;
+type ViewRenderProp<Data extends RowData> = (
+  props: DataTableViewProps<Data>,
+) => ReactNode;
 
-export interface DataTableProps<Data>
+export interface DataTableProps<Data extends RowData>
   extends UseDataTableProps<Data>, Pick<AsyncProps, "error" | "loading"> {
   /**
    * Additional CSS classes to apply to the DataTable container.
@@ -124,7 +134,7 @@ export interface DataTableProps<Data>
  * A flexible DataTable component that supports pagination, filtering, and sorting.
  *
  * This component heavily relies most of it's properties and API on [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table).
- * Please refer to the [docs](https://tanstack.com/table/v8/docs/introduction) for more details and advanced usage.
+ * Please refer to the [docs](https://tanstack.com/table/latest/docs/framework/react/guide/migrating) for more details and advanced usage.
  *
  * Features:
  * - Global text search filtering
@@ -139,7 +149,7 @@ export interface DataTableProps<Data>
  * @example
  * ```tsx
  * // Basic usage with array of users
- * const userColumns = createColumnHelper<User>()
+ * const userColumns = createColumnHelper<DataTableFeatures, User>()
  * <DataTable
  *   data={users}
  *   columns={[
@@ -155,7 +165,7 @@ export interface DataTableProps<Data>
  * @example
  * ```tsx
  * // With custom empty state and loading
- * const productColumns = createColumnHelper<Product>()
+ * const productColumns = createColumnHelper<DataTableFeatures, Product>()
  * <DataTable
  *   data={products}
  *   columns={[
@@ -198,7 +208,7 @@ export interface DataTableProps<Data>
  * </DataTable>
  * ```
  */
-export const DataTable = <Data,>({
+export const DataTable = <Data extends RowData>({
   className,
   columns,
   entityName,

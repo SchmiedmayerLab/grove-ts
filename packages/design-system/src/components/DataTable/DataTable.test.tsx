@@ -6,8 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { type SortingState } from "@tanstack/react-table";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { useState } from "react";
 import { vitest } from "vitest";
 import {
   columnHelper,
@@ -140,6 +142,92 @@ describe("DataTable", () => {
     fireEvent.click(disabledSortButton);
     // Just order of the data
     expectNamesInGivenOrder(peopleData);
+  });
+
+  it("keeps sorting independent from column filtering", () => {
+    const columns = columnHelper.columns([
+      columnHelper.accessor("name", {
+        header: "Name",
+        enableColumnFilter: false,
+      }),
+      columnHelper.accessor("age", {
+        header: "Age",
+        enableSorting: false,
+      }),
+    ]);
+    render(<DataTable columns={columns} data={peopleData} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort ascending by Name column" }),
+    );
+    expectNamesInGivenOrder(
+      [...peopleData].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    expect(
+      within(screen.getByRole("columnheader", { name: "Age" })).queryByRole(
+        "button",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("updates controlled sorting through the public table options", () => {
+    const ControlledTable = () => {
+      const [sorting, setSorting] = useState<SortingState>([]);
+      return (
+        <DataTable
+          columns={peopleColumns}
+          data={peopleData}
+          state={{ sorting }}
+          onSortingChange={setSorting}
+        />
+      );
+    };
+    render(<ControlledTable />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort descending by Age column" }),
+    );
+    expectNamesInGivenOrder([...peopleData].sort((a, b) => b.age - a.age));
+  });
+
+  it("resets pagination when filtering from a later page", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={peopleColumns} data={peopleData} pageSize={2} />,
+    );
+    await user.click(screen.getByRole("button", { name: "4" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Search..." }),
+      "Lorem",
+    );
+
+    await screen.findByText("1-1 of 1");
+    expect(screen.getByRole("cell", { name: "Lorem" })).toBeInTheDocument();
+  });
+
+  it("updates selected rows through a custom view", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={peopleColumns} data={peopleData}>
+        {({ rows }) =>
+          rows.map((row) => (
+            <button
+              key={row.id}
+              type="button"
+              aria-pressed={row.getIsSelected()}
+              onClick={() => row.toggleSelected()}
+            >
+              {row.original.name}
+            </button>
+          ))
+        }
+      </DataTable>,
+    );
+    const john = screen.getByRole("button", { name: "John" });
+    await user.click(john);
+    expect(john).toHaveAttribute("aria-pressed", "true");
+    await user.click(john);
+    expect(john).toHaveAttribute("aria-pressed", "false");
   });
 
   it("filters data with fuzzy search", async () => {
@@ -295,14 +383,14 @@ describe("DataTable", () => {
 
   describe("cellClassName", () => {
     it("applies static cellClassName to cells", () => {
-      const columns = [
+      const columns = columnHelper.columns([
         columnHelper.accessor("name", {
           header: "Name",
           id: "name",
           meta: { cellClassName: "bg-success/10 text-success" },
         }),
         peopleColumn.age,
-      ];
+      ]);
       render(<DataTable columns={columns} data={peopleData} />);
 
       const nameCell = screen.getByRole("cell", {
@@ -317,7 +405,7 @@ describe("DataTable", () => {
     });
 
     it("applies dynamic cellClassName based on cell value", () => {
-      const columns = [
+      const columns = columnHelper.columns([
         peopleColumn.name,
         columnHelper.accessor("age", {
           header: "Age",
@@ -330,7 +418,7 @@ describe("DataTable", () => {
             },
           },
         }),
-      ];
+      ]);
       render(<DataTable columns={columns} data={peopleData} />);
 
       // Ralph is 12, should get warning
