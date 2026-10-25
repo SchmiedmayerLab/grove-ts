@@ -408,7 +408,7 @@
     "postcss": "^8",
     "prettier": "^3",
     "rimraf": "^6.1.2",
-    "storybook": "^10.5.5",
+    "storybook": "^10.6.3",
     "tailwindcss": "^4",
     "typescript": "^6.0.3",
     "vite": "^8.2.0",
