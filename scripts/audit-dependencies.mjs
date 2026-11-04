@@ -7,23 +7,41 @@
 //
 
 import { execFile } from 'node:child_process'
-import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const executeFile = promisify(execFile)
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 
-export const auditExceptions = new Map([
-  [
-    'GHSA-5p2g-fcmc-qvqq',
-    'image-size is used only while building version-controlled documentation; no patched release exists.',
-  ],
-  [
-    'GHSA-w3rx-r6r6-pgpr',
-    'image-size is used only while building version-controlled documentation; no patched release exists.',
-  ],
-])
+const minimatchException = [
+  'GHSA-g3hv-75wg-m249',
+  'minimatch is used only by ESLint and TypeDoc tooling; the fix requires minimatch 11, which ESLint and Docusaurus do not support yet.',
+]
+const deepmergeException = [
+  'GHSA-gcqx-w48m-w2h4',
+  'deepmerge is used only by Jest and Docusaurus build tooling; no patched release exists.',
+]
+
+/** Temporary, documented exceptions for each audited dependency tree. */
+export const auditTargets = {
+  root: {
+    prefix: '.',
+    arguments: [],
+    exceptions: new Map([minimatchException, deepmergeException]),
+  },
+  production: {
+    prefix: '.',
+    arguments: ['--omit=dev'],
+    exceptions: new Map([minimatchException]),
+  },
+  docs: {
+    prefix: 'packages/design-system/docs',
+    arguments: [],
+    exceptions: new Map([minimatchException, deepmergeException]),
+  },
+}
 
 const advisoryId = (advisory) =>
   advisory.url?.match(/\/advisories\/(GHSA-[A-Za-z0-9-]+)$/)?.[1]
@@ -46,8 +64,41 @@ const rootAdvisories = (vulnerabilities, name, ancestors = new Set()) => {
   )
 }
 
+const versionParts = (version) =>
+  version
+    .split(/[-+]/)[0]
+    .split('.')
+    .map((part) => Number.parseInt(part, 10) || 0)
+
+const isNewerVersion = (candidate, installed) => {
+  const left = versionParts(candidate)
+  const right = versionParts(installed)
+  for (let index = 0; index < Math.max(left.length, right.length); index++) {
+    const difference = (left[index] ?? 0) - (right[index] ?? 0)
+    if (difference !== 0) return difference > 0
+  }
+  return false
+}
+
+/**
+ * npm audit reports `fixAvailable` even when the only "fix" is a downgrade to
+ * an older major release, or when every release of a package is affected.
+ * Neither resolves the finding, so only upgrades count as available fixes.
+ */
+const isActionableFix = ({ fixAvailable, range }, installedVersion) => {
+  if (!fixAvailable) return false
+  if (fixAvailable === true) return range !== '*'
+
+  const installed = installedVersion(fixAvailable.name)
+  return !installed || isNewerVersion(fixAvailable.version, installed)
+}
+
 /** Require every audit finding to resolve to an exact, temporary exception. */
-export const validateAuditReport = (report, exceptions = auditExceptions) => {
+export const validateAuditReport = (
+  report,
+  exceptions = auditTargets.docs.exceptions,
+  installedVersion = () => undefined,
+) => {
   if (report.error) {
     throw new Error(
       `npm audit failed: ${report.error.summary ?? report.error.message ?? 'unknown registry error'}`,
@@ -94,8 +145,9 @@ export const validateAuditReport = (report, exceptions = auditExceptions) => {
     .filter(([, records]) =>
       records.some(({ vulnerabilities: traversal }) =>
         traversal.some(
-          ({ isDirect, fixAvailable }, index) =>
-            fixAvailable && (isDirect || index === traversal.length - 1),
+          (vulnerability, index) =>
+            (vulnerability.isDirect || index === traversal.length - 1) &&
+            isActionableFix(vulnerability, installedVersion),
         ),
       ),
     )
@@ -107,7 +159,21 @@ export const validateAuditReport = (report, exceptions = auditExceptions) => {
   return [...findingsById.keys()].sort()
 }
 
-const run = async () => {
+const lockfileVersions = (prefix) => {
+  const { packages = {} } = JSON.parse(
+    readFileSync(join(repositoryRoot, prefix, 'package-lock.json'), 'utf8'),
+  )
+  return (name) => packages[`node_modules/${name}`]?.version
+}
+
+const run = async (targetName) => {
+  const target = auditTargets[targetName]
+  if (!target) {
+    throw new Error(
+      `Unknown audit target "${targetName}"; expected one of: ${Object.keys(auditTargets).join(', ')}`,
+    )
+  }
+
   let output
   try {
     const { stdout } = await executeFile(
@@ -115,7 +181,8 @@ const run = async () => {
       [
         'audit',
         '--prefix',
-        'packages/design-system/docs',
+        target.prefix,
+        ...target.arguments,
         '--audit-level=low',
         '--json',
       ],
@@ -128,14 +195,21 @@ const run = async () => {
   }
 
   const report = JSON.parse(output)
-  const accepted = validateAuditReport(report)
+  const accepted = validateAuditReport(
+    report,
+    target.exceptions,
+    lockfileVersions(target.prefix),
+  )
   for (const id of accepted) {
-    console.log(`Accepted temporary documentation audit exception: ${id}`)
-    console.log(auditExceptions.get(id))
+    console.log(`Accepted temporary ${targetName} audit exception: ${id}`)
+    console.log(target.exceptions.get(id))
+  }
+  if (accepted.length === 0) {
+    console.log(`No ${targetName} audit findings.`)
   }
 }
 
 const isDirectExecution =
   process.argv[1] &&
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
-if (isDirectExecution) await run()
+if (isDirectExecution) await run(process.argv[2] ?? 'root')
