@@ -70,7 +70,7 @@ describe("SignInForm", () => {
 
     rerender(<SignInForm {...defaultProps} enableEmailPassword={true} />);
 
-    expect(screen.queryByText("or")).toBeInTheDocument();
+    expect(screen.getByText("or")).toBeInTheDocument();
   });
 
   it("renders icons", () => {

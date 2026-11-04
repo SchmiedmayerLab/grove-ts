@@ -82,7 +82,7 @@ describe("Select", () => {
       pointerState,
     });
 
-    expect(screen.queryByRole("listbox")).toBeInTheDocument();
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
     const sirOption = getItem("Sir");
     expect(sirOption).toBeInTheDocument();
     await userEvent.click(sirOption);
