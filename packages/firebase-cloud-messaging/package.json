@@ -67,7 +67,7 @@
     "rimraf": "^6.1.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "firebase-admin": "^14.2.0"
