@@ -54,7 +54,7 @@
   ],
   "dependencies": {
     "@schmiedmayerlab/grove-firebase-utils": "0.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@schmiedmayerlab/grove-configurations": "0.0.0",
