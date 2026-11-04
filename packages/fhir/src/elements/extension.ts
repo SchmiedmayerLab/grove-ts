@@ -35,6 +35,7 @@ import {
   stringSchema,
   timeSchema,
   unsignedIntSchema,
+  uriSchema,
   urlSchema,
   uuidSchema,
 } from './dataTypes/primitiveTypes.js'
@@ -62,7 +63,7 @@ import { usageContextSchema } from './metaDataTypes/usageContext.js'
  */
 export const untypedExtensionSchema = z.lazy(() =>
   elementSchema.extend({
-    url: urlSchema,
+    url: uriSchema,
     _url: elementSchema.optional(),
     valueBase64Binary: base64BinarySchema.optional(),
     _valueBase64Binary: elementSchema.optional(),
@@ -93,7 +94,7 @@ export const untypedExtensionSchema = z.lazy(() =>
     valueTime: timeSchema.optional(),
     _valueTime: elementSchema.optional(),
     valueUnsignedInt: unsignedIntSchema.optional(),
-    valueUri: urlSchema.optional(),
+    valueUri: uriSchema.optional(),
     _valueUri: elementSchema.optional(),
     valueUrl: urlSchema.optional(),
     _valueUrl: elementSchema.optional(),
