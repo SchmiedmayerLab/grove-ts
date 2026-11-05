@@ -150,6 +150,8 @@ jobs:
         with:
           fail-on-severity: moderate
           fail-on-scopes: runtime, development
+          # Keep in sync with the exceptions in scripts/audit-dependencies.mjs.
+          allow-ghsas: GHSA-g3hv-75wg-m249
   ci:
     name: CI
     if: always()

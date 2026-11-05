@@ -57,9 +57,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "pack:check": "node scripts/verify-packages.mjs",
     "pack:lint": "node scripts/lint-packages.mjs",
-    "audit": "npm audit --audit-level=low",
-    "audit:production": "npm audit --omit=dev --audit-level=low",
-    "audit:docs": "node scripts/audit-docs.mjs",
+    "audit": "node scripts/audit-dependencies.mjs root",
+    "audit:production": "node scripts/audit-dependencies.mjs production",
+    "audit:docs": "node scripts/audit-dependencies.mjs docs",
     "audit:signatures": "npm audit signatures",
     "validate": "npm run build && npm run format:check && npm run lint:ci && npm run analyze && npm run typecheck && npm test && npm run docs:ci && npm run pack:check && npm run pack:lint && npm run audit && npm run audit:docs",
     "docs": "npm run dev --prefix packages/design-system/docs",
@@ -149,5 +149,9 @@
         ]
       }
     }
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6",
+    "glob": "^14.0.2"
   }
 }
