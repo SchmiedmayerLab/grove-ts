@@ -43,33 +43,30 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - name: Set up pnpm, Node.js, and dependencies
+        uses: pnpm/setup@v3
         with:
-          node-version: 24
-          cache: npm
-      - name: Set up npm
-        run: npm install --global --ignore-scripts npm@12.0.2
-      - name: Install dependencies
-        run: npm ci
+          runtime: node@24
+          cache: true
+          require-lockfile: true
       - name: Check formatting
-        run: npm run format:check
+        run: pnpm run format:check
       - name: Build packages with strict TypeScript checks
-        run: npm run build
+        run: pnpm run build
       - name: Lint packages
-        run: npm run lint:ci
+        run: pnpm run lint:ci
       - name: Analyze dead code, dependencies, exports, and cycles
-        run: npm run analyze
+        run: pnpm run analyze
       - name: Type-check source and tests
-        run: npm run typecheck
+        run: pnpm run typecheck
       - name: Verify package contents
-        run: npm run pack:check
+        run: pnpm run pack:check
       - name: Lint package manifests and TypeScript declarations
-        run: npm run pack:lint
+        run: pnpm run pack:lint
       - name: Audit all dependencies
-        run: npm run audit
-      - name: Verify npm registry signatures
-        run: npm run audit:signatures
+        run: pnpm run audit
+      - name: Verify registry signatures
+        run: pnpm run audit:signatures
   node-current:
     name: Node.js 26 Compatibility
     runs-on: ubuntu-latest
@@ -79,21 +76,18 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - name: Set up pnpm, Node.js, and dependencies
+        uses: pnpm/setup@v3
         with:
-          node-version: 26
-          cache: npm
-      - name: Set up npm
-        run: npm install --global --ignore-scripts npm@12.0.2
-      - name: Install dependencies
-        run: npm ci
+          runtime: node@26
+          cache: true
+          require-lockfile: true
       - name: Build packages
-        run: npm run build
+        run: pnpm run build
       - name: Type-check source and tests
-        run: npm run typecheck
+        run: pnpm run typecheck
       - name: Run tests
-        run: npm test
+        run: pnpm test
   documentation:
     name: Build Pages
     runs-on: ubuntu-latest
@@ -103,28 +97,14 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - name: Set up pnpm, Node.js, and dependencies
+        uses: pnpm/setup@v3
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            packages/design-system/docs/package-lock.json
-      - name: Use the repository npm version
-        run: |
-          NPM_VERSION="$(node --input-type=module -e '
-            import { readFileSync } from "node:fs";
-            const { packageManager } = JSON.parse(readFileSync("package.json", "utf8"));
-            const match = /^npm@((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))$/.exec(packageManager ?? "");
-            if (!match) throw new Error("package.json must declare an exact npm packageManager version.");
-            console.log(match[1]);
-          ')"
-          npm install --global --ignore-scripts "npm@$NPM_VERSION"
-      - name: Install dependencies
-        run: npm ci
+          cache: true
+          require-lockfile: true
       - name: Build Pages artifact
-        run: npm run pages:build
+        run: pnpm run pages:build
   tests:
     name: Test and Coverage
     uses: SchmiedmayerLab/.github/.github/workflows/npm-test-coverage.yml@v0.5
@@ -134,7 +114,6 @@ jobs:
         packages/firebase-cloud-messaging/coverage/lcov.info,
         packages/fhir/coverage/lcov.info,
         packages/firebase-utils/coverage/lcov.info
-      npmVersion: '12.0.2'
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
   dependency-review:

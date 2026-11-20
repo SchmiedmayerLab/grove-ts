@@ -354,12 +354,13 @@
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
+    "lint:package": "publint --strict --pack pnpm && attw --pack . --profile esm-only --exclude-entrypoints ./tailwind.css ./base.css --ignore-rules internal-resolution-error --quiet",
     "storybook": "storybook dev -p 6006",
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "5.5.7",
@@ -386,7 +387,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@schmiedmayerlab/grove-configurations": "0.0.0",
+    "@schmiedmayerlab/grove-configurations": "workspace:*",
     "@storybook/addon-docs": "^10.5.5",
     "@storybook/react": "^10.5.5",
     "@storybook/react-vite": "^10.5.5",
