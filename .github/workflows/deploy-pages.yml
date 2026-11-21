@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build-and-deploy:
     name: Build and Deploy to GitHub Pages
-    uses: SchmiedmayerLab/.github/.github/workflows/npm-pages.yml@v0.5
+    uses: SchmiedmayerLab/.github/.github/workflows/npm-pages.yml@e3709c19fb60fe94ea5e1f2e55e260dc7ccaaa73
     permissions:
       contents: read
       pages: write

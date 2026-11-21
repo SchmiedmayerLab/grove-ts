@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
+    "lint:package": "publint --strict --pack pnpm && attw --pack . --profile esm-only",
     "build": "tsc",
     "watch": "tsc --watch",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
@@ -23,7 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build"
   },
   "keywords": [
     "grove",
@@ -53,11 +54,11 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@schmiedmayerlab/grove-firebase-utils": "0.0.0",
+    "@schmiedmayerlab/grove-firebase-utils": "workspace:*",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@schmiedmayerlab/grove-configurations": "0.0.0",
+    "@schmiedmayerlab/grove-configurations": "workspace:*",
     "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.8.0",

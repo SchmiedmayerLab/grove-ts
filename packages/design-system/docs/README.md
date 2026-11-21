@@ -15,39 +15,40 @@ This documentation website is built using [Docusaurus 3](https://docusaurus.io/)
 ## Prerequisites
 
 - Node.js >= 24.0
-- npm package manager
+- pnpm 12
 
 ## Installation
 
-Install dependencies:
+The documentation site is a pnpm workspace package.
+Install dependencies from the repository root:
 
 ```bash
-npm install
+pnpm install --frozen-lockfile
 ```
 
 ## Development
 
-Start the local development server:
+Start the local development server from the repository root:
 
 ```bash
-npm run dev
+pnpm run docs
 ```
 
 This command starts a local development server at `http://localhost:3000` and opens up a browser window. Most changes are reflected live without having to restart the server.
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build the documentation site for production
-- `npm run clear` - Clear Docusaurus cache
-- `npm run docusaurus` - Run Docusaurus CLI commands
+- `pnpm run dev` - Start development server
+- `pnpm run build` - Build the documentation site for production
+- `pnpm run clear` - Clear Docusaurus cache
+- `pnpm run docusaurus` - Run Docusaurus CLI commands
 
 ## Building for Production
 
-Generate static content for production:
+Generate static content for production from the repository root:
 
 ```bash
-npm run build
+pnpm run docs:ci
 ```
 
 This command generates static content into the `build` directory and can be served using any static content hosting service.

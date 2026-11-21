@@ -79,42 +79,44 @@ Grove is currently pre-1.0, so review the [release notes](https://github.com/Sch
 To work on Grove itself, install:
 
 - Node.js 24
-- npm 12
+- pnpm 12
 
-Clone the repository and install the package and documentation dependencies:
+Clone the repository and install the dependencies of every workspace, including the documentation site:
 
 ```bash
 git clone https://github.com/SchmiedmayerLab/grove-ts.git
 cd grove-ts
-npm ci
-npm ci --prefix packages/design-system/docs
+pnpm install --frozen-lockfile
 ```
+
+Workspace packages are listed in `pnpm-workspace.yaml`, which also holds the dependency overrides, the allowed install scripts, and the seven-day minimum release age for new dependency versions.
+Internal dependencies use the `workspace:*` protocol, which pnpm replaces with the release version when packing.
 
 Run the complete local quality gate before requesting review:
 
 ```bash
-npm run validate
+pnpm run validate
 ```
 
-For faster iteration, target a single workspace with npm's `--workspace` option:
+For faster iteration, target a single workspace with pnpm's `--filter` option:
 
 ```bash
-npm run build --workspace @schmiedmayerlab/grove-design-system
-npm test --workspace @schmiedmayerlab/grove-firebase-utils
+pnpm --filter @schmiedmayerlab/grove-design-system run build
+pnpm --filter @schmiedmayerlab/grove-firebase-utils test
 ```
 
 Useful repository-wide commands include:
 
-| Command                 | Purpose                                                    |
-| ----------------------- | ---------------------------------------------------------- |
-| `npm run build`         | Build every workspace                                      |
-| `npm test`              | Run repository and workspace tests                         |
-| `npm run test:coverage` | Run workspace tests with coverage                          |
-| `npm run lint:ci`       | Run linting with no warnings allowed                       |
-| `npm run analyze`       | Check dead files, dependencies, exports, and import cycles |
-| `npm run docs`          | Start the design system documentation locally              |
-| `npm run pages:build`   | Assemble the complete GitHub Pages artifact                |
-| `npm run validate`      | Run the complete validation suite used before review       |
+| Command                  | Purpose                                                    |
+| ------------------------ | ---------------------------------------------------------- |
+| `pnpm run build`         | Build every workspace                                      |
+| `pnpm test`              | Run repository and workspace tests                         |
+| `pnpm run test:coverage` | Run workspace tests with coverage                          |
+| `pnpm run lint:ci`       | Run linting with no warnings allowed                       |
+| `pnpm run analyze`       | Check dead files, dependencies, exports, and import cycles |
+| `pnpm run docs`          | Start the design system documentation locally              |
+| `pnpm run pages:build`   | Assemble the complete GitHub Pages artifact                |
+| `pnpm run validate`      | Run the complete validation suite used before review       |
 
 ## Releases
 
@@ -154,7 +156,7 @@ After the workflow creates the packages, sign in to npm from a trusted workstati
 
 ```bash
 npm login
-npm run configure:trusted-publishing -- --packages '@schmiedmayerlab/grove-new-package'
+pnpm run configure:trusted-publishing --packages '@schmiedmayerlab/grove-new-package'
 ```
 
 npm requires an interactive maintainer session with two-factor authentication for this operation; it does not accept granular tokens, including bypass-2FA tokens, for changing Trusted Publishers.
@@ -166,7 +168,7 @@ If packages were published before Trusted Publishing was configured, run the hel
 
 ```bash
 npm login
-npm run configure:trusted-publishing
+pnpm run configure:trusted-publishing
 gh run rerun <release-run-id> --failed
 ```
 
