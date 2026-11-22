@@ -88,7 +88,7 @@ import { defineConfig } from 'oxfmt'
 export default defineConfig(oxfmtConfig)
 ```
 
-It formats with Prettier's defaults at 80 columns, and sorts imports and Tailwind classes.
+It keeps oxfmt's default formatting with Prettier's 80 columns, and adds import and Tailwind class sorting.
 
 ### Global Types
 

@@ -8,7 +8,8 @@
 import { type OxfmtConfig } from 'oxfmt'
 
 /**
- * oxfmt configuration with Prettier's defaults, Tailwind class sorting and import sorting.
+ * oxfmt's default formatting with Tailwind class sorting and import sorting.
+ * Line width and `package.json` handling follow Prettier's defaults, which the code was formatted with before.
  * Import groups follow the former `import-x/order` rule: builtin, external, internal, then relative.
  */
 export const oxfmtConfig: OxfmtConfig = {

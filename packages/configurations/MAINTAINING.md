@@ -77,6 +77,7 @@ The type-aware ESLint configurations register every plugin for every file withou
 - The rules also cover `.mjs`, `.cjs`, `.mts` and `.cts` files and the script blocks of Astro, Vue and Svelte components, which count as TypeScript.
 - Some typescript-eslint rules are nursery rules in oxlint, for example `no-unnecessary-condition` and `prefer-optional-chain`.
 - Only oxlint reports unused disable directives.
+- `oxfmtConfig` sets `printWidth: 80` and `sortPackageJson: false`, because oxfmt's defaults would wrap at 100 columns and sort `package.json` keys, unlike Prettier.
 - oxfmt does not support Prettier's `experimentalTernaries`.
 
 ### oxlint Behavior to Keep in Mind
