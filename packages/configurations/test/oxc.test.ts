@@ -6,12 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import process from "node:process";
-import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   getEslintTypeAwareNodeConfig,
@@ -24,10 +22,12 @@ import {
   oxlintNodeConfig,
   oxlintReactConfig,
 } from "@schmiedmayerlab/grove-configurations/oxlint";
-import { ESLint } from "eslint";
+import { ESLint, type Linter } from "eslint";
 import { format } from "oxfmt";
+import { type OxlintConfig } from "oxlint";
 import { configs as typescriptEslintConfigs } from "typescript-eslint";
-import { sonarRulesCoveredElsewhere } from "../src/sonarjsRules.ts";
+import { expect, test } from "vitest";
+import { sonarRulesCoveredElsewhere } from "../src/sonarjsRules";
 
 const require = createRequire(import.meta.url);
 const fixtureDir = join(
@@ -41,15 +41,45 @@ const oxlintBin = join(
   "oxlint",
 );
 
-const lintWithOxlint = () => {
+interface OxlintDiagnostic {
+  code: string;
+  filename: string;
+  message: string;
+}
+
+interface OxlintRuleMetadata {
+  scope: string;
+  value: string;
+  category: string;
+  type_aware: boolean;
+}
+
+/**
+ * The severity of a rule entry, with or without options.
+ */
+const level = (entry: unknown): unknown =>
+  Array.isArray(entry) ? entry[0] : entry;
+
+const runOxlint = (args: string[]): OxlintDiagnostic[] => {
   const result = spawnSync(
     process.execPath,
-    [oxlintBin, "--config", "oxlint.config.mjs", "--format", "json", "src"],
+    [oxlintBin, "--config", "oxlint.config.mjs", "--format", "json", ...args],
     { cwd: fixtureDir, encoding: "utf8" },
   );
-  assert.ok(result.stdout, result.stderr);
-  const { diagnostics } = JSON.parse(result.stdout);
-  return diagnostics.map(({ code, filename, message }) => ({
+  expect(result.stdout, result.stderr).toBeTruthy();
+  return (JSON.parse(result.stdout) as { diagnostics: OxlintDiagnostic[] })
+    .diagnostics;
+};
+
+const listOxlintRules = () =>
+  JSON.parse(
+    spawnSync(process.execPath, [oxlintBin, "--rules", "--format", "json"], {
+      encoding: "utf8",
+    }).stdout,
+  ) as OxlintRuleMetadata[];
+
+const lintWithOxlint = (): Finding[] => {
+  return runOxlint(["src"]).map(({ code, filename, message }) => ({
     code,
     file: filename,
     message,
@@ -59,40 +89,47 @@ const lintWithOxlint = () => {
 /**
  * The rules that apply to a TypeScript file: the top-level rules and the overrides for TypeScript globs.
  */
-const rulesForTypeScriptFiles = (config) =>
+const rulesForTypeScriptFiles = (config: OxlintConfig) =>
   Object.assign(
     {},
     config.rules,
     ...(config.overrides ?? [])
       .filter((override) => override.files.includes("**/*.{ts,tsx,mts,cts}"))
       .map((override) => override.rules ?? {}),
-  );
+  ) as Record<string, unknown>;
 
-const codesIn = (diagnostics, file) =>
-  new Set(
-    diagnostics
-      .filter((entry) => entry.file === file)
-      .map((entry) => entry.code),
-  );
+/**
+ * Merges the rules of an ESLint configuration array, later entries winning.
+ */
+const mergeEslintRules = (configs: Linter.Config[]) =>
+  Object.assign({}, ...configs.map((config) => config.rules ?? {})) as Record<
+    string,
+    unknown
+  >;
+
+interface Finding {
+  code: string;
+  file: string;
+  message: string;
+}
+
+const codesIn = (diagnostics: Finding[], file: string) =>
+  diagnostics.filter((entry) => entry.file === file).map((entry) => entry.code);
 
 test("exposes the oxlint configurations", () => {
   for (const config of [oxlintNodeConfig, oxlintReactConfig]) {
-    assert.equal(config.options?.typeAware, true);
-    assert.equal(config.options?.reportUnusedDisableDirectives, "error");
-    assert.equal(config.categories?.correctness, "error");
-    assert.ok(Object.keys(config.rules ?? {}).length > 10);
-    assert.ok(config.jsPlugins?.length);
+    expect(config.options?.typeAware).toBe(true);
+    expect(config.options?.reportUnusedDisableDirectives).toBe("error");
+    expect(config.categories?.correctness).toBe("error");
+    expect(Object.keys(config.rules ?? {}).length).toBeGreaterThan(10);
+    expect(config.jsPlugins?.length).toBeGreaterThan(0);
   }
-  assert.ok(
-    oxlintReactConfig.jsPlugins.some(
-      (plugin) => plugin.name === "@eslint-react",
-    ),
-  );
-  assert.ok(
-    !oxlintNodeConfig.jsPlugins.some(
-      (plugin) => plugin.name === "@eslint-react",
-    ),
-  );
+  const pluginNames = (config: OxlintConfig) =>
+    (config.jsPlugins ?? []).map((plugin) =>
+      typeof plugin === "string" ? plugin : plugin.name,
+    );
+  expect(pluginNames(oxlintReactConfig)).toContain("@eslint-react");
+  expect(pluginNames(oxlintNodeConfig)).not.toContain("@eslint-react");
 
   const custom = createOxlintConfig({
     files: { defaultExports: ["**/*.mts"] },
@@ -100,45 +137,45 @@ test("exposes the oxlint configurations", () => {
   const defaultExportOverride = custom.overrides?.find(
     (override) => override.rules?.["import/no-default-export"] === "off",
   );
-  assert.deepEqual(defaultExportOverride?.files, ["**/*.mts"]);
+  expect(defaultExportOverride?.files).toEqual(["**/*.mts"]);
 });
 
 test("keeps the rules at the top level, so that projects can change them", () => {
   for (const config of [oxlintNodeConfig, oxlintReactConfig]) {
-    assert.equal(config.rules?.["typescript/no-floating-promises"], "error");
-    assert.ok(config.rules?.["sonarjs/no-nested-conditional"]);
+    expect(config.rules?.["typescript/no-floating-promises"]).toBe("error");
+    expect(config.rules?.["sonarjs/no-nested-conditional"]).toBeTruthy();
     // Overrides only turn rules off.
     for (const override of config.overrides ?? []) {
       for (const entry of Object.values(override.rules ?? {})) {
-        assert.equal(Array.isArray(entry) ? entry[0] : entry, "off");
+        expect(Array.isArray(entry) ? entry[0] : entry).toBe("off");
       }
     }
   }
-  assert.ok(oxlintReactConfig.rules?.["@eslint-react/no-missing-key"]);
+  expect(
+    oxlintReactConfig.rules?.["@eslint-react/no-missing-key"],
+  ).toBeTruthy();
 
   const scoped = createOxlintConfig({
     react: true,
     files: { react: ["apps/web/**/*.tsx"] },
   });
-  assert.equal(scoped.rules?.["@eslint-react/no-missing-key"], undefined);
-  assert.ok(
+  expect(scoped.rules?.["@eslint-react/no-missing-key"]).toBeUndefined();
+  expect(
     scoped.overrides?.some(
       (override) =>
         override.files[0] === "apps/web/**/*.tsx" &&
         override.rules?.["@eslint-react/no-missing-key"],
     ),
-  );
+  ).toBeTruthy();
 });
 
 test("lists every enabled type-aware TypeScript rule", () => {
-  const rules = JSON.parse(
-    spawnSync(process.execPath, [oxlintBin, "--rules", "--format", "json"], {
-      encoding: "utf8",
-    }).stdout,
-  );
-  const level = (entry) => (Array.isArray(entry) ? entry[0] : entry);
+  const rules = listOxlintRules();
   const tsRules = rulesForTypeScriptFiles(oxlintNodeConfig);
-  const categories = oxlintNodeConfig.categories ?? {};
+  const categories = (oxlintNodeConfig.categories ?? {}) as Record<
+    string,
+    unknown
+  >;
   // A rule is on for TypeScript files when the TypeScript override enables it,
   // or when its category is on and the override does not turn it off.
   const enabled = rules
@@ -150,22 +187,18 @@ test("lists every enabled type-aware TypeScript rule", () => {
         : (categories[rule.category] ?? "off") !== "off";
     })
     .map((rule) => `${rule.scope}/${rule.value}`);
-  assert.deepEqual(
-    Object.keys(oxlintDisableTypeAwareRules).sort(),
-    enabled.sort(),
+  const byName = (left: string, right: string) => left.localeCompare(right);
+  expect(Object.keys(oxlintDisableTypeAwareRules).toSorted(byName)).toEqual(
+    enabled.toSorted(byName),
   );
 });
 
 test("keeps every enabled rule of the typescript-eslint presets", () => {
-  const level = (entry) => (Array.isArray(entry) ? entry[0] : entry);
   const tsRules = rulesForTypeScriptFiles(oxlintNodeConfig);
-  const presetRules = Object.assign(
-    {},
-    ...[
-      ...typescriptEslintConfigs.strictTypeChecked,
-      ...typescriptEslintConfigs.stylisticTypeChecked,
-    ].map((config) => config.rules ?? {}),
-  );
+  const presetRules = mergeEslintRules([
+    ...typescriptEslintConfigs.strictTypeChecked,
+    ...typescriptEslintConfigs.stylisticTypeChecked,
+  ] as Linter.Config[]);
   const missing = Object.entries(presetRules)
     .filter(([, entry]) => level(entry) !== "off")
     .map(([name]) => name.replace("@typescript-eslint/", ""))
@@ -174,40 +207,31 @@ test("keeps every enabled rule of the typescript-eslint presets", () => {
         level(tsRules[`typescript/${name}`] ?? tsRules[name] ?? "off") ===
         "off",
     );
-  assert.deepEqual(missing, []);
+  expect(missing).toEqual([]);
 });
 
 test("leaves out the sonarjs rules that other rules cover", () => {
-  const rules = JSON.parse(
-    spawnSync(process.execPath, [oxlintBin, "--rules", "--format", "json"], {
-      encoding: "utf8",
-    }).stdout,
-  );
   const correctness = new Set(
-    rules
+    listOxlintRules()
       .filter((rule) => rule.category === "correctness")
       .map((rule) =>
         rule.scope === "eslint" ? rule.value : `${rule.scope}/${rule.value}`,
       ),
   );
-  const level = (entry) => (Array.isArray(entry) ? entry[0] : entry);
   const oxlintRules = rulesForTypeScriptFiles(oxlintReactConfig);
-  const eslintRules = Object.assign(
-    {},
-    ...getEslintTypeAwareReactConfig({ tsconfigRootDir: fixtureDir }).map(
-      (config) => config.rules ?? {},
-    ),
+  const eslintRules = mergeEslintRules(
+    getEslintTypeAwareReactConfig({ tsconfigRootDir: fixtureDir }),
   );
   for (const [sonarRule, coveringRule] of Object.entries(
     sonarRulesCoveredElsewhere,
   )) {
-    assert.equal(eslintRules[sonarRule], undefined, sonarRule);
+    expect(eslintRules[sonarRule], sonarRule).toBeUndefined();
     const covered =
       coveringRule in oxlintRules
         ? level(oxlintRules[coveringRule]) !== "off"
         : correctness.has(coveringRule) ||
           level(eslintRules[coveringRule] ?? "off") !== "off";
-    assert.ok(covered, `${coveringRule} does not cover ${sonarRule}`);
+    expect(covered, `${coveringRule} does not cover ${sonarRule}`).toBeTruthy();
   }
 });
 
@@ -215,57 +239,44 @@ test("reports the expected rules through oxlint", () => {
   const diagnostics = lintWithOxlint();
 
   const functions = codesIn(diagnostics, "src/functions.ts");
-  assert.ok(functions.has("prefer-arrow-functions(prefer-arrow-functions)"));
-  assert.ok(functions.has("typescript(no-floating-promises)"));
-  assert.ok(functions.has("eslint(id-denylist)"));
+  expect(functions).toContain("prefer-arrow-functions(prefer-arrow-functions)");
+  expect(functions).toContain("typescript(no-floating-promises)");
+  expect(functions).toContain("eslint(id-denylist)");
   // sonarjs marks it as type-aware, but it works without type information.
-  assert.ok(functions.has("sonarjs(slow-regex)"));
+  expect(functions).toContain("sonarjs(slow-regex)");
   // Rules that need type information inside JS plugins run in ESLint instead.
-  assert.ok(!functions.has("sonarjs(no-alphabetical-sort)"));
-  assert.ok(functions.has("typescript(require-array-sort-compare)"));
+  expect(functions).not.toContain("sonarjs(no-alphabetical-sort)");
+  expect(functions).toContain("typescript(require-array-sort-compare)");
 
   const imports = codesIn(diagnostics, "src/imports.ts");
-  assert.ok(imports.has("import(extensions)"));
-  assert.ok(imports.has("import(no-default-export)"));
+  expect(imports).toContain("import(extensions)");
+  expect(imports).toContain("import(no-default-export)");
 
   const component = codesIn(diagnostics, "src/component.tsx");
-  assert.ok(component.has("@eslint-react(web-api-no-leaked-interval)"));
+  expect(component).toContain("@eslint-react(web-api-no-leaked-interval)");
 
   // A suppressed finding with a typescript-eslint rule name must neither report nor count as unused.
-  assert.deepEqual(codesIn(diagnostics, "src/directives.ts"), new Set());
-  assert.deepEqual(codesIn(diagnostics, "src/directives.mjs"), new Set());
-  assert.ok(!codesIn(diagnostics, "src/script.mjs").has("import(extensions)"));
+  expect(codesIn(diagnostics, "src/directives.ts")).toEqual([]);
+  expect(codesIn(diagnostics, "src/directives.mjs")).toEqual([]);
+  expect(codesIn(diagnostics, "src/script.mjs")).not.toContain(
+    "import(extensions)",
+  );
 
   // Astro components get the rules without `files`, and `Astro` is not reported as undefined.
   const astro = codesIn(diagnostics, "src/Page.astro");
-  assert.ok(astro.has("prefer-arrow-functions(prefer-arrow-functions)"));
-  assert.ok(!astro.has("eslint(no-undef)"));
+  expect(astro).toContain("prefer-arrow-functions(prefer-arrow-functions)");
+  expect(astro).not.toContain("eslint(no-undef)");
   // The configuration reports unused directives without a CLI flag.
-  assert.ok(
-    diagnostics.some(
-      (entry) =>
-        entry.file === "src/unusedDirective.ts" &&
-        entry.message.includes("Unused eslint-disable directive"),
-    ),
-  );
+  expect(
+    diagnostics
+      .filter((entry) => entry.file === "src/unusedDirective.ts")
+      .map((entry) => entry.message)
+      .join("\n"),
+  ).toContain("Unused eslint-disable directive");
 });
 
 test("lets tool configuration files use default exports and Node globals", () => {
-  const result = spawnSync(
-    process.execPath,
-    [
-      oxlintBin,
-      "--config",
-      "oxlint.config.mjs",
-      "--format",
-      "json",
-      "stylelint.config.mjs",
-    ],
-    { cwd: fixtureDir, encoding: "utf8" },
-  );
-  const { diagnostics } = JSON.parse(result.stdout);
-  assert.deepEqual(
-    diagnostics.map(({ code }) => code),
+  expect(runOxlint(["stylelint.config.mjs"]).map(({ code }) => code)).toEqual(
     [],
   );
 });
@@ -275,10 +286,10 @@ test("runs sonarjs rules that depend on imports in every file", () => {
   // unless the plugin wrapper resets it for each file.
   const diagnostics = lintWithOxlint();
   for (const file of ["src/first.test.ts", "src/second.test.ts"]) {
-    assert.ok(
-      codesIn(diagnostics, file).has("sonarjs(no-trivial-assertions)"),
+    expect(
+      codesIn(diagnostics, file),
       `sonarjs(no-trivial-assertions) is missing in ${file}`,
-    );
+    ).toContain("sonarjs(no-trivial-assertions)");
   }
 });
 
@@ -301,7 +312,7 @@ test("loads the type-aware ESLint entry point without Prettier or the import res
     ["--input-type=module", "--eval", script],
     { cwd: fixtureDir, encoding: "utf8" },
   );
-  assert.equal(result.status, 0, result.stderr);
+  expect(result.status, result.stderr).toBe(0);
 });
 
 test("skips the code blocks of ESLint processors", async () => {
@@ -312,16 +323,18 @@ test("skips the code blocks of ESLint processors", async () => {
       tsconfigRootDir: fixtureDir,
     }),
   });
-  const codeBlock = await eslint.calculateConfigForFile(
+  const codeBlock = (await eslint.calculateConfigForFile(
     "src/Page.astro/1_1.ts",
-  );
-  const real = await eslint.calculateConfigForFile("src/functions.ts");
-  assert.ok(real?.rules?.["sonarjs/no-ignored-return"]);
-  assert.equal(codeBlock?.rules?.["sonarjs/no-ignored-return"], undefined);
-  assert.equal(
-    codeBlock?.languageOptions?.parserOptions?.projectService,
-    undefined,
-  );
+  )) as Linter.Config | undefined;
+  const real = (await eslint.calculateConfigForFile("src/functions.ts")) as
+    | Linter.Config
+    | undefined;
+  expect(real?.rules?.["sonarjs/no-ignored-return"]).toBeTruthy();
+  expect(codeBlock?.rules?.["sonarjs/no-ignored-return"]).toBeUndefined();
+  const parserOptions = codeBlock?.languageOptions?.parserOptions as
+    | { projectService?: unknown }
+    | undefined;
+  expect(parserOptions?.projectService).toBeUndefined();
 });
 
 test("reports the type-aware JS plugin rules through ESLint", async () => {
@@ -340,43 +353,43 @@ test("reports the type-aware JS plugin rules through ESLint", async () => {
     })),
   );
 
-  assert.deepEqual(
-    messages.filter((message) => message.fatal || message.ruleId === null),
-    [],
-  );
-  // Disable directives for plugin rules must stay valid in JavaScript files.
-  assert.deepEqual(
-    messages.filter((message) => message.file === "src/directives.mjs"),
-    [],
-  );
-  const rulesIn = (file) =>
-    new Set(
-      messages
-        .filter((message) => message.file === file)
-        .map(({ ruleId }) => ruleId),
-    );
-  assert.ok(rulesIn("src/functions.ts").has("sonarjs/no-ignored-return"));
-  // oxlint covers it with typescript/require-array-sort-compare.
-  assert.ok(!rulesIn("src/functions.ts").has("sonarjs/no-alphabetical-sort"));
-  assert.ok(!rulesIn("src/functions.ts").has("sonarjs/slow-regex"));
-  assert.ok(
-    rulesIn("src/component.tsx").has(
-      "@eslint-react/no-leaked-conditional-rendering",
+  expect(
+    messages.filter(
+      (message) => message.fatal === true || message.ruleId === null,
     ),
+  ).toEqual([]);
+  // Disable directives for plugin rules must stay valid in JavaScript files.
+  expect(
+    messages.filter((message) => message.file === "src/directives.mjs"),
+  ).toEqual([]);
+  const rulesIn = (file: string) =>
+    messages
+      .filter((message) => message.file === file)
+      .map(({ ruleId }) => ruleId);
+  expect(rulesIn("src/functions.ts")).toContain("sonarjs/no-ignored-return");
+  // oxlint covers it with typescript/require-array-sort-compare.
+  expect(rulesIn("src/functions.ts")).not.toContain(
+    "sonarjs/no-alphabetical-sort",
+  );
+  expect(rulesIn("src/functions.ts")).not.toContain("sonarjs/slow-regex");
+  expect(rulesIn("src/component.tsx")).toContain(
+    "@eslint-react/no-leaked-conditional-rendering",
   );
   // Rules without type requirements run in oxlint only.
-  assert.ok(!rulesIn("src/first.test.ts").has("sonarjs/no-trivial-assertions"));
+  expect(rulesIn("src/first.test.ts")).not.toContain(
+    "sonarjs/no-trivial-assertions",
+  );
 
   const nodeConfig = getEslintTypeAwareNodeConfig({
     tsconfigRootDir: fixtureDir,
   });
-  assert.ok(
-    !nodeConfig.some((config) =>
+  expect(
+    nodeConfig.some((config) =>
       Object.keys(config.rules ?? {}).some((rule) =>
         rule.startsWith("@eslint-react/"),
       ),
     ),
-  );
+  ).toBeFalsy();
 });
 
 test("formats with the oxfmt configuration", async () => {
@@ -390,9 +403,8 @@ test("formats with the oxfmt configuration", async () => {
   ].join("\n");
   const { code, errors } = await format("example.tsx", source, oxfmtConfig);
 
-  assert.deepEqual(errors, []);
-  assert.equal(
-    code,
+  expect(errors).toEqual([]);
+  expect(code).toBe(
     [
       'import { join } from "node:path";',
       'import { a } from "library";',

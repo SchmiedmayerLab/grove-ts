@@ -15,22 +15,22 @@ Users only need the [README](README.md).
 
 ## Structure
 
-| File                          | Purpose                                                                                                           |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `src/eslint/index.ts`         | Full ESLint configurations, which need Prettier and the TypeScript import resolver                                |
-| `src/eslint/typeAware.ts`     | Type-aware ESLint configurations for the oxc setup, published as `./eslint-type-aware` without those dependencies |
-| `src/eslint/shared.ts`        | Helpers both ESLint entry points use                                                                              |
-| `src/prettier.ts`             | Prettier configuration                                                                                            |
-| `src/oxlint/index.ts`         | `createOxlintConfig` and the oxlint exports                                                                       |
-| `src/oxlint/rules.ts`         | Native oxlint rules on top of the correctness category                                                            |
-| `src/oxlint/sonarjs.ts`       | sonarjs prepared for oxlint's JS plugin runtime                                                                   |
-| `src/sonarjsRules.ts`         | Splits the sonarjs rules between oxlint and ESLint                                                                |
-| `src/typeAwareRules.ts`       | @eslint-react rules that run in ESLint                                                                            |
-| `src/oxfmt.ts`                | oxfmt configuration                                                                                               |
-| `global-types.d.ts`           | Global types entry, published as `./global-types`                                                                 |
-| `tsdown.config.ts`            | Build of the entry points                                                                                         |
-| `test/compatibility.test.mjs` | Pins the ESLint and Prettier configurations                                                                       |
-| `test/oxc.test.mjs`           | Checks the oxlint and oxfmt configurations                                                                        |
+| File                         | Purpose                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `src/eslint/index.ts`        | Full ESLint configurations, which need Prettier and the TypeScript import resolver                                |
+| `src/eslint/typeAware.ts`    | Type-aware ESLint configurations for the oxc setup, published as `./eslint-type-aware` without those dependencies |
+| `src/eslint/shared.ts`       | Helpers both ESLint entry points use                                                                              |
+| `src/prettier.ts`            | Prettier configuration                                                                                            |
+| `src/oxlint/index.ts`        | `createOxlintConfig` and the oxlint exports                                                                       |
+| `src/oxlint/rules.ts`        | Native oxlint rules on top of the correctness category                                                            |
+| `src/oxlint/sonarjs.ts`      | sonarjs prepared for oxlint's JS plugin runtime                                                                   |
+| `src/sonarjsRules.ts`        | Splits the sonarjs rules between oxlint and ESLint                                                                |
+| `src/typeAwareRules.ts`      | @eslint-react rules that run in ESLint                                                                            |
+| `src/oxfmt.ts`               | oxfmt configuration                                                                                               |
+| `global-types.d.ts`          | Global types entry, published as `./global-types`                                                                 |
+| `tsdown.config.ts`           | Build of the entry points                                                                                         |
+| `test/compatibility.test.ts` | Pins the ESLint and Prettier configurations                                                                       |
+| `test/oxc.test.ts`           | Checks the oxlint and oxfmt configurations                                                                        |
 
 ## oxlint and ESLint
 
@@ -112,9 +112,10 @@ The import turns that file into a module, so any other declaration in it would s
 
 ## Tests
 
-`test/compatibility.test.mjs` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the `./prettier` entry point loads nothing from ESLint, and loading with `require()`.
-Run `UPDATE_SNAPSHOTS=1 pnpm test` only when a change to the ESLint configurations is intended.
-`test/package.test.mjs` loads the main ESM entry point as published.
+The tests run with Vitest against the built entry points, so build the package before `pnpm test`.
+`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the `./prettier` entry point loads nothing from ESLint, and loading with `require()`.
+After an intended change to the ESLint configurations, update the snapshot with `pnpm test -u`; oxfmt leaves it as Vitest writes it.
+`test/package.test.ts` loads the main ESM entry point as published.
 
-`test/oxc.test.mjs` lints the fixture project in `test/fixtures/project` with oxlint and the type-aware ESLint configuration, and formats with oxfmt.
+`test/oxc.test.ts` lints the fixture project in `test/fixtures/project` with oxlint and the type-aware ESLint configuration, and formats with oxfmt.
 It also checks the rule lists against oxlint's rule metadata and that the `./eslint-type-aware` entry point loads neither Prettier nor the import resolver.

@@ -115,7 +115,9 @@
       "error",
       {
         "name": "react",
-        "importNames": ["default"],
+        "importNames": [
+          "default"
+        ],
         "message": "Import specific types directly: import { ReactNode } from 'react'"
       }
     ],
@@ -191,7 +193,10 @@
         "allowBoolean": true
       }
     ],
-    "@typescript-eslint/return-await": ["error", "in-try-catch"],
+    "@typescript-eslint/return-await": [
+      "error",
+      "in-try-catch"
+    ],
     "@typescript-eslint/triple-slash-reference": "error",
     "@typescript-eslint/unbound-method": "error",
     "@typescript-eslint/unified-signatures": "error",
@@ -238,8 +243,18 @@
     "import-x/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", ["parent", "sibling"]],
-        "pathGroupsExcludedImportTypes": ["builtin"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          [
+            "parent",
+            "sibling"
+          ]
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "builtin"
+        ],
         "newlines-between": "never",
         "alphabetize": {
           "order": "asc",
@@ -255,7 +270,10 @@
     "no-async-promise-executor": "error",
     "no-case-declarations": "error",
     "no-compare-neg-zero": "error",
-    "no-cond-assign": ["error", "except-parens"],
+    "no-cond-assign": [
+      "error",
+      "except-parens"
+    ],
     "no-constant-binary-expression": [
       "error",
       {
@@ -288,7 +306,10 @@
     ],
     "no-empty-static-block": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": ["error", {}],
+    "no-extra-boolean-cast": [
+      "error",
+      {}
+    ],
     "no-fallthrough": [
       "error",
       {
@@ -302,7 +323,10 @@
         "exceptions": []
       }
     ],
-    "no-invalid-regexp": ["error", {}],
+    "no-invalid-regexp": [
+      "error",
+      {}
+    ],
     "no-irregular-whitespace": [
       "error",
       {
@@ -423,7 +447,10 @@
       }
     ],
     "sonarjs/code-eval": "error",
-    "sonarjs/cognitive-complexity": ["error", 20],
+    "sonarjs/cognitive-complexity": [
+      "error",
+      20
+    ],
     "sonarjs/comma-or-logical-or-case": "error",
     "sonarjs/concise-regex": "error",
     "sonarjs/constructor-for-side-effects": "error",
@@ -470,7 +497,10 @@
     "sonarjs/jsx-no-leaked-render": "error",
     "sonarjs/label-position": "error",
     "sonarjs/link-with-target-blank": "error",
-    "sonarjs/max-switch-cases": ["error", 30],
+    "sonarjs/max-switch-cases": [
+      "error",
+      30
+    ],
     "sonarjs/memoize-cache-key": "error",
     "sonarjs/misplaced-loop-counter": "error",
     "sonarjs/new-operator-misuse": [
@@ -522,7 +552,12 @@
     "sonarjs/no-hardcoded-passwords": [
       "error",
       {
-        "passwordWords": ["password", "pwd", "passwd", "passphrase"]
+        "passwordWords": [
+          "password",
+          "pwd",
+          "passwd",
+          "passphrase"
+        ]
       }
     ],
     "sonarjs/no-hardcoded-secrets": [
@@ -535,7 +570,10 @@
     "sonarjs/no-hook-setter-in-body": "error",
     "sonarjs/no-identical-conditions": "error",
     "sonarjs/no-identical-expressions": "error",
-    "sonarjs/no-identical-functions": ["error", 3],
+    "sonarjs/no-identical-functions": [
+      "error",
+      3
+    ],
     "sonarjs/no-ignored-exceptions": "error",
     "sonarjs/no-ignored-return": "error",
     "sonarjs/no-implicit-global": "error",
@@ -717,8 +755,18 @@
     "import-x/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", ["parent", "sibling"]],
-        "pathGroupsExcludedImportTypes": ["builtin"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          [
+            "parent",
+            "sibling"
+          ]
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "builtin"
+        ],
         "newlines-between": "never",
         "alphabetize": {
           "order": "asc",
@@ -735,7 +783,10 @@
     "no-case-declarations": "error",
     "no-class-assign": "error",
     "no-compare-neg-zero": "error",
-    "no-cond-assign": ["error", "except-parens"],
+    "no-cond-assign": [
+      "error",
+      "except-parens"
+    ],
     "no-const-assign": "error",
     "no-constant-binary-expression": [
       "error",
@@ -772,7 +823,10 @@
     ],
     "no-empty-static-block": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": ["error", {}],
+    "no-extra-boolean-cast": [
+      "error",
+      {}
+    ],
     "no-fallthrough": [
       "error",
       {
@@ -788,7 +842,10 @@
       }
     ],
     "no-import-assign": "error",
-    "no-invalid-regexp": ["error", {}],
+    "no-invalid-regexp": [
+      "error",
+      {}
+    ],
     "no-irregular-whitespace": [
       "error",
       {
@@ -935,7 +992,10 @@
       }
     ],
     "sonarjs/code-eval": "error",
-    "sonarjs/cognitive-complexity": ["error", 20],
+    "sonarjs/cognitive-complexity": [
+      "error",
+      20
+    ],
     "sonarjs/comma-or-logical-or-case": "error",
     "sonarjs/concise-regex": "error",
     "sonarjs/constructor-for-side-effects": "error",
@@ -982,7 +1042,10 @@
     "sonarjs/jsx-no-leaked-render": "error",
     "sonarjs/label-position": "error",
     "sonarjs/link-with-target-blank": "error",
-    "sonarjs/max-switch-cases": ["error", 30],
+    "sonarjs/max-switch-cases": [
+      "error",
+      30
+    ],
     "sonarjs/memoize-cache-key": "error",
     "sonarjs/misplaced-loop-counter": "error",
     "sonarjs/new-operator-misuse": [
@@ -1034,7 +1097,12 @@
     "sonarjs/no-hardcoded-passwords": [
       "error",
       {
-        "passwordWords": ["password", "pwd", "passwd", "passphrase"]
+        "passwordWords": [
+          "password",
+          "pwd",
+          "passwd",
+          "passphrase"
+        ]
       }
     ],
     "sonarjs/no-hardcoded-secrets": [
@@ -1047,7 +1115,10 @@
     "sonarjs/no-hook-setter-in-body": "error",
     "sonarjs/no-identical-conditions": "error",
     "sonarjs/no-identical-expressions": "error",
-    "sonarjs/no-identical-functions": ["error", 3],
+    "sonarjs/no-identical-functions": [
+      "error",
+      3
+    ],
     "sonarjs/no-ignored-exceptions": "error",
     "sonarjs/no-ignored-return": "error",
     "sonarjs/no-implicit-global": "error",
@@ -1200,7 +1271,10 @@
     "no-case-declarations": "error",
     "no-class-assign": "error",
     "no-compare-neg-zero": "error",
-    "no-cond-assign": ["error", "except-parens"],
+    "no-cond-assign": [
+      "error",
+      "except-parens"
+    ],
     "no-const-assign": "error",
     "no-constant-binary-expression": [
       "error",
@@ -1237,7 +1311,10 @@
     ],
     "no-empty-static-block": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": ["error", {}],
+    "no-extra-boolean-cast": [
+      "error",
+      {}
+    ],
     "no-fallthrough": [
       "error",
       {
@@ -1253,7 +1330,10 @@
       }
     ],
     "no-import-assign": "error",
-    "no-invalid-regexp": ["error", {}],
+    "no-invalid-regexp": [
+      "error",
+      {}
+    ],
     "no-irregular-whitespace": [
       "error",
       {
@@ -1482,7 +1562,9 @@
       "error",
       {
         "name": "react",
-        "importNames": ["default"],
+        "importNames": [
+          "default"
+        ],
         "message": "Import specific types directly: import { ReactNode } from 'react'"
       }
     ],
@@ -1558,7 +1640,10 @@
         "allowBoolean": true
       }
     ],
-    "@typescript-eslint/return-await": ["error", "in-try-catch"],
+    "@typescript-eslint/return-await": [
+      "error",
+      "in-try-catch"
+    ],
     "@typescript-eslint/triple-slash-reference": "error",
     "@typescript-eslint/unbound-method": "error",
     "@typescript-eslint/unified-signatures": "error",
@@ -1604,8 +1689,18 @@
     "import-x/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", ["parent", "sibling"]],
-        "pathGroupsExcludedImportTypes": ["builtin"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          [
+            "parent",
+            "sibling"
+          ]
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "builtin"
+        ],
         "newlines-between": "never",
         "alphabetize": {
           "order": "asc",
@@ -1621,7 +1716,10 @@
     "no-async-promise-executor": "error",
     "no-case-declarations": "error",
     "no-compare-neg-zero": "error",
-    "no-cond-assign": ["error", "except-parens"],
+    "no-cond-assign": [
+      "error",
+      "except-parens"
+    ],
     "no-constant-binary-expression": [
       "error",
       {
@@ -1654,7 +1752,10 @@
     ],
     "no-empty-static-block": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": ["error", {}],
+    "no-extra-boolean-cast": [
+      "error",
+      {}
+    ],
     "no-fallthrough": [
       "error",
       {
@@ -1668,7 +1769,10 @@
         "exceptions": []
       }
     ],
-    "no-invalid-regexp": ["error", {}],
+    "no-invalid-regexp": [
+      "error",
+      {}
+    ],
     "no-irregular-whitespace": [
       "error",
       {
@@ -1789,7 +1893,10 @@
       }
     ],
     "sonarjs/code-eval": "error",
-    "sonarjs/cognitive-complexity": ["error", 20],
+    "sonarjs/cognitive-complexity": [
+      "error",
+      20
+    ],
     "sonarjs/comma-or-logical-or-case": "error",
     "sonarjs/concise-regex": "error",
     "sonarjs/constructor-for-side-effects": "error",
@@ -1836,7 +1943,10 @@
     "sonarjs/jsx-no-leaked-render": "error",
     "sonarjs/label-position": "error",
     "sonarjs/link-with-target-blank": "error",
-    "sonarjs/max-switch-cases": ["error", 30],
+    "sonarjs/max-switch-cases": [
+      "error",
+      30
+    ],
     "sonarjs/memoize-cache-key": "error",
     "sonarjs/misplaced-loop-counter": "error",
     "sonarjs/new-operator-misuse": [
@@ -1888,7 +1998,12 @@
     "sonarjs/no-hardcoded-passwords": [
       "error",
       {
-        "passwordWords": ["password", "pwd", "passwd", "passphrase"]
+        "passwordWords": [
+          "password",
+          "pwd",
+          "passwd",
+          "passphrase"
+        ]
       }
     ],
     "sonarjs/no-hardcoded-secrets": [
@@ -1901,7 +2016,10 @@
     "sonarjs/no-hook-setter-in-body": "error",
     "sonarjs/no-identical-conditions": "error",
     "sonarjs/no-identical-expressions": "error",
-    "sonarjs/no-identical-functions": ["error", 3],
+    "sonarjs/no-identical-functions": [
+      "error",
+      3
+    ],
     "sonarjs/no-ignored-exceptions": "error",
     "sonarjs/no-ignored-return": "error",
     "sonarjs/no-implicit-global": "error",
@@ -2248,7 +2366,9 @@
       "error",
       {
         "name": "react",
-        "importNames": ["default"],
+        "importNames": [
+          "default"
+        ],
         "message": "Import specific types directly: import { ReactNode } from 'react'"
       }
     ],
@@ -2324,7 +2444,10 @@
         "allowBoolean": true
       }
     ],
-    "@typescript-eslint/return-await": ["error", "in-try-catch"],
+    "@typescript-eslint/return-await": [
+      "error",
+      "in-try-catch"
+    ],
     "@typescript-eslint/triple-slash-reference": "error",
     "@typescript-eslint/unbound-method": "error",
     "@typescript-eslint/unified-signatures": "error",
@@ -2371,8 +2494,18 @@
     "import-x/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", ["parent", "sibling"]],
-        "pathGroupsExcludedImportTypes": ["builtin"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          [
+            "parent",
+            "sibling"
+          ]
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "builtin"
+        ],
         "newlines-between": "never",
         "alphabetize": {
           "order": "asc",
@@ -2388,7 +2521,10 @@
     "no-async-promise-executor": "error",
     "no-case-declarations": "error",
     "no-compare-neg-zero": "error",
-    "no-cond-assign": ["error", "except-parens"],
+    "no-cond-assign": [
+      "error",
+      "except-parens"
+    ],
     "no-constant-binary-expression": [
       "error",
       {
@@ -2421,7 +2557,10 @@
     ],
     "no-empty-static-block": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": ["error", {}],
+    "no-extra-boolean-cast": [
+      "error",
+      {}
+    ],
     "no-fallthrough": [
       "error",
       {
@@ -2435,7 +2574,10 @@
         "exceptions": []
       }
     ],
-    "no-invalid-regexp": ["error", {}],
+    "no-invalid-regexp": [
+      "error",
+      {}
+    ],
     "no-irregular-whitespace": [
       "error",
       {
@@ -2556,7 +2698,10 @@
       }
     ],
     "sonarjs/code-eval": "error",
-    "sonarjs/cognitive-complexity": ["error", 20],
+    "sonarjs/cognitive-complexity": [
+      "error",
+      20
+    ],
     "sonarjs/comma-or-logical-or-case": "error",
     "sonarjs/concise-regex": "error",
     "sonarjs/constructor-for-side-effects": "error",
@@ -2603,7 +2748,10 @@
     "sonarjs/jsx-no-leaked-render": "error",
     "sonarjs/label-position": "error",
     "sonarjs/link-with-target-blank": "error",
-    "sonarjs/max-switch-cases": ["error", 30],
+    "sonarjs/max-switch-cases": [
+      "error",
+      30
+    ],
     "sonarjs/memoize-cache-key": "error",
     "sonarjs/misplaced-loop-counter": "error",
     "sonarjs/new-operator-misuse": [
@@ -2655,7 +2803,12 @@
     "sonarjs/no-hardcoded-passwords": [
       "error",
       {
-        "passwordWords": ["password", "pwd", "passwd", "passphrase"]
+        "passwordWords": [
+          "password",
+          "pwd",
+          "passwd",
+          "passphrase"
+        ]
       }
     ],
     "sonarjs/no-hardcoded-secrets": [
@@ -2668,7 +2821,10 @@
     "sonarjs/no-hook-setter-in-body": "error",
     "sonarjs/no-identical-conditions": "error",
     "sonarjs/no-identical-expressions": "error",
-    "sonarjs/no-identical-functions": ["error", 3],
+    "sonarjs/no-identical-functions": [
+      "error",
+      3
+    ],
     "sonarjs/no-ignored-exceptions": "error",
     "sonarjs/no-ignored-return": "error",
     "sonarjs/no-implicit-global": "error",
@@ -3015,7 +3171,9 @@
       "error",
       {
         "name": "react",
-        "importNames": ["default"],
+        "importNames": [
+          "default"
+        ],
         "message": "Import specific types directly: import { ReactNode } from 'react'"
       }
     ],
@@ -3091,7 +3249,10 @@
         "allowBoolean": true
       }
     ],
-    "@typescript-eslint/return-await": ["error", "in-try-catch"],
+    "@typescript-eslint/return-await": [
+      "error",
+      "in-try-catch"
+    ],
     "@typescript-eslint/triple-slash-reference": "error",
     "@typescript-eslint/unbound-method": "error",
     "@typescript-eslint/unified-signatures": "error",
@@ -3137,8 +3298,18 @@
     "import-x/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", ["parent", "sibling"]],
-        "pathGroupsExcludedImportTypes": ["builtin"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          [
+            "parent",
+            "sibling"
+          ]
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "builtin"
+        ],
         "newlines-between": "never",
         "alphabetize": {
           "order": "asc",
@@ -3154,7 +3325,10 @@
     "no-async-promise-executor": "error",
     "no-case-declarations": "error",
     "no-compare-neg-zero": "error",
-    "no-cond-assign": ["error", "except-parens"],
+    "no-cond-assign": [
+      "error",
+      "except-parens"
+    ],
     "no-constant-binary-expression": [
       "error",
       {
@@ -3187,7 +3361,10 @@
     ],
     "no-empty-static-block": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": ["error", {}],
+    "no-extra-boolean-cast": [
+      "error",
+      {}
+    ],
     "no-fallthrough": [
       "error",
       {
@@ -3201,7 +3378,10 @@
         "exceptions": []
       }
     ],
-    "no-invalid-regexp": ["error", {}],
+    "no-invalid-regexp": [
+      "error",
+      {}
+    ],
     "no-irregular-whitespace": [
       "error",
       {
@@ -3322,7 +3502,10 @@
       }
     ],
     "sonarjs/code-eval": "error",
-    "sonarjs/cognitive-complexity": ["error", 20],
+    "sonarjs/cognitive-complexity": [
+      "error",
+      20
+    ],
     "sonarjs/comma-or-logical-or-case": "error",
     "sonarjs/concise-regex": "error",
     "sonarjs/constructor-for-side-effects": "error",
@@ -3369,7 +3552,10 @@
     "sonarjs/jsx-no-leaked-render": "error",
     "sonarjs/label-position": "error",
     "sonarjs/link-with-target-blank": "error",
-    "sonarjs/max-switch-cases": ["error", 30],
+    "sonarjs/max-switch-cases": [
+      "error",
+      30
+    ],
     "sonarjs/memoize-cache-key": "error",
     "sonarjs/misplaced-loop-counter": "error",
     "sonarjs/new-operator-misuse": [
@@ -3421,7 +3607,12 @@
     "sonarjs/no-hardcoded-passwords": [
       "error",
       {
-        "passwordWords": ["password", "pwd", "passwd", "passphrase"]
+        "passwordWords": [
+          "password",
+          "pwd",
+          "passwd",
+          "passphrase"
+        ]
       }
     ],
     "sonarjs/no-hardcoded-secrets": [
@@ -3434,7 +3625,10 @@
     "sonarjs/no-hook-setter-in-body": "error",
     "sonarjs/no-identical-conditions": "error",
     "sonarjs/no-identical-expressions": "error",
-    "sonarjs/no-identical-functions": ["error", 3],
+    "sonarjs/no-identical-functions": [
+      "error",
+      3
+    ],
     "sonarjs/no-ignored-exceptions": "error",
     "sonarjs/no-ignored-return": "error",
     "sonarjs/no-implicit-global": "error",

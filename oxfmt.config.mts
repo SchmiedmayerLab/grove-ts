@@ -22,5 +22,9 @@ export default defineConfig({
   },
   // oxfmt skips the files in .gitignore and lockfiles by itself.
   // Local agent settings can be hidden by a global gitignore, which oxfmt does not read.
-  ignorePatterns: [".claude"],
+  ignorePatterns: [
+    ".claude",
+    // Written by Vitest.
+    "packages/configurations/test/snapshots",
+  ],
 });

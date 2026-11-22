@@ -97,7 +97,7 @@
           "src/oxlint/sonarjs.ts",
           "src/oxfmt.ts",
           "src/prettier.ts",
-          "test/*.test.mjs"
+          "test/*.test.ts"
         ],
         "project": [
           "src/**/*.ts"

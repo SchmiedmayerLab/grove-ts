@@ -72,7 +72,8 @@
     "lint:ci": "oxlint --deny-warnings && eslint --max-warnings 0 .",
     "lint:fix": "oxlint --fix && eslint --fix .",
     "lint:package": "publint --strict --pack pnpm && attw --pack . --profile esm-only",
-    "test": "node --test test/*.test.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm run clean && pnpm run build"
   },
@@ -128,6 +129,7 @@
     "prettier": "^3.9.6",
     "rimraf": "^6.1.2",
     "tsdown": "^0.22.14",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.12"
   }
 }
