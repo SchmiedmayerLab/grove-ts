@@ -23,9 +23,9 @@ describe('TestScript Resource', () => {
     expectTypeOf<TestScript>().toExtend<Schema>()
 
     const data = fs.readFileSync('test/resources/testScripts.json', 'utf-8')
-    const decodedJson = JSON.parse(data)
+    const decodedJson = JSON.parse(data) as Record<string, unknown>
 
-    Object.values(decodedJson).forEach((jsonValue: unknown) => {
+    Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource = FhirTestScript.parse(jsonValue).value
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),

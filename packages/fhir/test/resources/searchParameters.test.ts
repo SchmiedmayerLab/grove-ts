@@ -26,9 +26,9 @@ describe('SearchParameter Resource', () => {
       'test/resources/searchParameters.json',
       'utf-8',
     )
-    const decodedJson = JSON.parse(data)
+    const decodedJson = JSON.parse(data) as Record<string, unknown>
 
-    Object.values(decodedJson).forEach((jsonValue: unknown) => {
+    Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource = FhirSearchParameter.parse(jsonValue).value
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),

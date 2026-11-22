@@ -26,9 +26,9 @@ describe('CapabilityStatement Resource', () => {
       'test/resources/capabilityStatements.json',
       'utf-8',
     )
-    const decodedJson = JSON.parse(data)
+    const decodedJson = JSON.parse(data) as Record<string, unknown>
 
-    Object.values(decodedJson).forEach((jsonValue: unknown) => {
+    Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource = FhirCapabilityStatement.parse(jsonValue).value
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),

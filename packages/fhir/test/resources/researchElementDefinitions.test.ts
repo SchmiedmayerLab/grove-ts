@@ -26,9 +26,9 @@ describe('ResearchElementDefinition Resource', () => {
       'test/resources/researchElementDefinitions.json',
       'utf-8',
     )
-    const decodedJson = JSON.parse(data)
+    const decodedJson = JSON.parse(data) as Record<string, unknown>
 
-    Object.values(decodedJson).forEach((jsonValue: unknown) => {
+    Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource =
         FhirResearchElementDefinition.parse(jsonValue).value
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
