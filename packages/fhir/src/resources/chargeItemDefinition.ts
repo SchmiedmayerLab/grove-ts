@@ -14,7 +14,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { domainResourceSchema } from '../elements/domainResource.js'
 import {
   identifierSchema,
@@ -37,6 +36,7 @@ import {
   chargeItemDefinitionStatusSchema,
   priceComponentTypeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const chargeItemDefinitionApplicabilitySchema: ZodType<ChargeItemDefinitionApplicability> =
   backboneElementSchema.extend({

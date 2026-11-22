@@ -10,8 +10,8 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type Slot } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import { FhirSlot, type untypedSlotSchema } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('Slot Resource', () => {
   it('should validate FHIR slot from slots.json', () => {

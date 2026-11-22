@@ -141,9 +141,9 @@ console.log(codes) // ['73211009']
 ### Firebase Functions Integration
 
 ```typescript
-import { onCall } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
 import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
+import { getFirestore } from 'firebase-admin/firestore'
+import { onCall } from 'firebase-functions/v2/https'
 
 export const createPatient = onCall(async (request) => {
   const patientData = request.data
@@ -165,8 +165,8 @@ export const createPatient = onCall(async (request) => {
 ### Firestore Integration
 
 ```typescript
-import { getFirestore } from 'firebase-admin/firestore'
 import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
+import { getFirestore } from 'firebase-admin/firestore'
 
 const firestore = getFirestore()
 

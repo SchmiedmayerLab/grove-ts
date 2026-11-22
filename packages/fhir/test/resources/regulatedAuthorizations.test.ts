@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type RegulatedAuthorization } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirRegulatedAuthorization,
   type untypedRegulatedAuthorizationSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('RegulatedAuthorization Resource', () => {
   it('should validate FHIR regulatedAuthorization from regulatedAuthorizations.json', () => {

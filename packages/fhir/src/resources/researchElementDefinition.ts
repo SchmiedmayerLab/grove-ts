@@ -12,7 +12,6 @@ import {
   type ResearchElementDefinitionCharacteristic,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -42,6 +41,7 @@ import {
   researchElementDefinitionTypeSchema,
   variableTypeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const researchElementDefinitionCharacteristicSchema: ZodType<ResearchElementDefinitionCharacteristic> =
   backboneElementSchema.extend({

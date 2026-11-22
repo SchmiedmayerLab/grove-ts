@@ -15,7 +15,6 @@ import {
   type ConceptMap,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -34,6 +33,7 @@ import {
   conceptMapUnmappedModeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const conceptMapGroupElementTargetDependsOnSchema: ZodType<ConceptMapGroupElementTargetDependsOn> =
   backboneElementSchema.extend({

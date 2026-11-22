@@ -26,7 +26,6 @@ import {
   type ContractTerm,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   attachmentSchema,
@@ -50,6 +49,7 @@ import {
   contractPublicationStatusSchema,
   contractStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 // Keep the nested schemas together to mirror the FHIR Contract structure.
 

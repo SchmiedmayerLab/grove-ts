@@ -14,7 +14,6 @@ import {
   type EvidenceReportRelatesTo,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -40,6 +39,7 @@ import {
   publicationStatusSchema,
   sectionModeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const evidenceReportSubjectCharacteristicSchema: ZodType<EvidenceReportSubjectCharacteristic> =
   backboneElementSchema.extend({

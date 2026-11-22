@@ -8,7 +8,6 @@
 
 import { type SubscriptionChannel, type Subscription } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   contactPointSchema,
@@ -22,6 +21,7 @@ import {
   subscriptionResourceStatusSchema,
   subscriptionChannelTypeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const subscriptionChannelSchema: ZodType<SubscriptionChannel> =
   backboneElementSchema.extend({

@@ -190,14 +190,15 @@ const BreadcrumbCompleteItem = ({
   return (
     <>
       <BreadcrumbItem>
-        {isActive ?
+        {isActive ? (
           <BreadcrumbPage className="max-w-25 truncate md:max-w-none">
             {label}
           </BreadcrumbPage>
-        : <BreadcrumbLink asChild className="max-w-25 truncate md:max-w-none">
+        ) : (
+          <BreadcrumbLink asChild className="max-w-25 truncate md:max-w-none">
             <Link href={href}>{label}</Link>
           </BreadcrumbLink>
-        }
+        )}
       </BreadcrumbItem>
       {!isActive && <BreadcrumbSeparator />}
     </>
@@ -246,9 +247,8 @@ export const Breadcrumbs = ({
   } = useGroveContext();
   const firstBreadcrumb = breadcrumbs.at(0);
   const hasTruncatedBreadcrumbs = breadcrumbs.length > maxToDisplay;
-  const remainingBreadcrumbs =
-    hasTruncatedBreadcrumbs ?
-      breadcrumbs.slice(-maxToDisplay + 1)
+  const remainingBreadcrumbs = hasTruncatedBreadcrumbs
+    ? breadcrumbs.slice(-maxToDisplay + 1)
     : breadcrumbs.slice(1, maxToDisplay);
 
   return (

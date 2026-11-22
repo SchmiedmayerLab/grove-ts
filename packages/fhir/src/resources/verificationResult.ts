@@ -13,7 +13,6 @@ import {
   type VerificationResult,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -27,6 +26,7 @@ import {
   timingSchema,
 } from '../elements/index.js'
 import { verificationResultStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const verificationResultPrimarySourceSchema: ZodType<VerificationResultPrimarySource> =
   backboneElementSchema.extend({

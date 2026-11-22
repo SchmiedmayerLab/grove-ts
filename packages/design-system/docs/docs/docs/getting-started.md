@@ -102,11 +102,11 @@ export const Route = createRootRoute({
 
 ```tsx
 'use client'
-import Link from 'next/link'
 import {
   GroveProvider,
   GroveContextRouter,
 } from '@schmiedmayerlab/grove-design-system'
+import Link from 'next/link'
 
 const routerProps: GroveContextRouter = {
   Link: ({ href, ...props }) => <Link href={href ?? '#'} {...props} />,
@@ -181,8 +181,8 @@ You can also import specific modules:
 
 ```tsx
 import { Button } from '@schmiedmayerlab/grove-design-system/components/Button'
-import { Input } from '@schmiedmayerlab/grove-design-system/components/Input'
 import { Card } from '@schmiedmayerlab/grove-design-system/components/Card'
+import { Input } from '@schmiedmayerlab/grove-design-system/components/Input'
 ```
 
 This approach might reduce bundle size, but it's more verbose. In Next.JS it might be necessary to import components individually if you want to use them on the server-side. Root includes all components, as well as those clients-only.

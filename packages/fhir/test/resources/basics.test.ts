@@ -10,8 +10,8 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type Basic } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import { FhirBasic, type untypedBasicSchema } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('Basic Resource', () => {
   it('should validate FHIR basic from basics.json', () => {

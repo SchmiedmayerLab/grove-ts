@@ -9,6 +9,6 @@
 // Synthetic Node script for the configuration tests.
 // Node with type stripping needs the full extension of TypeScript files.
 
-import { run } from "./functions.ts";
+import { run } from './functions.ts'
 
-export const start = () => run();
+export const start = () => run()

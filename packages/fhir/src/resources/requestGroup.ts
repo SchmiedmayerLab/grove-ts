@@ -14,7 +14,6 @@ import {
   type RequestGroupActionRelatedAction,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -45,6 +44,7 @@ import {
   requestGroupStatusSchema,
   requestPrioritySchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const requestGroupActionConditionSchema: ZodType<RequestGroupActionCondition> =
   backboneElementSchema.extend({

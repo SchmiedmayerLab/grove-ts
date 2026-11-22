@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type MessageDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirMessageDefinition,
   type untypedMessageDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('MessageDefinition Resource', () => {
   it('should validate FHIR message definition from messageDefinitions.json', () => {

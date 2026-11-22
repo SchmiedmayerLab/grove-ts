@@ -14,7 +14,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { domainResourceSchema } from '../elements/domainResource.js'
 import {
   identifierSchema,
@@ -30,6 +29,7 @@ import {
   booleanSchema,
 } from '../elements/index.js'
 import { coverageStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const coverageClassSchema: ZodType<CoverageClass> =
   backboneElementSchema.extend({

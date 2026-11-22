@@ -7,12 +7,12 @@
 //
 
 import { type Meta, type StoryObj } from "@storybook/react";
+import { Button } from "../Button";
 import {
   CollapsibleRoot,
   CollapsibleTrigger,
   CollapsibleContent,
 } from "./Collapsible";
-import { Button } from "../Button";
 
 const meta: Meta<typeof CollapsibleRoot> = {
   title: "Components/Collapsible",

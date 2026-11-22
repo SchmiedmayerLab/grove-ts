@@ -8,7 +8,6 @@
 
 import { type Patient, type ContactPoint, type Coding } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   addressSchema,
   attachmentSchema,
@@ -30,6 +29,7 @@ import {
   administrativeGenderSchema,
   patientLinkTypeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Patient resource (untyped version).

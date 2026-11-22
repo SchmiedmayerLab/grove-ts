@@ -10,8 +10,8 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type Location } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import { FhirLocation, type untypedLocationSchema } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('Location Resource', () => {
   it('should validate FHIR location from locations.json', () => {

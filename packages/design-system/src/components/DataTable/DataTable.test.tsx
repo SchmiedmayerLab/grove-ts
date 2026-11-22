@@ -9,13 +9,13 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { vitest } from "vitest";
+import { DataTable } from ".";
 import {
   columnHelper,
   peopleColumn,
   peopleColumns,
   peopleData,
 } from "./DataTable.mocks";
-import { DataTable } from ".";
 
 describe("DataTable", () => {
   const getTBody = () => {

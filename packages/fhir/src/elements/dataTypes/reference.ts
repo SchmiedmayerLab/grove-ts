@@ -8,9 +8,9 @@
 
 import { type Reference } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import { identifierSchema } from './identifier.js'
 import { stringSchema, uriSchema } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR Reference data type.

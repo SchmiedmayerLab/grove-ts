@@ -10,8 +10,8 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type CarePlan } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import { FhirCarePlan, type untypedCarePlanSchema } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('CarePlan Resource', () => {
   it('should validate FHIR CarePlans from carePlans.json', () => {

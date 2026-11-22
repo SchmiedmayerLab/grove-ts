@@ -12,7 +12,6 @@ import {
   type Provenance,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -26,6 +25,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { provenanceEntityRoleSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const provenanceAgentSchema: ZodType<ProvenanceAgent> =
   backboneElementSchema.extend({

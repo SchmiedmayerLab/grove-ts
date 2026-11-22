@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type GraphDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirGraphDefinition,
   type untypedGraphDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('GraphDefinition Resource', () => {
   it('should validate FHIR graph definition from graphDefinitions.json', () => {

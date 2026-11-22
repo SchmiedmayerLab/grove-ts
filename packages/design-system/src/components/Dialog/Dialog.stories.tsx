@@ -8,7 +8,6 @@
 
 import { type Meta, type StoryObj } from "@storybook/react";
 import { type Size, sizes } from "@/utils/tailwind";
-import { Button } from "../Button";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from ".";
+import { Button } from "../Button";
 
 interface FullDialogProps {
   size?: Size;

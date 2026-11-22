@@ -13,7 +13,6 @@ import {
   type Medication,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -28,6 +27,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { medicationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const medicationIngredientSchema: ZodType<MedicationIngredient> =
   backboneElementSchema.extend({

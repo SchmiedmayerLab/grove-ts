@@ -15,7 +15,6 @@ import {
   type AuditEvent,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   base64BinarySchema,
@@ -30,6 +29,7 @@ import {
   stringSchema,
   uriSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const auditEventActionSchema = z.enum(['C', 'R', 'U', 'D', 'E'])
 const auditEventAgentNetworkTypeSchema = z.enum(['1', '2', '3', '4', '5'])

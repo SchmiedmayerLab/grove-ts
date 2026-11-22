@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
 
 export const Counter = ({ count }: { count: number }) => {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(0)
   useEffect(() => {
     setInterval(() => {
-      setValue((current) => current + 1);
-    }, 1000);
-  }, []);
-  return <div>{count && <span>{value}</span>}</div>;
-};
+      setValue((current) => current + 1)
+    }, 1000)
+  }, [])
+  return <div>{count && <span>{value}</span>}</div>
+}

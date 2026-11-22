@@ -10,8 +10,8 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type Citation } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import { FhirCitation, type untypedCitationSchema } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('Citation Resource', () => {
   it('should validate FHIR citations from citations.json', () => {

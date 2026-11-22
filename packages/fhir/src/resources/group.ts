@@ -8,7 +8,6 @@
 
 import { type Coding, type Group } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -24,6 +23,7 @@ import {
   unsignedIntSchema,
 } from '../elements/index.js'
 import { groupTypeSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Group resource (untyped version).

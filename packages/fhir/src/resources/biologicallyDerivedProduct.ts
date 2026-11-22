@@ -15,7 +15,6 @@ import {
   type BiologicallyDerivedProductStorage,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -34,6 +33,7 @@ import {
   biologicallyDerivedProductStatusSchema,
   biologicallyDerivedProductStorageScaleSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const biologicallyDerivedProductCollectionSchema: ZodType<BiologicallyDerivedProductCollection> =
   backboneElementSchema.extend({

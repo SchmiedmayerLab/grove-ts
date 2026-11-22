@@ -18,7 +18,6 @@ import {
   type ClinicalUseDefinitionContraindicationOtherTherapy,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -30,6 +29,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { clinicalUseDefinitionTypeSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const clinicalUseDefinitionContraindicationOtherTherapySchema: ZodType<ClinicalUseDefinitionContraindicationOtherTherapy> =
   backboneElementSchema.extend({

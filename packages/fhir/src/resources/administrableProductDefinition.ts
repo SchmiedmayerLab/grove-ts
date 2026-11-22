@@ -15,7 +15,6 @@ import {
   type AdministrableProductDefinitionRouteOfAdministrationTargetSpeciesWithdrawalPeriod,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -31,6 +30,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { administrableProductDefinitionStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const administrableProductDefinitionPropertySchema: ZodType<AdministrableProductDefinitionProperty> =
   backboneElementSchema.extend({

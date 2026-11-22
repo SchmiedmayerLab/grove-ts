@@ -8,7 +8,6 @@
 
 import { type Coding, type GuidanceResponse } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   canonicalSchema,
@@ -22,6 +21,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { guidanceResponseStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR GuidanceResponse resource (untyped version).

@@ -8,6 +8,7 @@
 
 import { type SampledData } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import {
   decimalSchema,
   positiveDecimalSchema,
@@ -15,7 +16,6 @@ import {
   stringSchema,
 } from './primitiveTypes.js'
 import { quantitySchema } from './quantity.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR SampledData data type.

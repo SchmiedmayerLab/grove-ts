@@ -8,11 +8,11 @@
 
 import { type MarketingStatus } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { backboneElementSchema } from '../backBoneElement.js'
+import { elementSchema } from '../element.js'
 import { codeableConceptSchema } from './codeableConcept.js'
 import { periodSchema } from './period.js'
 import { dateTimeSchema } from './primitiveTypes.js'
-import { backboneElementSchema } from '../backBoneElement.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR MarketingStatus data type.

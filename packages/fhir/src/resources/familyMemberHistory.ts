@@ -12,7 +12,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -31,6 +30,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { familyMemberHistoryStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const familyMemberHistoryConditionSchema: ZodType<FamilyMemberHistoryCondition> =
   backboneElementSchema.extend({

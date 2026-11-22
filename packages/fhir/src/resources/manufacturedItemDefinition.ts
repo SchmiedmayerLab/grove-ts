@@ -12,7 +12,6 @@ import {
   type ManufacturedItemDefinitionProperty,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -26,6 +25,7 @@ import {
   referenceSchema,
 } from '../elements/index.js'
 import { manufacturedItemDefinitionStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const manufacturedItemDefinitionPropertySchema: ZodType<ManufacturedItemDefinitionProperty> =
   backboneElementSchema.extend({

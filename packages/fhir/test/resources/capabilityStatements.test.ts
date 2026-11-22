@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type CapabilityStatement } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirCapabilityStatement,
   type untypedCapabilityStatementSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('CapabilityStatement Resource', () => {
   it('should validate FHIR capability statement from capabilityStatements.json', () => {

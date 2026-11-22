@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type PlanDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirPlanDefinition,
   type untypedPlanDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('PlanDefinition Resource', () => {
   it('should validate FHIR plan definitions from planDefinitions.json', () => {

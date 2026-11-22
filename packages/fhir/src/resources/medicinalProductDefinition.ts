@@ -18,7 +18,6 @@ import {
   type MedicinalProductDefinitionOperation,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -32,6 +31,7 @@ import {
   referenceSchema,
   stringSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const medicinalProductDefinitionCharacteristicSchema: ZodType<MedicinalProductDefinitionCharacteristic> =
   backboneElementSchema.extend({

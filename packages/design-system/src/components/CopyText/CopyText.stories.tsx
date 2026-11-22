@@ -7,8 +7,8 @@
 //
 
 import { type Meta, type StoryObj } from "@storybook/react";
-import { CopyText } from "./CopyText";
 import { Toaster } from "../Toaster";
+import { CopyText } from "./CopyText";
 
 const meta: Meta<typeof CopyText> = {
   title: "Components/CopyText",

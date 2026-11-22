@@ -8,7 +8,6 @@
 
 import { type Coding, type DetectedIssue } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -24,6 +23,7 @@ import {
   detectedIssueSeveritySchema,
   detectedIssueStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR DetectedIssue resource (untyped version).

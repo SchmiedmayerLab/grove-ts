@@ -8,7 +8,6 @@
 
 import { type Coding, type EnrollmentResponse } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { domainResourceSchema } from '../elements/domainResource.js'
 import {
   identifierSchema,
@@ -21,6 +20,7 @@ import {
   financialResourceStatusSchema,
   remittanceOutcomeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR EnrollmentResponse resource (untyped version).

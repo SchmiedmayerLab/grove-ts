@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type AdministrableProductDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirAdministrableProductDefinition,
   type untypedAdministrableProductDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('AdministrableProductDefinition Resource', () => {
   it('should validate FHIR administrableProductDefinition from administrableProductDefinitions.json', () => {

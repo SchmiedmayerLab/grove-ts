@@ -8,8 +8,8 @@
 
 import { type Period } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { dateTimeSchema } from './primitiveTypes.js'
 import { elementSchema } from '../element.js'
+import { dateTimeSchema } from './primitiveTypes.js'
 
 /**
  * Zod schema for FHIR Period data type.

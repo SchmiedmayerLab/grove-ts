@@ -14,7 +14,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { anyValueSchema } from '../elements/anyValueSchema.js'
 import {
   annotationSchema,
@@ -36,6 +35,7 @@ import {
   taskIntentSchema,
   taskStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const taskRestrictionSchema: ZodType<TaskRestriction> =
   backboneElementSchema.extend({

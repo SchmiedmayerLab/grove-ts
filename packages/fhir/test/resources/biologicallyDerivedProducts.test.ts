@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type BiologicallyDerivedProduct } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirBiologicallyDerivedProduct,
   type untypedBiologicallyDerivedProductSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('BiologicallyDerivedProduct Resource', () => {
   it('should validate FHIR biologicallyDerivedProduct from biologicallyDerivedProducts.json', () => {

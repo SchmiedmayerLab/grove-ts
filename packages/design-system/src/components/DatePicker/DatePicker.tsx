@@ -24,9 +24,9 @@ export const DatePicker = (props: DatePickerProps) => {
   const selected = props.mode !== undefined ? props.selected : null;
   const timeFormat = showTimePicker ? " - p" : "";
   const displayValue =
-    selected && isDate(selected) ?
-      format(selected, `PPP${timeFormat}`)
-    : "Pick a date";
+    selected && isDate(selected)
+      ? format(selected, `PPP${timeFormat}`)
+      : "Pick a date";
   return (
     <PopoverRoot>
       <PopoverTrigger asChild>

@@ -8,7 +8,6 @@
 
 import { type Coding, type ImagingStudy } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -24,6 +23,7 @@ import {
   unsignedIntSchema,
 } from '../elements/index.js'
 import { imagingStudyStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR ImagingStudy resource (untyped version).

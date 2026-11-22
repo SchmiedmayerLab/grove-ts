@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type ResearchElementDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirResearchElementDefinition,
   type untypedResearchElementDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('ResearchElementDefinition Resource', () => {
   it('should validate FHIR research element definitions from researchElementDefinitions.json', () => {

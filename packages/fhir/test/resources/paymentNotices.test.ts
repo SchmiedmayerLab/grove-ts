@@ -9,11 +9,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type PaymentNotice } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirPaymentNotice,
   type untypedPaymentNoticeSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('PaymentNotice Resource', () => {
   it('should validate FHIR PaymentNotices from paymentNotices.json', () => {

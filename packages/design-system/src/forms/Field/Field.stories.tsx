@@ -93,9 +93,9 @@ const CheckEmptyError = ({ checkEmptyError }: CheckEmptyErrorProps) => {
         name="name"
         label="Field with error"
         error={
-          errorVisibility.isOpen ?
-            { message: "Name is a required field", type: "validationError" }
-          : undefined
+          errorVisibility.isOpen
+            ? { message: "Name is a required field", type: "validationError" }
+            : undefined
         }
         checkEmptyError={checkEmptyError}
         render={({ field }) => <Input {...field} />}

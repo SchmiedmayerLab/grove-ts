@@ -11,7 +11,6 @@ import {
   type CompartmentDefinition,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -28,6 +27,7 @@ import {
   fhirResourceTypeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const compartmentDefinitionResourceSchema: ZodType<CompartmentDefinitionResource> =
   backboneElementSchema.extend({

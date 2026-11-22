@@ -13,7 +13,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -45,6 +44,7 @@ import {
   requestIntentSchema,
   requestPrioritySchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const activityDefinitionParticipantSchema: ZodType<ActivityDefinitionParticipant> =
   backboneElementSchema.extend({

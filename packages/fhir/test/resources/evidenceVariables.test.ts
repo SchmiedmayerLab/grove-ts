@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type EvidenceVariable } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirEvidenceVariable,
   type untypedEvidenceVariableSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('EvidenceVariable Resource', () => {
   it('should validate FHIR evidence variables from evidenceVariables.json', () => {

@@ -12,7 +12,6 @@ import {
   type QuestionnaireResponseItem,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -32,6 +31,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { questionnaireResponseStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const questionnaireResponseItemAnswerSchema: ZodType<QuestionnaireResponseItemAnswer> =
   backboneElementSchema.extend({

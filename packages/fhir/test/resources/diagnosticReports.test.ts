@@ -9,11 +9,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type DiagnosticReport } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirDiagnosticReport,
   type untypedDiagnosticReportSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('DiagnosticReport Resource', () => {
   it('should validate FHIR DiagnosticReports from diagnosticReports.json', () => {

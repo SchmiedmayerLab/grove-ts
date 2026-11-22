@@ -30,7 +30,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   addressSchema,
   annotationSchema,
@@ -55,6 +54,7 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import { publicationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 // Define Citation sub-schemas using getter properties for self-referencing
 const citationSummarySchema: ZodType<CitationSummary> =

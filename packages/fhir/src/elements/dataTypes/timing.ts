@@ -8,6 +8,8 @@
 
 import { type Timing } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { eventTimingSchema } from '../../valueSets/index.js'
+import { elementSchema } from '../element.js'
 import { codeableConceptSchema } from './codeableConcept.js'
 import { periodSchema } from './period.js'
 import {
@@ -18,8 +20,6 @@ import {
 } from './primitiveTypes.js'
 import { quantitySchema } from './quantity.js'
 import { rangeSchema } from './range.js'
-import { eventTimingSchema } from '../../valueSets/index.js'
-import { elementSchema } from '../element.js'
 
 const timingRepeatDayOfWeekSchema = z.enum([
   'mon',

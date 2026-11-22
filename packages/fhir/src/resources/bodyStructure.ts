@@ -8,7 +8,6 @@
 
 import { type Coding, type BodyStructure } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   booleanSchema,
@@ -19,6 +18,7 @@ import {
   referenceSchema,
   stringSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR BodyStructure resource (untyped version).

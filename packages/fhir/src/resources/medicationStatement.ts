@@ -8,7 +8,6 @@
 
 import { type Coding, type MedicationStatement } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   codeableConceptSchema,
@@ -21,6 +20,7 @@ import {
   referenceSchema,
 } from '../elements/index.js'
 import { medicationStatementStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR MedicationStatement resource (untyped version).

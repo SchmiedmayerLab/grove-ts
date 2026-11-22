@@ -8,7 +8,6 @@
 
 import { type Coding, type Goal, type GoalTarget } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -25,6 +24,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { goalLifecycleStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const goalTargetSchema: ZodType<GoalTarget> = backboneElementSchema.extend({
   measure: codeableConceptSchema.optional(),

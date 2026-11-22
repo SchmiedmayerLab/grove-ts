@@ -8,6 +8,7 @@
 
 import { type Signature } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import { codingSchema } from './coding.js'
 import {
   base64BinarySchema,
@@ -15,7 +16,6 @@ import {
   instantSchema,
 } from './primitiveTypes.js'
 import { referenceSchema } from './reference.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR Signature data type.

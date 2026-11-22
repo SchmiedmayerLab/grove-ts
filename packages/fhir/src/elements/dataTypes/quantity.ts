@@ -8,13 +8,13 @@
 
 import { type Quantity } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import {
   codeSchema,
   decimalSchema,
   stringSchema,
   uriSchema,
 } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 const quantityComparatorSchema = z.enum(['<', '<=', '>=', '>'])
 

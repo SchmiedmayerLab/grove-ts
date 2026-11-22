@@ -14,7 +14,6 @@ import {
   type SpecimenDefinition,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -28,6 +27,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { specimenDefinitionTypeTestedPreferenceSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const specimenDefinitionTypeTestedContainerAdditiveSchema: ZodType<SpecimenDefinitionTypeTestedContainerAdditive> =
   backboneElementSchema.extend({

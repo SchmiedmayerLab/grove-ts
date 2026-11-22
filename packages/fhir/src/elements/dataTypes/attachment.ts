@@ -8,6 +8,7 @@
 
 import { type Attachment } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import {
   base64BinarySchema,
   codeSchema,
@@ -16,7 +17,6 @@ import {
   unsignedIntSchema,
   urlSchema,
 } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR Attachment data type.

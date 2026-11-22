@@ -8,7 +8,6 @@
 
 import { type Coding, type Observation } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   booleanSchema,
   codeableConceptSchema,
@@ -29,6 +28,7 @@ import {
   timingSchema,
 } from '../elements/index.js'
 import { observationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Observation resource (untyped version).

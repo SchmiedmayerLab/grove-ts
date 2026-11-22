@@ -160,9 +160,8 @@ export const SheetContentElement = ({
   ...props
 }: SheetContentElementProps) => {
   const isHorizontal = side === "right" || side === "left";
-  const dimensions =
-    isHorizontal ?
-      [
+  const dimensions = isHorizontal
+    ? [
         "inset-y-0 h-full w-[calc(100vw-var(--screenGap))]",
         size && sizeToMaxWidthRecord[size],
       ]

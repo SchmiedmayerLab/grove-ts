@@ -16,7 +16,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -30,6 +29,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { deviceNameTypeSchema, deviceStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const deviceDeviceNameSchema: ZodType<DeviceDeviceName> =
   backboneElementSchema.extend({

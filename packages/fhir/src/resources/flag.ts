@@ -8,7 +8,6 @@
 
 import { type Coding, type Flag } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   domainResourceSchema,
@@ -18,6 +17,7 @@ import {
   referenceSchema,
 } from '../elements/index.js'
 import { flagStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Flag resource (untyped version).

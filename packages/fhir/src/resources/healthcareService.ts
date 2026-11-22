@@ -8,7 +8,6 @@
 
 import { type Coding, type HealthcareService } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -24,6 +23,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { daysOfWeekSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const availableTimeSchema = backboneElementSchema.extend({
   daysOfWeek: daysOfWeekSchema.array().optional(),

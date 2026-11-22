@@ -11,7 +11,6 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { pathToFileURL } from 'node:url'
-
 import { readPublicWorkspacePackages, repositoryRoot } from './workspaces.mjs'
 
 const executeInteractive = (command, arguments_) =>
@@ -24,9 +23,9 @@ const executeInteractive = (command, arguments_) =>
       } else {
         rejectPromise(
           new Error(
-            signal ?
-              `${command} was terminated by ${signal}.`
-            : `${command} exited with status ${code}.`,
+            signal
+              ? `${command} was terminated by ${signal}.`
+              : `${command} exited with status ${code}.`,
           ),
         )
       }
@@ -54,17 +53,17 @@ export const selectWorkspacePackageNames = (packages, value) => {
     )
   }
 
-  return selection.has('*') ? packageNames : (
-      packageNames.filter((name) => selection.has(name))
-    )
+  return selection.has('*')
+    ? packageNames
+    : packageNames.filter((name) => selection.has(name))
 }
 
 /** Resolve the GitHub owner and repository from package metadata. */
 export const githubRepositoryFromManifest = (manifest) => {
   const repositoryUrl =
-    typeof manifest.repository === 'string' ?
-      manifest.repository
-    : manifest.repository?.url
+    typeof manifest.repository === 'string'
+      ? manifest.repository
+      : manifest.repository?.url
   if (!repositoryUrl) {
     throw new Error('package.json must define a GitHub repository URL.')
   }

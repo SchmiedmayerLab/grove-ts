@@ -12,7 +12,6 @@ import {
   type SupplyDeliverySuppliedItem,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -26,6 +25,7 @@ import {
   timingSchema,
 } from '../elements/index.js'
 import { supplyDeliveryStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR SupplyDeliverySuppliedItem backbone element.

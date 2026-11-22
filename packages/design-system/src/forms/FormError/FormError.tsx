@@ -33,17 +33,15 @@ export const FormError = ({
   prefix,
   ...props
 }: FormErrorProps) =>
-  formError ?
+  formError ? (
     <StateContainer padding={false} className={cn("pb-5", className)}>
       <ErrorState {...props}>
         {prefix}
-        {(
-          isObject(formError) &&
-          "message" in formError &&
-          isString(formError.message)
-        ) ?
-          formError.message
-        : (formError as ReactNode)}
+        {isObject(formError) &&
+        "message" in formError &&
+        isString(formError.message)
+          ? formError.message
+          : (formError as ReactNode)}
       </ErrorState>
     </StateContainer>
-  : null;
+  ) : null;

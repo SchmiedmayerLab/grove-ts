@@ -23,7 +23,6 @@ import {
   type CapabilityStatement,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -55,6 +54,7 @@ import {
   typeRestfulInteractionSchema,
   searchParameterTypeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const capabilityStatementSoftwareSchema: ZodType<CapabilityStatementSoftware> =
   backboneElementSchema.extend({

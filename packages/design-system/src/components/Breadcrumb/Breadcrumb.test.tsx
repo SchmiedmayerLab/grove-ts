@@ -9,8 +9,8 @@
 import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { renderWithProviders } from "@/tests/helpers";
-import { mockBreadcrumbs } from "./Breadcrumb.mocks";
 import { Breadcrumbs } from ".";
+import { mockBreadcrumbs } from "./Breadcrumb.mocks";
 
 describe("Breadcrumb", () => {
   it("renders links and active item", () => {

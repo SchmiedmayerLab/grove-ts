@@ -7,8 +7,8 @@
 //
 
 import { render, screen } from "@testing-library/react";
-import { SeparatorText } from "../SeparatorText";
 import { DashedSeparator } from ".";
+import { SeparatorText } from "../SeparatorText";
 
 describe("DashedSeparator", () => {
   it("renders separator element if no children provided", () => {

@@ -19,7 +19,6 @@ import {
   type TestReport,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   decimalSchema,
@@ -37,6 +36,7 @@ import {
   testReportResultSchema,
   testReportStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const testReportSetupActionOperationSchema: ZodType<TestReportSetupActionOperation> =
   backboneElementSchema.extend({

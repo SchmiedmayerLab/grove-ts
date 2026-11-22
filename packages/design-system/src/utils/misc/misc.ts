@@ -266,14 +266,14 @@ export const joinPaths = (...segments: Array<Nil<string | number>>) => {
       const isLastSegment = index === arr.length - 1;
 
       // Remove leading slashes from non-first segments to avoid "//" in the middle.
-      const withoutLeadingSlash =
-        isFirstSegment ? segment : segment.replace(/^\/+/, "");
+      const withoutLeadingSlash = isFirstSegment
+        ? segment
+        : segment.replace(/^\/+/, "");
 
       // Remove trailing slashes from non-last segments to avoid duplicate separators.
-      const withoutTrailingSlash =
-        isLastSegment ? withoutLeadingSlash : (
-          removeTrailingSlashes(withoutLeadingSlash)
-        );
+      const withoutTrailingSlash = isLastSegment
+        ? withoutLeadingSlash
+        : removeTrailingSlashes(withoutLeadingSlash);
 
       return withoutTrailingSlash;
     })

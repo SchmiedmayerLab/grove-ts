@@ -16,8 +16,8 @@ import {
   type Query,
   type Transaction,
 } from 'firebase-admin/firestore'
-import { type DeviceStorage, type Document } from './deviceStorage.js'
 import { type Device, deviceConverter } from '../models/device.js'
+import { type DeviceStorage, type Document } from './deviceStorage.js'
 
 /**
  * This class provides Firestore storage for device tokens

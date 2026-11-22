@@ -48,14 +48,15 @@ export const NotificationImage = ({
         notification.isRead && "opacity-70",
       )}
     >
-      {src ?
+      {src ? (
         <img
           alt={alt}
           className={cn("size-10 rounded-lg object-cover", className)}
           src={src}
           {...props}
         />
-      : <div
+      ) : (
+        <div
           className={cn(
             "flex-center bg-accent size-10 rounded-full",
             className,
@@ -63,7 +64,7 @@ export const NotificationImage = ({
         >
           <Info className="text-foreground/25" />
         </div>
-      }
+      )}
     </div>
   );
 };

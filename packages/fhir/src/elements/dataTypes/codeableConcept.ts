@@ -8,9 +8,9 @@
 
 import { type CodeableConcept } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import { codingSchema } from './coding.js'
 import { stringSchema } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR CodeableConcept data type.

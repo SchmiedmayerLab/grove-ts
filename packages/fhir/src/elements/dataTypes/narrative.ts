@@ -8,8 +8,8 @@
 
 import { type Narrative } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { xhtmlSchema } from './primitiveTypes.js'
 import { elementSchema } from '../element.js'
+import { xhtmlSchema } from './primitiveTypes.js'
 
 const narrativeStatusSchema = z.enum([
   'generated',

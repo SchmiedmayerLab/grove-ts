@@ -8,10 +8,10 @@
 
 import { use } from "react";
 import { cn } from "@/utils/className";
-import { DashboardContext } from "./DashboardContext";
 import { Avatar } from "../../components/Avatar";
 import { Button, type ButtonProps } from "../../components/Button";
 import { type Nil } from "../../utils/misc";
+import { DashboardContext } from "./DashboardContext";
 
 type UserMenuItemProps = Omit<ButtonProps, "name"> & {
   /**
@@ -46,9 +46,9 @@ export const UserMenuItem = ({ name, img, ...props }: UserMenuItemProps) => {
       variant="ghost"
       className={cn(
         "mt-auto mb-2 p-2! transition",
-        shrinkable ?
-          "xl:mb-0 xl:w-full xl:justify-start xl:self-start"
-        : "lg:mb-0 lg:w-full lg:justify-start lg:self-start",
+        shrinkable
+          ? "xl:mb-0 xl:w-full xl:justify-start xl:self-start"
+          : "lg:mb-0 lg:w-full lg:justify-start lg:self-start",
       )}
       {...props}
     >

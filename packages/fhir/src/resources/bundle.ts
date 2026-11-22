@@ -16,8 +16,6 @@ import {
   type Resource,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
-import { fhirResourceSchema } from './fhirResource.js'
 import {
   backboneElementSchema,
   decimalSchema,
@@ -35,6 +33,8 @@ import {
   bundleEntrySearchModeSchema,
   bundleEntryRequestMethodSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
+import { fhirResourceSchema } from './fhirResource.js'
 
 const bundleLinkSchema: ZodType<BundleLink> = backboneElementSchema.extend({
   relation: stringSchema,

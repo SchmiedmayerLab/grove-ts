@@ -8,7 +8,6 @@
 
 import { type PersonLink, type Coding, type Person } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   addressSchema,
   attachmentSchema,
@@ -26,6 +25,7 @@ import {
   administrativeGenderSchema,
   identityAssuranceLevelSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const personLinkSchema: ZodType<PersonLink> = backboneElementSchema.extend({
   target: referenceSchema,

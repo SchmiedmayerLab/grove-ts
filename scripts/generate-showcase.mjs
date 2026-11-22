@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { createServer } from 'node:http'
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { createServer } from 'node:http'
 import { extname, join, normalize, resolve, sep } from 'node:path'
 import { chromium } from 'playwright'
 

@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type ManufacturedItemDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirManufacturedItemDefinition,
   type untypedManufacturedItemDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('ManufacturedItemDefinition Resource', () => {
   it('should validate FHIR manufacturedItemDefinition from manufacturedItemDefinitions.json', () => {

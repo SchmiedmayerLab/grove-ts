@@ -14,7 +14,6 @@ import {
   type NutritionProductProductCharacteristic,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   attachmentSchema,
@@ -33,6 +32,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { nutritionProductStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const nutritionProductNutrientSchema: ZodType<NutritionProductNutrient> =
   backboneElementSchema.extend({

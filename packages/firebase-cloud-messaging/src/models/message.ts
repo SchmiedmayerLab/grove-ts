@@ -61,17 +61,16 @@ export const messageConverter = new SchemaConverter({
     // Create an intermediate object to avoid TypeScript errors with date conversion
     return {
       creationDate: dateConverter.encode(object.creationDate),
-      dueDate:
-        object.dueDate ? dateConverter.encode(object.dueDate) : undefined,
-      completionDate:
-        object.completionDate ?
-          dateConverter.encode(object.completionDate)
+      dueDate: object.dueDate
+        ? dateConverter.encode(object.dueDate)
+        : undefined,
+      completionDate: object.completionDate
+        ? dateConverter.encode(object.completionDate)
         : undefined,
       type: object.type,
       title: localizedTextConverter.encode(object.title),
-      description:
-        object.description ?
-          localizedTextConverter.encode(object.description)
+      description: object.description
+        ? localizedTextConverter.encode(object.description)
         : undefined,
       action: object.action ?? null,
       isDismissible: object.isDismissible,
@@ -162,9 +161,9 @@ export class Message {
       creationDate: input.creationDate ?? new Date(),
       title: new LocalizedText(input.title),
       description:
-        input.description === undefined ?
-          undefined
-        : new LocalizedText(input.description),
+        input.description === undefined
+          ? undefined
+          : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Information,
       isDismissible: input.isDismissible ?? true,
@@ -198,9 +197,9 @@ export class Message {
       creationDate: input.creationDate ?? new Date(),
       title: new LocalizedText(input.title),
       description:
-        input.description === undefined ?
-          undefined
-        : new LocalizedText(input.description),
+        input.description === undefined
+          ? undefined
+          : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Alert,
       isDismissible: input.isDismissible ?? true,
@@ -237,9 +236,9 @@ export class Message {
       dueDate: input.dueDate,
       title: new LocalizedText(input.title),
       description:
-        input.description === undefined ?
-          undefined
-        : new LocalizedText(input.description),
+        input.description === undefined
+          ? undefined
+          : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Reminder,
       isDismissible: input.isDismissible ?? false,
@@ -273,9 +272,9 @@ export class Message {
       creationDate: input.creationDate ?? new Date(),
       title: new LocalizedText(input.title),
       description:
-        input.description === undefined ?
-          undefined
-        : new LocalizedText(input.description),
+        input.description === undefined
+          ? undefined
+          : new LocalizedText(input.description),
       action: input.action,
       type: MessageType.Action,
       isDismissible: input.isDismissible ?? false,

@@ -505,9 +505,11 @@ export const SelectContent = ({ children, ...props }: SelectContentProps) => {
             return defaultFilter(string, searchTerm, keywords);
           }}
         >
-          {search ?
+          {search ? (
             <CommandInput placeholder={search.placeholder} />
-          : <button type="button" autoFocus className="sr-only" />}
+          ) : (
+            <button type="button" autoFocus className="sr-only" />
+          )}
           <CommandList>
             {search && <CommandEmpty>{search.emptyMessage}</CommandEmpty>}
             {children}

@@ -14,7 +14,6 @@ import {
   type Specimen,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -29,6 +28,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { specimenStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const specimenCollectionSchema: ZodType<SpecimenCollection> =
   backboneElementSchema.extend({

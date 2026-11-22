@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type CompartmentDefinition } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirCompartmentDefinition,
   type untypedCompartmentDefinitionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('CompartmentDefinition Resource', () => {
   it('should validate FHIR compartment definition from compartmentDefinitions.json', () => {

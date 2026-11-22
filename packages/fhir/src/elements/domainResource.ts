@@ -8,10 +8,10 @@
 
 import { type DomainResource, type Resource } from 'fhir/r4b.js'
 import { type ZodType } from 'zod'
+import { fhirResourceSchema } from '../resources/fhirResource.js'
 import { narrativeSchema } from './dataTypes/narrative.js'
 import { extensionSchema } from './extension.js'
 import { resourceSchema } from './resource.js'
-import { fhirResourceSchema } from '../resources/fhirResource.js'
 
 const containedResourceSchema: ZodType<Resource[]> = fhirResourceSchema.array()
 

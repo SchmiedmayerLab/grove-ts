@@ -15,7 +15,6 @@ import {
   type PackagedProductDefinitionPackageShelfLifeStorage,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -33,6 +32,7 @@ import {
   referenceSchema,
   stringSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const packagedProductDefinitionLegalStatusOfSupplySchema: ZodType<PackagedProductDefinitionLegalStatusOfSupply> =
   backboneElementSchema.extend({

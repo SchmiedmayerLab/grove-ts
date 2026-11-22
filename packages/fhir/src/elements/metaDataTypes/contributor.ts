@@ -8,9 +8,9 @@
 
 import { type Contributor } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { contactDetailSchema } from './contactDetail.js'
 import { stringSchema } from '../dataTypes/primitiveTypes.js'
 import { elementSchema } from '../element.js'
+import { contactDetailSchema } from './contactDetail.js'
 
 const contributorTypeSchema = z.enum([
   'author',

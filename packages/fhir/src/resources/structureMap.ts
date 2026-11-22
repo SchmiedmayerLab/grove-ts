@@ -18,7 +18,6 @@ import {
   type StructureMapGroupRule,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   base64BinarySchema,
@@ -51,6 +50,7 @@ import {
   structureMapTargetListModeSchema,
   structureMapTransformSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const structureMapGroupRuleSourceSchema: ZodType<StructureMapGroupRuleSource> =
   backboneElementSchema.extend({

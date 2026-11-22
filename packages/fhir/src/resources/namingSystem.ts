@@ -8,7 +8,6 @@
 
 import { type NamingSystemUniqueId, type NamingSystem } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -26,6 +25,7 @@ import {
   namingSystemUniqueIdTypeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const namingSystemUniqueIdSchema: ZodType<NamingSystemUniqueId> =
   backboneElementSchema.extend({

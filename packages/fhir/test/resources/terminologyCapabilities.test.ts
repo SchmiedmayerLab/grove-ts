@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type TerminologyCapabilities } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirTerminologyCapabilities,
   type untypedTerminologyCapabilitiesSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('TerminologyCapabilities Resource', () => {
   it('should validate FHIR TerminologyCapabilities from terminologyCapabilities.json', () => {

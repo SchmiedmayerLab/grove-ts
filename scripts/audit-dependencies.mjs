@@ -8,8 +8,8 @@
 
 import { execFile } from 'node:child_process'
 import { resolve } from 'node:path'
-import { promisify } from 'node:util'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { promisify } from 'node:util'
 
 const executeFile = promisify(execFile)
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))

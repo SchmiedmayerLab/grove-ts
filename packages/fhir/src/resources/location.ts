@@ -13,7 +13,6 @@ import {
   type Location,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   addressSchema,
   backboneElementSchema,
@@ -34,6 +33,7 @@ import {
   locationModeSchema,
   locationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const locationPositionSchema: ZodType<LocationPosition> =
   backboneElementSchema.extend({

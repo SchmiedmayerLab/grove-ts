@@ -18,7 +18,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -44,6 +43,7 @@ import {
   evidenceVariableHandlingSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const evidenceVariableDefinitionSchema: ZodType<EvidenceVariableDefinition> =
   backboneElementSchema.extend({

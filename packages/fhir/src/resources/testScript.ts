@@ -26,7 +26,6 @@ import {
   type TestScriptTestAction,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -53,6 +52,7 @@ import {
   publicationStatusSchema,
   testScriptRequestMethodSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const testScriptOriginSchema: ZodType<TestScriptOrigin> =
   backboneElementSchema.extend({

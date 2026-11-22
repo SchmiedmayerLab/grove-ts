@@ -20,7 +20,6 @@ import {
   type TerminologyCapabilities,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -38,6 +37,7 @@ import {
   codeSearchSupportSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const terminologyCapabilitiesSoftwareSchema: ZodType<TerminologyCapabilitiesSoftware> =
   backboneElementSchema.extend({

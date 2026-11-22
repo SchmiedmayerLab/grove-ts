@@ -16,7 +16,6 @@ import {
   type NutritionOrderSupplement,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -37,6 +36,7 @@ import {
   nutritionOrderIntentSchema,
   nutritionOrderStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const nutritionOrderOralDietNutrientSchema: ZodType<NutritionOrderOralDietNutrient> =
   backboneElementSchema.extend({

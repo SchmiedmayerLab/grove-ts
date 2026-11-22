@@ -69,9 +69,13 @@ describe('Extension', () => {
 
     const fhirBundle = FhirBundle.parse(bundle, patientSchema)
     const patientNumbers = (fhirBundle.value.entry ?? []).flatMap((entry) =>
-      entry.resource ?
-        [FhirPatient.parse(entry.resource).identifierByType(patientNumberType)]
-      : [],
+      entry.resource
+        ? [
+            FhirPatient.parse(entry.resource).identifierByType(
+              patientNumberType,
+            ),
+          ]
+        : [],
     )
 
     expect(patientNumbers).toEqual(['PN1', 'PN2'])

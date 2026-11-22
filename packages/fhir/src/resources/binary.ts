@@ -8,7 +8,6 @@
 
 import { type Binary } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { referenceSchema } from '../elements/dataTypes/reference.js'
 import {
   base64BinarySchema,
@@ -16,6 +15,7 @@ import {
   elementSchema,
 } from '../elements/index.js'
 import { resourceSchema } from '../elements/resource.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Binary resource (untyped version).

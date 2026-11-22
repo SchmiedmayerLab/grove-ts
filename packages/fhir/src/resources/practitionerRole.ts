@@ -13,7 +13,6 @@ import {
   type PractitionerRole,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { domainResourceSchema } from '../elements/domainResource.js'
 import {
   identifierSchema,
@@ -27,6 +26,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { daysOfWeekSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const practitionerRoleAvailableTimeSchema: ZodType<PractitionerRoleAvailableTime> =
   backboneElementSchema.extend({

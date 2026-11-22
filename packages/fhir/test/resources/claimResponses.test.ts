@@ -9,11 +9,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type ClaimResponse } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirClaimResponse,
   type untypedClaimResponseSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('ClaimResponse Resource', () => {
   it('should validate FHIR ClaimResponses from claimResponses.json', () => {

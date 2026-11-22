@@ -163,7 +163,7 @@ export const GroveProvider = ({
   );
 
   const themedChildren =
-    colorScheme !== undefined || themes !== undefined ?
+    colorScheme !== undefined || themes !== undefined ? (
       <div
         data-grove-color-scheme={resolvedColorScheme}
         data-grove-color-scheme-preference={colorSchemePreference}
@@ -171,7 +171,9 @@ export const GroveProvider = ({
       >
         {children}
       </div>
-    : children;
+    ) : (
+      children
+    );
 
   return (
     <NextIntlClientProvider messages={resolvedMessages} locale="en">

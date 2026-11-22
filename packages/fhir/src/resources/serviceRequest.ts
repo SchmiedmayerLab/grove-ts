@@ -8,7 +8,6 @@
 
 import { type Coding, type ServiceRequest } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   booleanSchema,
@@ -29,6 +28,7 @@ import {
   serviceRequestIntentSchema,
   serviceRequestStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR ServiceRequest resource (untyped version).

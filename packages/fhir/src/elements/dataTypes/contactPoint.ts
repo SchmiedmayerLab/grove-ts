@@ -8,9 +8,9 @@
 
 import { type ContactPoint } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import { periodSchema } from './period.js'
 import { positiveIntSchema, stringSchema } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 const contactPointSystemSchema = z.enum([
   'phone',

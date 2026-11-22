@@ -12,7 +12,6 @@ import {
   type SupplyRequestParameter,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -31,6 +30,7 @@ import {
   requestPrioritySchema,
   supplyRequestStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const supplyRequestParameterSchema: ZodType<SupplyRequestParameter> =
   backboneElementSchema.extend({

@@ -12,7 +12,6 @@ import {
   type AdverseEvent,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -24,6 +23,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { adverseEventActualitySchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const adverseEventSuspectEntityCausalitySchema: ZodType<AdverseEventSuspectEntityCausality> =
   backboneElementSchema.extend({

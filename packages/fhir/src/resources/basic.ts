@@ -8,7 +8,6 @@
 
 import { type Coding, type Basic } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   dateSchema,
@@ -17,6 +16,7 @@ import {
   identifierSchema,
   referenceSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Basic resource (untyped version).

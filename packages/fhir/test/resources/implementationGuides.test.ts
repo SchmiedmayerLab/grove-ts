@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type ImplementationGuide } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirImplementationGuide,
   type untypedImplementationGuideSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('ImplementationGuide Resource', () => {
   it('should validate FHIR implementation guide from implementationGuides.json', () => {

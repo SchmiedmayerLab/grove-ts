@@ -8,7 +8,6 @@
 
 import { type Coding, type ImmunizationEvaluation } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   dateTimeSchema,
@@ -20,6 +19,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { immunizationEvaluationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR ImmunizationEvaluation resource (untyped version).

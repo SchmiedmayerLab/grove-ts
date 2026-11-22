@@ -8,7 +8,6 @@
 
 import { type ListEntry, type Coding, type List } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -22,6 +21,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { listStatusSchema, listModeSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const listEntrySchema: ZodType<ListEntry> = backboneElementSchema.extend({
   flag: codeableConceptSchema.optional(),

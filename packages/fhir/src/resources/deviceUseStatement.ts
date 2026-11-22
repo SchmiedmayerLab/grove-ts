@@ -8,7 +8,6 @@
 
 import { type Coding, type DeviceUseStatement } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   codeableConceptSchema,
@@ -21,6 +20,7 @@ import {
   timingSchema,
 } from '../elements/index.js'
 import { deviceUseStatementStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR DeviceUseStatement resource (untyped version).

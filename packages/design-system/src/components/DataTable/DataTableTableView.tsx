@@ -68,17 +68,18 @@ export const DataTableTableView = <Data,>({
       {table.getHeaderGroups().map((headerGroup) => (
         <TableRow key={headerGroup.id} isHoverable={false}>
           {headerGroup.headers.map((header) => {
-            const columnContent =
-              header.isPlaceholder ? null : (
-                flexRender(header.column.columnDef.header, header.getContext())
-              );
+            const columnContent = header.isPlaceholder
+              ? null
+              : flexRender(header.column.columnDef.header, header.getContext());
             return (
               <TableHead key={header.id}>
-                {header.column.getCanFilter() ?
+                {header.column.getCanFilter() ? (
                   <ToggleSortButton header={header}>
                     {columnContent}
                   </ToggleSortButton>
-                : columnContent}
+                ) : (
+                  columnContent
+                )}
               </TableHead>
             );
           })}
@@ -91,21 +92,20 @@ export const DataTableTableView = <Data,>({
           key={row.id}
           data-state={row.getIsSelected() && "selected"}
           onClick={
-            onRowClick ?
-              (event) => {
-                if (isRowClicked(event)) {
-                  onRowClick(row.original, event);
+            onRowClick
+              ? (event) => {
+                  if (isRowClicked(event)) {
+                    onRowClick(row.original, event);
+                  }
                 }
-              }
-            : undefined
+              : undefined
           }
         >
           {row.getVisibleCells().map((cell) => {
             const meta = cell.column.columnDef.meta;
             const context = cell.getContext();
-            const cellClassName =
-              isFunction(meta?.cellClassName) ?
-                meta.cellClassName(context)
+            const cellClassName = isFunction(meta?.cellClassName)
+              ? meta.cellClassName(context)
               : meta?.cellClassName;
 
             return (

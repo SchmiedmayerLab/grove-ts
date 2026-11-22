@@ -21,7 +21,6 @@ import {
   type ImplementationGuideManifestResource,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -43,6 +42,7 @@ import {
   guideParameterCodeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const implementationGuideDependsOnSchema: ZodType<ImplementationGuideDependsOn> =
   backboneElementSchema.extend({

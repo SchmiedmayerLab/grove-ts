@@ -8,7 +8,6 @@
 
 import { type Coding, type OrganizationAffiliation } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   booleanSchema,
   codeableConceptSchema,
@@ -19,6 +18,7 @@ import {
   periodSchema,
   referenceSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR OrganizationAffiliation resource (untyped version).

@@ -8,8 +8,8 @@
 
 import { type Money } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { codeSchema, decimalSchema } from './primitiveTypes.js'
 import { elementSchema } from '../element.js'
+import { codeSchema, decimalSchema } from './primitiveTypes.js'
 
 /**
  * Zod schema for FHIR Money data type.

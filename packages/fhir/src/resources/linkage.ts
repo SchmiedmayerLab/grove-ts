@@ -8,7 +8,6 @@
 
 import { type LinkageItem, type Linkage } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -17,6 +16,7 @@ import {
   referenceSchema,
 } from '../elements/index.js'
 import { linkageItemTypeSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const linkageItemSchema: ZodType<LinkageItem> = backboneElementSchema.extend({
   resource: referenceSchema,

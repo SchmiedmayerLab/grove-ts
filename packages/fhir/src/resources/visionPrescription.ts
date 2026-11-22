@@ -13,7 +13,6 @@ import {
   type VisionPrescriptionLensSpecificationPrism,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -33,6 +32,7 @@ import {
   visionEyesSchema,
   visionPrescriptionStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const visionPrescriptionLensSpecificationPrismSchema: ZodType<VisionPrescriptionLensSpecificationPrism> =
   backboneElementSchema.extend({

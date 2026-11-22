@@ -13,7 +13,6 @@ import {
   type MessageHeader,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   canonicalSchema,
@@ -28,6 +27,7 @@ import {
   urlSchema,
 } from '../elements/index.js'
 import { messageHeaderResponseCodeSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const messageHeaderDestinationSchema: ZodType<MessageHeaderDestination> =
   backboneElementSchema.extend({

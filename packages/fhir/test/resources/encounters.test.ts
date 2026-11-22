@@ -9,8 +9,8 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type Encounter } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import { FhirEncounter, type untypedEncounterSchema } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('Encounter Resource', () => {
   it('should validate FHIR Encounters from encounters.json', () => {

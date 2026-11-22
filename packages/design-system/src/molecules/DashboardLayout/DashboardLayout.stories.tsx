@@ -10,13 +10,13 @@ import { type Meta } from "@storybook/react";
 import { Home, User } from "lucide-react";
 import { type ComponentProps } from "react";
 import { cn } from "@/utils/className";
+import { DashboardLayout, MenuItem, PageTitle, UserMenuItem } from ".";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/DropdownMenu";
-import { DashboardLayout, MenuItem, PageTitle, UserMenuItem } from ".";
 
 const meta: Meta<typeof DashboardLayout> = {
   title: "Molecules/DashboardLayout",

@@ -12,7 +12,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -34,6 +33,7 @@ import {
   deviceRequestStatusSchema,
   requestPrioritySchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const deviceRequestParameterSchema: ZodType<DeviceRequestParameter> =
   backboneElementSchema.extend({

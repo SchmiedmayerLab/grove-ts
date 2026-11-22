@@ -13,7 +13,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -32,6 +31,7 @@ import {
   observationDefinitionPermittedDataTypeSchema,
   observationDefinitionRangeCategorySchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const observationDefinitionQuantitativeDetailsSchema: ZodType<ObservationDefinitionQuantitativeDetails> =
   backboneElementSchema.extend({

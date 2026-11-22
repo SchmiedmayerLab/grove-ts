@@ -8,7 +8,6 @@
 
 import { type Coding, type PaymentNotice } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { domainResourceSchema } from '../elements/domainResource.js'
 import {
   identifierSchema,
@@ -20,6 +19,7 @@ import {
   dateSchema,
 } from '../elements/index.js'
 import { financialResourceStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR PaymentNotice resource (untyped version).

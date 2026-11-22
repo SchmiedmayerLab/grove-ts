@@ -12,7 +12,6 @@ import {
   type CatalogEntryRelatedEntry,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -28,6 +27,7 @@ import {
   catalogEntryRelationtypeSchema,
   catalogEntryStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const catalogEntryRelatedEntrySchema: ZodType<CatalogEntryRelatedEntry> =
   backboneElementSchema.extend({

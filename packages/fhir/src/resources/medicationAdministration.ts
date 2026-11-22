@@ -13,7 +13,6 @@ import {
   type MedicationAdministrationDosage,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -30,6 +29,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { medicationAdministrationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const medicationAdministrationPerformerSchema: ZodType<MedicationAdministrationPerformer> =
   backboneElementSchema.extend({

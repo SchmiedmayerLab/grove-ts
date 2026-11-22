@@ -8,7 +8,6 @@
 
 import { type Coding, type Media } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   attachmentSchema,
@@ -25,6 +24,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { mediaStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Media resource (untyped version).

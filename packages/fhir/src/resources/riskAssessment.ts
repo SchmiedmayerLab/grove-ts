@@ -12,7 +12,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -28,6 +27,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { riskAssessmentStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const riskAssessmentPredictionSchema: ZodType<RiskAssessmentPrediction> =
   backboneElementSchema.extend({

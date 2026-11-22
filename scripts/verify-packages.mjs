@@ -7,7 +7,6 @@
 //
 
 import { execFileSync } from 'node:child_process'
-
 import { readPublicWorkspacePackages, repositoryRoot } from './workspaces.mjs'
 
 const publicPackages = await readPublicWorkspacePackages()

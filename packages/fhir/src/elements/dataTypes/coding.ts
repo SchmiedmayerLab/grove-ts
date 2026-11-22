@@ -8,13 +8,13 @@
 
 import { type Coding } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import {
   booleanSchema,
   codeSchema,
   stringSchema,
   uriSchema,
 } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 /**
  * Zod schema for FHIR Coding data type.

@@ -8,7 +8,6 @@
 
 import { type Coding, type Library } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   booleanSchema,
@@ -30,6 +29,7 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import { publicationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Library resource (untyped version).

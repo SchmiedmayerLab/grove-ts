@@ -9,8 +9,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { type ComponentProps } from "react";
-import { Toaster } from "../Toaster";
 import { CopyText } from ".";
+import { Toaster } from "../Toaster";
 
 describe("CopyText", () => {
   const expectCopyValue = async (value: string) => {

@@ -8,4 +8,4 @@
 
 export const always = (value: string) =>
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Synthetic suppressed finding.
-  value !== undefined;
+  value !== undefined

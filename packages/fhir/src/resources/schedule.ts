@@ -8,7 +8,6 @@
 
 import { type Coding, type Schedule } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   domainResourceSchema,
@@ -18,6 +17,7 @@ import {
   referenceSchema,
   stringSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Schedule resource (untyped version).

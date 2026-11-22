@@ -13,9 +13,9 @@
  * @returns The average value, or undefined if array is empty
  */
 export const average = (values: number[]): number | undefined =>
-  values.length === 0 ?
-    undefined
-  : values.reduce((a, b) => a + b, 0) / values.length
+  values.length === 0
+    ? undefined
+    : values.reduce((a, b) => a + b, 0) / values.length
 
 /**
  * Split an array into chunks of the specified size.
@@ -50,8 +50,8 @@ export const compactMap = <T, V>(
 ): V[] =>
   array.flatMap((value) => {
     const mappedValue = map(value)
-    return mappedValue !== undefined && mappedValue !== null ?
-        [mappedValue]
+    return mappedValue !== undefined && mappedValue !== null
+      ? [mappedValue]
       : []
   })
 

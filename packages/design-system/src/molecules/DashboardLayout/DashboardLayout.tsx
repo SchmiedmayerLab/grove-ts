@@ -82,9 +82,9 @@ export const DashboardLayout = ({
         data-slot="dashboard-layout"
         className={cn(
           "text-foreground [--headerHeight:72px] **:[box-sizing:border-box] lg:[--headerHeight:86px]",
-          shrinkable ?
-            "[--asideWidth:86px] xl:[--asideWidth:240px]"
-          : "[--asideWidth:240px]",
+          shrinkable
+            ? "[--asideWidth:86px] xl:[--asideWidth:240px]"
+            : "[--asideWidth:240px]",
         )}
       >
         <header
@@ -116,16 +116,14 @@ export const DashboardLayout = ({
         <nav
           className={cn(
             "bg-surface fixed top-[calc(var(--headerHeight)+1px)] right-0 left-0 flex h-[calc(100vh-var(--headerHeight)-1px)] w-screen flex-col overflow-y-auto transition duration-300 lg:hidden",
-            menu.isOpen ? "z-10 translate-x-0" : (
-              "pointer-events-none -translate-x-24 opacity-0"
-            ),
+            menu.isOpen
+              ? "z-10 translate-x-0"
+              : "pointer-events-none -translate-x-24 opacity-0",
           )}
           hidden={!menu.isOpen}
           data-testid="mobileMenu"
         >
-          {actions ?
-            <div className="p-4">{actions}</div>
-          : null}
+          {actions ? <div className="p-4">{actions}</div> : null}
           {mobile}
         </nav>
         <div className="flex min-h-[calc(100vh-var(--headerHeight))] flex-col px-4 pt-6 pb-12 md:px-12 md:pt-10 md:pb-16 lg:ml-(--asideWidth)">

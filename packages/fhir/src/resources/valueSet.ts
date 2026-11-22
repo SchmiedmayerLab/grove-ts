@@ -19,7 +19,6 @@ import {
   type ValueSetComposeIncludeFilter,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -40,6 +39,7 @@ import {
   filterOperatorSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const valueSetComposeIncludeConceptDesignationSchema: ZodType<ValueSetComposeIncludeConceptDesignation> =
   backboneElementSchema.extend({

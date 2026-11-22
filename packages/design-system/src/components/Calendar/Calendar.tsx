@@ -20,9 +20,11 @@ import { buttonVariance } from "@/components/Button";
 import { cn } from "@/utils/className";
 
 const CalendarChevron = ({ orientation, ...props }: ChevronProps) =>
-  orientation === "left" ?
+  orientation === "left" ? (
     <ChevronLeft {...props} className="size-4" />
-  : <ChevronRight {...props} className="size-4" />;
+  ) : (
+    <ChevronRight {...props} className="size-4" />
+  );
 
 /**
  * Internal time picker component for the Calendar.

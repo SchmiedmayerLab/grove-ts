@@ -13,7 +13,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -25,6 +24,7 @@ import {
   referenceSchema,
   stringSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const immunizationRecommendationRecommendationDateCriterionSchema: ZodType<ImmunizationRecommendationRecommendationDateCriterion> =
   backboneElementSchema.extend({

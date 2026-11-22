@@ -9,5 +9,5 @@
 // Synthetic tool configuration for the configuration tests.
 
 export default {
-  rules: { "color-no-invalid-hex": process.env.CI ? true : null },
-};
+  rules: { 'color-no-invalid-hex': process.env.CI ? true : null },
+}

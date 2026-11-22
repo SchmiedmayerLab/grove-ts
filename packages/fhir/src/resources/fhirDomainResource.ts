@@ -465,8 +465,9 @@ export abstract class FhirDomainResource<ResourceType extends DomainResource> {
     if (!period) return false
 
     const periodStart = period.start ? new Date(period.start) : new Date(0)
-    const periodEnd =
-      period.end ? new Date(period.end) : new Date(8640000000000000)
+    const periodEnd = period.end
+      ? new Date(period.end)
+      : new Date(8640000000000000)
 
     return periodStart <= rangeEnd && periodEnd >= rangeStart
   }

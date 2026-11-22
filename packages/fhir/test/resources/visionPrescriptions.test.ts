@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type VisionPrescription } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirVisionPrescription,
   type untypedVisionPrescriptionSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('VisionPrescription Resource', () => {
   it('should validate FHIR VisionPrescriptions from visionPrescriptions.json', () => {

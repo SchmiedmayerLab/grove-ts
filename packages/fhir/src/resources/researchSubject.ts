@@ -8,7 +8,6 @@
 
 import { type Coding, type ResearchSubject } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   domainResourceSchema,
   elementSchema,
@@ -18,6 +17,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { researchSubjectStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR ResearchSubject resource (untyped version).

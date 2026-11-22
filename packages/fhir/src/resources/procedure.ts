@@ -13,7 +13,6 @@ import {
   type Procedure,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -31,6 +30,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { procedureStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const procedurePerformerSchema: ZodType<ProcedurePerformer> =
   backboneElementSchema.extend({

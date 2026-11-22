@@ -8,7 +8,6 @@
 
 import { type Coding, type Endpoint } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   codingSchema,
@@ -22,6 +21,7 @@ import {
   urlSchema,
 } from '../elements/index.js'
 import { endpointStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Endpoint resource (untyped version).

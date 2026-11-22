@@ -12,7 +12,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -30,6 +29,7 @@ import {
   deviceMetricColorSchema,
   deviceMetricOperationalStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const deviceMetricCalibrationSchema: ZodType<DeviceMetricCalibration> =
   backboneElementSchema.extend({

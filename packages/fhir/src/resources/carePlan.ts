@@ -13,7 +13,6 @@ import {
   type CarePlanActivityDetail,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -37,6 +36,7 @@ import {
   carePlanIntentSchema,
   carePlanStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const carePlanActivityDetailSchema: ZodType<CarePlanActivityDetail> =
   backboneElementSchema.extend({

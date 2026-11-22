@@ -131,7 +131,7 @@ export const IconPicker = ({
       <PopoverTrigger asChild {...props}>
         {children ?? (
           <Button variant="outline">
-            {currentIcon ?
+            {currentIcon ? (
               <>
                 <DynamicIcon
                   name={currentIcon}
@@ -141,7 +141,9 @@ export const IconPicker = ({
                 />{" "}
                 {upperFirst(currentIcon.split("-").join(" "))}
               </>
-            : triggerPlaceholder}
+            ) : (
+              triggerPlaceholder
+            )}
           </Button>
         )}
       </PopoverTrigger>

@@ -12,7 +12,6 @@ import {
   type DocumentManifestRelated,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -25,6 +24,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { documentManifestStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const documentManifestRelatedSchema: ZodType<DocumentManifestRelated> =
   backboneElementSchema.extend({

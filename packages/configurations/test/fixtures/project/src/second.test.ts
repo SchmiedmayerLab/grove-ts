@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { expect, it } from "vitest";
+import { expect, it } from 'vitest'
 
-it("checks a value", () => {
-  expect(1 + 1).toBe(2);
-});
+it('checks a value', () => {
+  expect(1 + 1).toBe(2)
+})
 
-it("computes a value", () => {
-  String(1 + 1);
-});
+it('computes a value', () => {
+  String(1 + 1)
+})

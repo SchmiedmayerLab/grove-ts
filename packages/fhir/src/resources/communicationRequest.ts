@@ -12,7 +12,6 @@ import {
   type CommunicationRequestPayload,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   attachmentSchema,
@@ -31,6 +30,7 @@ import {
   communicationRequestStatusSchema,
   requestPrioritySchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const communicationRequestPayloadSchema: ZodType<CommunicationRequestPayload> =
   backboneElementSchema.extend({

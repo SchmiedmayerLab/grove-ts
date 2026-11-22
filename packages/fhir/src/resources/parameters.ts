@@ -8,14 +8,14 @@
 
 import { type Parameters, type ParametersParameter } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
-import { fhirResourceSchema } from './fhirResource.js'
 import { anyValueSchema } from '../elements/anyValueSchema.js'
 import {
   domainResourceSchema,
   elementSchema,
   stringSchema,
 } from '../elements/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
+import { fhirResourceSchema } from './fhirResource.js'
 
 const parametersParameterSchema: ZodType<ParametersParameter> =
   anyValueSchema.extend({

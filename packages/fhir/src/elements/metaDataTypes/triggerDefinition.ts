@@ -8,8 +8,6 @@
 
 import { type TriggerDefinition } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { dataRequirementSchema } from './dataRequirement.js'
-import { expressionSchema } from './expression.js'
 import { codeableConceptSchema } from '../dataTypes/codeableConcept.js'
 import {
   dateSchema,
@@ -19,6 +17,8 @@ import {
 import { referenceSchema } from '../dataTypes/reference.js'
 import { timingSchema } from '../dataTypes/timing.js'
 import { elementSchema } from '../element.js'
+import { dataRequirementSchema } from './dataRequirement.js'
+import { expressionSchema } from './expression.js'
 
 const triggerDefinitionTypeSchema = z.enum([
   'named-event',

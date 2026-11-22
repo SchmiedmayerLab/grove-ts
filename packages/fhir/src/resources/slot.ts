@@ -8,7 +8,6 @@
 
 import { type Coding, type Slot } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   dateTimeSchema,
@@ -19,6 +18,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { slotStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Slot resource (untyped version).

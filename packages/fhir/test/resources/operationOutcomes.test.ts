@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type OperationOutcome } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirOperationOutcome,
   type untypedOperationOutcomeSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('OperationOutcome Resource', () => {
   it('should validate FHIR operationOutcome from operationOutcomes.json', () => {

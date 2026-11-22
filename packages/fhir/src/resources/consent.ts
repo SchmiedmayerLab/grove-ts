@@ -16,7 +16,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -37,6 +36,7 @@ import {
   consentStatusSchema,
   consentProvisionTypeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const consentPolicySchema: ZodType<ConsentPolicy> =
   backboneElementSchema.extend({

@@ -31,9 +31,9 @@ export const NotificationTitle = ({
       data-slot="notification-title"
       className={cn(
         "flex-1 text-sm",
-        notification.isRead ?
-          "text-foreground/70 font-medium"
-        : "font-semibold",
+        notification.isRead
+          ? "text-foreground/70 font-medium"
+          : "font-semibold",
         className,
       )}
       {...props}

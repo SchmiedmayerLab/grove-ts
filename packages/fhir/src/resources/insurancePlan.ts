@@ -8,7 +8,6 @@
 
 import { type Coding, type InsurancePlan } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import { domainResourceSchema } from '../elements/domainResource.js'
 import {
   identifierSchema,
@@ -26,6 +25,7 @@ import {
   positiveIntSchema,
 } from '../elements/index.js'
 import { insurancePlanStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR InsurancePlan resource (untyped version).

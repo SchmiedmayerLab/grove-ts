@@ -8,7 +8,6 @@
 
 import { type Coding, type EventDefinition } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   booleanSchema,
   codeableConceptSchema,
@@ -28,6 +27,7 @@ import {
   usageContextSchema,
 } from '../elements/index.js'
 import { publicationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR EventDefinition resource (untyped version).

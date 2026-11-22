@@ -232,10 +232,11 @@ export const DataTable = <Data,>({
   if (isObject(empty)) emptyState = { ...defaultEmptyProps, ...empty };
   else if (isBoolean(empty)) emptyState = empty;
 
-  const content =
-    children ?
-      children(viewProps)
-    : <DataTableTableView {...tableView} {...viewProps} />;
+  const content = children ? (
+    children(viewProps)
+  ) : (
+    <DataTableTableView {...tableView} {...viewProps} />
+  );
 
   return (
     <div

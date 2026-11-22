@@ -19,7 +19,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -39,6 +38,7 @@ import {
   fhirResourceTypeSchema,
   publicationStatusSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const exampleScenarioInstanceContainedInstanceSchema: ZodType<ExampleScenarioInstanceContainedInstance> =
   backboneElementSchema.extend({

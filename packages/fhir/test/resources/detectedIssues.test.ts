@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type DetectedIssue } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirDetectedIssue,
   type untypedDetectedIssueSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('DetectedIssue Resource', () => {
   it('should validate FHIR detected issue from detectedIssues.json', () => {

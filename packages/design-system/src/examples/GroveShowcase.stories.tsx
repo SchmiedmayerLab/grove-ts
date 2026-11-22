@@ -161,9 +161,9 @@ const GroveShowcase = ({ colorScheme }: GroveShowcaseProps) => (
                   key={label}
                   variant="ghost"
                   className={
-                    active ?
-                      "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary w-full justify-start"
-                    : "text-muted-foreground w-full justify-start"
+                    active
+                      ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary w-full justify-start"
+                      : "text-muted-foreground w-full justify-start"
                   }
                 >
                   <Icon className="size-4" aria-hidden="true" />

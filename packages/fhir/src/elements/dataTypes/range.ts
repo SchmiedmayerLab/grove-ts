@@ -8,8 +8,8 @@
 
 import { type Range } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { quantitySchema } from './quantity.js'
 import { elementSchema } from '../element.js'
+import { quantitySchema } from './quantity.js'
 
 /**
  * Zod schema for FHIR Range data type.

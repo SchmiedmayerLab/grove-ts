@@ -8,7 +8,6 @@
 
 import { type OperationOutcomeIssue, type OperationOutcome } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -17,6 +16,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { issueSeveritySchema, issueTypeSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const operationOutcomeIssueSchema: ZodType<OperationOutcomeIssue> =
   backboneElementSchema.extend({

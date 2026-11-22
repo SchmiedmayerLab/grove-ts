@@ -75,21 +75,21 @@ const getTypeAwareConfig = (
       },
       rules: getSonarRuleSet({ typeAware: true }),
     },
-    ...(react ?
-      [
-        {
-          files: ['**/*.{ts,tsx}'],
-          ignores: processorCodeBlocks,
-          settings: reactStrictConfig.settings,
-          rules: Object.fromEntries(
-            typeAwareReactRules.map((name) => [
-              name,
-              reactStrictConfig.rules?.[name] ?? 'error',
-            ]),
-          ),
-        },
-      ]
-    : []),
+    ...(react
+      ? [
+          {
+            files: ['**/*.{ts,tsx}'],
+            ignores: processorCodeBlocks,
+            settings: reactStrictConfig.settings,
+            rules: Object.fromEntries(
+              typeAwareReactRules.map((name) => [
+                name,
+                reactStrictConfig.rules?.[name] ?? 'error',
+              ]),
+            ),
+          },
+        ]
+      : []),
   )
 }
 

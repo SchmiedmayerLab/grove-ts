@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type QuestionnaireResponse } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirQuestionnaireResponse,
   type untypedQuestionnaireResponseSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('QuestionnaireResponse Resource', () => {
   it('should validate FHIR questionnaireResponse from questionnaireResponses.json', () => {

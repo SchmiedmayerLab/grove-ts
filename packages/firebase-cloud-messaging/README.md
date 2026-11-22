@@ -35,9 +35,6 @@ npm install @schmiedmayerlab/grove-firebase-cloud-messaging
 ## Quick Start
 
 ```typescript
-import { initializeApp, cert } from 'firebase-admin/app'
-import { getMessaging } from 'firebase-admin/messaging'
-import { getFirestore } from 'firebase-admin/firestore'
 import {
   FirebaseNotificationService,
   FirestoreDeviceStorage,
@@ -46,6 +43,9 @@ import {
   Device,
   LocalizedText,
 } from '@schmiedmayerlab/grove-firebase-cloud-messaging'
+import { initializeApp, cert } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
+import { getMessaging } from 'firebase-admin/messaging'
 
 // Initialize Firebase
 const app = initializeApp()
@@ -115,13 +115,13 @@ await notificationService.unregisterDevice(
 This package includes helpers for creating Firebase Functions:
 
 ```typescript
-import { onCall } from 'firebase-functions/v2/https'
 import {
   createRegisterDeviceHandler,
   createUnregisterDeviceHandler,
   registerDeviceInputSchema,
   unregisterDeviceInputSchema,
 } from '@schmiedmayerlab/grove-firebase-cloud-messaging'
+import { onCall } from 'firebase-functions/v2/https'
 
 // Create function handlers
 const registerDeviceHandler = createRegisterDeviceHandler(notificationService)

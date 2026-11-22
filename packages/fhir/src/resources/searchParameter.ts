@@ -11,7 +11,6 @@ import {
   type SearchParameter,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   booleanSchema,
@@ -32,6 +31,7 @@ import {
   searchParameterTypeSchema,
   searchParameterXpathUsageSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const searchParameterComponentSchema: ZodType<SearchParameterComponent> =
   backboneElementSchema.extend({

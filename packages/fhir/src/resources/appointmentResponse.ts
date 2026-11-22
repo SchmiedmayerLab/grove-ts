@@ -8,7 +8,6 @@
 
 import { type Coding, type AppointmentResponse } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   codeableConceptSchema,
   dateTimeSchema,
@@ -19,6 +18,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { appointmentResponseParticipantStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR AppointmentResponse resource (untyped version).

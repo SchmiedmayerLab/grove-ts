@@ -8,7 +8,6 @@
 
 import { type Coding, type Immunization } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   annotationSchema,
   backboneElementSchema,
@@ -25,6 +24,7 @@ import {
   uriSchema,
 } from '../elements/index.js'
 import { immunizationStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 /**
  * Zod schema for FHIR Immunization resource (untyped version).

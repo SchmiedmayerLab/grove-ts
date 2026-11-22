@@ -10,11 +10,11 @@ import fs from 'fs'
 import { expectTypeOf } from 'expect-type'
 import { type CommunicationRequest } from 'fhir/r4b.js'
 import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
 import {
   FhirCommunicationRequest,
   type untypedCommunicationRequestSchema,
 } from '../../src/index.js'
+import { jsonStringifyDeterministically } from './testHelpers.js'
 
 describe('CommunicationRequest Resource', () => {
   it('should validate FHIR CommunicationRequests from communicationRequests.json', () => {

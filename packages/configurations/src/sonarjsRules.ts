@@ -61,7 +61,8 @@ export const sonarRulesCoveredElsewhere: Record<string, string> = {
 const requiresTypeChecking = (name: string) => {
   if (rulesWorkingWithoutTypes.has(name)) return false
   const docs = sonarRules[name.replace(/^sonarjs\//, '')]?.meta?.docs as
-    { requiresTypeChecking?: boolean } | undefined
+    | { requiresTypeChecking?: boolean }
+    | undefined
   return docs?.requiresTypeChecking === true
 }
 

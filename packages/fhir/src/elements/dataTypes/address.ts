@@ -8,9 +8,9 @@
 
 import { type Address } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
+import { elementSchema } from '../element.js'
 import { periodSchema } from './period.js'
 import { stringSchema } from './primitiveTypes.js'
-import { elementSchema } from '../element.js'
 
 const addressTypeSchema = z.enum(['postal', 'physical', 'both'])
 const addressUseSchema = z.enum(['home', 'work', 'temp', 'old', 'billing'])

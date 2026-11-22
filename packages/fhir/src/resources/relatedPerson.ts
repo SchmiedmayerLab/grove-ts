@@ -12,7 +12,6 @@ import {
   type RelatedPerson,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   addressSchema,
   attachmentSchema,
@@ -29,6 +28,7 @@ import {
   referenceSchema,
 } from '../elements/index.js'
 import { administrativeGenderSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const relatedPersonCommunicationSchema: ZodType<RelatedPersonCommunication> =
   backboneElementSchema.extend({

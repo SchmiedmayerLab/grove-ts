@@ -7,8 +7,8 @@
 //
 
 import { type Meta, type StoryObj } from "@storybook/react";
-import { InfoButton } from "./InfoButton";
 import { Tooltip } from "../Tooltip/Tooltip";
+import { InfoButton } from "./InfoButton";
 
 const meta: Meta<typeof InfoButton> = {
   title: "Components/InfoButton",

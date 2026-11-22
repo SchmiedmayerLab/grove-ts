@@ -8,7 +8,6 @@
 
 import { type DiagnosticReportMedia, type DiagnosticReport } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -21,6 +20,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { diagnosticReportStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const diagnosticReportMediaSchema: ZodType<DiagnosticReportMedia> =
   backboneElementSchema.extend({

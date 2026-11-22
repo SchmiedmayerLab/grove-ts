@@ -145,8 +145,8 @@ test('lists every enabled type-aware TypeScript rule', () => {
     .filter((rule) => rule.type_aware)
     .filter((rule) => {
       const name = `${rule.scope}/${rule.value}`
-      return name in tsRules ?
-          level(tsRules[name]) !== 'off'
+      return name in tsRules
+        ? level(tsRules[name]) !== 'off'
         : (categories[rule.category] ?? 'off') !== 'off'
     })
     .map((rule) => `${rule.scope}/${rule.value}`)
@@ -203,10 +203,10 @@ test('leaves out the sonarjs rules that other rules cover', () => {
   )) {
     assert.equal(eslintRules[sonarRule], undefined, sonarRule)
     const covered =
-      coveringRule in oxlintRules ?
-        level(oxlintRules[coveringRule]) !== 'off'
-      : correctness.has(coveringRule) ||
-        level(eslintRules[coveringRule] ?? 'off') !== 'off'
+      coveringRule in oxlintRules
+        ? level(oxlintRules[coveringRule]) !== 'off'
+        : correctness.has(coveringRule) ||
+          level(eslintRules[coveringRule] ?? 'off') !== 'off'
     assert.ok(covered, `${coveringRule} does not cover ${sonarRule}`)
   }
 })

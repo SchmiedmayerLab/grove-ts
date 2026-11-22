@@ -13,7 +13,6 @@ import {
   type Coding,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -27,6 +26,7 @@ import {
   stringSchema,
 } from '../elements/index.js'
 import { substanceStatusSchema } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const substanceInstanceSchema: ZodType<SubstanceInstance> =
   backboneElementSchema.extend({

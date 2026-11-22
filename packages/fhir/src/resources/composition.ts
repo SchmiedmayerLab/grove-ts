@@ -14,7 +14,6 @@ import {
   type Composition,
 } from 'fhir/r4b.js'
 import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
 import {
   backboneElementSchema,
   codeableConceptSchema,
@@ -32,6 +31,7 @@ import {
   compositionStatusSchema,
   listModeSchema,
 } from '../valueSets/index.js'
+import { FhirDomainResource } from './fhirDomainResource.js'
 
 const attesterSchema: ZodType<CompositionAttester> =
   backboneElementSchema.extend({

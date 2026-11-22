@@ -9,4 +9,4 @@
 // Synthetic unused directive for the configuration tests.
 
 // eslint-disable-next-line no-debugger
-export const unusedDirective = 1;
+export const unusedDirective = 1
