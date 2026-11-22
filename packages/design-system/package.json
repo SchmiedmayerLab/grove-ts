@@ -396,7 +396,6 @@
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16",
     "@testing-library/user-event": "^14.6.1",
-    "@total-typescript/ts-reset": "^0.6.1",
     "@types/node": "^24",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

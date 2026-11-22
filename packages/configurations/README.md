@@ -111,6 +111,20 @@ export default tseslint.config(
 )
 ```
 
+## Global Types
+
+The package ships global types that make built-in types stricter, currently [ts-reset](https://github.com/total-typescript/ts-reset).
+For example, `JSON.parse` returns `unknown` instead of `any`, and `.filter(Boolean)` removes `null` and `undefined` from the array type.
+Add a `global-types.d.ts` file inside the `include` globs of your `tsconfig.json`, for example `src/global-types.d.ts`:
+
+```typescript
+// Do not add any other lines of code to this file!
+import '@schmiedmayerlab/grove-configurations/global-types'
+```
+
+The import turns the file into a module, so any other declaration in it would stop being global.
+Adopting them can surface new type errors, for example where code relies on `JSON.parse` returning `any`.
+
 ## License
 
 This project is licensed under the MIT License. See [Licenses](https://github.com/SchmiedmayerLab/grove-ts/tree/main/LICENSES) for more information.
