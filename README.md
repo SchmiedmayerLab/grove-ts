@@ -92,6 +92,10 @@ pnpm install --frozen-lockfile
 Workspace packages are listed in `pnpm-workspace.yaml`, which also holds the dependency overrides, the allowed install scripts, and the seven-day minimum release age for new dependency versions.
 Internal dependencies use the `workspace:*` protocol, which pnpm replaces with the release version when packing.
 
+Packages compile and type-check with TypeScript 7, installed as `typescript7`, which provides the `tsc` command.
+TypeScript 7 has no stable compiler API yet, so the `typescript` package name points to `@typescript/typescript6` for the tools that use that API: typescript-eslint, vite-plugin-dts, react-docgen-typescript and the declaration bundling of tsdown.
+The documentation site keeps TypeScript 6 because TypeDoc supports up to TypeScript 6.0.
+
 Run the complete local quality gate before requesting review:
 
 ```bash

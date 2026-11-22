@@ -68,7 +68,8 @@
     "oxlint": "^1.93.0",
     "oxlint-tsgolint": "^7.0.2007",
     "rimraf": "^6.1.2",
-    "typescript": "^6.0.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript7": "npm:typescript@^7.0.2",
     "vitest": "^4.1.12"
   },
   "peerDependencies": {

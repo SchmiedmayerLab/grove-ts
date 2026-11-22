@@ -22,7 +22,7 @@ updates:
     patterns: ["*"]
     multi-ecosystem-group: weekly-dependencies
     ignore:
-      # The typed linting stack currently supports TypeScript below 6.1.
+      # `typescript` stays TypeScript 6 for the tools that need its compiler API, such as typescript-eslint and TypeDoc.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
       # Grove's supported runtime is Node.js 24.

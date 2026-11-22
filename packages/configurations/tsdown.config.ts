@@ -6,7 +6,18 @@
 // SPDX-License-Identifier: MIT
 //
 
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { defineConfig } from "tsdown";
+
+// The `typescript` package is TypeScript 6 for typescript-eslint, so the declaration plugin
+// would use it. Point it at the TypeScript 7 compiler, installed as `typescript7`, instead.
+const require = createRequire(import.meta.url);
+const typeScript7 = dirname(require.resolve("typescript7/package.json"));
+const { default: getTypeScript7Path } = (await import(
+  pathToFileURL(join(typeScript7, "lib/getExePath.js")).href
+)) as { default: () => string };
 
 export default defineConfig({
   entry: [
@@ -22,5 +33,9 @@ export default defineConfig({
   unbundle: true,
   clean: true,
   outDir: "dist",
-  dts: true,
+  dts: {
+    generator: "tsgo",
+    tsconfig: "tsconfig.json",
+    tsgo: { path: getTypeScript7Path() },
+  },
 });

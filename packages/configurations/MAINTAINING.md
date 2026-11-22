@@ -28,7 +28,7 @@ Users only need the [README](README.md).
 | `src/typeAwareRules.ts`      | @eslint-react rules that run in ESLint                                                                            |
 | `src/oxfmt.ts`               | oxfmt configuration                                                                                               |
 | `global-types.d.ts`          | Global types entry, published as `./global-types`                                                                 |
-| `tsdown.config.ts`           | Build of the entry points                                                                                         |
+| `tsdown.config.ts`           | Build of the entry points, with declarations from TypeScript 7                                                    |
 | `test/compatibility.test.ts` | Pins the ESLint and Prettier configurations                                                                       |
 | `test/oxc.test.ts`           | Checks the oxlint and oxfmt configurations                                                                        |
 
@@ -104,6 +104,10 @@ That is why `eslint-plugin-sonarjs` is pinned to an exact version; check the wra
 
 tsdown builds the entry points listed in `tsdown.config.ts`; a new entry point needs its line there and in `exports` in `package.json`.
 publint and attw in `pack:lint` check that every export points at a built file.
+The declaration plugin of tsdown picks its compiler by the `typescript` package, which is TypeScript 6 here for typescript-eslint.
+The configuration therefore points its TypeScript 7 generator at the `typescript7` package, which emits the same declarations faster.
+tsdown warns that this generator is experimental.
+Once `typescript` is TypeScript 7, the plugin picks it by itself and the explicit path can go.
 
 ## Global Types
 
