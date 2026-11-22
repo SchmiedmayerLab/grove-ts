@@ -116,7 +116,7 @@ export const upperFirst = (value: string) =>
  * Generates an array with a specified length.
  */
 export const times = <T>(length: number, callback: (index: number) => T) =>
-  new Array(length).fill(undefined).map((_, index) => callback(index));
+  Array.from({ length }, (_, index) => callback(index));
 
 /**
  * Utility to dynamically resolve a strategy pattern.

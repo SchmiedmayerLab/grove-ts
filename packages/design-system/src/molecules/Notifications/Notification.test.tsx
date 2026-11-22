@@ -110,7 +110,8 @@ describe("NotificationActions", () => {
 
     expect(actionsClick).toHaveBeenCalledTimes(1);
     expect(
-      (actionsClick.mock.calls[0]?.[0] as MouseEvent).defaultPrevented,
+      (actionsClick.mock.calls[0]?.[0] as MouseEvent | undefined)
+        ?.defaultPrevented,
     ).toBe(true);
     expect(parentClick).not.toHaveBeenCalled();
   });

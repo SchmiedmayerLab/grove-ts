@@ -113,7 +113,7 @@ export default defineConfig({
         return `${name}.${format}`;
       },
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: (source) =>
         [...externalPackages].some(
           (packageName) =>

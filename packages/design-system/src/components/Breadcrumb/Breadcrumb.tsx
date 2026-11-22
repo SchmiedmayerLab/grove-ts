@@ -284,9 +284,9 @@ export const Breadcrumbs = ({
         )}
         {remainingBreadcrumbs.map((breadcrumb, index) => (
           <BreadcrumbCompleteItem
+            key={breadcrumb.href}
             {...breadcrumb}
             isActive={index === remainingBreadcrumbs.length - 1}
-            key={breadcrumb.href}
           />
         ))}
       </BreadcrumbList>
