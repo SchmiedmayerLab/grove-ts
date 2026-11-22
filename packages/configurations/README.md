@@ -15,103 +15,82 @@ SPDX-License-Identifier: MIT
 
 ## Getting Started
 
-Shared ESLint and Prettier configurations that can be added to TypeScript projects with minimal setup.
+Shared linting and formatting configurations for TypeScript projects.
 
-Configurations are opinionated and strict. We aim to catch as many possible mistakes or elements we consider harmful practices early. Some rules are meant to be broken once in a while, with an explanation comment around them.
+The configurations are opinionated and strict, to catch mistakes and harmful practices early.
+Some rules are meant to be broken once in a while, with a comment that explains why.
 
-### Installation
+We recommend [oxlint](https://oxc.rs/docs/guide/usage/linter) and [oxfmt](https://oxc.rs/docs/guide/usage/formatter), which are many times faster than ESLint and Prettier.
+In our projects, oxlint takes 70 to 97 percent less time than ESLint did, and the few type-aware rules that stay in ESLint add a few seconds.
+The [ESLint and Prettier configurations](#eslint-and-prettier) remain for existing projects and for environments that cannot run oxlint.
 
-Install dependencies:
+## Setup
+
+Install the tools:
 
 ```bash
-npm install --save-dev prettier eslint @schmiedmayerlab/grove-configurations
+npm install --save-dev oxlint oxlint-tsgolint oxfmt eslint @schmiedmayerlab/grove-configurations
 ```
 
-Create an `eslint.config.mjs` file.
+### oxlint
 
-If aiming for React, use:
+Create an `oxlint.config.ts` file:
+
+```typescript
+import { oxlintReactConfig } from '@schmiedmayerlab/grove-configurations/oxlint'
+import { defineConfig } from 'oxlint'
+
+export default defineConfig({
+  extends: [oxlintReactConfig],
+})
+```
+
+For a Node project, use `oxlintNodeConfig` instead.
+
+oxlint also lints the script blocks of Astro, Vue and Svelte components with the TypeScript rules.
+It does not lint their templates, and oxfmt does not format them.
+
+oxlint and oxfmt skip the files that `.gitignore` ignores, such as build output.
+Add `ignorePatterns` to your own configuration only for committed files that should not be linted, such as generated code.
+A pattern without a slash matches at any depth, so `lib` also skips `src/lib`; anchor root folders as `/lib`.
+
+### ESLint for Type-aware Plugin Rules
+
+A few sonarjs and @eslint-react rules need type information that oxlint cannot pass to ESLint plugins yet, so they run in ESLint.
+Create an `eslint.config.mjs` file:
 
 ```javascript
-import { getEslintReactConfig } from '@schmiedmayerlab/grove-configurations'
+import { getEslintTypeAwareReactConfig } from '@schmiedmayerlab/grove-configurations/eslint-type-aware'
 
-export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname })
+export default getEslintTypeAwareReactConfig({
+  tsconfigRootDir: import.meta.dirname,
+})
 ```
 
-If aiming for Node application, use:
+For a Node project, use `getEslintTypeAwareNodeConfig` instead.
+Run both linters, for example:
 
-```javascript
-import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
-
-export default getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname })
+```json
+{
+  "lint": "oxlint && eslint .",
+  "lint:ci": "oxlint --deny-warnings && eslint --max-warnings 0 ."
+}
 ```
 
-Create a `.prettierrc.mjs` file:
+### oxfmt
 
-```javascript
-import { prettierConfig } from '@schmiedmayerlab/grove-configurations'
+Create an `oxfmt.config.ts` file:
 
-export default prettierConfig
+```typescript
+import { oxfmtConfig } from '@schmiedmayerlab/grove-configurations/oxfmt'
+import { defineConfig } from 'oxfmt'
+
+export default defineConfig(oxfmtConfig)
 ```
 
-Now, when you run `eslint . --fix`, code is going to be linted and formatted.
+It formats with Prettier's defaults at 80 columns, and sorts imports and Tailwind classes.
 
-### ESLint customization
-
-We aim to make this config mostly plug and play. You can adjust ESLint to your needs by passing additional configuration pieces.
-
-```javascript
-import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
-
-export default [
-  ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
-  {
-    ignores: ['lib/**/*'], // Ignore generated build files
-  },
-  {
-    rules: {
-      '@typescript-eslint/no-non-null-assertion': 'off', // ignore unwanted rule
-    },
-  },
-]
-```
-
-For more complex scenarios, we expose smaller pieces of configuration. You can use them and do micro-adjustments. This is not the recommended approach.
-
-```javascript
-import {
-  getEslintRules,
-  getNodeGlobals,
-  getPreferArrowFunctions,
-  getReactPlugins,
-  getPrettierPlugin,
-  getTslint,
-} from '@schmiedmayerlab/grove-configurations'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
-
-const tsconfigRootDir = import.meta.dirname
-
-export default tseslint.config(
-  ...getEslintRules(),
-  getNodeGlobals(),
-  {
-    ...getTslint(),
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir,
-      },
-    },
-  },
-  getPreferArrowFunctions(),
-  ...getReactPlugins(),
-  ...getPrettierPlugin(),
-)
-```
-
-## Global Types
+### Global Types
 
 The package ships global types that make built-in types stricter, currently [ts-reset](https://github.com/total-typescript/ts-reset).
 For example, `JSON.parse` returns `unknown` instead of `any`, and `.filter(Boolean)` removes `null` and `undefined` from the array type.
@@ -124,6 +103,114 @@ import '@schmiedmayerlab/grove-configurations/global-types'
 
 The import turns the file into a module, so any other declaration in it would stop being global.
 Adopting them can surface new type errors, for example where code relies on `JSON.parse` returning `any`.
+
+## Customization
+
+Add project-specific settings after `extends`: `rules` for the whole project and `overrides` for some files.
+oxlint rule names drop the ESLint plugin prefixes: `@typescript-eslint/` becomes `typescript/` and `import-x/` becomes `import/`.
+
+```typescript
+export default defineConfig({
+  extends: [oxlintNodeConfig],
+  ignorePatterns: ['src/generated/**'],
+  rules: { 'typescript/only-throw-error': 'off' },
+  overrides: [
+    {
+      files: ['test/**/*.ts'],
+      rules: { 'typescript/no-non-null-assertion': 'off' },
+    },
+  ],
+})
+```
+
+oxlint ignores `/* global */` comments, so declare extra globals with `globals` in your configuration.
+
+Disable comments work with the ESLint rule names in both linters, for example `// eslint-disable-next-line @typescript-eslint/no-explicit-any -- reason`.
+Unused disable comments are errors.
+oxlint also reads the comments for the type-aware rules that run in ESLint and reports them as unused, so turn those rules off in `eslint.config.mjs` instead.
+
+Files outside the TypeScript program, for example tests excluded from `tsconfig.json`, have no type information.
+Turn off the type-aware rules for them with `oxlintDisableTypeAwareRules`:
+
+```typescript
+overrides: [{ files: ['src/**/*.test.ts'], rules: oxlintDisableTypeAwareRules }]
+```
+
+To change which files get which rules, for example files that may have a default export, build the configuration with `createOxlintConfig` and its `files` option.
+In a monorepo with one configuration, `files.react` can limit the React rules to one app.
+Rules whose globs you change move into overrides, so change them in your own `overrides` rather than in `rules`:
+
+```typescript
+createOxlintConfig({
+  react: true,
+  files: {
+    defaultExports: [
+      ...defaultOxlintFiles.defaultExports,
+      '**/routes/**/*.tsx',
+    ],
+  },
+})
+```
+
+## TypeScript 7
+
+oxlint's type-aware rules already run on TypeScript 7, so they read your `tsconfig.json` with TypeScript 7.
+Options that TypeScript 7 removed, such as `baseUrl`, stop all type-aware rules, even when the project still compiles with TypeScript 6.
+ESLint uses typescript-eslint, which needs the compiler API that TypeScript 7 does not ship yet.
+Install TypeScript 6 under the `typescript` name for these tools and TypeScript 7 under another name:
+
+```json
+{
+  "devDependencies": {
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript7": "npm:typescript@^7.0.2"
+  }
+}
+```
+
+With pnpm, `tsc` then runs TypeScript 7.
+With npm, `@typescript/typescript6` also installs a TypeScript 6 `tsc` command, so run TypeScript 7 explicitly, for example `node node_modules/typescript7/bin/tsc`.
+
+## ESLint and Prettier
+
+Use these configurations only when a project cannot run oxlint.
+They lint and format through ESLint, with Prettier as an ESLint rule.
+
+```bash
+npm install --save-dev prettier eslint eslint-import-resolver-typescript @schmiedmayerlab/grove-configurations
+```
+
+Create an `eslint.config.mjs` file:
+
+```javascript
+import { getEslintReactConfig } from '@schmiedmayerlab/grove-configurations'
+
+export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname })
+```
+
+For a Node project, use `getEslintNodeConfig` instead.
+Create a `.prettierrc.mjs` file:
+
+```javascript
+import { prettierConfig } from '@schmiedmayerlab/grove-configurations/prettier'
+
+export default prettierConfig
+```
+
+The `/prettier` entry point loads only the Prettier configuration, so it also suits projects that format some files with Prettier next to oxfmt, such as Astro components.
+
+`eslint . --fix` then lints and formats the code.
+Add project-specific settings after the configuration:
+
+```javascript
+export default [
+  ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
+  { ignores: ['lib/**/*'] },
+  { rules: { '@typescript-eslint/no-non-null-assertion': 'off' } },
+]
+```
+
+The building blocks `getEslintRules`, `getNodeGlobals`, `getTslint`, `getPreferArrowFunctions`, `getReactPlugins` and `getPrettierPlugin` are exported for configurations that need to be assembled by hand.
 
 ## License
 

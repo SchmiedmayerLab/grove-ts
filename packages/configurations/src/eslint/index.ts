@@ -5,10 +5,10 @@
 //
 // SPDX-License-Identifier: MIT
 //
-import eslint from '@eslint/js'
+
 import reactPlugin from '@eslint-react/eslint-plugin'
+import eslint from '@eslint/js'
 import { type Processor } from '@typescript-eslint/utils/ts-eslint'
-import { defineConfig } from 'eslint/config'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import { flatConfigs as importConfigs } from 'eslint-plugin-import-x'
 import * as preferArrow from 'eslint-plugin-prefer-arrow-functions'
@@ -16,16 +16,12 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import { configs as sonarConfigs } from 'eslint-plugin-sonarjs'
 import globals from 'globals'
 import { configs, type ConfigWithExtends } from 'typescript-eslint'
+import { defineTypedConfig, getIgnoredDirs } from './shared'
+
+export { getIgnoredDirs }
 
 const sonarRecommended =
   sonarConfigs.recommended as unknown as ConfigWithExtends
-
-/**
- * Bridges typescript-eslint's config type to ESLint 10's native config helper.
- * The runtime shapes are compatible, but their independently published types differ.
- */
-const defineTypedConfig = (...config: ConfigWithExtends[]) =>
-  defineConfig(config as unknown as Parameters<typeof defineConfig>[0])
 
 interface EslintConfigParams {
   /**
@@ -39,25 +35,6 @@ interface EslintConfigParams {
    * */
   tsConfigsDirs?: string[]
 }
-
-/**
- * Completely ignores these directories
- * */
-export const getIgnoredDirs = (): ConfigWithExtends => ({
-  ignores: [
-    'dist',
-    'lib',
-    'docs',
-    'out',
-    'build',
-    'coverage',
-    '.next',
-    '.docusaurus',
-    'storybook-static',
-    '**/playwright-report',
-    'eslint_report.json',
-  ],
-})
 
 /**
  * Fails on stale suppressions so lint exceptions cannot silently accumulate.

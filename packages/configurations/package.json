@@ -1,7 +1,7 @@
 {
   "name": "@schmiedmayerlab/grove-configurations",
   "version": "0.0.0",
-  "description": "Shared ESLint and Prettier configurations for Grove TypeScript projects",
+  "description": "Shared oxlint, oxfmt, ESLint and Prettier configurations for Grove TypeScript projects",
   "author": "Schmiedmayer Lab",
   "license": "MIT",
   "sideEffects": false,
@@ -12,7 +12,9 @@
     "eslint",
     "prettier",
     "linting",
-    "formatting"
+    "formatting",
+    "oxlint",
+    "oxfmt"
   ],
   "files": [
     "dist",
@@ -41,14 +43,30 @@
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     },
+    "./eslint-type-aware": {
+      "types": "./dist/eslint/typeAware.d.mts",
+      "default": "./dist/eslint/typeAware.mjs"
+    },
+    "./oxlint": {
+      "types": "./dist/oxlint/index.d.mts",
+      "default": "./dist/oxlint/index.mjs"
+    },
+    "./oxfmt": {
+      "types": "./dist/oxfmt.d.mts",
+      "default": "./dist/oxfmt.mjs"
+    },
+    "./prettier": {
+      "types": "./dist/prettier.d.mts",
+      "default": "./dist/prettier.mjs"
+    },
     "./global-types": {
       "types": "./global-types.d.ts"
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts --format esm --dts --clean --out-dir dist",
+    "build": "tsdown",
     "clean": "rimraf dist",
-    "dev": "tsdown src/index.ts --format esm --dts --watch --out-dir dist",
+    "dev": "tsdown --watch",
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
@@ -61,26 +79,52 @@
     "@eslint-react/eslint-plugin": "^5.18.1",
     "@eslint/js": "^10.0.1",
     "@total-typescript/ts-reset": "^0.6.1",
-    "@typescript-eslint/utils": "^8.65.0",
+    "@typescript-eslint/utils": "^8.72.1",
     "eslint-config-prettier": "^10",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-prefer-arrow-functions": "^3.9.1",
     "eslint-plugin-prettier": "^5",
-    "eslint-plugin-sonarjs": "^4.2.0",
+    "eslint-plugin-sonarjs": "4.2.2",
     "globals": "^17.3.0",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.72.1"
   },
   "peerDependencies": {
     "eslint": "^10",
     "eslint-import-resolver-typescript": "^4.4.5",
+    "oxfmt": ">=0.78.0",
+    "oxlint": "^1.93.0",
+    "oxlint-tsgolint": ">=7.0.2007",
     "prettier": "^3"
+  },
+  "peerDependenciesMeta": {
+    "eslint-import-resolver-typescript": {
+      "optional": true
+    },
+    "oxfmt": {
+      "optional": true
+    },
+    "oxlint": {
+      "optional": true
+    },
+    "oxlint-tsgolint": {
+      "optional": true
+    },
+    "prettier": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "eslint": "^10.13.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
+    "oxlint-tsgolint": "^7.0.2007",
+    "prettier": "^3.9.6",
     "rimraf": "^6.1.2",
     "tsdown": "^0.22.14",
     "typescript": "^6.0.3"

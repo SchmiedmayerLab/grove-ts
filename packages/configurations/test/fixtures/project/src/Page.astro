@@ -1,0 +1,20 @@
+---
+// This source file is part of the Grove open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+
+// Synthetic Astro component for the configuration tests.
+
+interface Props {
+  readonly title: string;
+}
+
+const { title } = Astro.props as Props;
+function shout(value: string) {
+  return value.toUpperCase();
+}
+---
+
+<h1>{shout(title)}</h1>
