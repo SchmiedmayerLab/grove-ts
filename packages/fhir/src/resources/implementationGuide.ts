@@ -19,8 +19,8 @@ import {
   type ImplementationGuideManifest,
   type ImplementationGuideManifestPage,
   type ImplementationGuideManifestResource,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   booleanSchema,
@@ -33,7 +33,7 @@ import {
   stringSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   fhirLicenseSchema,
   fhirResourceTypeSchema,
@@ -41,8 +41,8 @@ import {
   guidePageGenerationSchema,
   guideParameterCodeSchema,
   publicationStatusSchema,
-} from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const implementationGuideDependsOnSchema: ZodType<ImplementationGuideDependsOn> =
   backboneElementSchema.extend({
@@ -52,7 +52,7 @@ const implementationGuideDependsOnSchema: ZodType<ImplementationGuideDependsOn> 
     _packageId: elementSchema.optional(),
     version: stringSchema.optional(),
     _version: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideGlobalSchema: ZodType<ImplementationGuideGlobal> =
   backboneElementSchema.extend({
@@ -60,7 +60,7 @@ const implementationGuideGlobalSchema: ZodType<ImplementationGuideGlobal> =
     _type: elementSchema.optional(),
     profile: urlSchema,
     _profile: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideDefinitionResourceSchema: ZodType<ImplementationGuideDefinitionResource> =
   backboneElementSchema.extend({
@@ -77,7 +77,7 @@ const implementationGuideDefinitionResourceSchema: ZodType<ImplementationGuideDe
     _exampleCanonical: elementSchema.optional(),
     groupingId: stringSchema.optional(),
     _groupingId: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideDefinitionPageSchema: ZodType<ImplementationGuideDefinitionPage> =
   backboneElementSchema.extend({
@@ -89,9 +89,9 @@ const implementationGuideDefinitionPageSchema: ZodType<ImplementationGuideDefini
     generation: guidePageGenerationSchema,
     _generation: elementSchema.optional(),
     get page() {
-      return implementationGuideDefinitionPageSchema.array().optional()
+      return implementationGuideDefinitionPageSchema.array().optional();
     },
-  })
+  });
 
 const implementationGuideDefinitionParameterSchema: ZodType<ImplementationGuideDefinitionParameter> =
   backboneElementSchema.extend({
@@ -99,7 +99,7 @@ const implementationGuideDefinitionParameterSchema: ZodType<ImplementationGuideD
     _code: elementSchema.optional(),
     value: stringSchema,
     _value: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideDefinitionTemplateSchema: ZodType<ImplementationGuideDefinitionTemplate> =
   backboneElementSchema.extend({
@@ -109,7 +109,7 @@ const implementationGuideDefinitionTemplateSchema: ZodType<ImplementationGuideDe
     _source: elementSchema.optional(),
     scope: stringSchema.optional(),
     _scope: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideDefinitionGroupingSchema: ZodType<ImplementationGuideDefinitionGrouping> =
   backboneElementSchema.extend({
@@ -117,7 +117,7 @@ const implementationGuideDefinitionGroupingSchema: ZodType<ImplementationGuideDe
     _name: elementSchema.optional(),
     description: stringSchema.optional(),
     _description: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideDefinitionSchema: ZodType<ImplementationGuideDefinition> =
   backboneElementSchema.extend({
@@ -126,7 +126,7 @@ const implementationGuideDefinitionSchema: ZodType<ImplementationGuideDefinition
     page: implementationGuideDefinitionPageSchema.optional(),
     parameter: implementationGuideDefinitionParameterSchema.array().optional(),
     template: implementationGuideDefinitionTemplateSchema.array().optional(),
-  })
+  });
 
 const implementationGuideManifestResourceSchema: ZodType<ImplementationGuideManifestResource> =
   backboneElementSchema.extend({
@@ -137,7 +137,7 @@ const implementationGuideManifestResourceSchema: ZodType<ImplementationGuideMani
     _exampleCanonical: elementSchema.optional(),
     relativePath: urlSchema.optional(),
     _relativePath: elementSchema.optional(),
-  })
+  });
 
 const implementationGuideManifestPageSchema: ZodType<ImplementationGuideManifestPage> =
   backboneElementSchema.extend({
@@ -147,7 +147,7 @@ const implementationGuideManifestPageSchema: ZodType<ImplementationGuideManifest
     _title: elementSchema.optional(),
     anchor: stringSchema.array().optional(),
     _anchor: elementSchema.array().optional(),
-  })
+  });
 
 const implementationGuideManifestSchema: ZodType<ImplementationGuideManifest> =
   backboneElementSchema.extend({
@@ -159,14 +159,14 @@ const implementationGuideManifestSchema: ZodType<ImplementationGuideManifest> =
     _image: elementSchema.array().optional(),
     other: stringSchema.array().optional(),
     _other: elementSchema.array().optional(),
-  })
+  });
 
 /**
  * Zod schema for FHIR ImplementationGuide resource (untyped version).
  */
 export const untypedImplementationGuideSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('ImplementationGuide').readonly(),
+    resourceType: z.literal("ImplementationGuide").readonly(),
     url: urlSchema,
     _url: elementSchema.optional(),
     version: stringSchema.optional(),
@@ -201,13 +201,13 @@ export const untypedImplementationGuideSchema = z.lazy(() =>
     definition: implementationGuideDefinitionSchema.optional(),
     manifest: implementationGuideManifestSchema.optional(),
   }),
-) satisfies ZodType<ImplementationGuide>
+) satisfies ZodType<ImplementationGuide>;
 
 /**
  * Zod schema for FHIR ImplementationGuide resource.
  */
 export const implementationGuideSchema: ZodType<ImplementationGuide> =
-  untypedImplementationGuideSchema
+  untypedImplementationGuideSchema;
 
 /**
  * Wrapper class for FHIR ImplementationGuide resources.
@@ -223,6 +223,6 @@ export class FhirImplementationGuide extends FhirDomainResource<ImplementationGu
    * @returns A FhirImplementationGuide instance containing the validated resource
    */
   public static parse(value: unknown): FhirImplementationGuide {
-    return new FhirImplementationGuide(implementationGuideSchema.parse(value))
+    return new FhirImplementationGuide(implementationGuideSchema.parse(value));
   }
 }

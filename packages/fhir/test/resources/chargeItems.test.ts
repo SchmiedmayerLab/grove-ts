@@ -5,30 +5,30 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type ChargeItem } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type ChargeItem } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirChargeItem,
   type untypedChargeItemSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('ChargeItem Resource', () => {
-  it('should validate FHIR ChargeItems from chargeItems.json', () => {
-    type Schema = z.infer<typeof untypedChargeItemSchema>
-    expectTypeOf<Schema>().toExtend<ChargeItem>()
-    expectTypeOf<ChargeItem>().toExtend<Schema>()
+describe("ChargeItem Resource", () => {
+  it("should validate FHIR ChargeItems from chargeItems.json", () => {
+    type Schema = z.infer<typeof untypedChargeItemSchema>;
+    expectTypeOf<Schema>().toExtend<ChargeItem>();
+    expectTypeOf<ChargeItem>().toExtend<Schema>();
 
-    const data = fs.readFileSync('test/resources/chargeItems.json', 'utf-8')
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+    const data = fs.readFileSync("test/resources/chargeItems.json", "utf-8");
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirChargeItem.parse(jsonValue).value
+      const parsedResource = FhirChargeItem.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

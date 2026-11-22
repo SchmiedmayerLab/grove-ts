@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { getEslintTypeAwareReactConfig } from '@schmiedmayerlab/grove-configurations/eslint-type-aware'
+import { getEslintTypeAwareReactConfig } from "@schmiedmayerlab/grove-configurations/eslint-type-aware";
 
 export default [
-  { ignores: ['storybook-static'] },
+  { ignores: ["storybook-static"] },
   ...getEslintTypeAwareReactConfig({ tsconfigRootDir: import.meta.dirname }),
-]
+];

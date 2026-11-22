@@ -5,15 +5,15 @@
 //
 // SPDX-License-Identifier: MIT
 //
-import { type Linter, type Rule } from 'eslint'
-import { configs, rules } from 'eslint-plugin-sonarjs'
+import { type Linter, type Rule } from "eslint";
+import { configs, rules } from "eslint-plugin-sonarjs";
 
 const isEnabled = (entry: Linter.RuleEntry | undefined) => {
-  const level = Array.isArray(entry) ? entry[0] : entry
-  return level !== undefined && level !== 'off' && level !== 0
-}
+  const level = Array.isArray(entry) ? entry[0] : entry;
+  return level !== undefined && level !== "off" && level !== 0;
+};
 
-const sonarRules = rules as Record<string, Rule.RuleModule | undefined>
+const sonarRules = rules as Record<string, Rule.RuleModule | undefined>;
 
 /**
  * Rules that sonarjs marks as requiring type information, but that report the same findings without it.
@@ -21,61 +21,61 @@ const sonarRules = rules as Record<string, Rule.RuleModule | undefined>
  * `assertions-in-tests` is not one of them: without types it misses assertions inside helper functions.
  */
 const rulesWorkingWithoutTypes = new Set([
-  'sonarjs/bitwise-operators',
-  'sonarjs/concise-regex',
-  'sonarjs/duplicates-in-character-class',
-  'sonarjs/empty-string-repetition',
-  'sonarjs/no-collection-size-mischeck',
-  'sonarjs/no-empty-after-reluctant',
-  'sonarjs/no-empty-alternatives',
-  'sonarjs/no-empty-group',
-  'sonarjs/no-redundant-optional',
-  'sonarjs/no-small-switch',
-  'sonarjs/regex-complexity',
-  'sonarjs/single-char-in-character-classes',
-  'sonarjs/single-character-alternation',
-  'sonarjs/slow-regex',
-])
+  "sonarjs/bitwise-operators",
+  "sonarjs/concise-regex",
+  "sonarjs/duplicates-in-character-class",
+  "sonarjs/empty-string-repetition",
+  "sonarjs/no-collection-size-mischeck",
+  "sonarjs/no-empty-after-reluctant",
+  "sonarjs/no-empty-alternatives",
+  "sonarjs/no-empty-group",
+  "sonarjs/no-redundant-optional",
+  "sonarjs/no-small-switch",
+  "sonarjs/regex-complexity",
+  "sonarjs/single-char-in-character-classes",
+  "sonarjs/single-character-alternation",
+  "sonarjs/slow-regex",
+]);
 
 /**
  * Type-aware sonarjs rules that oxlint or another rule of the type-aware ESLint configuration already covers, with the rule that covers each.
  * The type-aware ESLint configuration leaves them out; `sonarjs/deprecation` alone took most of its time.
  */
 export const sonarRulesCoveredElsewhere: Record<string, string> = {
-  'sonarjs/deprecation': 'typescript/no-deprecated',
-  'sonarjs/jsx-no-leaked-render':
-    '@eslint-react/no-leaked-conditional-rendering',
-  'sonarjs/no-alphabetical-sort': 'typescript/require-array-sort-compare',
-  'sonarjs/no-array-delete': 'typescript/no-array-delete',
-  'sonarjs/no-control-regex': 'no-control-regex',
-  'sonarjs/no-empty-character-class': 'no-empty-character-class',
-  'sonarjs/no-invalid-regexp': 'no-invalid-regexp',
-  'sonarjs/no-misleading-character-class': 'no-misleading-character-class',
-  'sonarjs/no-regex-spaces': 'no-regex-spaces',
-  'sonarjs/no-useless-intersection':
-    'typescript/no-redundant-type-constituents',
-  'sonarjs/prefer-regexp-exec': 'typescript/prefer-regexp-exec',
-  'sonarjs/unused-import': 'no-unused-vars',
-}
+  "sonarjs/deprecation": "typescript/no-deprecated",
+  "sonarjs/jsx-no-leaked-render":
+    "@eslint-react/no-leaked-conditional-rendering",
+  "sonarjs/no-alphabetical-sort": "typescript/require-array-sort-compare",
+  "sonarjs/no-array-delete": "typescript/no-array-delete",
+  "sonarjs/no-control-regex": "no-control-regex",
+  "sonarjs/no-empty-character-class": "no-empty-character-class",
+  "sonarjs/no-invalid-regexp": "no-invalid-regexp",
+  "sonarjs/no-misleading-character-class": "no-misleading-character-class",
+  "sonarjs/no-regex-spaces": "no-regex-spaces",
+  "sonarjs/no-useless-intersection":
+    "typescript/no-redundant-type-constituents",
+  "sonarjs/prefer-regexp-exec": "typescript/prefer-regexp-exec",
+  "sonarjs/unused-import": "no-unused-vars",
+};
 
 const requiresTypeChecking = (name: string) => {
-  if (rulesWorkingWithoutTypes.has(name)) return false
-  const docs = sonarRules[name.replace(/^sonarjs\//, '')]?.meta?.docs as
+  if (rulesWorkingWithoutTypes.has(name)) return false;
+  const docs = sonarRules[name.replace(/^sonarjs\//, "")]?.meta?.docs as
     | { requiresTypeChecking?: boolean }
-    | undefined
-  return docs?.requiresTypeChecking === true
-}
+    | undefined;
+  return docs?.requiresTypeChecking === true;
+};
 
 const recommendedRules = Object.entries(configs.recommended.rules ?? {}).filter(
   ([, entry]) => isEnabled(entry),
-)
+);
 
 /**
  * Grove's adjustments to the sonarjs recommended rules.
  */
 const sonarRuleOverrides: Linter.RulesRecord = {
-  'sonarjs/cognitive-complexity': ['error', 20],
-}
+  "sonarjs/cognitive-complexity": ["error", 20],
+};
 
 /**
  * Returns the enabled sonarjs recommended rules, split by whether a rule needs TypeScript type information.
@@ -87,4 +87,4 @@ export const getSonarRuleSet = ({ typeAware }: { typeAware: boolean }) =>
       .filter(([name]) => requiresTypeChecking(name) === typeAware)
       .filter(([name]) => !(name in sonarRulesCoveredElsewhere))
       .map(([name, entry]) => [name, sonarRuleOverrides[name] ?? entry]),
-  ) as Linter.RulesRecord
+  ) as Linter.RulesRecord;

@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { oxlintNodeConfig } from '@schmiedmayerlab/grove-configurations/oxlint'
-import { defineConfig } from 'oxlint'
+import { oxlintNodeConfig } from "@schmiedmayerlab/grove-configurations/oxlint";
+import { defineConfig } from "oxlint";
 
 export default defineConfig({
   extends: [oxlintNodeConfig],
-})
+});

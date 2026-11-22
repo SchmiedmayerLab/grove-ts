@@ -6,17 +6,17 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
-    include: ['test/**/*.test.ts'],
+    environment: "node",
+    include: ["test/**/*.test.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'lcov'],
-      include: ['src/**/*.ts'],
+      provider: "v8",
+      reporter: ["text", "json", "lcov"],
+      include: ["src/**/*.ts"],
       thresholds: {
         branches: 95,
         functions: 95,
@@ -25,4 +25,4 @@ export default defineConfig({
       },
     },
   },
-})
+});

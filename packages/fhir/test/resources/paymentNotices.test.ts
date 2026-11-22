@@ -5,30 +5,30 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type PaymentNotice } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type PaymentNotice } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirPaymentNotice,
   type untypedPaymentNoticeSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('PaymentNotice Resource', () => {
-  it('should validate FHIR PaymentNotices from paymentNotices.json', () => {
-    type Schema = z.infer<typeof untypedPaymentNoticeSchema>
-    expectTypeOf<Schema>().toExtend<PaymentNotice>()
-    expectTypeOf<PaymentNotice>().toExtend<Schema>()
+describe("PaymentNotice Resource", () => {
+  it("should validate FHIR PaymentNotices from paymentNotices.json", () => {
+    type Schema = z.infer<typeof untypedPaymentNoticeSchema>;
+    expectTypeOf<Schema>().toExtend<PaymentNotice>();
+    expectTypeOf<PaymentNotice>().toExtend<Schema>();
 
-    const data = fs.readFileSync('test/resources/paymentNotices.json', 'utf-8')
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+    const data = fs.readFileSync("test/resources/paymentNotices.json", "utf-8");
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirPaymentNotice.parse(jsonValue).value
+      const parsedResource = FhirPaymentNotice.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

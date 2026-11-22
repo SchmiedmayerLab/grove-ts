@@ -11,6 +11,6 @@
  * oxlint runs JS plugins without type information, so these rules stay in ESLint.
  */
 export const typeAwareReactRules = [
-  '@eslint-react/no-leaked-conditional-rendering',
-  '@eslint-react/no-unused-props',
-] as const
+  "@eslint-react/no-leaked-conditional-rendering",
+  "@eslint-react/no-unused-props",
+] as const;

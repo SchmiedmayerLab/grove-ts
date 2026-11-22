@@ -6,33 +6,33 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type OperationOutcome } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type OperationOutcome } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirOperationOutcome,
   type untypedOperationOutcomeSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('OperationOutcome Resource', () => {
-  it('should validate FHIR operationOutcome from operationOutcomes.json', () => {
-    type Schema = z.infer<typeof untypedOperationOutcomeSchema>
-    expectTypeOf<Schema>().toExtend<OperationOutcome>()
-    expectTypeOf<OperationOutcome>().toExtend<Schema>()
+describe("OperationOutcome Resource", () => {
+  it("should validate FHIR operationOutcome from operationOutcomes.json", () => {
+    type Schema = z.infer<typeof untypedOperationOutcomeSchema>;
+    expectTypeOf<Schema>().toExtend<OperationOutcome>();
+    expectTypeOf<OperationOutcome>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/operationOutcomes.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/operationOutcomes.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirOperationOutcome.parse(jsonValue).value
+      const parsedResource = FhirOperationOutcome.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

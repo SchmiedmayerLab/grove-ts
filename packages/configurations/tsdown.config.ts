@@ -6,21 +6,21 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { defineConfig } from 'tsdown'
+import { defineConfig } from "tsdown";
 
 export default defineConfig({
   entry: [
-    'src/index.ts',
-    'src/eslint/typeAware.ts',
-    'src/oxlint/index.ts',
+    "src/index.ts",
+    "src/eslint/typeAware.ts",
+    "src/oxlint/index.ts",
     // Not exported: oxlint loads the sonarjs wrapper by its file path.
-    'src/oxlint/sonarjs.ts',
-    'src/oxfmt.ts',
-    'src/prettier.ts',
+    "src/oxlint/sonarjs.ts",
+    "src/oxfmt.ts",
+    "src/prettier.ts",
   ],
-  format: 'esm',
+  format: "esm",
   unbundle: true,
   clean: true,
-  outDir: 'dist',
+  outDir: "dist",
   dts: true,
-})
+});

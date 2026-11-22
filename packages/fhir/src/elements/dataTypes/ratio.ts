@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Ratio } from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
-import { elementSchema } from '../element.js'
-import { quantitySchema } from './quantity.js'
+import { type Ratio } from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
+import { elementSchema } from "../element.js";
+import { quantitySchema } from "./quantity.js";
 
 /**
  * Zod schema for FHIR Ratio data type.
@@ -19,9 +19,9 @@ export const untypedRatioSchema = z.lazy(() =>
     numerator: quantitySchema.optional(),
     denominator: quantitySchema.optional(),
   }),
-) satisfies ZodType<Ratio>
+) satisfies ZodType<Ratio>;
 
 /**
  * Zod schema for FHIR Ratio data type.
  */
-export const ratioSchema: ZodType<Ratio> = untypedRatioSchema
+export const ratioSchema: ZodType<Ratio> = untypedRatioSchema;

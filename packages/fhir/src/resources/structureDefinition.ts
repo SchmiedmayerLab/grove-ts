@@ -22,8 +22,8 @@ import {
   type StructureDefinitionSnapshot,
   type StructureDefinition,
   type Coding,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   addressSchema,
   annotationSchema,
@@ -62,7 +62,7 @@ import {
   uriSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   aggregationModeSchema,
   bindingStrengthSchema,
@@ -76,8 +76,8 @@ import {
   slicingRulesSchema,
   structureDefinitionDerivationSchema,
   structureDefinitionKindSchema,
-} from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const structureDefinitionMappingSchema: ZodType<StructureDefinitionMapping> =
   backboneElementSchema.extend({
@@ -89,7 +89,7 @@ const structureDefinitionMappingSchema: ZodType<StructureDefinitionMapping> =
     _name: elementSchema.optional(),
     comment: stringSchema.optional(),
     _comment: elementSchema.optional(),
-  })
+  });
 
 const structureDefinitionContextSchema: ZodType<StructureDefinitionContext> =
   backboneElementSchema.extend({
@@ -97,7 +97,7 @@ const structureDefinitionContextSchema: ZodType<StructureDefinitionContext> =
     _type: elementSchema.optional(),
     expression: stringSchema,
     _expression: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionSlicingDiscriminatorSchema: ZodType<ElementDefinitionSlicingDiscriminator> =
   backboneElementSchema.extend({
@@ -105,7 +105,7 @@ const elementDefinitionSlicingDiscriminatorSchema: ZodType<ElementDefinitionSlic
     _type: elementSchema.optional(),
     path: stringSchema,
     _path: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionSlicingSchema: ZodType<ElementDefinitionSlicing> =
   backboneElementSchema.extend({
@@ -118,7 +118,7 @@ const elementDefinitionSlicingSchema: ZodType<ElementDefinitionSlicing> =
     _ordered: elementSchema.optional(),
     rules: slicingRulesSchema,
     _rules: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionBaseSchema: ZodType<ElementDefinitionBase> =
   backboneElementSchema.extend({
@@ -127,7 +127,7 @@ const elementDefinitionBaseSchema: ZodType<ElementDefinitionBase> =
     min: unsignedIntSchema,
     max: stringSchema,
     _max: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionTypeSchema: ZodType<ElementDefinitionType> =
   backboneElementSchema.extend({
@@ -141,7 +141,7 @@ const elementDefinitionTypeSchema: ZodType<ElementDefinitionType> =
     _aggregation: elementSchema.array().optional(),
     versioning: referenceVersionRulesSchema.optional(),
     _versioning: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionExampleSchema: ZodType<ElementDefinitionExample> =
   backboneElementSchema.extend({
@@ -185,7 +185,7 @@ const elementDefinitionExampleSchema: ZodType<ElementDefinitionExample> =
     _valueUrl: elementSchema.optional(),
     valueUuid: stringSchema.optional(),
     _valueUuid: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionConstraintSchema: ZodType<ElementDefinitionConstraint> =
   backboneElementSchema.extend({
@@ -203,7 +203,7 @@ const elementDefinitionConstraintSchema: ZodType<ElementDefinitionConstraint> =
     _xpath: elementSchema.optional(),
     source: urlSchema.optional(),
     _source: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionBindingSchema: ZodType<ElementDefinitionBinding> =
   backboneElementSchema.extend({
@@ -213,7 +213,7 @@ const elementDefinitionBindingSchema: ZodType<ElementDefinitionBinding> =
     _description: elementSchema.optional(),
     valueSet: urlSchema.optional(),
     _valueSet: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionMappingSchema: ZodType<ElementDefinitionMapping> =
   backboneElementSchema.extend({
@@ -225,7 +225,7 @@ const elementDefinitionMappingSchema: ZodType<ElementDefinitionMapping> =
     _map: elementSchema.optional(),
     comment: stringSchema.optional(),
     _comment: elementSchema.optional(),
-  })
+  });
 
 const elementDefinitionSchema: ZodType<ElementDefinition> =
   backboneElementSchema.extend({
@@ -457,24 +457,24 @@ const elementDefinitionSchema: ZodType<ElementDefinition> =
     _isSummary: elementSchema.optional(),
     binding: elementDefinitionBindingSchema.optional(),
     mapping: elementDefinitionMappingSchema.array().optional(),
-  })
+  });
 
 const structureDefinitionSnapshotSchema: ZodType<StructureDefinitionSnapshot> =
   backboneElementSchema.extend({
     element: elementDefinitionSchema.array(),
-  })
+  });
 
 const structureDefinitionDifferentialSchema: ZodType<StructureDefinitionDifferential> =
   backboneElementSchema.extend({
     element: elementDefinitionSchema.array(),
-  })
+  });
 
 /**
  * Zod schema for FHIR StructureDefinition resource (untyped version).
  */
 export const untypedStructureDefinitionSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('StructureDefinition').readonly(),
+    resourceType: z.literal("StructureDefinition").readonly(),
     url: urlSchema,
     _url: elementSchema.optional(),
     identifier: identifierSchema.array().optional(),
@@ -521,13 +521,13 @@ export const untypedStructureDefinitionSchema = z.lazy(() =>
     snapshot: structureDefinitionSnapshotSchema.optional(),
     differential: structureDefinitionDifferentialSchema.optional(),
   }),
-) satisfies ZodType<StructureDefinition>
+) satisfies ZodType<StructureDefinition>;
 
 /**
  * Zod schema for FHIR StructureDefinition resource.
  */
 export const structureDefinitionSchema: ZodType<StructureDefinition> =
-  untypedStructureDefinitionSchema
+  untypedStructureDefinitionSchema;
 
 /**
  * Wrapper class for FHIR StructureDefinition resources.
@@ -543,7 +543,7 @@ export class FhirStructureDefinition extends FhirDomainResource<StructureDefinit
    * @returns A FhirStructureDefinition instance containing the validated resource
    */
   public static parse(value: unknown): FhirStructureDefinition {
-    return new FhirStructureDefinition(structureDefinitionSchema.parse(value))
+    return new FhirStructureDefinition(structureDefinitionSchema.parse(value));
   }
 
   /**
@@ -556,7 +556,7 @@ export class FhirStructureDefinition extends FhirDomainResource<StructureDefinit
     return FhirDomainResource.identifiersBySystem(
       this.value.identifier,
       ...system,
-    )
+    );
   }
 
   /**
@@ -569,7 +569,7 @@ export class FhirStructureDefinition extends FhirDomainResource<StructureDefinit
     return FhirDomainResource.identifierBySystem(
       this.value.identifier,
       ...system,
-    )
+    );
   }
 
   /**
@@ -579,7 +579,7 @@ export class FhirStructureDefinition extends FhirDomainResource<StructureDefinit
    * @returns Array of identifier values from matching types
    */
   public identifiersByType(...type: Coding[]): string[] {
-    return FhirDomainResource.identifiersByType(this.value.identifier, ...type)
+    return FhirDomainResource.identifiersByType(this.value.identifier, ...type);
   }
 
   /**
@@ -589,6 +589,6 @@ export class FhirStructureDefinition extends FhirDomainResource<StructureDefinit
    * @returns The first matching identifier value, or undefined if none found
    */
   public identifierByType(...type: Coding[]): string | undefined {
-    return FhirDomainResource.identifierByType(this.value.identifier, ...type)
+    return FhirDomainResource.identifierByType(this.value.identifier, ...type);
   }
 }

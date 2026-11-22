@@ -21,8 +21,8 @@ import {
   type CapabilityStatementRestSecurity,
   type CapabilityStatementSoftware,
   type CapabilityStatement,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   booleanSchema,
@@ -37,7 +37,7 @@ import {
   unsignedIntSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   capabilityStatementKindSchema,
   conditionalDeleteStatusSchema,
@@ -53,8 +53,8 @@ import {
   systemRestfulInteractionSchema,
   typeRestfulInteractionSchema,
   searchParameterTypeSchema,
-} from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const capabilityStatementSoftwareSchema: ZodType<CapabilityStatementSoftware> =
   backboneElementSchema.extend({
@@ -64,7 +64,7 @@ const capabilityStatementSoftwareSchema: ZodType<CapabilityStatementSoftware> =
     _version: elementSchema.optional(),
     releaseDate: dateTimeSchema.optional(),
     _releaseDate: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementImplementationSchema: ZodType<CapabilityStatementImplementation> =
   backboneElementSchema.extend({
@@ -73,7 +73,7 @@ const capabilityStatementImplementationSchema: ZodType<CapabilityStatementImplem
     url: urlSchema.optional(),
     _url: elementSchema.optional(),
     custodian: referenceSchema.optional(),
-  })
+  });
 
 const capabilityStatementRestSecuritySchema: ZodType<CapabilityStatementRestSecurity> =
   backboneElementSchema.extend({
@@ -82,7 +82,7 @@ const capabilityStatementRestSecuritySchema: ZodType<CapabilityStatementRestSecu
     service: codeableConceptSchema.array().optional(),
     description: stringSchema.optional(),
     _description: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementRestResourceInteractionSchema: ZodType<CapabilityStatementRestResourceInteraction> =
   backboneElementSchema.extend({
@@ -90,7 +90,7 @@ const capabilityStatementRestResourceInteractionSchema: ZodType<CapabilityStatem
     _code: elementSchema.optional(),
     documentation: stringSchema.optional(),
     _documentation: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementRestResourceSearchParamSchema: ZodType<CapabilityStatementRestResourceSearchParam> =
   backboneElementSchema.extend({
@@ -102,7 +102,7 @@ const capabilityStatementRestResourceSearchParamSchema: ZodType<CapabilityStatem
     _type: elementSchema.optional(),
     documentation: stringSchema.optional(),
     _documentation: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementRestResourceOperationSchema: ZodType<CapabilityStatementRestResourceOperation> =
   backboneElementSchema.extend({
@@ -112,7 +112,7 @@ const capabilityStatementRestResourceOperationSchema: ZodType<CapabilityStatemen
     _definition: elementSchema.optional(),
     documentation: stringSchema.optional(),
     _documentation: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementRestResourceSchema: ZodType<CapabilityStatementRestResource> =
   backboneElementSchema.extend({
@@ -153,7 +153,7 @@ const capabilityStatementRestResourceSchema: ZodType<CapabilityStatementRestReso
     operation: capabilityStatementRestResourceOperationSchema
       .array()
       .optional(),
-  })
+  });
 
 const capabilityStatementRestInteractionSchema: ZodType<CapabilityStatementRestInteraction> =
   backboneElementSchema.extend({
@@ -161,7 +161,7 @@ const capabilityStatementRestInteractionSchema: ZodType<CapabilityStatementRestI
     _code: elementSchema.optional(),
     documentation: stringSchema.optional(),
     _documentation: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementRestSchema: ZodType<CapabilityStatementRest> =
   backboneElementSchema.extend({
@@ -180,14 +180,14 @@ const capabilityStatementRestSchema: ZodType<CapabilityStatementRest> =
       .optional(),
     compartment: urlSchema.array().optional(),
     _compartment: elementSchema.array().optional(),
-  })
+  });
 
 const capabilityStatementMessagingEndpointSchema: ZodType<CapabilityStatementMessagingEndpoint> =
   backboneElementSchema.extend({
     protocol: codingSchema,
     address: urlSchema,
     _address: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementMessagingSupportedMessageSchema: ZodType<CapabilityStatementMessagingSupportedMessage> =
   backboneElementSchema.extend({
@@ -195,7 +195,7 @@ const capabilityStatementMessagingSupportedMessageSchema: ZodType<CapabilityStat
     _mode: elementSchema.optional(),
     definition: urlSchema,
     _definition: elementSchema.optional(),
-  })
+  });
 
 const capabilityStatementMessagingSchema: ZodType<CapabilityStatementMessaging> =
   backboneElementSchema.extend({
@@ -206,7 +206,7 @@ const capabilityStatementMessagingSchema: ZodType<CapabilityStatementMessaging> 
     supportedMessage: capabilityStatementMessagingSupportedMessageSchema
       .array()
       .optional(),
-  })
+  });
 
 const capabilityStatementDocumentSchema: ZodType<CapabilityStatementDocument> =
   backboneElementSchema.extend({
@@ -216,14 +216,14 @@ const capabilityStatementDocumentSchema: ZodType<CapabilityStatementDocument> =
     _documentation: elementSchema.optional(),
     profile: urlSchema,
     _profile: elementSchema.optional(),
-  })
+  });
 
 /**
  * Zod schema for FHIR CapabilityStatement resource (untyped version).
  */
 export const untypedCapabilityStatementSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('CapabilityStatement').readonly(),
+    resourceType: z.literal("CapabilityStatement").readonly(),
     url: urlSchema.optional(),
     _url: elementSchema.optional(),
     version: stringSchema.optional(),
@@ -269,13 +269,13 @@ export const untypedCapabilityStatementSchema = z.lazy(() =>
     messaging: capabilityStatementMessagingSchema.array().optional(),
     document: capabilityStatementDocumentSchema.array().optional(),
   }),
-) satisfies ZodType<CapabilityStatement>
+) satisfies ZodType<CapabilityStatement>;
 
 /**
  * Zod schema for FHIR CapabilityStatement resource.
  */
 export const capabilityStatementSchema: ZodType<CapabilityStatement> =
-  untypedCapabilityStatementSchema
+  untypedCapabilityStatementSchema;
 
 /**
  * Wrapper class for FHIR CapabilityStatement resources.
@@ -291,6 +291,6 @@ export class FhirCapabilityStatement extends FhirDomainResource<CapabilityStatem
    * @returns A FhirCapabilityStatement instance containing the validated resource
    */
   public static parse(value: unknown): FhirCapabilityStatement {
-    return new FhirCapabilityStatement(capabilityStatementSchema.parse(value))
+    return new FhirCapabilityStatement(capabilityStatementSchema.parse(value));
   }
 }

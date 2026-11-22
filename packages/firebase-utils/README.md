@@ -34,14 +34,14 @@ npm install @schmiedmayerlab/grove-firebase-utils
 ### Schema Converter
 
 ```typescript
-import { SchemaConverter } from '@schmiedmayerlab/grove-firebase-utils'
-import { z } from 'zod'
+import { SchemaConverter } from "@schmiedmayerlab/grove-firebase-utils";
+import { z } from "zod";
 
 const userSchema = z.object({
   name: z.string(),
   email: z.email(),
   age: z.number().optional(),
-})
+});
 
 const userConverter = new SchemaConverter({
   schema: userSchema,
@@ -50,22 +50,22 @@ const userConverter = new SchemaConverter({
     email: user.email,
     age: user.age,
   }),
-})
+});
 ```
 
 ### Localized Text
 
 ```typescript
-import { LocalizedText } from '@schmiedmayerlab/grove-firebase-utils'
+import { LocalizedText } from "@schmiedmayerlab/grove-firebase-utils";
 
 const greeting = new LocalizedText({
-  en: 'Hello',
-  es: 'Hola',
-  fr: 'Bonjour',
-})
+  en: "Hello",
+  es: "Hola",
+  fr: "Bonjour",
+});
 
-console.log(greeting.localize('fr')) // 'Bonjour'
-console.log(greeting.localize('de', 'en')) // 'Hello' (fallback)
+console.log(greeting.localize("fr")); // 'Bonjour'
+console.log(greeting.localize("de", "en")); // 'Hello' (fallback)
 ```
 
 ## License

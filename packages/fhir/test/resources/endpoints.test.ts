@@ -6,27 +6,27 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type Endpoint } from 'fhir/r4b.js'
-import { type z } from 'zod'
-import { FhirEndpoint, type untypedEndpointSchema } from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type Endpoint } from "fhir/r4b.js";
+import { type z } from "zod";
+import { FhirEndpoint, type untypedEndpointSchema } from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('Endpoint Resource', () => {
-  it('should validate FHIR endpoint from endpoints.json', () => {
-    type Schema = z.infer<typeof untypedEndpointSchema>
-    expectTypeOf<Schema>().toExtend<Endpoint>()
-    expectTypeOf<Endpoint>().toExtend<Schema>()
+describe("Endpoint Resource", () => {
+  it("should validate FHIR endpoint from endpoints.json", () => {
+    type Schema = z.infer<typeof untypedEndpointSchema>;
+    expectTypeOf<Schema>().toExtend<Endpoint>();
+    expectTypeOf<Endpoint>().toExtend<Schema>();
 
-    const data = fs.readFileSync('test/resources/endpoints.json', 'utf-8')
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+    const data = fs.readFileSync("test/resources/endpoints.json", "utf-8");
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirEndpoint.parse(jsonValue).value
+      const parsedResource = FhirEndpoint.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

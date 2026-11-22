@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-import { type OxfmtConfig } from 'oxfmt'
+import { type OxfmtConfig } from "oxfmt";
 
 /**
  * oxfmt's default formatting with Tailwind class sorting and import sorting.
@@ -17,9 +17,9 @@ export const oxfmtConfig: OxfmtConfig = {
   sortPackageJson: false,
   sortTailwindcss: {},
   sortImports: {
-    groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
-    internalPattern: ['@/'],
+    groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+    internalPattern: ["@/"],
     newlinesBetween: false,
     ignoreCase: true,
   },
-}
+};

@@ -13,21 +13,21 @@
 import {
   LocalizedText,
   localizedTextConverter,
-} from '@schmiedmayerlab/grove-firebase-utils'
-import { z } from 'zod'
-import { dateConverter } from '../utils/dateConverter.js'
-import { optionalish } from '../utils/optionalish.js'
-import { SchemaConverter } from '../utils/schemaConverter.js'
+} from "@schmiedmayerlab/grove-firebase-utils";
+import { z } from "zod";
+import { dateConverter } from "../utils/dateConverter.js";
+import { optionalish } from "../utils/optionalish.js";
+import { SchemaConverter } from "../utils/schemaConverter.js";
 
 /**
  * Enumeration of message types for categorizing notifications
  */
 export enum MessageType {
-  Information = 'Information',
-  Alert = 'Alert',
-  Reminder = 'Reminder',
-  Action = 'Action',
-  System = 'System',
+  Information = "Information",
+  Alert = "Alert",
+  Reminder = "Reminder",
+  Action = "Action",
+  System = "System",
 }
 
 /**
@@ -55,7 +55,7 @@ export const messageConverter = new SchemaConverter({
         ...content,
         title: content.title as LocalizedText,
         description: content.description as LocalizedText | undefined,
-      })
+      });
     }),
   encode: (object: Message) => {
     // Create an intermediate object to avoid TypeScript errors with date conversion
@@ -76,25 +76,25 @@ export const messageConverter = new SchemaConverter({
       isDismissible: object.isDismissible,
       reference: object.reference ?? null,
       data: object.data ?? null,
-    }
+    };
   },
-})
+});
 
 /**
  * Represents a notification message with localized content
  */
 export class Message {
   // Properties
-  readonly creationDate: Date
-  readonly dueDate?: Date
-  readonly completionDate?: Date
-  readonly type: MessageType
-  readonly title: LocalizedText
-  readonly description?: LocalizedText
-  readonly action?: string
-  readonly isDismissible: boolean
-  readonly reference?: string
-  readonly data?: Record<string, string>
+  readonly creationDate: Date;
+  readonly dueDate?: Date;
+  readonly completionDate?: Date;
+  readonly type: MessageType;
+  readonly title: LocalizedText;
+  readonly description?: LocalizedText;
+  readonly action?: string;
+  readonly isDismissible: boolean;
+  readonly reference?: string;
+  readonly data?: Record<string, string>;
 
   /**
    * Creates a new Message instance
@@ -112,27 +112,27 @@ export class Message {
    */
   // Constructor
   constructor(input: {
-    creationDate: Date
-    dueDate?: Date
-    completionDate?: Date
-    type: MessageType
-    title: LocalizedText
-    description?: LocalizedText
-    action?: string
-    isDismissible: boolean
-    reference?: string
-    data?: Record<string, string>
+    creationDate: Date;
+    dueDate?: Date;
+    completionDate?: Date;
+    type: MessageType;
+    title: LocalizedText;
+    description?: LocalizedText;
+    action?: string;
+    isDismissible: boolean;
+    reference?: string;
+    data?: Record<string, string>;
   }) {
-    this.creationDate = input.creationDate
-    this.dueDate = input.dueDate
-    this.completionDate = input.completionDate
-    this.type = input.type
-    this.title = input.title
-    this.description = input.description
-    this.action = input.action
-    this.isDismissible = input.isDismissible
-    this.reference = input.reference
-    this.data = input.data
+    this.creationDate = input.creationDate;
+    this.dueDate = input.dueDate;
+    this.completionDate = input.completionDate;
+    this.type = input.type;
+    this.title = input.title;
+    this.description = input.description;
+    this.action = input.action;
+    this.isDismissible = input.isDismissible;
+    this.reference = input.reference;
+    this.data = input.data;
   }
 
   /**
@@ -149,13 +149,13 @@ export class Message {
    */
   // Factory methods for common message types
   static createInformation(input: {
-    title: Record<string, string> | string
-    description?: Record<string, string> | string
-    action?: string
-    isDismissible?: boolean
-    reference?: string
-    data?: Record<string, string>
-    creationDate?: Date
+    title: Record<string, string> | string;
+    description?: Record<string, string> | string;
+    action?: string;
+    isDismissible?: boolean;
+    reference?: string;
+    data?: Record<string, string>;
+    creationDate?: Date;
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
@@ -169,7 +169,7 @@ export class Message {
       isDismissible: input.isDismissible ?? true,
       reference: input.reference,
       data: input.data,
-    })
+    });
   }
 
   /**
@@ -185,13 +185,13 @@ export class Message {
    * @returns A new Message instance of type Alert
    */
   static createAlert(input: {
-    title: Record<string, string> | string
-    description?: Record<string, string> | string
-    action?: string
-    isDismissible?: boolean
-    reference?: string
-    data?: Record<string, string>
-    creationDate?: Date
+    title: Record<string, string> | string;
+    description?: Record<string, string> | string;
+    action?: string;
+    isDismissible?: boolean;
+    reference?: string;
+    data?: Record<string, string>;
+    creationDate?: Date;
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
@@ -205,7 +205,7 @@ export class Message {
       isDismissible: input.isDismissible ?? true,
       reference: input.reference,
       data: input.data,
-    })
+    });
   }
 
   /**
@@ -222,14 +222,14 @@ export class Message {
    * @returns A new Message instance of type Reminder
    */
   static createReminder(input: {
-    title: Record<string, string> | string
-    description?: Record<string, string> | string
-    action?: string
-    dueDate?: Date
-    isDismissible?: boolean
-    reference?: string
-    data?: Record<string, string>
-    creationDate?: Date
+    title: Record<string, string> | string;
+    description?: Record<string, string> | string;
+    action?: string;
+    dueDate?: Date;
+    isDismissible?: boolean;
+    reference?: string;
+    data?: Record<string, string>;
+    creationDate?: Date;
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
@@ -244,7 +244,7 @@ export class Message {
       isDismissible: input.isDismissible ?? false,
       reference: input.reference,
       data: input.data,
-    })
+    });
   }
 
   /**
@@ -260,13 +260,13 @@ export class Message {
    * @returns A new Message instance of type Action
    */
   static createAction(input: {
-    title: Record<string, string> | string
-    description?: Record<string, string> | string
-    action: string
-    isDismissible?: boolean
-    reference?: string
-    data?: Record<string, string>
-    creationDate?: Date
+    title: Record<string, string> | string;
+    description?: Record<string, string> | string;
+    action: string;
+    isDismissible?: boolean;
+    reference?: string;
+    data?: Record<string, string>;
+    creationDate?: Date;
   }): Message {
     return new Message({
       creationDate: input.creationDate ?? new Date(),
@@ -280,6 +280,6 @@ export class Message {
       isDismissible: input.isDismissible ?? false,
       reference: input.reference,
       data: input.data,
-    })
+    });
   }
 }

@@ -15,16 +15,16 @@ export const jsonStringifyDeterministically = (object: unknown): string =>
   JSON.stringify(
     object,
     (_, value: unknown) => {
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
-        const record = value as Record<string, unknown>
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const record = value as Record<string, unknown>;
         return Object.keys(record)
           .sort()
           .reduce<Record<string, unknown>>((sorted, key) => {
-            sorted[key] = record[key]
-            return sorted
-          }, {})
+            sorted[key] = record[key];
+            return sorted;
+          }, {});
       }
-      return value
+      return value;
     },
     2,
-  )
+  );

@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { getEslintTypeAwareNodeConfig } from '@schmiedmayerlab/grove-configurations/eslint-type-aware'
+import { getEslintTypeAwareNodeConfig } from "@schmiedmayerlab/grove-configurations/eslint-type-aware";
 
 export default [
-  { ignores: ['examples/**', 'vitest.config.ts'] },
+  { ignores: ["examples/**", "vitest.config.ts"] },
   ...getEslintTypeAwareNodeConfig({ tsconfigRootDir: import.meta.dirname }),
-]
+];

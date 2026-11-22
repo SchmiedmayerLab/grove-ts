@@ -10,7 +10,7 @@
  * Utility for handling optional fields in schemas
  */
 
-import { type z } from 'zod'
+import { type z } from "zod";
 
 /**
  * Creates a schema that transforms null values to undefined
@@ -20,8 +20,8 @@ import { type z } from 'zod'
  */
 export const optionalish = <T extends z.ZodType>(schema: T) =>
   schema.nullable().transform<z.infer<T> | undefined>((val) => {
-    return val ?? undefined
-  })
+    return val ?? undefined;
+  });
 
 /**
  * Creates a schema that provides a default value when null is encountered
@@ -38,5 +38,5 @@ export const optionalishDefault = <T extends z.ZodType>(
     .nullable()
     .default(null)
     .transform<z.infer<T>>((val) => {
-      return val ?? defaultValue
-    })
+      return val ?? defaultValue;
+    });

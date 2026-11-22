@@ -14,17 +14,17 @@ multi-ecosystem-groups:
 updates:
   - package-ecosystem: github-actions
     directory: /
-    patterns: ['*']
+    patterns: ["*"]
     multi-ecosystem-group: weekly-dependencies
   # Dependabot updates pnpm-lock.yaml through the npm ecosystem, including the documentation site workspace.
   - package-ecosystem: npm
     directory: /
-    patterns: ['*']
+    patterns: ["*"]
     multi-ecosystem-group: weekly-dependencies
     ignore:
       # The typed linting stack currently supports TypeScript below 6.1.
       - dependency-name: typescript
-        update-types: ['version-update:semver-major']
+        update-types: ["version-update:semver-major"]
       # Grove's supported runtime is Node.js 24.
-      - dependency-name: '@types/node'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]

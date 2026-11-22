@@ -10,8 +10,8 @@
  * Firebase function for unregistering a device
  */
 
-import { z } from 'zod'
-import { type NotificationService } from '../services/notificationService.js'
+import { z } from "zod";
+import { type NotificationService } from "../services/notificationService.js";
 
 /**
  * Zod schema for unregister device input validation
@@ -19,18 +19,18 @@ import { type NotificationService } from '../services/notificationService.js'
 export const unregisterDeviceInputSchema = z.object({
   notificationToken: z.string(),
   platform: z.string(),
-})
+});
 
 /**
  * Type for unregister device input data
  */
-export type UnregisterDeviceInput = z.input<typeof unregisterDeviceInputSchema>
+export type UnregisterDeviceInput = z.input<typeof unregisterDeviceInputSchema>;
 
 /**
  * Type for unregister device output (undefined)
  */
 // eslint-disable-next-line sonarjs/redundant-type-aliases -- The named output type is part of the callable function contract.
-export type UnregisterDeviceOutput = undefined
+export type UnregisterDeviceOutput = undefined;
 
 /**
  * Create an unregister device function handler
@@ -44,10 +44,10 @@ export const createUnregisterDeviceHandler =
     data: UnregisterDeviceInput,
   ): Promise<UnregisterDeviceOutput> => {
     const { notificationToken, platform } =
-      unregisterDeviceInputSchema.parse(data)
+      unregisterDeviceInputSchema.parse(data);
     await notificationService.unregisterDevice(
       userId,
       notificationToken,
       platform,
-    )
-  }
+    );
+  };

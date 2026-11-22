@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-sidebar_label: 'Why Grove Web?'
+sidebar_label: "Why Grove Web?"
 ---
 
 # Why Grove Design System?

@@ -8,7 +8,7 @@
 
 // Synthetic suppression in a JavaScript file for the configuration tests.
 
-import { spawnSync } from 'node:child_process'
+import { spawnSync } from "node:child_process";
 
 // eslint-disable-next-line sonarjs/no-os-command-from-path -- The fixture runs the developer's git on purpose.
-export const status = () => spawnSync('git', ['status'])
+export const status = () => spawnSync("git", ["status"]);

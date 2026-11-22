@@ -9,22 +9,22 @@
 // Synthetic violations for the configuration tests.
 
 export function declared(value: number) {
-  return value
+  return value;
 }
 
-export const run = async () => Promise.resolve(1)
+export const run = async () => Promise.resolve(1);
 
 export const caller = () => {
-  run()
-}
+  run();
+};
 
-export const sorted = (values: number[]) => values.sort()
+export const sorted = (values: number[]) => values.sort();
 
-export const handler = (e: Event) => e.type
+export const handler = (e: Event) => e.type;
 
-export const repeated = /(a+)+$/
+export const repeated = /(a+)+$/;
 
 export const trimmed = (name: string) => {
-  name.trim()
-  return name
-}
+  name.trim();
+  return name;
+};

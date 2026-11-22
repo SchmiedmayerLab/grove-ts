@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { oxlintReactConfig } from '@schmiedmayerlab/grove-configurations/oxlint'
+import { oxlintReactConfig } from "@schmiedmayerlab/grove-configurations/oxlint";
 
 export default {
   extends: [oxlintReactConfig],
-}
+};

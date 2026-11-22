@@ -14,8 +14,8 @@ import {
   type BundleLink,
   type Bundle,
   type Resource,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   decimalSchema,
@@ -27,28 +27,28 @@ import {
   stringSchema,
   unsignedIntSchema,
   uriSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   bundleTypeSchema,
   bundleEntrySearchModeSchema,
   bundleEntryRequestMethodSchema,
-} from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
-import { fhirResourceSchema } from './fhirResource.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
+import { fhirResourceSchema } from "./fhirResource.js";
 
 const bundleLinkSchema: ZodType<BundleLink> = backboneElementSchema.extend({
   relation: stringSchema,
   _relation: elementSchema.optional(),
   url: uriSchema,
   _url: elementSchema.optional(),
-})
+});
 
 const bundleEntrySearchSchema: ZodType<BundleEntrySearch> =
   backboneElementSchema.extend({
     mode: bundleEntrySearchModeSchema.optional(),
     _mode: elementSchema.optional(),
     score: decimalSchema.optional(),
-  })
+  });
 
 const bundleEntryRequestSchema: ZodType<BundleEntryRequest> =
   backboneElementSchema.extend({
@@ -64,7 +64,7 @@ const bundleEntryRequestSchema: ZodType<BundleEntryRequest> =
     _ifMatch: elementSchema.optional(),
     ifNoneMatch: stringSchema.optional(),
     _ifNoneMatch: elementSchema.optional(),
-  })
+  });
 
 const bundleEntryResponseSchema: ZodType<BundleEntryResponse> =
   backboneElementSchema.extend({
@@ -77,9 +77,9 @@ const bundleEntryResponseSchema: ZodType<BundleEntryResponse> =
     lastModified: instantSchema.optional(),
     _lastModified: elementSchema.optional(),
     get outcome() {
-      return fhirResourceSchema.optional()
+      return fhirResourceSchema.optional();
     },
-  })
+  });
 
 /**
  * Creates a BundleEntry schema for the given resource type.
@@ -99,7 +99,7 @@ const bundleEntrySchema = <R extends Resource>(
     search: bundleEntrySearchSchema.optional(),
     request: bundleEntryRequestSchema.optional(),
     response: bundleEntryResponseSchema.optional(),
-  })
+  });
 
 /**
  * Creates an untyped Bundle schema for the given resource type.
@@ -109,7 +109,7 @@ const bundleEntrySchema = <R extends Resource>(
  */
 export const untypedBundleSchema = <R extends Resource>(schema: ZodType<R>) =>
   resourceSchema.extend({
-    resourceType: z.literal('Bundle').readonly(),
+    resourceType: z.literal("Bundle").readonly(),
     identifier: identifierSchema.optional(),
     type: bundleTypeSchema,
     _type: elementSchema.optional(),
@@ -119,10 +119,10 @@ export const untypedBundleSchema = <R extends Resource>(schema: ZodType<R>) =>
     _total: elementSchema.optional(),
     link: bundleLinkSchema.array().optional(),
     get entry() {
-      return bundleEntrySchema(schema).array().optional()
+      return bundleEntrySchema(schema).array().optional();
     },
     signature: signatureSchema.optional(),
-  }) satisfies ZodType<Bundle<R>>
+  }) satisfies ZodType<Bundle<R>>;
 
 /**
  * Creates a Bundle schema for the given resource type.
@@ -132,20 +132,20 @@ export const untypedBundleSchema = <R extends Resource>(schema: ZodType<R>) =>
  */
 export const bundleSchema = <R extends Resource>(
   schema: ZodType<R>,
-): ZodType<Bundle<R>> => untypedBundleSchema(schema)
+): ZodType<Bundle<R>> => untypedBundleSchema(schema);
 
 /**
  * Zod schema for FHIR Bundle resource (untyped version, generic).
  */
 export const untypedGenericBundleSchema = z.lazy(() => {
-  const resourceCompatibleSchema: ZodType<Resource> = fhirResourceSchema
-  return untypedBundleSchema(resourceCompatibleSchema)
-})
+  const resourceCompatibleSchema: ZodType<Resource> = fhirResourceSchema;
+  return untypedBundleSchema(resourceCompatibleSchema);
+});
 
 /**
  * Zod schema for FHIR Bundle resource (generic).
  */
-export const genericBundleSchema: ZodType<Bundle> = untypedGenericBundleSchema
+export const genericBundleSchema: ZodType<Bundle> = untypedGenericBundleSchema;
 
 /**
  * Wrapper class for FHIR Bundle resources.
@@ -165,7 +165,7 @@ export class FhirBundle<R extends Resource> extends FhirDomainResource<
    * @returns A FhirBundle instance containing any FHIR resource
    */
   public static parseGeneric(value: unknown): FhirBundle<Resource> {
-    return new FhirBundle(genericBundleSchema.parse(value))
+    return new FhirBundle(genericBundleSchema.parse(value));
   }
 
   /**
@@ -180,7 +180,7 @@ export class FhirBundle<R extends Resource> extends FhirDomainResource<
     value: unknown,
     schema: ZodType<R>,
   ): FhirBundle<R> {
-    return new FhirBundle(bundleSchema(schema).parse(value))
+    return new FhirBundle(bundleSchema(schema).parse(value));
   }
 
   // Functions
@@ -200,7 +200,7 @@ export class FhirBundle<R extends Resource> extends FhirDomainResource<
    * ```
    */
   public findResources<T extends R>(
-    resourceType: T['resourceType'],
+    resourceType: T["resourceType"],
     predicate?: (resource: T) => boolean,
   ): T[] {
     return (this.value.entry ?? [])
@@ -209,7 +209,7 @@ export class FhirBundle<R extends Resource> extends FhirDomainResource<
           entry.resource?.resourceType === resourceType &&
           (predicate ? predicate(entry.resource as T) : true),
       )
-      .map((entry) => entry.resource as T)
+      .map((entry) => entry.resource as T);
   }
 
   /**
@@ -226,13 +226,13 @@ export class FhirBundle<R extends Resource> extends FhirDomainResource<
    * ```
    */
   public resourceById<T extends R>(
-    resourceType: T['resourceType'],
+    resourceType: T["resourceType"],
     id: string,
   ): T | undefined {
     return this.findResources<T>(
       resourceType,
       (resource) => resource.id === id,
-    ).at(0)
+    ).at(0);
   }
 
   /**
@@ -247,8 +247,8 @@ export class FhirBundle<R extends Resource> extends FhirDomainResource<
    * ```
    */
   public findResourceByReference(reference: string): R | undefined {
-    const [resourceType, id] = reference.split('/')
-    if (!resourceType || !id) return undefined
-    return this.resourceById(resourceType, id)
+    const [resourceType, id] = reference.split("/");
+    if (!resourceType || !id) return undefined;
+    return this.resourceById(resourceType, id);
   }
 }

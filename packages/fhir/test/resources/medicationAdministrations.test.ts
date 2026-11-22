@@ -6,33 +6,34 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type MedicationAdministration } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type MedicationAdministration } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirMedicationAdministration,
   type untypedMedicationAdministrationSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('MedicationAdministration Resource', () => {
-  it('should validate FHIR medication administrations from medicationAdministrations.json', () => {
-    type Schema = z.infer<typeof untypedMedicationAdministrationSchema>
-    expectTypeOf<Schema>().toExtend<MedicationAdministration>()
-    expectTypeOf<MedicationAdministration>().toExtend<Schema>()
+describe("MedicationAdministration Resource", () => {
+  it("should validate FHIR medication administrations from medicationAdministrations.json", () => {
+    type Schema = z.infer<typeof untypedMedicationAdministrationSchema>;
+    expectTypeOf<Schema>().toExtend<MedicationAdministration>();
+    expectTypeOf<MedicationAdministration>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/medicationAdministrations.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/medicationAdministrations.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirMedicationAdministration.parse(jsonValue).value
+      const parsedResource =
+        FhirMedicationAdministration.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

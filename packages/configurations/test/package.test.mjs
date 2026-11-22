@@ -6,23 +6,23 @@
 // SPDX-License-Identifier: MIT
 //
 
-import assert from 'node:assert/strict'
-import test from 'node:test'
+import assert from "node:assert/strict";
+import test from "node:test";
 import {
   getEslintNodeConfig,
   getEslintReactConfig,
   prettierConfig,
-} from '@schmiedmayerlab/grove-configurations'
+} from "@schmiedmayerlab/grove-configurations";
 
-test('loads the published ESM configuration entry point', () => {
-  const options = { tsconfigRootDir: import.meta.dirname }
+test("loads the published ESM configuration entry point", () => {
+  const options = { tsconfigRootDir: import.meta.dirname };
 
-  assert.ok(getEslintNodeConfig(options).length > 0)
-  assert.ok(getEslintReactConfig(options).length > 0)
+  assert.ok(getEslintNodeConfig(options).length > 0);
+  assert.ok(getEslintReactConfig(options).length > 0);
   assert.ok(
     prettierConfig !== null &&
-      typeof prettierConfig === 'object' &&
+      typeof prettierConfig === "object" &&
       !Array.isArray(prettierConfig) &&
       Array.isArray(prettierConfig.plugins),
-  )
-})
+  );
+});

@@ -6,76 +6,76 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { execFileSync } from 'node:child_process'
-import { readPublicWorkspacePackages, repositoryRoot } from './workspaces.mjs'
+import { execFileSync } from "node:child_process";
+import { readPublicWorkspacePackages, repositoryRoot } from "./workspaces.mjs";
 
-const publicPackages = await readPublicWorkspacePackages()
+const publicPackages = await readPublicWorkspacePackages();
 const workspaceNames = new Set(
   publicPackages.map(({ manifest }) => manifest.name),
-)
+);
 
 const packOutput = execFileSync(
-  'pnpm',
+  "pnpm",
   [
-    '--recursive',
+    "--recursive",
     ...publicPackages.flatMap(({ workspace }) => [
-      '--filter',
+      "--filter",
       `./${workspace}`,
     ]),
-    'pack',
-    '--json',
-    '--dry-run',
+    "pack",
+    "--json",
+    "--dry-run",
   ],
   {
     cwd: repositoryRoot,
-    encoding: 'utf8',
+    encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
   },
-)
-const packMetadata = JSON.parse(packOutput)
+);
+const packMetadata = JSON.parse(packOutput);
 // pnpm returns an array for several packages and a single object for one.
-const packs = Array.isArray(packMetadata) ? packMetadata : [packMetadata]
-const packsByName = new Map(packs.map((pack) => [pack.name, pack]))
-const errors = []
+const packs = Array.isArray(packMetadata) ? packMetadata : [packMetadata];
+const packsByName = new Map(packs.map((pack) => [pack.name, pack]));
+const errors = [];
 
 const check = (condition, message) => {
-  if (!condition) errors.push(message)
-}
+  if (!condition) errors.push(message);
+};
 
 const exportTargets = (value) => {
-  if (typeof value === 'string') return [value]
-  if (Array.isArray(value)) return value.flatMap(exportTargets)
-  if (value && typeof value === 'object') {
-    return Object.values(value).flatMap(exportTargets)
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(exportTargets);
+  if (value && typeof value === "object") {
+    return Object.values(value).flatMap(exportTargets);
   }
-  return []
-}
+  return [];
+};
 
 const forbiddenPackageFile = (path) =>
   /(^|\/)(coverage|test|tests|\.storybook)(\/|$)/.test(path) ||
   /^dist\/src\/.*\.(?:[cm]?js|d\.ts)(?:\.map)?$/.test(path) ||
   /\.(spec|stories|test)\./.test(path) ||
-  path.endsWith('.tsbuildinfo') ||
-  path.includes('eslint_report')
+  path.endsWith(".tsbuildinfo") ||
+  path.includes("eslint_report");
 
 for (const { manifest } of publicPackages) {
-  const label = manifest.name
-  const pack = packsByName.get(label)
-  check(pack, `${label}: pnpm did not produce package metadata`)
-  if (!pack) continue
+  const label = manifest.name;
+  const pack = packsByName.get(label);
+  check(pack, `${label}: pnpm did not produce package metadata`);
+  if (!pack) continue;
 
-  const packageFiles = new Set(pack.files.map(({ path }) => path))
+  const packageFiles = new Set(pack.files.map(({ path }) => path));
   const licenseCount = pack.files.filter(
-    ({ path }) => path === 'LICENSE',
-  ).length
-  check(licenseCount === 1, `${label}: expected exactly one LICENSE file`)
-  check(packageFiles.has('README.md'), `${label}: README.md is not published`)
+    ({ path }) => path === "LICENSE",
+  ).length;
+  check(licenseCount === 1, `${label}: expected exactly one LICENSE file`);
+  check(packageFiles.has("README.md"), `${label}: README.md is not published`);
 
   for (const { path } of pack.files) {
     check(
       !forbiddenPackageFile(path),
       `${label}: unexpected package file ${path}`,
-    )
+    );
   }
 
   for (const target of [
@@ -83,46 +83,46 @@ for (const { manifest } of publicPackages) {
     manifest.types,
     ...exportTargets(manifest.exports),
   ].filter(Boolean)) {
-    const normalizedTarget = target.replace(/^\.\//, '')
+    const normalizedTarget = target.replace(/^\.\//, "");
     check(
       packageFiles.has(normalizedTarget),
       `${label}: package target ${target} is missing`,
-    )
+    );
   }
 
-  const exportKeys = new Set(Object.keys(manifest.exports ?? {}))
+  const exportKeys = new Set(Object.keys(manifest.exports ?? {}));
   for (const path of packageFiles) {
     const entry = path.match(
       /^dist\/(components|molecules|modules|utils)\/([^/]+)\.js$/,
-    )
-    if (!entry) continue
+    );
+    if (!entry) continue;
 
-    const expectedExport = `./${entry[1]}/${entry[2]}`
+    const expectedExport = `./${entry[1]}/${entry[2]}`;
     const packageUsesSubpath = [...exportKeys].some((key) =>
       key.startsWith(`./${entry[1]}/`),
-    )
-    if (!packageUsesSubpath) continue
+    );
+    if (!packageUsesSubpath) continue;
 
     check(
       exportKeys.has(expectedExport),
       `${label}: built entry ${path} is not exported as ${expectedExport}`,
-    )
+    );
   }
 
   for (const dependencyField of [
-    'dependencies',
-    'optionalDependencies',
-    'peerDependencies',
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
   ]) {
     for (const [dependencyName, dependencyVersion] of Object.entries(
       manifest[dependencyField] ?? {},
     )) {
-      if (!workspaceNames.has(dependencyName)) continue
+      if (!workspaceNames.has(dependencyName)) continue;
 
       check(
-        dependencyVersion === 'workspace:*',
+        dependencyVersion === "workspace:*",
         `${label}: ${dependencyName} must use the workspace:* protocol`,
-      )
+      );
     }
   }
 }
@@ -130,15 +130,15 @@ for (const { manifest } of publicPackages) {
 check(
   packs.length === publicPackages.length,
   `expected ${publicPackages.length} packages but pnpm described ${packs.length}`,
-)
+);
 check(
   new Set(publicPackages.map(({ manifest }) => manifest.version)).size === 1,
-  'all published workspace packages must use the same version',
-)
+  "all published workspace packages must use the same version",
+);
 
 if (errors.length > 0) {
-  throw new Error(`Package verification failed:\n- ${errors.join('\n- ')}`)
+  throw new Error(`Package verification failed:\n- ${errors.join("\n- ")}`);
 }
 
-const fileCount = packs.reduce((total, pack) => total + pack.files.length, 0)
-console.log(`Verified ${packs.length} packages containing ${fileCount} files.`)
+const fileCount = packs.reduce((total, pack) => total + pack.files.length, 0);
+console.log(`Verified ${packs.length} packages containing ${fileCount} files.`);

@@ -6,33 +6,33 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type SubscriptionStatus } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type SubscriptionStatus } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirSubscriptionStatus,
   type untypedSubscriptionStatusSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('SubscriptionStatus Resource', () => {
-  it('should validate FHIR subscription status from subscriptionStatuses.json', () => {
-    type Schema = z.infer<typeof untypedSubscriptionStatusSchema>
-    expectTypeOf<Schema>().toExtend<SubscriptionStatus>()
-    expectTypeOf<SubscriptionStatus>().toExtend<Schema>()
+describe("SubscriptionStatus Resource", () => {
+  it("should validate FHIR subscription status from subscriptionStatuses.json", () => {
+    type Schema = z.infer<typeof untypedSubscriptionStatusSchema>;
+    expectTypeOf<Schema>().toExtend<SubscriptionStatus>();
+    expectTypeOf<SubscriptionStatus>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/subscriptionStatuses.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/subscriptionStatuses.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirSubscriptionStatus.parse(jsonValue).value
+      const parsedResource = FhirSubscriptionStatus.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

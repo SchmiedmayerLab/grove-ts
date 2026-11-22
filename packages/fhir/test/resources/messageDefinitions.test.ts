@@ -6,33 +6,33 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type MessageDefinition } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type MessageDefinition } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirMessageDefinition,
   type untypedMessageDefinitionSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('MessageDefinition Resource', () => {
-  it('should validate FHIR message definition from messageDefinitions.json', () => {
-    type Schema = z.infer<typeof untypedMessageDefinitionSchema>
-    expectTypeOf<Schema>().toExtend<MessageDefinition>()
-    expectTypeOf<MessageDefinition>().toExtend<Schema>()
+describe("MessageDefinition Resource", () => {
+  it("should validate FHIR message definition from messageDefinitions.json", () => {
+    type Schema = z.infer<typeof untypedMessageDefinitionSchema>;
+    expectTypeOf<Schema>().toExtend<MessageDefinition>();
+    expectTypeOf<MessageDefinition>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/messageDefinitions.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/messageDefinitions.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirMessageDefinition.parse(jsonValue).value
+      const parsedResource = FhirMessageDefinition.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

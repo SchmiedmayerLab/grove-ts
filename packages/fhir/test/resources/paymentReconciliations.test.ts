@@ -5,33 +5,33 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type PaymentReconciliation } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type PaymentReconciliation } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirPaymentReconciliation,
   type untypedPaymentReconciliationSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('PaymentReconciliation Resource', () => {
-  it('should validate FHIR PaymentReconciliations from paymentReconciliations.json', () => {
-    type Schema = z.infer<typeof untypedPaymentReconciliationSchema>
-    expectTypeOf<Schema>().toExtend<PaymentReconciliation>()
-    expectTypeOf<PaymentReconciliation>().toExtend<Schema>()
+describe("PaymentReconciliation Resource", () => {
+  it("should validate FHIR PaymentReconciliations from paymentReconciliations.json", () => {
+    type Schema = z.infer<typeof untypedPaymentReconciliationSchema>;
+    expectTypeOf<Schema>().toExtend<PaymentReconciliation>();
+    expectTypeOf<PaymentReconciliation>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/paymentReconciliations.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/paymentReconciliations.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirPaymentReconciliation.parse(jsonValue).value
+      const parsedResource = FhirPaymentReconciliation.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

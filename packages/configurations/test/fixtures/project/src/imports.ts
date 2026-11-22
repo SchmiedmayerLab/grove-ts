@@ -6,6 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { declared } from './functions.ts'
+import { declared } from "./functions.ts";
 
-export default declared(1)
+export default declared(1);

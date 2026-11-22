@@ -15,7 +15,7 @@
 export const average = (values: number[]): number | undefined =>
   values.length === 0
     ? undefined
-    : values.reduce((a, b) => a + b, 0) / values.length
+    : values.reduce((a, b) => a + b, 0) / values.length;
 
 /**
  * Split an array into chunks of the specified size.
@@ -26,7 +26,7 @@ export const average = (values: number[]): number | undefined =>
 export const chunks = <T>(array: T[], size: number): T[][] =>
   Array.from({ length: Math.ceil(array.length / size) }, (_, index) =>
     array.slice(index * size, (index + 1) * size),
-  )
+  );
 
 /**
  * Filter out undefined and null values from an array.
@@ -36,7 +36,7 @@ export const chunks = <T>(array: T[], size: number): T[][] =>
 export const compact = <T>(array: Array<T | undefined | null>): T[] =>
   array.flatMap((value) =>
     value !== undefined && value !== null ? [value] : [],
-  )
+  );
 
 /**
  * Map an array to a new array, filtering out undefined and null results.
@@ -49,11 +49,11 @@ export const compactMap = <T, V>(
   map: (arg0: T) => V | undefined | null,
 ): V[] =>
   array.flatMap((value) => {
-    const mappedValue = map(value)
+    const mappedValue = map(value);
     return mappedValue !== undefined && mappedValue !== null
       ? [mappedValue]
-      : []
-  })
+      : [];
+  });
 
 /**
  * Calculate the median of an array of numbers.
@@ -65,7 +65,7 @@ export const median = (values: number[]): number | undefined =>
   presortedPercentile(
     [...values].sort((a, b) => a - b),
     0.5,
-  )
+  );
 
 /**
  * Calculate the median of an already sorted array of numbers.
@@ -74,7 +74,7 @@ export const median = (values: number[]): number | undefined =>
  * @returns The median value, or undefined if array is empty
  */
 export const presortedMedian = (values: number[]): number | undefined =>
-  presortedPercentile(values, 0.5)
+  presortedPercentile(values, 0.5);
 
 /**
  * Calculate a percentile of an array of numbers.
@@ -90,7 +90,7 @@ export const percentile = (
   presortedPercentile(
     [...values].sort((a, b) => a - b),
     percentile,
-  )
+  );
 
 /**
  * Calculate a percentile of an already sorted array of numbers.
@@ -103,21 +103,21 @@ export const presortedPercentile = (
   values: number[],
   percentile: number,
 ): number | undefined => {
-  if (values.length === 0) return undefined
-  const index = (values.length - 1) * percentile
-  const lowerIndex = Math.floor(index)
-  const upperIndex = Math.ceil(index)
+  if (values.length === 0) return undefined;
+  const index = (values.length - 1) * percentile;
+  const lowerIndex = Math.floor(index);
+  const upperIndex = Math.ceil(index);
 
   if (lowerIndex === upperIndex) {
-    return values[lowerIndex]
+    return values[lowerIndex];
   } else {
-    const weight = index - lowerIndex
-    const lowerValue = values[lowerIndex]
-    const upperValue = values[upperIndex]
-    if (lowerValue == null || upperValue == null) return undefined
-    return lowerValue * (1 - weight) + upperValue * weight
+    const weight = index - lowerIndex;
+    const lowerValue = values[lowerIndex];
+    const upperValue = values[upperIndex];
+    if (lowerValue == null || upperValue == null) return undefined;
+    return lowerValue * (1 - weight) + upperValue * weight;
   }
-}
+};
 
 /**
  * Calculate what percentage of values in an array match a given predicate.
@@ -130,8 +130,8 @@ export const percentage = <T>(
   values: T[],
   filter: (value: T) => boolean,
 ): number | undefined => {
-  const total = values.length
-  if (total === 0) return undefined
-  const count = values.filter(filter).length
-  return (count / total) * 100
-}
+  const total = values.length;
+  if (total === 0) return undefined;
+  const count = values.filter(filter).length;
+  return (count / total) * 100;
+};

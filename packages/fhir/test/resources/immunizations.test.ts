@@ -6,30 +6,30 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type Immunization } from 'fhir/r4b.js'
-import { type z } from 'zod'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type Immunization } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirImmunization,
   type untypedImmunizationSchema,
-} from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('Immunization Resource', () => {
-  it('should validate FHIR immunizations from immunizations.json', () => {
-    type Schema = z.infer<typeof untypedImmunizationSchema>
-    expectTypeOf<Schema>().toExtend<Immunization>()
-    expectTypeOf<Immunization>().toExtend<Schema>()
+describe("Immunization Resource", () => {
+  it("should validate FHIR immunizations from immunizations.json", () => {
+    type Schema = z.infer<typeof untypedImmunizationSchema>;
+    expectTypeOf<Schema>().toExtend<Immunization>();
+    expectTypeOf<Immunization>().toExtend<Schema>();
 
-    const data = fs.readFileSync('test/resources/immunizations.json', 'utf-8')
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+    const data = fs.readFileSync("test/resources/immunizations.json", "utf-8");
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirImmunization.parse(jsonValue).value
+      const parsedResource = FhirImmunization.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

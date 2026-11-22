@@ -6,29 +6,29 @@
 // SPDX-License-Identifier: MIT
 //
 
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vitest/config'
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
 
-const directory = path.dirname(fileURLToPath(import.meta.url))
+const directory = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@schmiedmayerlab/grove-firebase-utils': path.resolve(
+      "@schmiedmayerlab/grove-firebase-utils": path.resolve(
         directory,
-        '../firebase-utils/src/index.ts',
+        "../firebase-utils/src/index.ts",
       ),
     },
   },
   test: {
     globals: true,
-    environment: 'node',
-    include: ['test/**/*.test.ts'],
+    environment: "node",
+    include: ["test/**/*.test.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'lcov'],
-      include: ['src/**/*.ts'],
+      provider: "v8",
+      reporter: ["text", "json", "lcov"],
+      include: ["src/**/*.ts"],
       thresholds: {
         branches: 74,
         functions: 90,
@@ -37,4 +37,4 @@ export default defineConfig({
       },
     },
   },
-})
+});

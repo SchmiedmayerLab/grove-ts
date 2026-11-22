@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Coding, type Slot } from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+import { type Coding, type Slot } from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   codeableConceptSchema,
   dateTimeSchema,
@@ -16,16 +16,16 @@ import {
   identifierSchema,
   referenceSchema,
   stringSchema,
-} from '../elements/index.js'
-import { slotStatusSchema } from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "../elements/index.js";
+import { slotStatusSchema } from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 /**
  * Zod schema for FHIR Slot resource (untyped version).
  */
 export const untypedSlotSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('Slot').readonly(),
+    resourceType: z.literal("Slot").readonly(),
     identifier: identifierSchema.array().optional(),
     serviceCategory: codeableConceptSchema.array().optional(),
     serviceType: codeableConceptSchema.array().optional(),
@@ -43,12 +43,12 @@ export const untypedSlotSchema = z.lazy(() =>
     comment: stringSchema.optional(),
     _comment: elementSchema.optional(),
   }),
-) satisfies ZodType<Slot>
+) satisfies ZodType<Slot>;
 
 /**
  * Zod schema for FHIR Slot resource.
  */
-export const slotSchema: ZodType<Slot> = untypedSlotSchema
+export const slotSchema: ZodType<Slot> = untypedSlotSchema;
 
 /**
  * Wrapper class for FHIR Slot resources.
@@ -64,7 +64,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * @returns A FhirSlot instance containing the validated resource
    */
   public static parse(value: unknown): FhirSlot {
-    return new FhirSlot(slotSchema.parse(value))
+    return new FhirSlot(slotSchema.parse(value));
   }
 
   /**
@@ -79,7 +79,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public get startDate(): Date {
-    return new Date(this.value.start)
+    return new Date(this.value.start);
   }
 
   /**
@@ -94,7 +94,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public get endDate(): Date {
-    return new Date(this.value.end)
+    return new Date(this.value.end);
   }
 
   /**
@@ -109,7 +109,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public get duration(): number {
-    return this.endDate.getTime() - this.startDate.getTime()
+    return this.endDate.getTime() - this.startDate.getTime();
   }
 
   /**
@@ -126,7 +126,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public isPast(asOfDate: Date = new Date()): boolean {
-    return this.endDate < asOfDate
+    return this.endDate < asOfDate;
   }
 
   /**
@@ -141,7 +141,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * ```
    */
   public get specialtyDisplays(): string[] {
-    return FhirDomainResource.codeableConceptDisplays(this.value.specialty)
+    return FhirDomainResource.codeableConceptDisplays(this.value.specialty);
   }
 
   /**
@@ -154,7 +154,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
     return FhirDomainResource.identifiersBySystem(
       this.value.identifier,
       ...system,
-    )
+    );
   }
 
   /**
@@ -167,7 +167,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
     return FhirDomainResource.identifierBySystem(
       this.value.identifier,
       ...system,
-    )
+    );
   }
 
   /**
@@ -177,7 +177,7 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * @returns Array of identifier values matching any provided Coding
    */
   public identifiersByType(...type: Coding[]): string[] {
-    return FhirDomainResource.identifiersByType(this.value.identifier, ...type)
+    return FhirDomainResource.identifiersByType(this.value.identifier, ...type);
   }
 
   /**
@@ -187,6 +187,6 @@ export class FhirSlot extends FhirDomainResource<Slot> {
    * @returns The first matching identifier value, or undefined if none match
    */
   public identifierByType(...type: Coding[]): string | undefined {
-    return FhirDomainResource.identifierByType(this.value.identifier, ...type)
+    return FhirDomainResource.identifierByType(this.value.identifier, ...type);
   }
 }

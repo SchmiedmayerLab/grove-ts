@@ -10,8 +10,8 @@ import {
   type MessageDefinitionAllowedResponse,
   type MessageDefinitionFocus,
   type MessageDefinition,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   booleanSchema,
@@ -27,14 +27,14 @@ import {
   stringSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   fhirResourceTypeSchema,
   messageDefinitionCategorySchema,
   messageDefinitionResponseRequiredSchema,
   publicationStatusSchema,
-} from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const messageDefinitionAllowedResponseSchema: ZodType<MessageDefinitionAllowedResponse> =
   backboneElementSchema.extend({
@@ -42,7 +42,7 @@ const messageDefinitionAllowedResponseSchema: ZodType<MessageDefinitionAllowedRe
     _message: elementSchema.optional(),
     situation: markdownSchema.optional(),
     _situation: elementSchema.optional(),
-  })
+  });
 
 const messageDefinitionFocusSchema: ZodType<MessageDefinitionFocus> =
   backboneElementSchema.extend({
@@ -53,14 +53,14 @@ const messageDefinitionFocusSchema: ZodType<MessageDefinitionFocus> =
     min: intSchema,
     profile: urlSchema.optional(),
     _profile: elementSchema.optional(),
-  })
+  });
 
 /**
  * Zod schema for FHIR MessageDefinition resource (untyped version).
  */
 export const untypedMessageDefinitionSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('MessageDefinition').readonly(),
+    resourceType: z.literal("MessageDefinition").readonly(),
     allowedResponse: messageDefinitionAllowedResponseSchema.array().optional(),
     base: urlSchema.optional(),
     _base: elementSchema.optional(),
@@ -105,13 +105,13 @@ export const untypedMessageDefinitionSchema = z.lazy(() =>
     version: stringSchema.optional(),
     _version: elementSchema.optional(),
   }),
-) satisfies ZodType<MessageDefinition>
+) satisfies ZodType<MessageDefinition>;
 
 /**
  * Zod schema for FHIR MessageDefinition resource.
  */
 export const messageDefinitionSchema: ZodType<MessageDefinition> =
-  untypedMessageDefinitionSchema
+  untypedMessageDefinitionSchema;
 
 /**
  * Wrapper class for FHIR MessageDefinition resources.
@@ -127,6 +127,6 @@ export class FhirMessageDefinition extends FhirDomainResource<MessageDefinition>
    * @returns A FhirMessageDefinition instance containing the validated resource
    */
   public static parse(value: unknown): FhirMessageDefinition {
-    return new FhirMessageDefinition(messageDefinitionSchema.parse(value))
+    return new FhirMessageDefinition(messageDefinitionSchema.parse(value));
   }
 }

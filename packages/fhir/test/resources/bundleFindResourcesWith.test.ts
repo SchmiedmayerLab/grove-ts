@@ -6,159 +6,159 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Bundle, type Patient, type Observation } from 'fhir/r4b.js'
-import { FhirBundle } from '../../src/index.js'
+import { type Bundle, type Patient, type Observation } from "fhir/r4b.js";
+import { FhirBundle } from "../../src/index.js";
 
-const patient = (resource: Patient): Patient => resource
-const observation = (resource: Observation): Observation => resource
+const patient = (resource: Patient): Patient => resource;
+const observation = (resource: Observation): Observation => resource;
 
-describe('FhirBundle - findResourcesWith', () => {
-  it('should find resources matching a predicate', () => {
+describe("FhirBundle - findResourcesWith", () => {
+  it("should find resources matching a predicate", () => {
     const bundle: Bundle = {
-      resourceType: 'Bundle',
-      type: 'collection',
+      resourceType: "Bundle",
+      type: "collection",
       entry: [
         {
           resource: patient({
-            resourceType: 'Patient',
-            id: '1',
+            resourceType: "Patient",
+            id: "1",
             active: true,
-            name: [{ family: 'Smith' }],
+            name: [{ family: "Smith" }],
           }),
         },
         {
           resource: patient({
-            resourceType: 'Patient',
-            id: '2',
+            resourceType: "Patient",
+            id: "2",
             active: false,
-            name: [{ family: 'Jones' }],
+            name: [{ family: "Jones" }],
           }),
         },
         {
           resource: observation({
-            resourceType: 'Observation',
-            id: '3',
-            status: 'final',
-            code: { text: 'Blood pressure' },
+            resourceType: "Observation",
+            id: "3",
+            status: "final",
+            code: { text: "Blood pressure" },
           }),
         },
       ],
-    }
+    };
 
-    const fhirBundle = FhirBundle.parseGeneric(bundle)
+    const fhirBundle = FhirBundle.parseGeneric(bundle);
 
     // Find all active patients
     const activePatients = fhirBundle.findResources<Patient>(
-      'Patient',
+      "Patient",
       (resource) => resource.active === true,
-    )
+    );
 
-    expect(activePatients).toHaveLength(1)
-    expect(activePatients.at(0)?.id).toBe('1')
-  })
+    expect(activePatients).toHaveLength(1);
+    expect(activePatients.at(0)?.id).toBe("1");
+  });
 
-  it('should return empty array when no resources match', () => {
+  it("should return empty array when no resources match", () => {
     const bundle: Bundle = {
-      resourceType: 'Bundle',
-      type: 'collection',
+      resourceType: "Bundle",
+      type: "collection",
       entry: [
         {
           resource: patient({
-            resourceType: 'Patient',
-            id: '1',
+            resourceType: "Patient",
+            id: "1",
             active: false,
           }),
         },
       ],
-    }
+    };
 
-    const fhirBundle = FhirBundle.parseGeneric(bundle)
+    const fhirBundle = FhirBundle.parseGeneric(bundle);
 
     const activePatients = fhirBundle.findResources<Patient>(
-      'Patient',
+      "Patient",
       (resource) => resource.active === true,
-    )
+    );
 
-    expect(activePatients).toHaveLength(0)
-  })
+    expect(activePatients).toHaveLength(0);
+  });
 
-  it('should handle bundles with no entries', () => {
+  it("should handle bundles with no entries", () => {
     const bundle: Bundle = {
-      resourceType: 'Bundle',
-      type: 'collection',
-    }
+      resourceType: "Bundle",
+      type: "collection",
+    };
 
-    const fhirBundle = FhirBundle.parseGeneric(bundle)
+    const fhirBundle = FhirBundle.parseGeneric(bundle);
 
-    const results = fhirBundle.findResources('Patient')
-    expect(results).toHaveLength(0)
-  })
+    const results = fhirBundle.findResources("Patient");
+    expect(results).toHaveLength(0);
+  });
 
-  it('should handle entries without resources', () => {
+  it("should handle entries without resources", () => {
     const bundle: Bundle = {
-      resourceType: 'Bundle',
-      type: 'collection',
+      resourceType: "Bundle",
+      type: "collection",
       entry: [
         {
-          fullUrl: 'http://example.com/Patient/1',
+          fullUrl: "http://example.com/Patient/1",
         },
         {
           resource: patient({
-            resourceType: 'Patient',
-            id: '2',
+            resourceType: "Patient",
+            id: "2",
             active: true,
           }),
         },
       ],
-    }
+    };
 
-    const fhirBundle = FhirBundle.parseGeneric(bundle)
+    const fhirBundle = FhirBundle.parseGeneric(bundle);
 
-    const patients = fhirBundle.findResources('Patient')
+    const patients = fhirBundle.findResources("Patient");
 
-    expect(patients).toHaveLength(1)
-    expect(patients.at(0)?.id).toBe('2')
-  })
+    expect(patients).toHaveLength(1);
+    expect(patients.at(0)?.id).toBe("2");
+  });
 
-  it('should find a resource by type and ID', () => {
+  it("should find a resource by type and ID", () => {
     const bundle: Bundle = {
-      resourceType: 'Bundle',
-      type: 'collection',
+      resourceType: "Bundle",
+      type: "collection",
       entry: [
         {
           resource: patient({
-            resourceType: 'Patient',
-            id: 'patient-1',
+            resourceType: "Patient",
+            id: "patient-1",
           }),
         },
       ],
-    }
+    };
 
-    const fhirBundle = FhirBundle.parseGeneric(bundle)
+    const fhirBundle = FhirBundle.parseGeneric(bundle);
 
-    expect(fhirBundle.resourceById<Patient>('Patient', 'patient-1')?.id).toBe(
-      'patient-1',
-    )
+    expect(fhirBundle.resourceById<Patient>("Patient", "patient-1")?.id).toBe(
+      "patient-1",
+    );
     expect(
-      fhirBundle.resourceById<Patient>('Patient', 'missing'),
-    ).toBeUndefined()
-  })
+      fhirBundle.resourceById<Patient>("Patient", "missing"),
+    ).toBeUndefined();
+  });
 
-  it('should work with complex predicates', () => {
+  it("should work with complex predicates", () => {
     const bundle: Bundle = {
-      resourceType: 'Bundle',
-      type: 'collection',
+      resourceType: "Bundle",
+      type: "collection",
       entry: [
         {
           resource: observation({
-            resourceType: 'Observation',
-            id: '1',
-            status: 'final',
+            resourceType: "Observation",
+            id: "1",
+            status: "final",
             code: {
               coding: [
                 {
-                  system: 'http://loinc.org',
-                  code: '8867-4',
+                  system: "http://loinc.org",
+                  code: "8867-4",
                 },
               ],
             },
@@ -166,14 +166,14 @@ describe('FhirBundle - findResourcesWith', () => {
         },
         {
           resource: observation({
-            resourceType: 'Observation',
-            id: '2',
-            status: 'preliminary',
+            resourceType: "Observation",
+            id: "2",
+            status: "preliminary",
             code: {
               coding: [
                 {
-                  system: 'http://loinc.org',
-                  code: '85354-9',
+                  system: "http://loinc.org",
+                  code: "85354-9",
                 },
               ],
             },
@@ -181,34 +181,34 @@ describe('FhirBundle - findResourcesWith', () => {
         },
         {
           resource: observation({
-            resourceType: 'Observation',
-            id: '3',
-            status: 'final',
+            resourceType: "Observation",
+            id: "3",
+            status: "final",
             code: {
               coding: [
                 {
-                  system: 'http://snomed.info/sct',
-                  code: '12345',
+                  system: "http://snomed.info/sct",
+                  code: "12345",
                 },
               ],
             },
           }),
         },
       ],
-    }
+    };
 
-    const fhirBundle = FhirBundle.parseGeneric(bundle)
+    const fhirBundle = FhirBundle.parseGeneric(bundle);
 
     // Find final observations with LOINC codes
     const loincObservations = fhirBundle.findResources<Observation>(
-      'Observation',
+      "Observation",
       (resource) =>
-        resource.status === 'final' &&
-        (resource.code.coding?.some((c) => c.system === 'http://loinc.org') ??
+        resource.status === "final" &&
+        (resource.code.coding?.some((c) => c.system === "http://loinc.org") ??
           false),
-    )
+    );
 
-    expect(loincObservations).toHaveLength(1)
-    expect(loincObservations.at(0)?.id).toBe('1')
-  })
-})
+    expect(loincObservations).toHaveLength(1);
+    expect(loincObservations.at(0)?.id).toBe("1");
+  });
+});

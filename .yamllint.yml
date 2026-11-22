@@ -14,4 +14,4 @@ rules:
     max: 120
     level: warning
   truthy:
-    allowed-values: ['true', 'false', 'on']
+    allowed-values: ["true", "false", "on"]

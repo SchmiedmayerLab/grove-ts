@@ -9,8 +9,8 @@
 import {
   type SearchParameterComponent,
   type SearchParameter,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   booleanSchema,
@@ -22,7 +22,7 @@ import {
   stringSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   fhirResourceTypeSchema,
   publicationStatusSchema,
@@ -30,8 +30,8 @@ import {
   searchParameterModifierSchema,
   searchParameterTypeSchema,
   searchParameterXpathUsageSchema,
-} from '../valueSets/index.js'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const searchParameterComponentSchema: ZodType<SearchParameterComponent> =
   backboneElementSchema.extend({
@@ -39,14 +39,14 @@ const searchParameterComponentSchema: ZodType<SearchParameterComponent> =
     _definition: elementSchema.optional(),
     expression: stringSchema,
     _expression: elementSchema.optional(),
-  })
+  });
 
 /**
  * Zod schema for FHIR SearchParameter resource (untyped version).
  */
 export const untypedSearchParameterSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('SearchParameter').readonly(),
+    resourceType: z.literal("SearchParameter").readonly(),
     base: fhirResourceTypeSchema.array(),
     _base: elementSchema.array().optional(),
     chain: stringSchema.array().optional(),
@@ -96,13 +96,13 @@ export const untypedSearchParameterSchema = z.lazy(() =>
     xpathUsage: searchParameterXpathUsageSchema.optional(),
     _xpathUsage: elementSchema.optional(),
   }),
-) satisfies ZodType<SearchParameter>
+) satisfies ZodType<SearchParameter>;
 
 /**
  * Zod schema for FHIR SearchParameter resource.
  */
 export const searchParameterSchema: ZodType<SearchParameter> =
-  untypedSearchParameterSchema
+  untypedSearchParameterSchema;
 
 /**
  * Wrapper class for FHIR SearchParameter resources.
@@ -118,6 +118,6 @@ export class FhirSearchParameter extends FhirDomainResource<SearchParameter> {
    * @returns A FhirSearchParameter instance containing the validated resource
    */
   public static parse(value: unknown): FhirSearchParameter {
-    return new FhirSearchParameter(searchParameterSchema.parse(value))
+    return new FhirSearchParameter(searchParameterSchema.parse(value));
   }
 }

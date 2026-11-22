@@ -23,7 +23,7 @@ SPDX-License-Identifier: MIT
   color: var(--landing-foreground);
 }
 
-:global([data-theme='dark']) .page {
+:global([data-theme="dark"]) .page {
   --landing-background: #2e2d29;
   --landing-surface: #383733;
   --landing-card: #353430;
@@ -44,7 +44,7 @@ SPDX-License-Identifier: MIT
     var(--landing-background);
 }
 
-:global([data-theme='dark']) .hero {
+:global([data-theme="dark"]) .hero {
   background:
     radial-gradient(circle at 5% 0%, rgb(88 87 84 / 24%), transparent 32rem),
     radial-gradient(circle at 95% 100%, rgb(83 86 90 / 14%), transparent 32rem),
@@ -55,7 +55,7 @@ SPDX-License-Identifier: MIT
   position: absolute;
   inset: 0 0 auto;
   height: 0.35rem;
-  content: '';
+  content: "";
   background: #8c1515;
 }
 
@@ -227,11 +227,11 @@ SPDX-License-Identifier: MIT
   display: none;
 }
 
-:global([data-theme='dark']) .showcase .showcaseLight {
+:global([data-theme="dark"]) .showcase .showcaseLight {
   display: none;
 }
 
-:global([data-theme='dark']) .showcase .showcaseDark {
+:global([data-theme="dark"]) .showcase .showcaseDark {
   display: block;
 }
 

@@ -6,40 +6,40 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type Slot } from 'fhir/r4b.js'
-import { type z } from 'zod'
-import { FhirSlot, type untypedSlotSchema } from '../../src/index.js'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type Slot } from "fhir/r4b.js";
+import { type z } from "zod";
+import { FhirSlot, type untypedSlotSchema } from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('Slot Resource', () => {
-  it('should validate FHIR slot from slots.json', () => {
-    type Schema = z.infer<typeof untypedSlotSchema>
-    expectTypeOf<Schema>().toExtend<Slot>()
-    expectTypeOf<Slot>().toExtend<Schema>()
+describe("Slot Resource", () => {
+  it("should validate FHIR slot from slots.json", () => {
+    type Schema = z.infer<typeof untypedSlotSchema>;
+    expectTypeOf<Schema>().toExtend<Slot>();
+    expectTypeOf<Slot>().toExtend<Schema>();
 
-    const data = fs.readFileSync('test/resources/slots.json', 'utf-8')
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+    const data = fs.readFileSync("test/resources/slots.json", "utf-8");
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
-      const parsedResource = FhirSlot.parse(jsonValue).value
+      const parsedResource = FhirSlot.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
+      );
+    });
+  });
 
-  it('exposes validated slot boundaries as dates', () => {
+  it("exposes validated slot boundaries as dates", () => {
     const slot = FhirSlot.parse({
-      resourceType: 'Slot',
-      schedule: { reference: 'Schedule/example' },
-      status: 'free',
-      start: '2024-12-15T09:00:00Z',
-      end: '2024-12-15T09:30:00Z',
-    })
+      resourceType: "Slot",
+      schedule: { reference: "Schedule/example" },
+      status: "free",
+      start: "2024-12-15T09:00:00Z",
+      end: "2024-12-15T09:30:00Z",
+    });
 
-    expect(slot.startDate.toISOString()).toBe('2024-12-15T09:00:00.000Z')
-    expect(slot.endDate.toISOString()).toBe('2024-12-15T09:30:00.000Z')
-  })
-})
+    expect(slot.startDate.toISOString()).toBe("2024-12-15T09:00:00.000Z");
+    expect(slot.endDate.toISOString()).toBe("2024-12-15T09:30:00.000Z");
+  });
+});

@@ -37,12 +37,12 @@ npm install --save-dev oxlint oxlint-tsgolint oxfmt eslint @schmiedmayerlab/grov
 Create an `oxlint.config.ts` file:
 
 ```typescript
-import { oxlintReactConfig } from '@schmiedmayerlab/grove-configurations/oxlint'
-import { defineConfig } from 'oxlint'
+import { oxlintReactConfig } from "@schmiedmayerlab/grove-configurations/oxlint";
+import { defineConfig } from "oxlint";
 
 export default defineConfig({
   extends: [oxlintReactConfig],
-})
+});
 ```
 
 For a Node project, use `oxlintNodeConfig` instead.
@@ -60,11 +60,11 @@ A few sonarjs and @eslint-react rules need type information that oxlint cannot p
 Create an `eslint.config.mjs` file:
 
 ```javascript
-import { getEslintTypeAwareReactConfig } from '@schmiedmayerlab/grove-configurations/eslint-type-aware'
+import { getEslintTypeAwareReactConfig } from "@schmiedmayerlab/grove-configurations/eslint-type-aware";
 
 export default getEslintTypeAwareReactConfig({
   tsconfigRootDir: import.meta.dirname,
-})
+});
 ```
 
 For a Node project, use `getEslintTypeAwareNodeConfig` instead.
@@ -82,10 +82,10 @@ Run both linters, for example:
 Create an `oxfmt.config.ts` file:
 
 ```typescript
-import { oxfmtConfig } from '@schmiedmayerlab/grove-configurations/oxfmt'
-import { defineConfig } from 'oxfmt'
+import { oxfmtConfig } from "@schmiedmayerlab/grove-configurations/oxfmt";
+import { defineConfig } from "oxfmt";
 
-export default defineConfig(oxfmtConfig)
+export default defineConfig(oxfmtConfig);
 ```
 
 It keeps oxfmt's default formatting with Prettier's 80 columns, and adds import and Tailwind class sorting.
@@ -98,7 +98,7 @@ Add a `global-types.d.ts` file inside the `include` globs of your `tsconfig.json
 
 ```typescript
 // Do not add any other lines of code to this file!
-import '@schmiedmayerlab/grove-configurations/global-types'
+import "@schmiedmayerlab/grove-configurations/global-types";
 ```
 
 The import turns the file into a module, so any other declaration in it would stop being global.
@@ -112,15 +112,15 @@ oxlint rule names drop the ESLint plugin prefixes: `@typescript-eslint/` becomes
 ```typescript
 export default defineConfig({
   extends: [oxlintNodeConfig],
-  ignorePatterns: ['src/generated/**'],
-  rules: { 'typescript/only-throw-error': 'off' },
+  ignorePatterns: ["src/generated/**"],
+  rules: { "typescript/only-throw-error": "off" },
   overrides: [
     {
-      files: ['test/**/*.ts'],
-      rules: { 'typescript/no-non-null-assertion': 'off' },
+      files: ["test/**/*.ts"],
+      rules: { "typescript/no-non-null-assertion": "off" },
     },
   ],
-})
+});
 ```
 
 oxlint ignores `/* global */` comments, so declare extra globals with `globals` in your configuration.
@@ -133,7 +133,9 @@ Files outside the TypeScript program, for example tests excluded from `tsconfig.
 Turn off the type-aware rules for them with `oxlintDisableTypeAwareRules`:
 
 ```typescript
-overrides: [{ files: ['src/**/*.test.ts'], rules: oxlintDisableTypeAwareRules }]
+overrides: [
+  { files: ["src/**/*.test.ts"], rules: oxlintDisableTypeAwareRules },
+];
 ```
 
 To change which files get which rules, for example files that may have a default export, build the configuration with `createOxlintConfig` and its `files` option.
@@ -146,10 +148,10 @@ createOxlintConfig({
   files: {
     defaultExports: [
       ...defaultOxlintFiles.defaultExports,
-      '**/routes/**/*.tsx',
+      "**/routes/**/*.tsx",
     ],
   },
-})
+});
 ```
 
 ## TypeScript 7
@@ -183,18 +185,18 @@ npm install --save-dev prettier eslint eslint-import-resolver-typescript @schmie
 Create an `eslint.config.mjs` file:
 
 ```javascript
-import { getEslintReactConfig } from '@schmiedmayerlab/grove-configurations'
+import { getEslintReactConfig } from "@schmiedmayerlab/grove-configurations";
 
-export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname })
+export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname });
 ```
 
 For a Node project, use `getEslintNodeConfig` instead.
 Create a `.prettierrc.mjs` file:
 
 ```javascript
-import { prettierConfig } from '@schmiedmayerlab/grove-configurations/prettier'
+import { prettierConfig } from "@schmiedmayerlab/grove-configurations/prettier";
 
-export default prettierConfig
+export default prettierConfig;
 ```
 
 The `/prettier` entry point loads only the Prettier configuration, so it also suits projects that format some files with Prettier next to oxfmt, such as Astro components.
@@ -205,9 +207,9 @@ Add project-specific settings after the configuration:
 ```javascript
 export default [
   ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
-  { ignores: ['lib/**/*'] },
-  { rules: { '@typescript-eslint/no-non-null-assertion': 'off' } },
-]
+  { ignores: ["lib/**/*"] },
+  { rules: { "@typescript-eslint/no-non-null-assertion": "off" } },
+];
 ```
 
 The building blocks `getEslintRules`, `getNodeGlobals`, `getTslint`, `getPreferArrowFunctions`, `getReactPlugins` and `getPrettierPlugin` are exported for configurations that need to be assembled by hand.
