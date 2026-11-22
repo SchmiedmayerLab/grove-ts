@@ -74,6 +74,7 @@ export default defineConfig({
         "**/*.test.{ts,tsx}",
         "testSetup.ts",
         "vite.config.ts",
+        "oxlint.config.ts",
       ],
       insertTypesEntry: true,
     }),

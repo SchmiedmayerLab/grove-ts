@@ -36,13 +36,13 @@ Explore the [live Storybook](https://schmiedmayerlab.github.io/grove-ts/storyboo
 
 ## Packages
 
-| Package                                                                                  | Use it for                                                   |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`@schmiedmayerlab/grove-configurations`](./packages/configurations)                     | Shared ESLint and Prettier configuration for Node and React  |
-| [`@schmiedmayerlab/grove-design-system`](./packages/design-system)                       | React components, layouts, forms, themes, and utilities      |
-| [`@schmiedmayerlab/grove-firebase-cloud-messaging`](./packages/firebase-cloud-messaging) | Cloud Messaging, device registration, and notification flows |
-| [`@schmiedmayerlab/grove-fhir`](./packages/fhir)                                         | FHIR R4B schemas and validation                              |
-| [`@schmiedmayerlab/grove-firebase-utils`](./packages/firebase-utils)                     | Shared Firebase converters and application utilities         |
+| Package                                                                                  | Use it for                                                                 |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`@schmiedmayerlab/grove-configurations`](./packages/configurations)                     | Shared oxlint, oxfmt, ESLint and Prettier configuration for Node and React |
+| [`@schmiedmayerlab/grove-design-system`](./packages/design-system)                       | React components, layouts, forms, themes, and utilities                    |
+| [`@schmiedmayerlab/grove-firebase-cloud-messaging`](./packages/firebase-cloud-messaging) | Cloud Messaging, device registration, and notification flows               |
+| [`@schmiedmayerlab/grove-fhir`](./packages/fhir)                                         | FHIR R4B schemas and validation                                            |
+| [`@schmiedmayerlab/grove-firebase-utils`](./packages/firebase-utils)                     | Shared Firebase converters and application utilities                       |
 
 Each package README contains focused setup and usage guidance.
 The [design system documentation](https://schmiedmayerlab.github.io/grove-ts/docs/) provides a guided introduction, while [Storybook](https://schmiedmayerlab.github.io/grove-ts/storybook/) lets you explore the components interactively.
@@ -112,7 +112,10 @@ Useful repository-wide commands include:
 | `pnpm run build`         | Build every workspace                                      |
 | `pnpm test`              | Run repository and workspace tests                         |
 | `pnpm run test:coverage` | Run workspace tests with coverage                          |
-| `pnpm run lint:ci`       | Run linting with no warnings allowed                       |
+| `pnpm run lint`          | Run oxlint in every workspace                              |
+| `pnpm run lint:types`    | Run the ESLint rules that need type information            |
+| `pnpm run lint:ci`       | Run oxlint and ESLint with no warnings allowed             |
+| `pnpm run format`        | Format the repository with oxfmt                           |
 | `pnpm run analyze`       | Check dead files, dependencies, exports, and import cycles |
 | `pnpm run docs`          | Start the design system documentation locally              |
 | `pnpm run pages:build`   | Assemble the complete GitHub Pages artifact                |
