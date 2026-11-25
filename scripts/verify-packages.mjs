@@ -8,7 +8,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, posix } from "node:path";
 import { readPublicWorkspacePackages, repositoryRoot } from "./workspaces.mjs";
 
 const publicPackages = await readPublicWorkspacePackages();
@@ -90,6 +90,26 @@ for (const { manifest, workspace } of publicPackages) {
       !emptyImport.test(source),
       `${label}: ${path} imports a module without bindings, use import type for type-only imports`,
     );
+  }
+
+  // A source map without embedded sources must point at sources that the package publishes.
+  for (const { path } of pack.files) {
+    if (!path.endsWith(".map")) continue;
+    const sourceMap = JSON.parse(
+      readFileSync(join(repositoryRoot, workspace, path), "utf8"),
+    );
+    if (sourceMap.sourcesContent?.every((content) => content !== null)) {
+      continue;
+    }
+    for (const source of sourceMap.sources ?? []) {
+      const sourcePath = posix.normalize(
+        posix.join(dirname(path), sourceMap.sourceRoot ?? "", source),
+      );
+      check(
+        packageFiles.has(sourcePath),
+        `${label}: ${path} points at ${sourcePath}, which is not published`,
+      );
+    }
   }
 
   for (const target of [
