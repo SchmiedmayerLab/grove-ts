@@ -149,6 +149,32 @@ describe("DataTable", () => {
     expectNamesInGivenOrder(peopleData);
   });
 
+  it("shows sort buttons only for sortable columns", () => {
+    const columns = [
+      columnHelper.accessor("name", {
+        header: "Name",
+        enableColumnFilter: false,
+      }),
+      columnHelper.accessor("age", {
+        header: "Age",
+        enableSorting: false,
+      }),
+    ];
+    render(<DataTable columns={columns} data={peopleData} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort ascending by Name column" }),
+    );
+    expectNamesInGivenOrder(
+      [...peopleData].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    expect(
+      within(screen.getByRole("columnheader", { name: "Age" })).queryByRole(
+        "button",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("supports controlled sorting", () => {
     const onSortingChange = vitest.fn();
     const ControlledTable = () => {

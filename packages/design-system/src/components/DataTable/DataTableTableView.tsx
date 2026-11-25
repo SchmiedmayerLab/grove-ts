@@ -73,7 +73,7 @@ export const DataTableTableView = <Data extends RowData>({
               : flexRender(header.column.columnDef.header, header.getContext());
             return (
               <TableHead key={header.id}>
-                {header.column.getCanFilter() ? (
+                {header.column.getCanSort() ? (
                   <ToggleSortButton header={header}>
                     {columnContent}
                   </ToggleSortButton>
