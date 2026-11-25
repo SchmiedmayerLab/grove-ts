@@ -381,7 +381,6 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "es-toolkit": "^1.53.2",
-    "firebase": "^12.10.0",
     "input-otp": "^1.5.0",
     "lucide-react": "^1.75.0",
     "radix-ui": "^1.8.1",
@@ -409,6 +408,7 @@
     "@vitest/coverage-v8": "^5.1.1",
     "eslint": "^10.15.0",
     "eslint-plugin-jsdoc": "^65.4.12",
+    "firebase": "^13.4.0",
     "jsdom": "^31.0.1",
     "next": "^16.4.6",
     "oxlint": "^1.94.0",
@@ -426,6 +426,7 @@
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5",
+    "firebase": "^12.10.0 || ^13.0.0",
     "next-intl": "^4",
     "react": "^19",
     "react-dom": "^19"

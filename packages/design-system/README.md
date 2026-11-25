@@ -58,6 +58,12 @@ Grove Design System is part of a larger ecosystem of tools and packages:
 
 For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://schmiedmayerlab.github.io/grove-ts/docs/docs/getting-started)**.
 
+## Firebase
+
+The `modules/auth` components and hooks use the Firebase JavaScript SDK, which is a peer dependency in version `^12.10.0 || ^13.0.0`.
+An application that already uses Firebase shares its own copy with the design system, so `FirebaseError` checks and auth state see the same SDK.
+npm and pnpm install the peer automatically when the application has no `firebase` of its own, because the root entry point imports `modules/auth`.
+
 ## DataTable and TanStack Table v9
 
 `DataTable` is built on TanStack Table v9.
