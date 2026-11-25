@@ -46,11 +46,12 @@ describe("DashedSeparator", () => {
 
     const element = screen.getByRole("separator");
     expect(element).toBeInTheDocument();
-    expect(element).toHaveStyle({
-      "--dash-color": "var(--color-primary)",
-      "--dash-size": "8px",
-      "--dash-gap": "10%",
-    });
+    // The computed value of a custom property substitutes var() references, so check the inline style.
+    expect(element.style.getPropertyValue("--dash-color")).toBe(
+      "var(--color-primary)",
+    );
+    expect(element.style.getPropertyValue("--dash-size")).toBe("8px");
+    expect(element.style.getPropertyValue("--dash-gap")).toBe("10%");
   });
 
   it("renders separator with custom style classes", () => {
