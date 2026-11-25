@@ -1,32 +1,36 @@
 {
   "name": "@schmiedmayerlab/grove-design-system",
   "version": "0.0.0",
-  "type": "module",
   "description": "Reusable React components and utilities for Grove applications",
-  "author": "Schmiedmayer Lab",
-  "license": "MIT",
-  "sideEffects": [
-    "**/*.css"
-  ],
   "keywords": [
+    "components",
+    "design-system",
     "grove",
     "react",
-    "typescript",
-    "design-system",
-    "components"
+    "typescript"
   ],
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "license": "MIT",
+  "author": "Schmiedmayer Lab",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
     "directory": "packages/design-system"
   },
-  "bugs": {
-    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
-  },
-  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -339,13 +343,9 @@
       "default": "./dist/utils/notImplementedToast.js"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc && vite build",
     "build-storybook": "storybook build",

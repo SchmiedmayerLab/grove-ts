@@ -2,39 +2,36 @@
   "name": "@schmiedmayerlab/grove-configurations",
   "version": "0.0.0",
   "description": "Shared oxlint, oxfmt, ESLint and Prettier configurations for Grove TypeScript projects",
-  "author": "Schmiedmayer Lab",
-  "license": "MIT",
-  "sideEffects": false,
   "keywords": [
-    "grove",
-    "typescript",
     "configuration",
     "eslint",
-    "prettier",
-    "linting",
     "formatting",
+    "grove",
+    "linting",
+    "oxfmt",
     "oxlint",
-    "oxfmt"
+    "prettier",
+    "typescript"
   ],
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "license": "MIT",
+  "author": "Schmiedmayer Lab",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
+    "directory": "packages/configurations"
+  },
   "files": [
     "dist",
     "global-types.d.ts",
     "README.md",
     "LICENSE"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
-    "directory": "packages/configurations"
-  },
-  "bugs": {
-    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
-  },
-  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
-  "publishConfig": {
-    "access": "public"
-  },
   "type": "module",
+  "sideEffects": false,
   "exports": {
     "./eslint": {
       "types": "./dist/eslint/index.d.mts",
@@ -64,6 +61,9 @@
       "types": "./global-types.d.ts"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "clean": "rimraf dist",
@@ -86,6 +86,25 @@
     "eslint-plugin-prettier": "^5",
     "globals": "^17.3.0",
     "prettier-plugin-tailwindcss": "^0.8.1"
+  },
+  "devDependencies": {
+    "@eslint-react/eslint-plugin": "^5.18.1",
+    "@types/node": "^24.10.0",
+    "@typescript-eslint/utils": "^8.72.1",
+    "eslint": "^10.13.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-sonarjs": "4.2.2",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
+    "oxlint-tsgolint": "^7.0.2007",
+    "prettier": "^3.9.6",
+    "rimraf": "^6.1.2",
+    "tsdown": "^0.22.14",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "typescript7": "npm:typescript@^7.0.2",
+    "vitest": "^4.1.12"
   },
   "peerDependencies": {
     "@eslint-react/eslint-plugin": "^5.18.1",
@@ -130,24 +149,5 @@
   },
   "engines": {
     "node": ">=24"
-  },
-  "devDependencies": {
-    "@eslint-react/eslint-plugin": "^5.18.1",
-    "@types/node": "^24.10.0",
-    "@typescript-eslint/utils": "^8.72.1",
-    "eslint": "^10.13.0",
-    "eslint-import-resolver-typescript": "^4.4.5",
-    "eslint-plugin-import-x": "^4.17.1",
-    "eslint-plugin-sonarjs": "4.2.2",
-    "oxfmt": "^0.78.0",
-    "oxlint": "^1.93.0",
-    "oxlint-tsgolint": "^7.0.2007",
-    "prettier": "^3.9.6",
-    "rimraf": "^6.1.2",
-    "tsdown": "^0.22.14",
-    "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.72.1",
-    "typescript7": "npm:typescript@^7.0.2",
-    "vitest": "^4.1.12"
   }
 }
