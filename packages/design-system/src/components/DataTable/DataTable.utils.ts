@@ -239,9 +239,10 @@ export const useDataTable = <Data extends RowData>({
     },
   });
 
-  const globalFilter = ensureString(table.state.globalFilter) ?? "";
-  const setGlobalFilter = (value: string) => table.setGlobalFilter(value);
-  const setGlobalFilterDebounced = useDebouncedCallback(setGlobalFilter, 200);
+  const setGlobalFilterDebounced = useDebouncedCallback(
+    (value: string) => table.setGlobalFilter(value),
+    200,
+  );
 
   const rows = table.getRowModel().rows;
 
@@ -254,8 +255,6 @@ export const useDataTable = <Data extends RowData>({
   };
 
   return {
-    globalFilter,
-    setGlobalFilter,
     setGlobalFilterDebounced,
     table,
     rows,
