@@ -7,6 +7,8 @@
 //
 
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { readPublicWorkspacePackages, repositoryRoot } from "./workspaces.mjs";
 
 const publicPackages = await readPublicWorkspacePackages();
@@ -58,7 +60,10 @@ const forbiddenPackageFile = (path) =>
   path.endsWith(".tsbuildinfo") ||
   path.includes("eslint_report");
 
-for (const { manifest } of publicPackages) {
+// verbatimModuleSyntax keeps an import of only inline types as an import without bindings, which loads the module at runtime.
+const emptyImport = /^\s*import\s*\{\s*\}\s*from\s/m;
+
+for (const { manifest, workspace } of publicPackages) {
   const label = manifest.name;
   const pack = packsByName.get(label);
   check(pack, `${label}: pnpm did not produce package metadata`);
@@ -75,6 +80,15 @@ for (const { manifest } of publicPackages) {
     check(
       !forbiddenPackageFile(path),
       `${label}: unexpected package file ${path}`,
+    );
+  }
+
+  for (const { path } of pack.files) {
+    if (!/\.[cm]?js$/.test(path)) continue;
+    const source = readFileSync(join(repositoryRoot, workspace, path), "utf8");
+    check(
+      !emptyImport.test(source),
+      `${label}: ${path} imports a module without bindings, use import type for type-only imports`,
     );
   }
 
