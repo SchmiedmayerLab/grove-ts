@@ -7,9 +7,15 @@
 //
 
 import { getEslintNodeConfig } from '@schmiedmayerlab/grove-configurations'
+import { configs } from 'typescript-eslint'
 
 export default [
   ...getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname }),
+  {
+    // Tool configuration is intentionally outside the production TS program.
+    ...configs.disableTypeChecked,
+    files: ['vitest.config.ts'],
+  },
   {
     files: ['src/**/*.ts'],
     rules: {
