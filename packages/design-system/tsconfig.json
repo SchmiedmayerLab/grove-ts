@@ -1,6 +1,7 @@
 {
   "extends": "@schmiedmayerlab/grove-configurations/tsconfig/react-library",
   "compilerOptions": {
+    "declarationMap": true,
     "allowJs": true,
     "noEmit": true,
     "resolveJsonModule": true,
