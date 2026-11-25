@@ -58,6 +58,47 @@ Grove Design System is part of a larger ecosystem of tools and packages:
 
 For detailed setup instructions, configuration, and usage examples, see the **[Getting Started guide](https://schmiedmayerlab.github.io/grove-ts/docs/docs/getting-started)**.
 
+## DataTable and TanStack Table v9
+
+`DataTable` is built on TanStack Table v9.
+Applications that import `@tanstack/react-table` or `@tanstack/table-core` themselves must use version 9, because v8 types are not compatible with DataTable's props.
+Define columns with `createDataTableColumnHelper`, which binds TanStack's column helper to DataTable's feature set:
+
+```tsx
+import {
+  createDataTableColumnHelper,
+  DataTable,
+} from "@schmiedmayerlab/grove-design-system";
+
+interface Person {
+  name: string;
+  age: number;
+}
+
+const columnHelper = createDataTableColumnHelper<Person>();
+const columns = [
+  columnHelper.accessor("name", { header: "Name" }),
+  columnHelper.accessor("age", { header: "Age" }),
+];
+
+export const People = ({ people }: { people: Person[] }) => (
+  <DataTable columns={columns} data={people} pageSize={20} />
+);
+```
+
+Public API changes compared to the v8-based releases:
+
+- New exports: `dataTableFeatures`, `DataTableFeatures`, `DataTableFilterMeta`, and `createDataTableColumnHelper`.
+- `DataTableProps`, `UseDataTableProps`, `DataTableViewProps`, `DataTableTableViewSpecificProps`, `useDataTable`, `DataTablePagination`, `ToggleSortButton`, `dateColumn`, and `dateTimeColumn` use v9 types with `DataTableFeatures` as the feature set, and their `Data` type must be an object or an array.
+- `UseDataTableProps` accepts an optional `features` option and no longer accepts the removed v8 options `getCoreRowModel`, `get*RowModel`, and `filterFns`.
+- `fuzzyFilter` is a v9 filter function created with `constructFilterFn`, and the global `FilterFns` and `FilterMeta` augmentations are replaced by `dataTableFeatures`.
+- The `ColumnMeta` augmentation with `cellClassName` takes `TFeatures` as its first type parameter.
+- Shift range selection of TanStack Table v9 is disabled by default and can be enabled with `enableRowRangeSelection`.
+- The global search can be controlled with `state.globalFilter` and `onGlobalFilterChange`, and `pageSize` is merged into `initialState.pagination`.
+- Sort buttons are shown for sortable columns instead of filterable columns.
+
+See [DataTable and TanStack Table](https://schmiedmayerlab.github.io/grove-ts/docs/docs/data-table) for the feature set and state handling.
+
 ## Why Grove?
 
 Grove Design System strikes a balance between highly opinionated frameworks and copy-paste patterns. It provides package-based distribution for automatic updates, strong defaults for faster development, and escape hatches for deep customization.
