@@ -29,8 +29,6 @@ allowBuilds:
 
 # Wait seven days before installing newly published releases.
 minimumReleaseAge: 10080
-minimumReleaseAgeExclude:
-  - nanoid
 
 overrides:
   "@grpc/grpc-js": ^1.14.6
