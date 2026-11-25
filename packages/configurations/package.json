@@ -16,6 +16,7 @@
   ],
   "files": [
     "dist",
+    "global-types.d.ts",
     "README.md",
     "LICENSE"
   ],
@@ -39,6 +40,9 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
+    },
+    "./global-types": {
+      "types": "./global-types.d.ts"
     }
   },
   "scripts": {
@@ -56,6 +60,7 @@
   "dependencies": {
     "@eslint-react/eslint-plugin": "^5.18.1",
     "@eslint/js": "^10.0.1",
+    "@total-typescript/ts-reset": "^0.6.1",
     "@typescript-eslint/utils": "^8.65.0",
     "eslint-config-prettier": "^10",
     "eslint-plugin-import-x": "^4.17.1",

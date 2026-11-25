@@ -23,9 +23,9 @@ describe('DeviceRequest Resource', () => {
     expectTypeOf<DeviceRequest>().toExtend<Schema>()
 
     const data = fs.readFileSync('test/resources/deviceRequests.json', 'utf-8')
-    const decodedJson = JSON.parse(data)
+    const decodedJson = JSON.parse(data) as Record<string, unknown>
 
-    Object.values(decodedJson).forEach((jsonValue: unknown) => {
+    Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource = FhirDeviceRequest.parse(jsonValue).value
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
