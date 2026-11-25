@@ -8,8 +8,8 @@
 
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { elements, Tab } from "./Tabs.mocks";
 import { Tabs } from ".";
+import { elements, Tab } from "./Tabs.mocks";
 
 describe("Tabs", () => {
   it("renders no content if no default value provided", () => {

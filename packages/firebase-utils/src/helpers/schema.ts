@@ -6,29 +6,29 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type z, type ZodType } from 'zod'
+import { type z, type ZodType } from "zod";
 
 /**
  * Extract the forward schema type from a BidirectionalSchema
  */
 export type Forward<S> =
-  S extends BidirectionalSchema<infer Forward, ZodType> ? Forward : never
+  S extends BidirectionalSchema<infer Forward, ZodType> ? Forward : never;
 
 /**
  * Extract the backward schema type from a BidirectionalSchema
  */
 export type Backward<S> =
-  S extends BidirectionalSchema<ZodType, infer Backward> ? Backward : never
+  S extends BidirectionalSchema<ZodType, infer Backward> ? Backward : never;
 
 /**
  * Extract the input type from a schema
  */
-export type Input<S> = z.input<Forward<S>>
+export type Input<S> = z.input<Forward<S>>;
 
 /**
  * Extract the output type from a schema
  */
-export type Output<S> = z.output<Forward<S>>
+export type Output<S> = z.output<Forward<S>>;
 
 /**
  * A schema that supports bidirectional transformation between two types
@@ -39,14 +39,14 @@ export class BidirectionalSchema<
 > {
   // Properties
 
-  readonly forward: Forward
-  readonly backward: Backward
+  readonly forward: Forward;
+  readonly backward: Backward;
 
   // Constructor
 
   private constructor(forward: Forward, backward: Backward) {
-    this.forward = forward
-    this.backward = backward
+    this.forward = forward;
+    this.backward = backward;
   }
 
   // Factory Functions
@@ -59,7 +59,7 @@ export class BidirectionalSchema<
   static simple<Type extends ZodType>(
     schema: Type,
   ): BidirectionalSchema<Type, Type> {
-    return new BidirectionalSchema(schema, schema)
+    return new BidirectionalSchema(schema, schema);
   }
 
   /**
@@ -77,7 +77,7 @@ export class BidirectionalSchema<
     forward: Forward,
     backward: Backward,
   ): BidirectionalSchema<Forward, Backward> {
-    return new BidirectionalSchema(forward, backward)
+    return new BidirectionalSchema(forward, backward);
   }
 
   // Methods
@@ -91,7 +91,7 @@ export class BidirectionalSchema<
     this: BidirectionalSchema<ZodType<Output>, ZodType<Input, Output>>,
     input: unknown,
   ): Output {
-    return this.forward.parse(input)
+    return this.forward.parse(input);
   }
 
   /**
@@ -103,7 +103,7 @@ export class BidirectionalSchema<
     this: BidirectionalSchema<ZodType<Output>, ZodType<Input, Output>>,
     output: unknown,
   ): Input {
-    return this.backward.parse(output)
+    return this.backward.parse(output);
   }
 }
 
@@ -116,4 +116,4 @@ export class BidirectionalSchema<
 export const createBidirectionalSchema = <Input, Output>(
   forward: ZodType<Output, Input>,
   backward: ZodType<Input, Output>,
-) => ({ forward, backward })
+) => ({ forward, backward });

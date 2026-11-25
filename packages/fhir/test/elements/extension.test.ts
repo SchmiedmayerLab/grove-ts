@@ -6,33 +6,33 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Bundle, type Patient } from 'fhir/r4b.js'
+import { type Bundle, type Patient } from "fhir/r4b.js";
 import {
   extensionSchema,
   FhirBundle,
   FhirPatient,
   patientSchema,
-} from '../../src/index.js'
+} from "../../src/index.js";
 
 const patientNumberType = {
   // eslint-disable-next-line sonarjs/no-clear-text-protocols -- FHIR code system identifier, not a transport URL.
-  system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
-  code: 'PN',
-}
+  system: "http://terminology.hl7.org/CodeSystem/v2-0203",
+  code: "PN",
+};
 
 const complexExtension = {
-  url: 'http://example.org/fhir/StructureDefinition/complex',
+  url: "http://example.org/fhir/StructureDefinition/complex",
   extension: [
-    { url: 'code', valueString: 'a' },
-    { url: 'text', valueString: 'b' },
+    { url: "code", valueString: "a" },
+    { url: "text", valueString: "b" },
   ],
-}
+};
 
 const patient = (pn: string, extra: Partial<Patient> = {}): Patient => ({
-  resourceType: 'Patient',
+  resourceType: "Patient",
   identifier: [
     {
-      type: { coding: [{ ...patientNumberType, code: 'MR' }] },
+      type: { coding: [{ ...patientNumberType, code: "MR" }] },
       value: `MR-${pn}`,
     },
     {
@@ -41,39 +41,43 @@ const patient = (pn: string, extra: Partial<Patient> = {}): Patient => ({
     },
   ],
   ...extra,
-})
+});
 
-describe('Extension', () => {
-  it('should accept relative sub-extension urls of complex extensions', () => {
-    expect(extensionSchema.parse(complexExtension)).toEqual(complexExtension)
-  })
+describe("Extension", () => {
+  it("should accept relative sub-extension urls of complex extensions", () => {
+    expect(extensionSchema.parse(complexExtension)).toEqual(complexExtension);
+  });
 
-  it('should accept relative uri values', () => {
-    const extension = { url: 'local', valueUri: 'Patient/123' }
-    expect(extensionSchema.parse(extension)).toEqual(extension)
-  })
+  it("should accept relative uri values", () => {
+    const extension = { url: "local", valueUri: "Patient/123" };
+    expect(extensionSchema.parse(extension)).toEqual(extension);
+  });
 
-  it('should still require a url', () => {
-    expect(() => extensionSchema.parse({ valueString: 'a' })).toThrow()
-  })
+  it("should still require a url", () => {
+    expect(() => extensionSchema.parse({ valueString: "a" })).toThrow();
+  });
 
-  it('should parse bundles of patients carrying complex extensions', () => {
+  it("should parse bundles of patients carrying complex extensions", () => {
     const bundle: Bundle<Patient> = {
-      resourceType: 'Bundle',
-      type: 'searchset',
+      resourceType: "Bundle",
+      type: "searchset",
       entry: [
-        { resource: patient('PN1', { extension: [complexExtension] }) },
-        { resource: patient('PN2') },
+        { resource: patient("PN1", { extension: [complexExtension] }) },
+        { resource: patient("PN2") },
       ],
-    }
+    };
 
-    const fhirBundle = FhirBundle.parse(bundle, patientSchema)
+    const fhirBundle = FhirBundle.parse(bundle, patientSchema);
     const patientNumbers = (fhirBundle.value.entry ?? []).flatMap((entry) =>
-      entry.resource ?
-        [FhirPatient.parse(entry.resource).identifierByType(patientNumberType)]
-      : [],
-    )
+      entry.resource
+        ? [
+            FhirPatient.parse(entry.resource).identifierByType(
+              patientNumberType,
+            ),
+          ]
+        : [],
+    );
 
-    expect(patientNumbers).toEqual(['PN1', 'PN2'])
-  })
-})
+    expect(patientNumbers).toEqual(["PN1", "PN2"]);
+  });
+});

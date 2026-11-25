@@ -8,8 +8,8 @@
 
 import { type Meta } from "@storybook/react";
 import { action } from "storybook/actions";
-import { Button } from "../Button";
 import { Toaster, toast } from ".";
+import { Button } from "../Button";
 
 const meta: Meta = {
   title: "Components/Toaster",

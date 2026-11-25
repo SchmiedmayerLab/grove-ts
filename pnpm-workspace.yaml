@@ -16,9 +16,9 @@ packages:
 
 # Only these dependencies may run install scripts.
 allowBuilds:
-  '@firebase/util': true
-  '@parcel/watcher': true
-  '@swc/core': true
+  "@firebase/util": true
+  "@parcel/watcher": true
+  "@swc/core": true
   esbuild: true
   fsevents: true
   lmdb: true
@@ -33,7 +33,7 @@ minimumReleaseAgeExclude:
   - nanoid
 
 overrides:
-  '@grpc/grpc-js': ^1.14.6
+  "@grpc/grpc-js": ^1.14.6
   glob: ^14.0.2
   # Documentation site build tooling.
   serialize-javascript: ^7.1.3

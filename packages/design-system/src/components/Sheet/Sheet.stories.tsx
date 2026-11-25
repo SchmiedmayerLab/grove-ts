@@ -10,7 +10,6 @@ import { type Meta, type StoryObj } from "@storybook/react";
 import { useIsDocs } from "@/tests/storybook";
 import { times } from "@/utils/misc";
 import { sizes, type Size } from "@/utils/tailwind";
-import { Button } from "../Button";
 import {
   Sheet,
   SheetContent,
@@ -22,6 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from ".";
+import { Button } from "../Button";
 
 interface FullSheetProps {
   side?: SheetSide;

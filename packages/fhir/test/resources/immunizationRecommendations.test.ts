@@ -6,53 +6,53 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type ImmunizationRecommendation } from 'fhir/r4b.js'
-import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type ImmunizationRecommendation } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirImmunizationRecommendation,
   type untypedImmunizationRecommendationSchema,
-} from '../../src/index.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('ImmunizationRecommendation Resource', () => {
-  it('should validate FHIR immunization recommendations from immunizationRecommendations.json', () => {
-    type Schema = z.infer<typeof untypedImmunizationRecommendationSchema>
-    expectTypeOf<Schema>().toExtend<ImmunizationRecommendation>()
-    expectTypeOf<ImmunizationRecommendation>().toExtend<Schema>()
+describe("ImmunizationRecommendation Resource", () => {
+  it("should validate FHIR immunization recommendations from immunizationRecommendations.json", () => {
+    type Schema = z.infer<typeof untypedImmunizationRecommendationSchema>;
+    expectTypeOf<Schema>().toExtend<ImmunizationRecommendation>();
+    expectTypeOf<ImmunizationRecommendation>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/immunizationRecommendations.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/immunizationRecommendations.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource =
-        FhirImmunizationRecommendation.parse(jsonValue).value
+        FhirImmunizationRecommendation.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
+      );
+    });
+  });
 
-  it('should return vaccine displays and ignore recommendations without vaccine codes', () => {
+  it("should return vaccine displays and ignore recommendations without vaccine codes", () => {
     const recommendation = FhirImmunizationRecommendation.parse({
-      resourceType: 'ImmunizationRecommendation',
-      patient: { reference: 'Patient/123' },
-      date: '2026-08-06',
+      resourceType: "ImmunizationRecommendation",
+      patient: { reference: "Patient/123" },
+      date: "2026-08-06",
       recommendation: [
         {
-          vaccineCode: [{ text: 'Influenza' }],
-          forecastStatus: { text: 'Due' },
+          vaccineCode: [{ text: "Influenza" }],
+          forecastStatus: { text: "Due" },
         },
         {
-          forecastStatus: { text: 'Complete' },
+          forecastStatus: { text: "Complete" },
         },
       ],
-    })
+    });
 
-    expect(recommendation.vaccineCodeDisplays).toEqual(['Influenza'])
-  })
-})
+    expect(recommendation.vaccineCodeDisplays).toEqual(["Influenza"]);
+  });
+});

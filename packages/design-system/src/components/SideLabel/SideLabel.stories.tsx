@@ -7,8 +7,8 @@
 //
 
 import { type Meta } from "@storybook/react";
-import { SideLabel } from "./SideLabel";
 import { Switch } from "../Switch";
+import { SideLabel } from "./SideLabel";
 
 const meta: Meta<typeof SideLabel> = {
   title: "Components/SideLabel",

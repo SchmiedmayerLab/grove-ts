@@ -9,6 +9,7 @@
 import { type Meta } from "@storybook/react";
 import { LogOut } from "lucide-react";
 import { useIsDocs } from "@/tests/storybook";
+import { Button } from "../Button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +24,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./DropdownMenu";
-import { Button } from "../Button";
 
 const meta: Meta<typeof DropdownMenu> = {
   title: "Components/DropdownMenu",

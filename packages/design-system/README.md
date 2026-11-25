@@ -49,7 +49,7 @@ Grove Design System is part of a larger ecosystem of tools and packages:
 
 ### Related Packages
 
-- **[`@schmiedmayerlab/grove-configurations`](../configurations)** - Shared ESLint and Prettier configurations
+- **[`@schmiedmayerlab/grove-configurations`](../configurations)** - Shared oxlint, oxfmt, ESLint and Prettier configurations
 - **[Grove Firebase packages](../firebase-utils)** - Firebase, messaging, and FHIR utilities
 
 ## Getting Started

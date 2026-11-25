@@ -9,8 +9,8 @@
 import { type ReactNode, use } from "react";
 import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
-import { DashboardContext } from "./DashboardContext";
 import { Tooltip } from "../../components/Tooltip";
+import { DashboardContext } from "./DashboardContext";
 
 interface MenuItemProps {
   /**
@@ -79,9 +79,9 @@ export const MenuItem = ({
       data-slot="menu-item"
       className={cn(
         "focus-ring relative flex items-center gap-3 rounded-lg p-2 font-medium no-underline transition",
-        isActive ?
-          "bg-accent/50 text-primary hover:opacity-60"
-        : "text-foreground/60 hover:bg-accent hover:text-foreground",
+        isActive
+          ? "bg-accent/50 text-primary hover:opacity-60"
+          : "text-foreground/60 hover:bg-accent hover:text-foreground",
         shrinkable ? "xl:w-full xl:self-start" : "lg:w-full lg:self-start",
       )}
     >
@@ -103,15 +103,17 @@ export const MenuItem = ({
     </Link>
   );
 
-  return shrinkable ?
-      <Tooltip
-        key={href}
-        tooltip={label}
-        sideOffset={8}
-        side="right"
-        className="hidden lg:block xl:hidden"
-      >
-        {content}
-      </Tooltip>
-    : content;
+  return shrinkable ? (
+    <Tooltip
+      key={href}
+      tooltip={label}
+      sideOffset={8}
+      side="right"
+      className="hidden lg:block xl:hidden"
+    >
+      {content}
+    </Tooltip>
+  ) : (
+    content
+  );
 };

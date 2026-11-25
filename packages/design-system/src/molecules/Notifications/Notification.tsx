@@ -105,33 +105,33 @@ export const Notification = ({
     <>
       <NotificationImage src={image} />
       <NotificationContentContainer>
-        {hasRenderableContent(title) || time !== undefined ?
+        {hasRenderableContent(title) || time !== undefined ? (
           <NotificationHeader>
-            {hasRenderableContent(title) ?
+            {hasRenderableContent(title) ? (
               <NotificationTitle>{title}</NotificationTitle>
-            : null}
-            {time !== undefined ?
-              <NotificationTime time={time} />
-            : null}
+            ) : null}
+            {time !== undefined ? <NotificationTime time={time} /> : null}
           </NotificationHeader>
-        : null}
-        {hasRenderableContent(message) ?
+        ) : null}
+        {hasRenderableContent(message) ? (
           <NotificationMessage>{message}</NotificationMessage>
-        : null}
-        {hasRenderableContent(actions) ?
+        ) : null}
+        {hasRenderableContent(actions) ? (
           <NotificationActions>{actions}</NotificationActions>
-        : null}
+        ) : null}
       </NotificationContentContainer>
     </>
   );
 
   const notificationContext = { isRead };
 
-  return link ?
-      <NotificationLink href={link} notification={notificationContext}>
-        {content}
-      </NotificationLink>
-    : <NotificationRoot notification={notificationContext}>
-        {content}
-      </NotificationRoot>;
+  return link ? (
+    <NotificationLink href={link} notification={notificationContext}>
+      {content}
+    </NotificationLink>
+  ) : (
+    <NotificationRoot notification={notificationContext}>
+      {content}
+    </NotificationRoot>
+  );
 };

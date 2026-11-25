@@ -74,6 +74,7 @@ export default defineConfig({
         "**/*.test.{ts,tsx}",
         "testSetup.ts",
         "vite.config.ts",
+        "oxlint.config.ts",
       ],
       insertTypesEntry: true,
     }),
@@ -112,7 +113,7 @@ export default defineConfig({
         return `${name}.${format}`;
       },
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: (source) =>
         [...externalPackages].some(
           (packageName) =>

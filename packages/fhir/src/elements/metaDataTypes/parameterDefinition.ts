@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ParameterDefinition } from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
-import { fhirTypeSchema } from '../../valueSets/index.js'
-import { intSchema, stringSchema } from '../dataTypes/primitiveTypes.js'
-import { elementSchema } from '../element.js'
+import { type ParameterDefinition } from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
+import { fhirTypeSchema } from "../../valueSets/index.js";
+import { intSchema, stringSchema } from "../dataTypes/primitiveTypes.js";
+import { elementSchema } from "../element.js";
 
-const parameterDefinitionUseSchema = z.enum(['in', 'out'])
+const parameterDefinitionUseSchema = z.enum(["in", "out"]);
 
 /**
  * Zod schema for FHIR ParameterDefinition data type.
@@ -36,10 +36,10 @@ export const untypedParameterDefinitionSchema = z.lazy(() =>
     profile: stringSchema.optional(),
     _profile: elementSchema.optional(),
   }),
-) satisfies ZodType<ParameterDefinition>
+) satisfies ZodType<ParameterDefinition>;
 
 /**
  * Zod schema for FHIR ParameterDefinition data type.
  */
 export const parameterDefinitionSchema: ZodType<ParameterDefinition> =
-  untypedParameterDefinitionSchema
+  untypedParameterDefinitionSchema;

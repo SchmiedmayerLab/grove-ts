@@ -130,9 +130,7 @@ export const Tooltip = ({
 }: TooltipProps) => (
   <TooltipProvider>
     <TooltipRoot {...rootProps} delayDuration={delayDuration}>
-      {children ?
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-      : null}
+      {children ? <TooltipTrigger asChild>{children}</TooltipTrigger> : null}
       <TooltipContent
         side={side}
         sideOffset={sideOffset}

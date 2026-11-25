@@ -21,9 +21,11 @@ const Row = ({ label, value }: { label: string; value: boolean }) => (
   <TableRow>
     <TableCell className="font-medium">{label}</TableCell>
     <TableCell>
-      {value ?
+      {value ? (
         <Badge variant="success">True</Badge>
-      : <Badge variant="destructiveLight">False</Badge>}
+      ) : (
+        <Badge variant="destructiveLight">False</Badge>
+      )}
     </TableCell>
   </TableRow>
 );

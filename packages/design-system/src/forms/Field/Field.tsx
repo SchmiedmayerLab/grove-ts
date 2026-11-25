@@ -119,16 +119,14 @@ export const Field = <
         };
         return (
           <div className={className}>
-            {tooltip || label ?
+            {tooltip || label ? (
               <LabelContainer>
-                {label ?
-                  <Label htmlFor={id}>{label}</Label>
-                : null}
-                {tooltip ?
+                {label ? <Label htmlFor={id}>{label}</Label> : null}
+                {tooltip ? (
                   <FieldTooltip tooltip={tooltip} label={label} id={id} />
-                : null}
+                ) : null}
               </LabelContainer>
-            : null}
+            ) : null}
             {render({
               ...states,
               field: fieldProps,

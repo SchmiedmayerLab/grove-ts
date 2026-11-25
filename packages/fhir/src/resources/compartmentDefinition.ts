@@ -9,9 +9,8 @@
 import {
   type CompartmentDefinitionResource,
   type CompartmentDefinition,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   booleanSchema,
@@ -22,12 +21,13 @@ import {
   stringSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   compartmentDefinitionCodeSchema,
   fhirResourceTypeSchema,
   publicationStatusSchema,
-} from '../valueSets/index.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const compartmentDefinitionResourceSchema: ZodType<CompartmentDefinitionResource> =
   backboneElementSchema.extend({
@@ -37,14 +37,14 @@ const compartmentDefinitionResourceSchema: ZodType<CompartmentDefinitionResource
     _documentation: elementSchema.optional(),
     param: stringSchema.array().optional(),
     _param: elementSchema.array().optional(),
-  })
+  });
 
 /**
  * Zod schema for FHIR CompartmentDefinition resource (untyped version).
  */
 export const untypedCompartmentDefinitionSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('CompartmentDefinition').readonly(),
+    resourceType: z.literal("CompartmentDefinition").readonly(),
     code: compartmentDefinitionCodeSchema,
     _code: elementSchema.optional(),
     contact: contactDetailSchema.array().optional(),
@@ -71,13 +71,13 @@ export const untypedCompartmentDefinitionSchema = z.lazy(() =>
     version: stringSchema.optional(),
     _version: elementSchema.optional(),
   }),
-) satisfies ZodType<CompartmentDefinition>
+) satisfies ZodType<CompartmentDefinition>;
 
 /**
  * Zod schema for FHIR CompartmentDefinition resource.
  */
 export const compartmentDefinitionSchema: ZodType<CompartmentDefinition> =
-  untypedCompartmentDefinitionSchema
+  untypedCompartmentDefinitionSchema;
 
 /**
  * Wrapper class for FHIR CompartmentDefinition resources.
@@ -95,6 +95,6 @@ export class FhirCompartmentDefinition extends FhirDomainResource<CompartmentDef
   public static parse(value: unknown): FhirCompartmentDefinition {
     return new FhirCompartmentDefinition(
       compartmentDefinitionSchema.parse(value),
-    )
+    );
   }
 }

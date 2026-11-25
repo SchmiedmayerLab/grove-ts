@@ -10,7 +10,7 @@ name: Monthly Markdown Link Check
 
 on:
   schedule:
-    - cron: '0 8 1 * *'
+    - cron: "0 8 1 * *"
 
 jobs:
   markdown_link_check:

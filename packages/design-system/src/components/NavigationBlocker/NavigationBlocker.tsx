@@ -128,9 +128,9 @@ export const NavigationBlocker = ({
             </div>
           </div>
           <DialogTitle>{title}</DialogTitle>
-          {description ?
+          {description ? (
             <DialogDescription>{description}</DialogDescription>
-          : null}
+          ) : null}
         </DialogHeader>
         <DialogFooter className="gap-4 pt-2">
           <Button

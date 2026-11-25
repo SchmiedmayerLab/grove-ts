@@ -13,9 +13,8 @@ import {
   type Questionnaire,
   type QuestionnaireItem,
   type Coding,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   attachmentSchema,
   backboneElementSchema,
@@ -38,14 +37,15 @@ import {
   timeSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   fhirResourceTypeSchema,
   questionnaireItemEnableBehaviorSchema,
   questionnaireItemEnableWhenOperatorSchema,
   questionnaireItemTypeSchema,
   questionnaireStatusSchema,
-} from '../valueSets/index.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const questionnaireItemEnableWhenSchema: ZodType<QuestionnaireItemEnableWhen> =
   backboneElementSchema.extend({
@@ -72,7 +72,7 @@ const questionnaireItemEnableWhenSchema: ZodType<QuestionnaireItemEnableWhen> =
     answerCoding: codingSchema.optional(),
     answerQuantity: quantitySchema.optional(),
     answerReference: referenceSchema.optional(),
-  })
+  });
 
 const questionnaireItemAnswerOptionSchema: ZodType<QuestionnaireItemAnswerOption> =
   backboneElementSchema.extend({
@@ -94,7 +94,7 @@ const questionnaireItemAnswerOptionSchema: ZodType<QuestionnaireItemAnswerOption
     valueReference: referenceSchema.optional(),
     initialSelected: booleanSchema.optional(),
     _initialSelected: elementSchema.optional(),
-  })
+  });
 
 const questionnaireItemInitialSchema: ZodType<QuestionnaireItemInitial> =
   backboneElementSchema.extend({
@@ -116,7 +116,7 @@ const questionnaireItemInitialSchema: ZodType<QuestionnaireItemInitial> =
     valueCoding: codingSchema.optional(),
     valueQuantity: quantitySchema.optional(),
     valueReference: referenceSchema.optional(),
-  })
+  });
 
 const questionnaireItemSchema: ZodType<QuestionnaireItem> =
   backboneElementSchema.extend({
@@ -143,16 +143,16 @@ const questionnaireItemSchema: ZodType<QuestionnaireItem> =
     answerOption: questionnaireItemAnswerOptionSchema.array().optional(),
     initial: questionnaireItemInitialSchema.array().optional(),
     get item() {
-      return questionnaireItemSchema.array().optional()
+      return questionnaireItemSchema.array().optional();
     },
-  })
+  });
 
 /**
  * Zod schema for FHIR Questionnaire resource (untyped version).
  */
 export const untypedQuestionnaireSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('Questionnaire').readonly(),
+    resourceType: z.literal("Questionnaire").readonly(),
     url: urlSchema.optional(),
     _url: elementSchema.optional(),
     identifier: identifierSchema.array().optional(),
@@ -189,13 +189,13 @@ export const untypedQuestionnaireSchema = z.lazy(() =>
     code: codingSchema.array().optional(),
     item: questionnaireItemSchema.array().optional(),
   }),
-) satisfies ZodType<Questionnaire>
+) satisfies ZodType<Questionnaire>;
 
 /**
  * Zod schema for FHIR Questionnaire resource.
  */
 export const questionnaireSchema: ZodType<Questionnaire> =
-  untypedQuestionnaireSchema
+  untypedQuestionnaireSchema;
 
 /**
  * Wrapper class for FHIR Questionnaire resources.
@@ -209,7 +209,7 @@ export class FhirQuestionnaire extends FhirDomainResource<Questionnaire> {
    * @returns A FhirQuestionnaire instance containing the validated resource
    */
   public static parse(value: unknown): FhirQuestionnaire {
-    return new FhirQuestionnaire(questionnaireSchema.parse(value))
+    return new FhirQuestionnaire(questionnaireSchema.parse(value));
   }
 
   /**
@@ -218,7 +218,7 @@ export class FhirQuestionnaire extends FhirDomainResource<Questionnaire> {
    * @returns The publication date, or undefined if not set
    */
   public get date(): Date | undefined {
-    return FhirDomainResource.parseDateTime(this.value.date)
+    return FhirDomainResource.parseDateTime(this.value.date);
   }
 
   /**
@@ -231,7 +231,7 @@ export class FhirQuestionnaire extends FhirDomainResource<Questionnaire> {
     return FhirDomainResource.identifiersBySystem(
       this.value.identifier,
       ...system,
-    )
+    );
   }
 
   /**
@@ -244,7 +244,7 @@ export class FhirQuestionnaire extends FhirDomainResource<Questionnaire> {
     return FhirDomainResource.identifierBySystem(
       this.value.identifier,
       ...system,
-    )
+    );
   }
 
   /**
@@ -254,7 +254,7 @@ export class FhirQuestionnaire extends FhirDomainResource<Questionnaire> {
    * @returns Array of identifier values matching any provided type
    */
   public identifiersByType(...type: Coding[]): string[] {
-    return FhirDomainResource.identifiersByType(this.value.identifier, ...type)
+    return FhirDomainResource.identifiersByType(this.value.identifier, ...type);
   }
 
   /**
@@ -264,6 +264,6 @@ export class FhirQuestionnaire extends FhirDomainResource<Questionnaire> {
    * @returns The first matching identifier value, or undefined if none match
    */
   public identifierByType(...type: Coding[]): string | undefined {
-    return FhirDomainResource.identifierByType(this.value.identifier, ...type)
+    return FhirDomainResource.identifierByType(this.value.identifier, ...type);
   }
 }

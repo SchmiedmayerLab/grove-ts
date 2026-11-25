@@ -6,6 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { getEslintNodeConfig } from './dist/index.mjs'
+import { getEslintTypeAwareNodeConfig } from "./dist/eslint/typeAware.mjs";
 
-export default getEslintNodeConfig({ tsconfigRootDir: import.meta.dirname })
+export default [
+  { ignores: ["test/fixtures/**"] },
+  ...getEslintTypeAwareNodeConfig({ tsconfigRootDir: import.meta.dirname }),
+];

@@ -9,8 +9,8 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { z } from "zod";
-import { useForm } from "../useForm";
 import { Field, type FieldProps } from ".";
+import { useForm } from "../useForm";
 
 const Component = (props: Partial<FieldProps<{ name: string }, "name">>) => {
   const form = useForm({

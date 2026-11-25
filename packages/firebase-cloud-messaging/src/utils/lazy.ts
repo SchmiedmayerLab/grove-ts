@@ -14,16 +14,16 @@
  * A utility class that implements lazy initialization pattern
  */
 export class Lazy<T> {
-  private readonly factory: () => T
-  private isInitialized = false
-  private _value!: T
+  private readonly factory: () => T;
+  private isInitialized = false;
+  private _value!: T;
 
   /**
    * Creates a new Lazy instance
    * @param factory Function that produces the value when first accessed
    */
   constructor(factory: () => T) {
-    this.factory = factory
+    this.factory = factory;
   }
 
   /**
@@ -32,9 +32,9 @@ export class Lazy<T> {
    */
   get value(): T {
     if (!this.isInitialized) {
-      this._value = this.factory()
-      this.isInitialized = true
+      this._value = this.factory();
+      this.isInitialized = true;
     }
-    return this._value
+    return this._value;
   }
 }

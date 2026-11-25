@@ -148,11 +148,13 @@ export const DropdownMenuContent = ({
       {...props}
     />
   );
-  return container === null ? content : (
-      <DropdownMenuPrimitive.Portal container={container}>
-        {content}
-      </DropdownMenuPrimitive.Portal>
-    );
+  return container === null ? (
+    content
+  ) : (
+    <DropdownMenuPrimitive.Portal container={container}>
+      {content}
+    </DropdownMenuPrimitive.Portal>
+  );
 };
 
 /**

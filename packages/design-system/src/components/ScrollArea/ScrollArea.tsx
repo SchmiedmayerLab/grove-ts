@@ -53,9 +53,9 @@ export const ScrollBar = ({
       orientation={orientation}
       className={cn(
         "flex touch-none p-px transition select-none",
-        orientation === "vertical" ?
-          "h-full w-2.5 border-l border-l-transparent"
-        : "h-2.5 flex-col border-t border-t-transparent",
+        orientation === "vertical"
+          ? "h-full w-2.5 border-l border-l-transparent"
+          : "h-2.5 flex-col border-t border-t-transparent",
         className,
       )}
       {...props}

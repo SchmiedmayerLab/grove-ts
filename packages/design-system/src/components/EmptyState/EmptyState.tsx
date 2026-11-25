@@ -116,18 +116,14 @@ export const EmptyState = ({
       className={cn("text-muted-foreground flex gap-3", className)}
       {...props}
     >
-      {textFilter ?
-        <SearchX />
-      : <ListX />}
+      {textFilter ? <SearchX /> : <ListX />}
       <span className="flex flex-col gap-3">
         {children ?? (
           <span>
             No {entityName ?? "results"} found{filterDescription}.
           </span>
         )}
-        {actions ?
-          <div className="flex gap-2">{actions}</div>
-        : null}
+        {actions ? <div className="flex gap-2">{actions}</div> : null}
       </span>
     </div>
   );

@@ -35,9 +35,6 @@ npm install @schmiedmayerlab/grove-firebase-cloud-messaging
 ## Quick Start
 
 ```typescript
-import { initializeApp, cert } from 'firebase-admin/app'
-import { getMessaging } from 'firebase-admin/messaging'
-import { getFirestore } from 'firebase-admin/firestore'
 import {
   FirebaseNotificationService,
   FirestoreDeviceStorage,
@@ -45,69 +42,72 @@ import {
   DevicePlatform,
   Device,
   LocalizedText,
-} from '@schmiedmayerlab/grove-firebase-cloud-messaging'
+} from "@schmiedmayerlab/grove-firebase-cloud-messaging";
+import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 // Initialize Firebase
-const app = initializeApp()
-const messaging = getMessaging(app)
-const firestore = getFirestore(app)
+const app = initializeApp();
+const messaging = getMessaging(app);
+const firestore = getFirestore(app);
 
 // Initialize device storage
-const deviceStorage = new FirestoreDeviceStorage(firestore)
+const deviceStorage = new FirestoreDeviceStorage(firestore);
 
 // Initialize notification service
 const notificationService = new FirebaseNotificationService(
   messaging,
   deviceStorage,
-)
+);
 
 // Register a device
 await notificationService.registerDevice(
-  'user123',
+  "user123",
   new Device({
-    notificationToken: 'fcm-token-123',
+    notificationToken: "fcm-token-123",
     platform: DevicePlatform.iOS,
-    language: 'en',
-    appVersion: '1.0.0',
+    language: "en",
+    appVersion: "1.0.0",
   }),
-)
+);
 
 // Send a notification
-await notificationService.sendNotification('user123', {
-  title: { en: 'Hello', de: 'Hallo' },
+await notificationService.sendNotification("user123", {
+  title: { en: "Hello", de: "Hallo" },
   body: {
-    en: 'This is a test notification',
-    de: 'Dies ist eine Test-Benachrichtigung',
+    en: "This is a test notification",
+    de: "Dies ist eine Test-Benachrichtigung",
   },
-  data: { action: 'open_home' },
-})
+  data: { action: "open_home" },
+});
 
 // Create and send a message notification
 const message = Message.createInformation({
-  title: { en: 'Information', de: 'Information' },
+  title: { en: "Information", de: "Information" },
   description: {
-    en: 'This is important information',
-    de: 'Dies ist eine wichtige Information',
+    en: "This is important information",
+    de: "Dies ist eine wichtige Information",
   },
-  action: 'view_details',
+  action: "view_details",
   isDismissible: true,
-  data: { itemId: '123' },
-})
+  data: { itemId: "123" },
+});
 
 // Send a message-based notification
-await notificationService.sendMessageNotification('user123', {
-  id: 'message-123',
-  path: '/messages/message-123',
+await notificationService.sendMessageNotification("user123", {
+  id: "message-123",
+  path: "/messages/message-123",
   lastUpdate: new Date(),
   content: message,
-})
+});
 
 // Unregister a device
 await notificationService.unregisterDevice(
-  'user123',
-  'fcm-token-123',
+  "user123",
+  "fcm-token-123",
   DevicePlatform.iOS,
-)
+);
 ```
 
 ## Firebase Functions Integration
@@ -115,18 +115,18 @@ await notificationService.unregisterDevice(
 This package includes helpers for creating Firebase Functions:
 
 ```typescript
-import { onCall } from 'firebase-functions/v2/https'
 import {
   createRegisterDeviceHandler,
   createUnregisterDeviceHandler,
   registerDeviceInputSchema,
   unregisterDeviceInputSchema,
-} from '@schmiedmayerlab/grove-firebase-cloud-messaging'
+} from "@schmiedmayerlab/grove-firebase-cloud-messaging";
+import { onCall } from "firebase-functions/v2/https";
 
 // Create function handlers
-const registerDeviceHandler = createRegisterDeviceHandler(notificationService)
+const registerDeviceHandler = createRegisterDeviceHandler(notificationService);
 const unregisterDeviceHandler =
-  createUnregisterDeviceHandler(notificationService)
+  createUnregisterDeviceHandler(notificationService);
 
 // Create Firebase Functions
 export const registerDevice = onCall(
@@ -134,24 +134,24 @@ export const registerDevice = onCall(
     schema: registerDeviceInputSchema,
   },
   async (request) => {
-    const userId = request.auth?.uid
-    if (!userId) throw new Error('Unauthorized')
+    const userId = request.auth?.uid;
+    if (!userId) throw new Error("Unauthorized");
 
-    return registerDeviceHandler(userId, request.data)
+    return registerDeviceHandler(userId, request.data);
   },
-)
+);
 
 export const unregisterDevice = onCall(
   {
     schema: unregisterDeviceInputSchema,
   },
   async (request) => {
-    const userId = request.auth?.uid
-    if (!userId) throw new Error('Unauthorized')
+    const userId = request.auth?.uid;
+    if (!userId) throw new Error("Unauthorized");
 
-    return unregisterDeviceHandler(userId, request.data)
+    return unregisterDeviceHandler(userId, request.data);
   },
-)
+);
 ```
 
 ## License

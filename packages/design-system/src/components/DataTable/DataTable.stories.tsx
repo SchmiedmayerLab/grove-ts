@@ -8,6 +8,8 @@
 
 import { type Meta, type StoryObj } from "@storybook/react";
 import { Pencil, Trash } from "lucide-react";
+import { Button } from "../Button";
+import { DropdownMenuItem } from "../DropdownMenu";
 import { DataTable } from "./DataTable";
 import { dateColumn, dateTimeColumn } from "./DataTable.columns";
 import {
@@ -18,8 +20,6 @@ import {
   columnHelper,
 } from "./DataTable.mocks";
 import { RowDropdownMenu } from "./RowDropdownMenu";
-import { Button } from "../Button";
-import { DropdownMenuItem } from "../DropdownMenu";
 
 const meta: Meta<typeof DataTable> = {
   title: "Components/DataTable",

@@ -50,136 +50,136 @@ Patient, Practitioner, Observation, Medication, MedicationRequest, Appointment, 
 ### Validating FHIR Resources
 
 ```typescript
-import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
+import { FhirPatient } from "@schmiedmayerlab/grove-fhir";
 
 // Parse and validate a patient resource
 const rawData = {
-  resourceType: 'Patient',
-  id: 'patient-123',
+  resourceType: "Patient",
+  id: "patient-123",
   name: [
     {
-      use: 'official',
-      family: 'Smith',
-      given: ['John', 'Michael'],
+      use: "official",
+      family: "Smith",
+      given: ["John", "Michael"],
     },
   ],
-  gender: 'male',
-  birthDate: '1980-01-15',
-}
+  gender: "male",
+  birthDate: "1980-01-15",
+};
 
 // Validate the data and get a typed resource
-const patient = FhirPatient.parse(rawData)
-console.log(patient.value.name?.[0]?.family) // 'Smith'
+const patient = FhirPatient.parse(rawData);
+console.log(patient.value.name?.[0]?.family); // 'Smith'
 ```
 
 ### Working with Observations
 
 ```typescript
-import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
+import { FhirObservation } from "@schmiedmayerlab/grove-fhir";
 
 const observationData = {
-  resourceType: 'Observation',
-  status: 'final',
+  resourceType: "Observation",
+  status: "final",
   code: {
     coding: [
       {
-        system: 'http://loinc.org',
-        code: '29463-7',
-        display: 'Body Weight',
+        system: "http://loinc.org",
+        code: "29463-7",
+        display: "Body Weight",
       },
     ],
   },
   subject: {
-    reference: 'Patient/patient-123',
+    reference: "Patient/patient-123",
   },
   valueQuantity: {
     value: 72.5,
-    unit: 'kg',
-    system: 'http://unitsofmeasure.org',
-    code: 'kg',
+    unit: "kg",
+    system: "http://unitsofmeasure.org",
+    code: "kg",
   },
-}
+};
 
-const observation = FhirObservation.parse(observationData)
-console.log(observation.value.valueQuantity?.value) // 72.5
+const observation = FhirObservation.parse(observationData);
+console.log(observation.value.valueQuantity?.value); // 72.5
 ```
 
 ### Using Helper Methods
 
 ```typescript
-import { FhirCondition } from '@schmiedmayerlab/grove-fhir'
+import { FhirCondition } from "@schmiedmayerlab/grove-fhir";
 
 const condition = FhirCondition.parse({
-  resourceType: 'Condition',
+  resourceType: "Condition",
   code: {
     coding: [
       {
-        system: 'http://snomed.info/sct',
-        code: '73211009',
-        display: 'Diabetes mellitus',
+        system: "http://snomed.info/sct",
+        code: "73211009",
+        display: "Diabetes mellitus",
       },
     ],
   },
   // ... other fields
-})
+});
 
 // Check if condition contains specific coding
 const hasDiabetes = condition.containsCoding(condition.value.code, [
   {
-    system: 'http://snomed.info/sct',
-    code: '73211009',
+    system: "http://snomed.info/sct",
+    code: "73211009",
   },
-])
+]);
 
 // Extract codes from CodeableConcept
 const codes = condition.codes(condition.value.code, {
-  system: 'http://snomed.info/sct',
-})
-console.log(codes) // ['73211009']
+  system: "http://snomed.info/sct",
+});
+console.log(codes); // ['73211009']
 ```
 
 ### Firebase Functions Integration
 
 ```typescript
-import { onCall } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
-import { FhirPatient } from '@schmiedmayerlab/grove-fhir'
+import { FhirPatient } from "@schmiedmayerlab/grove-fhir";
+import { getFirestore } from "firebase-admin/firestore";
+import { onCall } from "firebase-functions/v2/https";
 
 export const createPatient = onCall(async (request) => {
-  const patientData = request.data
+  const patientData = request.data;
 
   // Validate the patient data
-  const patient = FhirPatient.parse(patientData)
+  const patient = FhirPatient.parse(patientData);
 
   // Store in Firestore
-  const firestore = getFirestore()
+  const firestore = getFirestore();
   await firestore
-    .collection('patients')
+    .collection("patients")
     .doc(patient.value.id)
-    .set(patient.value)
+    .set(patient.value);
 
-  return { success: true, id: patient.value.id }
-})
+  return { success: true, id: patient.value.id };
+});
 ```
 
 ### Firestore Integration
 
 ```typescript
-import { getFirestore } from 'firebase-admin/firestore'
-import { FhirObservation } from '@schmiedmayerlab/grove-fhir'
+import { FhirObservation } from "@schmiedmayerlab/grove-fhir";
+import { getFirestore } from "firebase-admin/firestore";
 
-const firestore = getFirestore()
+const firestore = getFirestore();
 
 // Read and validate from Firestore
-const doc = await firestore.collection('observations').doc('obs-123').get()
-const observation = FhirObservation.parse(doc.data())
+const doc = await firestore.collection("observations").doc("obs-123").get();
+const observation = FhirObservation.parse(doc.data());
 
 // Write validated data to Firestore
-const newObservation = FhirObservation.parse({/* ... */})
+const newObservation = FhirObservation.parse({/* ... */});
 await firestore
-  .collection('observations')
+  .collection("observations")
   .doc(newObservation.value.id)
-  .set(newObservation.value)
+  .set(newObservation.value);
 ```
 
 ## API Overview
@@ -194,13 +194,13 @@ import {
   FhirObservation,
   FhirMedicationRequest,
   FhirAppointment,
-} from '@schmiedmayerlab/grove-fhir'
+} from "@schmiedmayerlab/grove-fhir";
 
 // Each resource has a parse method
-const patient = FhirPatient.parse(rawData)
+const patient = FhirPatient.parse(rawData);
 
 // Access the validated value
-console.log(patient.value) // Typed FHIR Patient resource
+console.log(patient.value); // Typed FHIR Patient resource
 ```
 
 ### Helper Methods
@@ -216,11 +216,11 @@ The `FhirDomainResource` base class provides useful utilities:
 All schemas provide full TypeScript type inference:
 
 ```typescript
-import { type Patient } from 'fhir/r4b.js'
+import { type Patient } from "fhir/r4b.js";
 
 // The parsed value is fully typed
-const patient = FhirPatient.parse(data)
-const name: string | undefined = patient.value.name?.[0]?.family
+const patient = FhirPatient.parse(data);
+const name: string | undefined = patient.value.name?.[0]?.family;
 ```
 
 ## License

@@ -51,7 +51,8 @@ declare module "@tanstack/react-table" {
      * ```
      */
     cellClassName?:
-      string | ((context: CellContext<TData, TValue>) => string | undefined);
+      | string
+      | ((context: CellContext<TData, TValue>) => string | undefined);
   }
 }
 

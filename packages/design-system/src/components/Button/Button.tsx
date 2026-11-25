@@ -137,11 +137,13 @@ export const Button = ({
       aria-label={isPending ? "Loading" : undefined}
       {...props}
     >
-      {isPending !== undefined ?
+      {isPending !== undefined ? (
         <ButtonPending size={size} isPending={isPending}>
           {children}
         </ButtonPending>
-      : children}
+      ) : (
+        children
+      )}
     </Comp>
   );
 };

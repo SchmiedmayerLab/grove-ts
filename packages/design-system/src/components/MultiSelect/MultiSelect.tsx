@@ -321,12 +321,12 @@ export const MultiSelectValue = ({
             )}
             key={value}
             onClick={
-              clickToRemove ?
-                (event) => {
-                  event.stopPropagation();
-                  toggleValue(value);
-                }
-              : undefined
+              clickToRemove
+                ? (event) => {
+                    event.stopPropagation();
+                    toggleValue(value);
+                  }
+                : undefined
             }
           >
             {items.get(value)}
@@ -422,9 +422,11 @@ export const MultiSelectContent = ({
       </div>
       <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] !p-0">
         <Command {...props}>
-          {searchObject ?
+          {searchObject ? (
             <CommandInput placeholder={searchObject.placeholder} />
-          : <button type="button" autoFocus className="sr-only" />}
+          ) : (
+            <button type="button" autoFocus className="sr-only" />
+          )}
           <CommandList>
             {searchObject && (
               <CommandEmpty>{searchObject.emptyMessage}</CommandEmpty>

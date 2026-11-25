@@ -8,8 +8,8 @@
 
 import { type Meta } from "@storybook/react";
 import { useState } from "react";
-import { Button } from "../Button";
 import { NavigationBlocker, type BlockerStatus } from ".";
+import { Button } from "../Button";
 
 const meta: Meta<typeof NavigationBlocker> = {
   title: "Components/NavigationBlocker",

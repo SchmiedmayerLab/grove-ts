@@ -150,7 +150,7 @@ export const Avatar = ({
       {...props}
     >
       <div className="size-full overflow-hidden rounded-full">
-        {src ?
+        {src ? (
           <img
             data-slot="avatar-image"
             className={cn(
@@ -162,19 +162,17 @@ export const Avatar = ({
             onLoad={() => setIsImageLoaded(true)}
             alt={[name, "avatar"].filter(Boolean).join(" ")}
           />
-        : null}
-        {fallbackContent ?
+        ) : null}
+        {fallbackContent ? (
           <div
             data-slot="avatar-fallback"
             className="flex-center bg-muted size-full rounded-full"
           >
             {fallbackContent}
           </div>
-        : null}
+        ) : null}
       </div>
-      {overlay ?
-        <div className="absolute inset-0">{overlay}</div>
-      : null}
+      {overlay ? <div className="absolute inset-0">{overlay}</div> : null}
     </div>
   );
 };

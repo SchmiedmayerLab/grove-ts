@@ -12,9 +12,8 @@ import {
   type OperationDefinitionParameterReferencedFrom,
   type OperationDefinition,
   type OperationDefinitionParameter,
-} from 'fhir/r4b.js'
-import { z, type ZodType } from 'zod'
-import { FhirDomainResource } from './fhirDomainResource.js'
+} from "fhir/r4b.js";
+import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,
   booleanSchema,
@@ -28,7 +27,7 @@ import {
   stringSchema,
   urlSchema,
   usageContextSchema,
-} from '../elements/index.js'
+} from "../elements/index.js";
 import {
   bindingStrengthSchema,
   fhirResourceTypeSchema,
@@ -37,7 +36,8 @@ import {
   operationDefinitionParameterUseSchema,
   publicationStatusSchema,
   searchParameterTypeSchema,
-} from '../valueSets/index.js'
+} from "../valueSets/index.js";
+import { FhirDomainResource } from "./fhirDomainResource.js";
 
 const operationDefinitionParameterBindingSchema: ZodType<OperationDefinitionParameterBinding> =
   backboneElementSchema.extend({
@@ -45,7 +45,7 @@ const operationDefinitionParameterBindingSchema: ZodType<OperationDefinitionPara
     _strength: elementSchema.optional(),
     valueSet: urlSchema,
     _valueSet: elementSchema.optional(),
-  })
+  });
 
 const operationDefinitionParameterReferencedFromSchema: ZodType<OperationDefinitionParameterReferencedFrom> =
   backboneElementSchema.extend({
@@ -53,7 +53,7 @@ const operationDefinitionParameterReferencedFromSchema: ZodType<OperationDefinit
     _source: elementSchema.optional(),
     sourceId: stringSchema.optional(),
     _sourceId: elementSchema.optional(),
-  })
+  });
 
 const operationDefinitionParameterSchema: ZodType<OperationDefinitionParameter> =
   backboneElementSchema.extend({
@@ -66,7 +66,7 @@ const operationDefinitionParameterSchema: ZodType<OperationDefinitionParameter> 
     name: stringSchema,
     _name: elementSchema.optional(),
     get part() {
-      return operationDefinitionParameterSchema.array().optional()
+      return operationDefinitionParameterSchema.array().optional();
     },
     referencedFrom: operationDefinitionParameterReferencedFromSchema
       .array()
@@ -79,7 +79,7 @@ const operationDefinitionParameterSchema: ZodType<OperationDefinitionParameter> 
     _type: elementSchema.optional(),
     use: operationDefinitionParameterUseSchema,
     _use: elementSchema.optional(),
-  })
+  });
 
 const operationDefinitionOverloadSchema: ZodType<OperationDefinitionOverload> =
   backboneElementSchema.extend({
@@ -87,14 +87,14 @@ const operationDefinitionOverloadSchema: ZodType<OperationDefinitionOverload> =
     _comment: elementSchema.optional(),
     parameterName: stringSchema.array().optional(),
     _parameterName: elementSchema.array().optional(),
-  })
+  });
 
 /**
  * Zod schema for FHIR OperationDefinition resource (untyped version).
  */
 export const untypedOperationDefinitionSchema = z.lazy(() =>
   domainResourceSchema.extend({
-    resourceType: z.literal('OperationDefinition').readonly(),
+    resourceType: z.literal("OperationDefinition").readonly(),
     affectsState: booleanSchema.optional(),
     _affectsState: elementSchema.optional(),
     base: urlSchema.optional(),
@@ -143,13 +143,13 @@ export const untypedOperationDefinitionSchema = z.lazy(() =>
     version: stringSchema.optional(),
     _version: elementSchema.optional(),
   }),
-) satisfies ZodType<OperationDefinition>
+) satisfies ZodType<OperationDefinition>;
 
 /**
  * Zod schema for FHIR OperationDefinition resource.
  */
 export const operationDefinitionSchema: ZodType<OperationDefinition> =
-  untypedOperationDefinitionSchema
+  untypedOperationDefinitionSchema;
 
 /**
  * Wrapper class for FHIR OperationDefinition resources.
@@ -165,6 +165,6 @@ export class FhirOperationDefinition extends FhirDomainResource<OperationDefinit
    * @returns A FhirOperationDefinition instance containing the validated resource
    */
   public static parse(value: unknown): FhirOperationDefinition {
-    return new FhirOperationDefinition(operationDefinitionSchema.parse(value))
+    return new FhirOperationDefinition(operationDefinitionSchema.parse(value));
   }
 }

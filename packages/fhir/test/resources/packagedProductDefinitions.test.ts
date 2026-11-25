@@ -6,34 +6,34 @@
 // SPDX-License-Identifier: MIT
 //
 
-import fs from 'fs'
-import { expectTypeOf } from 'expect-type'
-import { type PackagedProductDefinition } from 'fhir/r4b.js'
-import { type z } from 'zod'
-import { jsonStringifyDeterministically } from './testHelpers.js'
+import fs from "fs";
+import { expectTypeOf } from "expect-type";
+import { type PackagedProductDefinition } from "fhir/r4b.js";
+import { type z } from "zod";
 import {
   FhirPackagedProductDefinition,
   type untypedPackagedProductDefinitionSchema,
-} from '../../src/index.js'
+} from "../../src/index.js";
+import { jsonStringifyDeterministically } from "./testHelpers.js";
 
-describe('PackagedProductDefinition Resource', () => {
-  it('should validate FHIR packagedProductDefinition from packagedProductDefinitions.json', () => {
-    type Schema = z.infer<typeof untypedPackagedProductDefinitionSchema>
-    expectTypeOf<Schema>().toExtend<PackagedProductDefinition>()
-    expectTypeOf<PackagedProductDefinition>().toExtend<Schema>()
+describe("PackagedProductDefinition Resource", () => {
+  it("should validate FHIR packagedProductDefinition from packagedProductDefinitions.json", () => {
+    type Schema = z.infer<typeof untypedPackagedProductDefinitionSchema>;
+    expectTypeOf<Schema>().toExtend<PackagedProductDefinition>();
+    expectTypeOf<PackagedProductDefinition>().toExtend<Schema>();
 
     const data = fs.readFileSync(
-      'test/resources/packagedProductDefinitions.json',
-      'utf-8',
-    )
-    const decodedJson = JSON.parse(data) as Record<string, unknown>
+      "test/resources/packagedProductDefinitions.json",
+      "utf-8",
+    );
+    const decodedJson = JSON.parse(data) as Record<string, unknown>;
 
     Object.values(decodedJson).forEach((jsonValue) => {
       const parsedResource =
-        FhirPackagedProductDefinition.parse(jsonValue).value
+        FhirPackagedProductDefinition.parse(jsonValue).value;
       expect(jsonStringifyDeterministically(jsonValue)).toBe(
         jsonStringifyDeterministically(parsedResource),
-      )
-    })
-  })
-})
+      );
+    });
+  });
+});

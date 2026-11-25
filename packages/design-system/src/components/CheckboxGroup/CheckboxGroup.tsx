@@ -95,9 +95,8 @@ export const CheckboxGroup = <T extends string | number>({
   });
 
   const handleChange = (optionValue: T, isChecked: boolean) => {
-    const newValue =
-      isChecked ?
-        [...value, optionValue]
+    const newValue = isChecked
+      ? [...value, optionValue]
       : value.filter((selectedValue) => selectedValue !== optionValue);
     setValue(newValue);
   };

@@ -29,9 +29,9 @@ const useMedia = (query: string) => {
   );
   const getSnapshot = useCallback(
     () =>
-      typeof window.matchMedia === "function" ?
-        window.matchMedia(query).matches
-      : false,
+      typeof window.matchMedia === "function"
+        ? window.matchMedia(query).matches
+        : false,
     [query],
   );
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
