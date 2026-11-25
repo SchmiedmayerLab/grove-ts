@@ -178,6 +178,8 @@ export const typeScriptRules: DummyRuleMap = {
       disallowTypeAnnotations: false,
     },
   ],
+  // With verbatimModuleSyntax, an import of only inline types stays in the output as `import {} from`.
+  "typescript/no-import-type-side-effects": "error",
   "no-restricted-imports": [
     "error",
     {

@@ -196,6 +196,8 @@ export const getTslint = (): ConfigWithExtends => ({
         disallowTypeAnnotations: false,
       },
     ],
+    // With verbatimModuleSyntax, an import of only inline types stays in the output as `import {} from`.
+    "@typescript-eslint/no-import-type-side-effects": "error",
     "@typescript-eslint/no-misused-promises": [
       "error",
       {

@@ -7,5 +7,8 @@
 //
 
 import { declared } from "./functions.ts";
+import { type Shape } from "./types.ts";
+
+export const shape: Shape = "circle";
 
 export default declared(1);
