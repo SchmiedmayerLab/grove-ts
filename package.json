@@ -103,6 +103,7 @@
           "src/**/*.ts"
         ],
         "ignoreDependencies": [
+          "@types/react",
           "prettier-plugin-tailwindcss"
         ],
         "ignore": [
