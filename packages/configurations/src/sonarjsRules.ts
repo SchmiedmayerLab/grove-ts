@@ -6,14 +6,20 @@
 // SPDX-License-Identifier: MIT
 //
 import { type Linter, type Rule } from "eslint";
-import { configs, rules } from "eslint-plugin-sonarjs";
+
+/**
+ * The parts of eslint-plugin-sonarjs that the rule split reads.
+ * The callers pass the plugin in, so that this module does not load it: it is an optional peer dependency.
+ */
+export interface SonarjsPlugin {
+  configs: { recommended: Linter.Config };
+  rules: Record<string, Rule.RuleModule | undefined>;
+}
 
 const isEnabled = (entry: Linter.RuleEntry | undefined) => {
   const level = Array.isArray(entry) ? entry[0] : entry;
   return level !== undefined && level !== "off" && level !== 0;
 };
-
-const sonarRules = rules as Record<string, Rule.RuleModule | undefined>;
 
 /**
  * Rules that sonarjs marks as requiring type information, but that report the same findings without it.
@@ -58,17 +64,13 @@ export const sonarRulesCoveredElsewhere: Record<string, string> = {
   "sonarjs/unused-import": "no-unused-vars",
 };
 
-const requiresTypeChecking = (name: string) => {
+const requiresTypeChecking = (sonarjs: SonarjsPlugin, name: string) => {
   if (rulesWorkingWithoutTypes.has(name)) return false;
-  const docs = sonarRules[name.replace(/^sonarjs\//, "")]?.meta?.docs as
+  const docs = sonarjs.rules[name.replace(/^sonarjs\//, "")]?.meta?.docs as
     | { requiresTypeChecking?: boolean }
     | undefined;
   return docs?.requiresTypeChecking === true;
 };
-
-const recommendedRules = Object.entries(configs.recommended.rules ?? {}).filter(
-  ([, entry]) => isEnabled(entry),
-);
 
 /**
  * Grove's adjustments to the sonarjs recommended rules.
@@ -81,10 +83,14 @@ const sonarRuleOverrides: Linter.RulesRecord = {
  * Returns the enabled sonarjs recommended rules, split by whether a rule needs TypeScript type information.
  * oxlint runs JS plugins without type information, so the type-aware rules stay in ESLint.
  */
-export const getSonarRuleSet = ({ typeAware }: { typeAware: boolean }) =>
+export const getSonarRuleSet = (
+  sonarjs: SonarjsPlugin,
+  { typeAware }: { typeAware: boolean },
+) =>
   Object.fromEntries(
-    recommendedRules
-      .filter(([name]) => requiresTypeChecking(name) === typeAware)
+    Object.entries(sonarjs.configs.recommended.rules ?? {})
+      .filter(([, entry]) => isEnabled(entry))
+      .filter(([name]) => requiresTypeChecking(sonarjs, name) === typeAware)
       .filter(([name]) => !(name in sonarRulesCoveredElsewhere))
       .map(([name, entry]) => [name, sonarRuleOverrides[name] ?? entry]),
   ) as Linter.RulesRecord;
