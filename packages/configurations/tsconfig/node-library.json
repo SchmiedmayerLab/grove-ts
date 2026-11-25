@@ -3,7 +3,7 @@
   "extends": "./node-app.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "inlineSources": true
   }
 }

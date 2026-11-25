@@ -140,9 +140,9 @@ Extend the preset that matches your project:
 | Preset          | For                                                      | Adds to `strict`                                                                                         |
 | --------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `node-app`      | Node.js 24 applications                                  | ES2025 target and the Node.js 24 library, `module: nodenext`, `types: ["node"]`                          |
-| `node-library`  | Node.js libraries compiled with `tsc`                    | Everything in `node-app`, plus declarations, declaration maps and source maps                            |
+| `node-library`  | Node.js libraries compiled with `tsc`                    | Everything in `node-app`, plus declarations and source maps with the sources embedded                    |
 | `react-app`     | React applications built by a bundler, such as Vite      | ES2023 target with the DOM, `module: preserve`, `jsx: react-jsx`, `noEmit`, `allowImportingTsExtensions` |
-| `react-library` | React libraries built by a bundler                       | ES2023 target with the DOM, `module: preserve`, `jsx: react-jsx`, declarations and declaration maps      |
+| `react-library` | React libraries built by a bundler                       | ES2023 target with the DOM, `module: preserve`, `jsx: react-jsx`, declarations                           |
 | `strict`        | Frameworks with their own base configuration, like Astro | Only the compiler checks below                                                                           |
 
 Each preset is exported as `@schmiedmayerlab/grove-configurations/tsconfig/<preset>`, without the `.json` extension.
@@ -193,6 +193,9 @@ Arrays replace the preset value instead of extending it, so repeat `node` when y
 A Vite application adds `"types": ["vite/client"]`.
 A project whose public API exports enums can set `"erasableSyntaxOnly": false` until it replaces them.
 To emit JavaScript from a `react-app` project, set `"noEmit": false` and `"allowImportingTsExtensions": false`.
+
+The library presets leave out declaration maps, which only help when the package also publishes its sources.
+A package that publishes `src` can set `"declarationMap": true`, so that editors and agents jump from a type to its implementation.
 
 Next.js skips its own `tsconfig.json` setup when the file has `extends`, so keep its `plugins`, `paths`, `incremental` and `.next` `include` entries yourself.
 

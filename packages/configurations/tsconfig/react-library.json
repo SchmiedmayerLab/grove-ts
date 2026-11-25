@@ -7,7 +7,6 @@
     "module": "preserve",
     "jsx": "react-jsx",
     "declaration": true,
-    "declarationMap": true,
     "skipLibCheck": true
   }
 }

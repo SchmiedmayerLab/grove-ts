@@ -281,9 +281,28 @@ describe("TypeScript presets", () => {
         expect(output).toBe("");
         expect(status).toBe(0);
         expect(existsSync(join(outDir, "index.d.ts"))).toBe(true);
-        expect(existsSync(join(outDir, "index.d.ts.map"))).toBe(true);
+        // Declaration maps point at sources, which a package usually does not publish.
+        expect(existsSync(join(outDir, "index.d.ts.map"))).toBe(false);
       },
     );
+
+    test("node-library embeds the sources in the JavaScript source maps", () => {
+      const outDir = join(consumerDir, "node-library", "dist");
+      rmSync(outDir, { recursive: true, force: true });
+      const { status } = runTsc(
+        compiler,
+        join(consumerDir, "node-library", "tsconfig.json"),
+      );
+      const sourceMap = readJson(join(outDir, "index.js.map"));
+
+      expect(status).toBe(0);
+      expect(isRecord(sourceMap) && sourceMap.sourcesContent).toEqual([
+        readFileSync(
+          join(fixturesDir, "node-library", "src", "index.ts"),
+          "utf8",
+        ),
+      ]);
+    });
   });
 
   test("matches the snapshot of the resolved compiler options", async () => {
