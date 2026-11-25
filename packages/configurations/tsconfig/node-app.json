@@ -1,0 +1,11 @@
+{
+  "$schema": "https://www.schemastore.org/tsconfig",
+  "extends": "./strict.json",
+  "compilerOptions": {
+    "target": "es2025",
+    "lib": ["es2025", "esnext.array", "esnext.disposable", "esnext.error"],
+    "module": "nodenext",
+    "types": ["node"],
+    "skipLibCheck": true
+  }
+}
