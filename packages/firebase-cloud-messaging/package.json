@@ -75,6 +75,6 @@
     "firebase-admin": "^14.2.0"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24.15"
   }
 }

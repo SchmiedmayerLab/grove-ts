@@ -28,7 +28,7 @@ Guidance for contributors working in this repository.
 
 ## Working Rules
 
-- Use Node.js 24 and pnpm 12.
+- Use Node.js 24.15 or later and pnpm 12.
 - Run `pnpm install` after changing dependencies and commit the resulting `pnpm-lock.yaml`.
 - Run `pnpm run validate` before requesting review.
 - Keep package entry points, published files, engine requirements, repository metadata, and scripts consistent across all publishable workspaces.

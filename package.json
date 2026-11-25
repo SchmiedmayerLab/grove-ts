@@ -67,7 +67,7 @@
     "publint": "^0.3.25"
   },
   "engines": {
-    "node": ">=24",
+    "node": ">=24.15",
     "pnpm": ">=12"
   },
   "packageManager": "pnpm@12.22.0",
