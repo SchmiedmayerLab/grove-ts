@@ -70,7 +70,7 @@
     "node": ">=24",
     "pnpm": ">=12"
   },
-  "packageManager": "pnpm@12.20.0",
+  "packageManager": "pnpm@12.22.0",
   "knip": {
     "ignoreWorkspaces": [
       "packages/design-system/docs"
