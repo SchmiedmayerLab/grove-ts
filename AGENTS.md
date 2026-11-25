@@ -27,9 +27,9 @@ Guidance for contributors working in this repository.
 
 ## Working Rules
 
-- Use Node.js 24 and npm 12.
-- Run `npm ci` after changing dependencies and commit the resulting lockfile.
-- Run `npm run validate` before requesting review.
+- Use Node.js 24 and pnpm 12.
+- Run `pnpm install` after changing dependencies and commit the resulting `pnpm-lock.yaml`.
+- Run `pnpm run validate` before requesting review.
 - Keep package entry points, published files, engine requirements, repository metadata, and scripts consistent across all publishable workspaces.
 - Treat TypeScript errors, lint errors, test failures, coverage regressions, invalid package contents, and production audit findings as blocking.
 - Add or update tests for behavior changes and bug fixes.

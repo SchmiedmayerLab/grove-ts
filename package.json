@@ -22,50 +22,42 @@
   "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
   "engines": {
     "node": ">=24",
-    "npm": ">=12"
+    "pnpm": ">=12"
   },
-  "packageManager": "npm@12.0.2",
-  "workspaces": [
-    "packages/configurations",
-    "packages/design-system",
-    "packages/firebase-utils",
-    "packages/fhir",
-    "packages/firebase-cloud-messaging"
-  ],
+  "packageManager": "pnpm@12.20.0",
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "build:fhir": "npm run build -w @schmiedmayerlab/grove-fhir",
-    "build:utils": "npm run build -w @schmiedmayerlab/grove-firebase-utils",
-    "build:cloud-messaging": "npm run build -w @schmiedmayerlab/grove-firebase-cloud-messaging",
-    "clean": "npm run clean --workspaces --if-present",
+    "build": "pnpm -r --filter \"./packages/*\" run build",
+    "build:fhir": "pnpm --filter @schmiedmayerlab/grove-fhir run build",
+    "build:utils": "pnpm --filter @schmiedmayerlab/grove-firebase-utils run build",
+    "build:cloud-messaging": "pnpm --filter @schmiedmayerlab/grove-firebase-cloud-messaging run build",
+    "clean": "pnpm -r --filter \"./packages/*\" run clean",
     "configure:trusted-publishing": "node scripts/configure-trusted-publishing.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prelint": "npm run build --workspace @schmiedmayerlab/grove-configurations",
-    "lint": "npm run lint --workspaces --if-present",
-    "lint:fix": "npm run lint:fix --workspaces --if-present",
-    "lint:ci": "npm run lint:ci --workspaces --if-present",
-    "lint:strict": "npm run lint:ci",
+    "prelint": "pnpm --filter @schmiedmayerlab/grove-configurations run build",
+    "lint": "pnpm -r --filter \"./packages/*\" run lint",
+    "lint:fix": "pnpm -r --filter \"./packages/*\" run lint:fix",
+    "lint:ci": "pnpm -r --filter \"./packages/*\" run lint:ci",
+    "lint:strict": "pnpm run lint:ci",
     "analyze": "knip --include files,dependencies,unlisted,exports --no-config-hints && knip --cycles --workspace '!packages/fhir' --no-config-hints",
-    "pretest": "npm run build",
-    "test": "npm run test:release && npm run test --workspaces --if-present",
+    "pretest": "pnpm run build",
+    "test": "pnpm run test:release && pnpm -r --filter \"./packages/*\" run test",
     "test:release": "node --test scripts/*.test.mjs",
-    "test:coverage": "npm run test:coverage --workspaces --if-present",
-    "test:fhir": "npm run test -w @schmiedmayerlab/grove-fhir",
-    "test:utils": "npm run test -w @schmiedmayerlab/grove-firebase-utils",
-    "test:cloud-messaging": "npm run test -w @schmiedmayerlab/grove-firebase-cloud-messaging",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:coverage": "pnpm -r --filter \"./packages/*\" run test:coverage",
+    "test:fhir": "pnpm --filter @schmiedmayerlab/grove-fhir run test",
+    "test:utils": "pnpm --filter @schmiedmayerlab/grove-firebase-utils run test",
+    "test:cloud-messaging": "pnpm --filter @schmiedmayerlab/grove-firebase-cloud-messaging run test",
+    "typecheck": "pnpm -r --filter \"./packages/*\" run typecheck",
     "pack:check": "node scripts/verify-packages.mjs",
-    "pack:lint": "node scripts/lint-packages.mjs",
+    "pack:lint": "pnpm -r --filter \"./packages/*\" run lint:package",
     "audit": "node scripts/audit-dependencies.mjs root",
     "audit:production": "node scripts/audit-dependencies.mjs production",
-    "audit:docs": "node scripts/audit-dependencies.mjs docs",
-    "audit:signatures": "npm audit signatures",
-    "validate": "npm run build && npm run format:check && npm run lint:ci && npm run analyze && npm run typecheck && npm test && npm run docs:ci && npm run pack:check && npm run pack:lint && npm run audit && npm run audit:docs",
-    "docs": "npm run dev --prefix packages/design-system/docs",
-    "docs:ci": "npm run build --prefix packages/design-system/docs",
-    "pages:build": "npm ci --prefix packages/design-system/docs && npm run audit:docs && npm run showcase && npm run docs:ci && node scripts/prepare-pages.mjs",
-    "showcase": "npm run build-storybook --workspace @schmiedmayerlab/grove-design-system && npm run showcase:generate",
+    "audit:signatures": "pnpm audit signatures",
+    "validate": "pnpm run build && pnpm run format:check && pnpm run lint:ci && pnpm run analyze && pnpm run typecheck && pnpm test && pnpm run docs:ci && pnpm run pack:check && pnpm run pack:lint && pnpm run audit",
+    "docs": "pnpm --filter @schmiedmayerlab/grove-docs run dev",
+    "docs:ci": "pnpm --filter @schmiedmayerlab/grove-docs run build",
+    "pages:build": "pnpm run showcase && pnpm run docs:ci && node scripts/prepare-pages.mjs",
+    "showcase": "pnpm --filter @schmiedmayerlab/grove-design-system run build-storybook && pnpm run showcase:generate",
     "showcase:generate": "node scripts/generate-showcase.mjs"
   },
   "devDependencies": {
@@ -77,18 +69,10 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "publint": "^0.3.22"
   },
-  "allowScripts": {
-    "@firebase/util@1.15.2": true,
-    "@parcel/watcher@2.6.0": true,
-    "@swc/core@1.15.47": true,
-    "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true,
-    "lmdb@2.8.5": true,
-    "msgpackr-extract@3.0.4": true,
-    "protobufjs@7.6.5": true,
-    "unrs-resolver@1.12.2": true
-  },
   "knip": {
+    "ignoreWorkspaces": [
+      "packages/design-system/docs"
+    ],
     "workspaces": {
       ".": {
         "entry": [
@@ -149,9 +133,5 @@
         ]
       }
     }
-  },
-  "overrides": {
-    "@grpc/grpc-js": "^1.14.6",
-    "glob": "^14.0.2"
   }
 }

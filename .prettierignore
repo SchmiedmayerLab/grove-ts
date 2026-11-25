@@ -17,3 +17,4 @@
 packages/design-system/docs/docs/api
 .parcel-cache
 node_modules
+pnpm-lock.yaml

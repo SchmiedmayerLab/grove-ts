@@ -10,9 +10,9 @@ import { spawn } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { pathToFileURL } from 'node:url'
 
-const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
+import { readPublicWorkspacePackages, repositoryRoot } from './workspaces.mjs'
 
 const executeInteractive = (command, arguments_) =>
   new Promise((resolvePromise, rejectPromise) => {
@@ -106,6 +106,7 @@ export const configureTrustedPublishing = async ({
 
   for (const [index, packageName] of packageNames.entries()) {
     console.log(`Configuring Trusted Publishing for ${packageName}.`)
+    // pnpm has no Trusted Publisher command, so this registry setting uses the npm CLI bundled with Node.js.
     await execute('npm', [
       'trust',
       'github',
@@ -125,18 +126,10 @@ const readRepositoryConfiguration = async () => {
   const rootManifest = JSON.parse(
     await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'),
   )
-  const packages = await Promise.all(
-    rootManifest.workspaces.map(async (workspace) =>
-      JSON.parse(
-        await readFile(
-          resolve(repositoryRoot, workspace, 'package.json'),
-          'utf8',
-        ),
-      ),
-    ),
-  )
   return {
-    packages: packages.filter(({ private: isPrivate }) => !isPrivate),
+    packages: (await readPublicWorkspacePackages()).map(
+      ({ manifest }) => manifest,
+    ),
     repository: githubRepositoryFromManifest(rootManifest),
   }
 }

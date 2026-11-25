@@ -10,63 +10,37 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { auditTargets, validateAuditReport } from './audit-dependencies.mjs'
 
-const advisory = (id) => ({
-  title: id,
+const exceptions = new Map([['GHSA-g3hv-75wg-m249', 'minimatch']])
+
+const advisory = (id, moduleName) => ({
+  github_advisory_id: id,
+  module_name: moduleName,
   url: `https://github.com/advisories/${id}`,
+  findings: [{ version: '1.0.0', paths: [`root>${moduleName}`] }],
 })
 
-const exceptions = new Map([
-  ['GHSA-g3hv-75wg-m249', 'minimatch'],
-  ['GHSA-gcqx-w48m-w2h4', 'deepmerge'],
-])
-
-const report = ({
-  fixAvailable = false,
-  includeUnexpected = false,
-  rootFixAvailable = false,
-  rootRange = '>=1.0.0',
-  transitiveFixAvailable = false,
-} = {}) => ({
-  vulnerabilities: {
-    eslint: {
-      isDirect: true,
-      fixAvailable: rootFixAvailable,
-      range: rootRange,
-      via: ['@eslint/config-array'],
-    },
-    '@eslint/config-array': {
-      isDirect: false,
-      fixAvailable: transitiveFixAvailable,
-      range: '*',
-      via: ['minimatch'],
-    },
-    minimatch: {
-      isDirect: false,
-      fixAvailable,
-      range: '<11.0.1',
-      via: [advisory('GHSA-g3hv-75wg-m249')],
-    },
-    deepmerge: {
-      isDirect: false,
-      fixAvailable: false,
-      range: '>=4.2.0',
-      via: [advisory('GHSA-gcqx-w48m-w2h4')],
-    },
+const report = ({ includeUnexpected = false } = {}) => ({
+  advisories: {
+    1: advisory('GHSA-g3hv-75wg-m249', 'minimatch'),
     ...(includeUnexpected && {
-      unexpected: {
-        isDirect: false,
-        fixAvailable: false,
-        via: [advisory('GHSA-xxxx-yyyy-zzzz')],
-      },
+      2: advisory('GHSA-xxxx-yyyy-zzzz', 'unexpected'),
     }),
   },
+  metadata: {},
 })
 
-const accepted = ['GHSA-g3hv-75wg-m249', 'GHSA-gcqx-w48m-w2h4']
-
 describe('dependency audit exceptions', () => {
-  it('accepts only the documented, unfixable advisories', () => {
-    assert.deepEqual(validateAuditReport(report(), exceptions), accepted)
+  it('accepts only the documented advisories', () => {
+    assert.deepEqual(validateAuditReport(report(), exceptions), [
+      'GHSA-g3hv-75wg-m249',
+    ])
+  })
+
+  it('accepts a report without findings when no exceptions remain', () => {
+    assert.deepEqual(
+      validateAuditReport({ advisories: {}, metadata: {} }, new Map()),
+      [],
+    )
   })
 
   it('documents a reason for every exception', () => {
@@ -83,7 +57,7 @@ describe('dependency audit exceptions', () => {
     assert.throws(
       () =>
         validateAuditReport(report({ includeUnexpected: true }), exceptions),
-      /Unexpected npm audit findings: GHSA-xxxx-yyyy-zzzz/,
+      /Unexpected pnpm audit findings: GHSA-xxxx-yyyy-zzzz/,
     )
   })
 
@@ -94,64 +68,29 @@ describe('dependency audit exceptions', () => {
           { error: { summary: 'registry unavailable' } },
           exceptions,
         ),
-      /npm audit failed: registry unavailable/,
+      /pnpm audit failed: registry unavailable/,
     )
   })
 
-  it('rejects stale exceptions and advisories with fixes', () => {
+  it('rejects stale exceptions', () => {
     const withResolved = new Map([
       ...exceptions,
       ['GHSA-resolved-advisory', 'Resolved.'],
     ])
     assert.throws(
       () => validateAuditReport(report(), withResolved),
-      /Remove resolved npm audit exceptions: GHSA-resolved-advisory/,
-    )
-    assert.throws(
-      () => validateAuditReport(report({ fixAvailable: true }), exceptions),
-      /Fixes are now available for: GHSA-g3hv-75wg-m249/,
-    )
-    assert.throws(
-      () => validateAuditReport(report({ rootFixAvailable: true }), exceptions),
-      /Fixes are now available/,
+      /Remove resolved pnpm audit exceptions: GHSA-resolved-advisory/,
     )
   })
 
-  it('ignores fixAvailable on transitive, non-direct dependencies', () => {
-    assert.deepEqual(
-      validateAuditReport(report({ transitiveFixAvailable: true }), exceptions),
-      accepted,
+  it('identifies advisories from their URL when the ID field is missing', () => {
+    const { github_advisory_id: _, ...withoutId } = advisory(
+      'GHSA-g3hv-75wg-m249',
+      'minimatch',
     )
-  })
-
-  it('ignores fixes when every release of a direct dependency is affected', () => {
     assert.deepEqual(
-      validateAuditReport(
-        report({ rootFixAvailable: true, rootRange: '*' }),
-        exceptions,
-      ),
-      accepted,
-    )
-  })
-
-  it('ignores suggested downgrades but rejects upgrades', () => {
-    const fix = { name: 'eslint', version: '8.14.0', isSemVerMajor: true }
-    assert.deepEqual(
-      validateAuditReport(
-        report({ rootFixAvailable: fix }),
-        exceptions,
-        () => '10.13.0',
-      ),
-      accepted,
-    )
-    assert.throws(
-      () =>
-        validateAuditReport(
-          report({ rootFixAvailable: { ...fix, version: '11.0.0' } }),
-          exceptions,
-          () => '10.13.0',
-        ),
-      /Fixes are now available/,
+      validateAuditReport({ advisories: { 1: withoutId } }, exceptions),
+      ['GHSA-g3hv-75wg-m249'],
     )
   })
 })

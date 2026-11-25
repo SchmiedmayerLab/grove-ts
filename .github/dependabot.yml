@@ -16,6 +16,7 @@ updates:
     directory: /
     patterns: ['*']
     multi-ecosystem-group: weekly-dependencies
+  # Dependabot updates pnpm-lock.yaml through the npm ecosystem, including the documentation site workspace.
   - package-ecosystem: npm
     directory: /
     patterns: ['*']
@@ -26,11 +27,4 @@ updates:
         update-types: ['version-update:semver-major']
       # Grove's supported runtime is Node.js 24.
       - dependency-name: '@types/node'
-        update-types: ['version-update:semver-major']
-  - package-ecosystem: npm
-    directory: /packages/design-system/docs
-    patterns: ['*']
-    multi-ecosystem-group: weekly-dependencies
-    ignore:
-      - dependency-name: typescript
         update-types: ['version-update:semver-major']

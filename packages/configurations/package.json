@@ -48,9 +48,10 @@
     "lint": "eslint .",
     "lint:ci": "eslint --max-warnings 0 .",
     "lint:fix": "eslint . --fix",
+    "lint:package": "publint --strict --pack pnpm && attw --pack . --profile esm-only",
     "test": "node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build"
   },
   "dependencies": {
     "@eslint-react/eslint-plugin": "^5.18.1",

@@ -7,51 +7,35 @@
 //
 
 import { execFileSync } from 'node:child_process'
-import { readFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const rootManifest = JSON.parse(
-  await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'),
-)
+import { readPublicWorkspacePackages, repositoryRoot } from './workspaces.mjs'
 
-const workspacePackages = await Promise.all(
-  rootManifest.workspaces.map(async (workspace) => ({
-    workspace,
-    manifest: JSON.parse(
-      await readFile(
-        resolve(repositoryRoot, workspace, 'package.json'),
-        'utf8',
-      ),
-    ),
-  })),
-)
-const publicPackages = workspacePackages.filter(
-  ({ manifest }) => !manifest.private,
-)
-const workspaceVersions = new Map(
-  publicPackages.map(({ manifest }) => [manifest.name, manifest.version]),
+const publicPackages = await readPublicWorkspacePackages()
+const workspaceNames = new Set(
+  publicPackages.map(({ manifest }) => manifest.name),
 )
 
 const packOutput = execFileSync(
-  'npm',
-  ['pack', '--json', '--dry-run', '--workspaces'],
+  'pnpm',
+  [
+    '--recursive',
+    ...publicPackages.flatMap(({ workspace }) => [
+      '--filter',
+      `./${workspace}`,
+    ]),
+    'pack',
+    '--json',
+    '--dry-run',
+  ],
   {
     cwd: repositoryRoot,
     encoding: 'utf8',
-    env: {
-      ...process.env,
-      npm_config_cache: resolve(tmpdir(), 'grove-npm-cache'),
-    },
     maxBuffer: 32 * 1024 * 1024,
   },
 )
 const packMetadata = JSON.parse(packOutput)
-// npm 12 keys workspace metadata by package name; npm 11 returned an array.
-const packs =
-  Array.isArray(packMetadata) ? packMetadata : Object.values(packMetadata)
+// pnpm returns an array for several packages and a single object for one.
+const packs = Array.isArray(packMetadata) ? packMetadata : [packMetadata]
 const packsByName = new Map(packs.map((pack) => [pack.name, pack]))
 const errors = []
 
@@ -78,7 +62,7 @@ const forbiddenPackageFile = (path) =>
 for (const { manifest } of publicPackages) {
   const label = manifest.name
   const pack = packsByName.get(label)
-  check(pack, `${label}: npm did not produce package metadata`)
+  check(pack, `${label}: pnpm did not produce package metadata`)
   if (!pack) continue
 
   const packageFiles = new Set(pack.files.map(({ path }) => path))
@@ -134,12 +118,11 @@ for (const { manifest } of publicPackages) {
     for (const [dependencyName, dependencyVersion] of Object.entries(
       manifest[dependencyField] ?? {},
     )) {
-      const workspaceVersion = workspaceVersions.get(dependencyName)
-      if (!workspaceVersion) continue
+      if (!workspaceNames.has(dependencyName)) continue
 
       check(
-        dependencyVersion === workspaceVersion,
-        `${label}: ${dependencyName} must use workspace version ${workspaceVersion}`,
+        dependencyVersion === 'workspace:*',
+        `${label}: ${dependencyName} must use the workspace:* protocol`,
       )
     }
   }
@@ -147,7 +130,7 @@ for (const { manifest } of publicPackages) {
 
 check(
   packs.length === publicPackages.length,
-  `expected ${publicPackages.length} packages but npm described ${packs.length}`,
+  `expected ${publicPackages.length} packages but pnpm described ${packs.length}`,
 )
 check(
   new Set(publicPackages.map(({ manifest }) => manifest.version)).size === 1,
@@ -158,5 +141,5 @@ if (errors.length > 0) {
   throw new Error(`Package verification failed:\n- ${errors.join('\n- ')}`)
 }
 
-const fileCount = packs.reduce((total, pack) => total + pack.entryCount, 0)
+const fileCount = packs.reduce((total, pack) => total + pack.files.length, 0)
 console.log(`Verified ${packs.length} packages containing ${fileCount} files.`)
