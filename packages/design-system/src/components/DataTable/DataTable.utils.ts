@@ -115,7 +115,7 @@ export const fuzzyFilter = constructFilterFn({
 /**
  * Features registered for every DataTable.
  *
- * Registers all stock TanStack Table features, so every v8 table, row, column, and cell API stays available.
+ * Registers all stock TanStack Table features.
  * Adds client-side filtering, sorting, and pagination row models,
  * every built-in filter and sort function under its TanStack name, and the `fuzzy` filter used for global filtering.
  *
@@ -228,8 +228,6 @@ export const useDataTable = <Data extends RowData>({
     columns,
     data,
     globalFilterFn: "fuzzy",
-    // TanStack Table v9 enables Shift range selection by default, v8 did not.
-    enableRowRangeSelection: false,
     ...props,
     initialState: {
       ...initialState,

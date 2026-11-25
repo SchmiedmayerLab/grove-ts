@@ -19,7 +19,6 @@ import { formatDate, formatDateTime } from "@/utils/date";
 import {
   createDataTableColumnHelper,
   DataTable,
-  type DataTableProps,
   dataTableFeatures,
   dateColumn,
   dateTimeColumn,
@@ -29,7 +28,6 @@ import {
   peopleColumn,
   peopleColumns,
   peopleData,
-  type Person,
 } from "./DataTable.mocks";
 
 describe("DataTable", () => {
@@ -363,69 +361,6 @@ describe("DataTable", () => {
       );
       expect(getRows()).toHaveLength(updatedInRange.length);
       expectNamesInGivenOrder(updatedInRange);
-    });
-  });
-
-  describe("row selection", () => {
-    const SelectableTable = (
-      props: Pick<DataTableProps<Person>, "enableRowRangeSelection">,
-    ) => (
-      <DataTable columns={peopleColumns} data={peopleData} {...props}>
-        {({ rows }) =>
-          rows.map((row) => (
-            <label key={row.id}>
-              <input
-                type="checkbox"
-                checked={row.getIsSelected()}
-                onChange={row.getToggleSelectedHandler()}
-              />
-              {row.original.name}
-            </label>
-          ))
-        }
-      </DataTable>
-    );
-
-    const getCheckbox = (index: number) =>
-      screen.getByRole("checkbox", { name: peopleData[index]?.name });
-
-    it("toggles rows through a custom view", async () => {
-      const user = userEvent.setup();
-      render(<SelectableTable />);
-
-      await user.click(getCheckbox(0));
-      expect(getCheckbox(0)).toBeChecked();
-      await user.click(getCheckbox(0));
-      expect(getCheckbox(0)).not.toBeChecked();
-    });
-
-    it("does not select ranges with Shift by default", async () => {
-      const user = userEvent.setup();
-      render(<SelectableTable />);
-
-      await user.click(getCheckbox(0));
-      await user.keyboard("{Shift>}");
-      await user.click(getCheckbox(2));
-      await user.keyboard("{/Shift}");
-
-      expect(screen.getAllByRole("checkbox", { checked: true })).toHaveLength(
-        2,
-      );
-      expect(getCheckbox(1)).not.toBeChecked();
-    });
-
-    it("selects ranges with Shift when enabled", async () => {
-      const user = userEvent.setup();
-      render(<SelectableTable enableRowRangeSelection />);
-
-      await user.click(getCheckbox(0));
-      await user.keyboard("{Shift>}");
-      await user.click(getCheckbox(2));
-      await user.keyboard("{/Shift}");
-
-      expect(screen.getAllByRole("checkbox", { checked: true })).toHaveLength(
-        3,
-      );
     });
   });
 

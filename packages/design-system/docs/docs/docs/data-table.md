@@ -50,7 +50,7 @@ Rows must be objects or arrays, as required by the v9 `RowData` type.
 ## Features
 
 `dataTableFeatures` registers every stock TanStack Table feature,
-so all table, row, column, and cell APIs of v8 stay available in columns and custom views.
+so all table, row, column, and cell APIs are available in columns and custom views.
 It also registers the client-side filtering, sorting, and pagination row models,
 every built-in filter and sort function under its TanStack name, and the `fuzzy` filter used for global search.
 That makes `auto` and string references like `filterFn: "startsWith"` resolve, including `inDateRange`, which `auto` picks for date columns.
@@ -80,11 +80,4 @@ The global search is part of the table state, so it can be controlled with `stat
 
 Custom views, headers, and cells receive the v9 table instance.
 Read its state with `table.store.state` instead of `table.getState()`.
-Call row, column, and cell methods on the object, like `row.getIsSelected()`, instead of destructuring them.
-
-## Row selection
-
-TanStack Table v9 selects a range of rows when a row is toggled with Shift held down.
-DataTable keeps the v8 behavior and disables it by default.
-Pass `enableRowRangeSelection` to enable range selection.
-`table.getIsSomeRowsSelected()` is true when at least one row is selected, also when all rows are selected.
+Call row, column, and cell methods on the object, like `row.getValue("name")`, instead of destructuring them.
