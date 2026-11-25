@@ -64,7 +64,7 @@
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.15.0",
     "eslint-import-resolver-typescript": "^4.4.5",
-    "firebase-admin": "^14.2.0",
+    "firebase-admin": "^14.5.1",
     "oxlint": "^1.94.0",
     "oxlint-tsgolint": "^7.0.2007",
     "rimraf": "^6.1.4",
