@@ -117,9 +117,9 @@ The import turns that file into a module, so any other declaration in it would s
 ## Tests
 
 The tests run with Vitest against the built entry points, so build the package before `pnpm test`.
-`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the main and `./prettier` entry points load nothing from ESLint, and loading with `require()`.
+`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the `./prettier` entry point loads nothing from ESLint, loading with `require()`, and that the package has no main entry point.
 After an intended change to the ESLint configurations, update the snapshot with `pnpm test -u`; oxfmt leaves it as Vitest writes it.
-`test/package.test.ts` loads the main and `./eslint` ESM entry points as published.
+`test/package.test.ts` loads the `./eslint` and `./prettier` ESM entry points as published.
 
 `test/oxc.test.ts` lints the fixture project in `test/fixtures/project` with oxlint and the type-aware ESLint configuration, and formats with oxfmt.
 It also checks the rule lists against oxlint's rule metadata and that the `./eslint-type-aware` entry point loads neither Prettier nor the import resolver.

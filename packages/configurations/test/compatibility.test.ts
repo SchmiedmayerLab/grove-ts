@@ -15,11 +15,11 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { prettierConfig } from "@schmiedmayerlab/grove-configurations";
 import {
   getEslintNodeConfig,
   getEslintReactConfig,
 } from "@schmiedmayerlab/grove-configurations/eslint";
+import { prettierConfig } from "@schmiedmayerlab/grove-configurations/prettier";
 import { ESLint, type Linter } from "eslint";
 import { format } from "prettier";
 import { expect, test } from "vitest";
@@ -112,12 +112,9 @@ test("formats with the Prettier configuration", async () => {
   );
 });
 
-// The main entry point stays free of ESLint, because typescript-eslint fails to load
+// The Prettier entry point stays free of ESLint, because typescript-eslint fails to load
 // when a project installs TypeScript 7 as `typescript`.
-test.each([
-  "@schmiedmayerlab/grove-configurations",
-  "@schmiedmayerlab/grove-configurations/prettier",
-])("loads %s without the ESLint dependencies", (entryPoint) => {
+test("loads the Prettier entry point without the ESLint dependencies", () => {
   // Fails the import of any module that only the ESLint configurations need.
   const script = `
     import { registerHooks } from "node:module";
@@ -127,7 +124,7 @@ test.each([
         return nextResolve(specifier, context);
       },
     });
-    const { prettierConfig } = await import(${JSON.stringify(entryPoint)});
+    const { prettierConfig } = await import("@schmiedmayerlab/grove-configurations/prettier");
     if (!prettierConfig.plugins.length) throw new Error("no plugins");
   `;
   const result = spawnSync(
@@ -141,17 +138,26 @@ test.each([
   expect(result.status, result.stderr).toBe(0);
 });
 
-test("loads the main and ESLint entry points with require()", () => {
+test("loads the ESLint and Prettier entry points with require()", () => {
   const require = createRequire(import.meta.url);
-  const configurations = require("@schmiedmayerlab/grove-configurations") as {
-    prettierConfig: { plugins: unknown };
-  };
   const eslintConfigurations =
     require("@schmiedmayerlab/grove-configurations/eslint") as {
       getEslintReactConfig: unknown;
       getEslintNodeConfig: unknown;
     };
-  expect(configurations.prettierConfig.plugins).toBeInstanceOf(Array);
+  const prettierConfigurations =
+    require("@schmiedmayerlab/grove-configurations/prettier") as {
+      prettierConfig: { plugins: unknown };
+    };
   expect(eslintConfigurations.getEslintReactConfig).toBeTypeOf("function");
   expect(eslintConfigurations.getEslintNodeConfig).toBeTypeOf("function");
+  expect(prettierConfigurations.prettierConfig.plugins).toBeInstanceOf(Array);
+});
+
+test("has no main entry point", () => {
+  // Every configuration has its own entry point, so that each loads only its own tools.
+  const require = createRequire(import.meta.url);
+  expect(() =>
+    require.resolve("@schmiedmayerlab/grove-configurations"),
+  ).toThrow(expect.objectContaining({ code: "ERR_PACKAGE_PATH_NOT_EXPORTED" }));
 });

@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { prettierConfig } from "@schmiedmayerlab/grove-configurations";
 import {
   getEslintNodeConfig,
   getEslintReactConfig,
 } from "@schmiedmayerlab/grove-configurations/eslint";
+import { prettierConfig } from "@schmiedmayerlab/grove-configurations/prettier";
 import { expect, test } from "vitest";
 
 test("loads the published ESM configuration entry points", () => {
