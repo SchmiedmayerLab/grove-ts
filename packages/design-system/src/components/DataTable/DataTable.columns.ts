@@ -24,8 +24,11 @@ import type { DataTableFeatures } from "./DataTable.utils";
  * })
  * ```
  */
-export const dateColumn = <T extends RowData>(
-  props: CellContext<DataTableFeatures, T, Nil<string | Date>>,
+export const dateColumn = <
+  T extends RowData,
+  TValue extends Nil<string | Date> = Nil<string | Date>,
+>(
+  props: CellContext<DataTableFeatures, T, TValue>,
 ) => formatNilDate(props.getValue()) ?? "";
 
 /**
@@ -41,6 +44,9 @@ export const dateColumn = <T extends RowData>(
  * })
  * ```
  */
-export const dateTimeColumn = <T extends RowData>(
-  props: CellContext<DataTableFeatures, T, Nil<string | Date>>,
+export const dateTimeColumn = <
+  T extends RowData,
+  TValue extends Nil<string | Date> = Nil<string | Date>,
+>(
+  props: CellContext<DataTableFeatures, T, TValue>,
 ) => formatNilDateTime(props.getValue()) ?? "";

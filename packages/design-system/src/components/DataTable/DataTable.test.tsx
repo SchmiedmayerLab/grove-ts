@@ -15,7 +15,15 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { vitest } from "vitest";
-import { DataTable, type DataTableProps, dataTableFeatures } from ".";
+import { formatDate, formatDateTime } from "@/utils/date";
+import {
+  createDataTableColumnHelper,
+  DataTable,
+  type DataTableProps,
+  dataTableFeatures,
+  dateColumn,
+  dateTimeColumn,
+} from ".";
 import {
   columnHelper,
   peopleColumn,
@@ -227,6 +235,32 @@ describe("DataTable", () => {
 
     await screen.findByText("1-1 of 1");
     expect(screen.getByRole("cell", { name: "Lorem" })).toBeInTheDocument();
+  });
+
+  it("formats date columns of any date value type", () => {
+    const createdAt = new Date(2026, 0, 2, 3, 4);
+    const data = [{ name: "Ada", createdAt, updatedAt: null }];
+    const eventHelper = createDataTableColumnHelper<(typeof data)[number]>();
+    const columns = [
+      eventHelper.accessor("createdAt", { header: "Date", cell: dateColumn }),
+      eventHelper.accessor("createdAt", {
+        id: "createdAtTime",
+        header: "Date Time",
+        cell: dateTimeColumn,
+      }),
+      eventHelper.accessor("updatedAt", {
+        header: "Updated",
+        cell: dateColumn,
+      }),
+    ];
+    render(<DataTable columns={columns} data={data} />);
+
+    expect(
+      screen.getByRole("cell", { name: formatDate(createdAt) }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("cell", { name: formatDateTime(createdAt) }),
+    ).toBeInTheDocument();
   });
 
   describe("custom filter functions", () => {
