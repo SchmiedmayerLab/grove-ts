@@ -7,7 +7,7 @@
 //
 
 import { CircleAlert } from "lucide-react";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Badge, type BadgeProps } from "@/components/Badge";
 
 export interface ErrorStateProps extends BadgeProps {

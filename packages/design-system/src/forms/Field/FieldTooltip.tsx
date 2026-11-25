@@ -8,7 +8,7 @@
 
 import { InfoButton } from "@/components/InfoButton";
 import { Tooltip, type TooltipProps } from "@/components/Tooltip";
-import { type FieldProps } from "@/forms";
+import type { FieldProps } from "@/forms";
 import { ensureString } from "@/utils/misc";
 
 interface FieldTooltipProps extends TooltipProps, Pick<FieldProps, "label"> {

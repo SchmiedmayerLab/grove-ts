@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { addDays } from "date-fns";
 import { useState } from "react";
-import { type DateRange } from "react-day-picker";
+import type { DateRange } from "react-day-picker";
 import { Calendar } from "./Calendar";
 
 const meta: Meta<typeof Calendar> = {

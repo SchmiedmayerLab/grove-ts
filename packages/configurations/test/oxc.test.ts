@@ -28,7 +28,7 @@ import {
 } from "@schmiedmayerlab/grove-configurations/oxlint-core";
 import { ESLint, type Linter } from "eslint";
 import { format } from "oxfmt";
-import { type OxlintConfig } from "oxlint";
+import type { OxlintConfig } from "oxlint";
 import { configs as typescriptEslintConfigs } from "typescript-eslint";
 import { expect, test } from "vitest";
 import { sonarRulesCoveredElsewhere } from "../src/sonarjsRules";

@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type PractitionerRoleAvailableTime,
-  type PractitionerRoleNotAvailable,
-  type Coding,
-  type PractitionerRole,
+import type {
+  PractitionerRoleAvailableTime,
+  PractitionerRoleNotAvailable,
+  Coding,
+  PractitionerRole,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

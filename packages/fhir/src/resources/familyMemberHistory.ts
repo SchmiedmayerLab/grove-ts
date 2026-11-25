@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type FamilyMemberHistoryCondition,
-  type FamilyMemberHistory,
-  type Coding,
+import type {
+  FamilyMemberHistoryCondition,
+  FamilyMemberHistory,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

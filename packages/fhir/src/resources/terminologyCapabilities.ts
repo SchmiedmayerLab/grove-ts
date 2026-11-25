@@ -6,18 +6,18 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type TerminologyCapabilitiesClosure,
-  type TerminologyCapabilitiesCodeSystem,
-  type TerminologyCapabilitiesCodeSystemVersion,
-  type TerminologyCapabilitiesCodeSystemVersionFilter,
-  type TerminologyCapabilitiesExpansion,
-  type TerminologyCapabilitiesExpansionParameter,
-  type TerminologyCapabilitiesImplementation,
-  type TerminologyCapabilitiesSoftware,
-  type TerminologyCapabilitiesTranslation,
-  type TerminologyCapabilitiesValidateCode,
-  type TerminologyCapabilities,
+import type {
+  TerminologyCapabilitiesClosure,
+  TerminologyCapabilitiesCodeSystem,
+  TerminologyCapabilitiesCodeSystemVersion,
+  TerminologyCapabilitiesCodeSystemVersionFilter,
+  TerminologyCapabilitiesExpansion,
+  TerminologyCapabilitiesExpansionParameter,
+  TerminologyCapabilitiesImplementation,
+  TerminologyCapabilitiesSoftware,
+  TerminologyCapabilitiesTranslation,
+  TerminologyCapabilitiesValidateCode,
+  TerminologyCapabilities,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

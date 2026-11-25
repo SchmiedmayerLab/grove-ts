@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Header } from "@tanstack/react-table";
+import type { Header } from "@tanstack/react-table";
 import { ArrowDownAZ, ArrowUpZA } from "lucide-react";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Button } from "../Button";
 
 interface ToggleSortButtonProps<Data> {

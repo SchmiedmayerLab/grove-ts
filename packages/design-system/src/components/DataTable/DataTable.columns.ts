@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type CellContext } from "@tanstack/react-table";
+import type { CellContext } from "@tanstack/react-table";
 import { formatNilDate, formatNilDateTime } from "../../utils/date";
-import { type Nil } from "../../utils/misc";
+import type { Nil } from "../../utils/misc";
 
 /**
  * Column cell formatter that formats date to include just the day, month and year.

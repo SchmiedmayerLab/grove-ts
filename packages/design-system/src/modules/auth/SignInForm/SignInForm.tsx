@@ -7,11 +7,11 @@
 //
 
 import { FirebaseError } from "firebase/app";
-import {
-  type Auth,
-  type AuthProvider,
-  type signInWithPopup,
-  type signInWithEmailAndPassword,
+import type {
+  Auth,
+  AuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";

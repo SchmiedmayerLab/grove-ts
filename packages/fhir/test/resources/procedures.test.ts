@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Procedure } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Procedure } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirProcedure, type untypedProcedureSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

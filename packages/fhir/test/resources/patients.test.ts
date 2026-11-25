@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Patient } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Patient } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirPatient, type untypedPatientSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

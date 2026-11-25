@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type AllergyIntoleranceReaction,
-  type AllergyIntolerance,
-  type Coding,
+import type {
+  AllergyIntoleranceReaction,
+  AllergyIntolerance,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

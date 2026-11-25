@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type AdverseEventSuspectEntity,
-  type AdverseEventSuspectEntityCausality,
-  type AdverseEvent,
+import type {
+  AdverseEventSuspectEntity,
+  AdverseEventSuspectEntityCausality,
+  AdverseEvent,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

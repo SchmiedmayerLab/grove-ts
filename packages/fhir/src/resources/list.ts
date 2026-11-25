@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ListEntry, type Coding, type List } from "fhir/r4b.js";
+import type { ListEntry, Coding, List } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   annotationSchema,

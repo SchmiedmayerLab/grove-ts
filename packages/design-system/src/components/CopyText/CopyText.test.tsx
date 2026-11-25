@@ -8,7 +8,7 @@
 
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { CopyText } from ".";
 import { Toaster } from "../Toaster";
 

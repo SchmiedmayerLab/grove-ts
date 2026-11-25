@@ -10,7 +10,7 @@
  * Interface for device token storage
  */
 
-import { type Device } from "../models/device.js";
+import type { Device } from "../models/device.js";
 
 /**
  * Represents a document with metadata

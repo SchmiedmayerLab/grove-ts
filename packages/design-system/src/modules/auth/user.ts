@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type UserInfo as AuthUserInfo } from "firebase/auth";
+import type { UserInfo as AuthUserInfo } from "firebase/auth";
 
 /**
  * Converts complete Firebase UserInfo to plain object with properties

@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type RegulatedAuthorization,
-  type RegulatedAuthorizationCase,
+import type {
+  RegulatedAuthorization,
+  RegulatedAuthorizationCase,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

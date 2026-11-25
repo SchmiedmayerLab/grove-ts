@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { action } from "storybook/actions";
 import { Radio, RadioRoot } from "./Radio";
 

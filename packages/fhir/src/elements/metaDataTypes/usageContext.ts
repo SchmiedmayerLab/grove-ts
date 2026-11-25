@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type UsageContext } from "fhir/r4b.js";
+import type { UsageContext } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { codeableConceptSchema } from "../dataTypes/codeableConcept.js";
 import { codingSchema } from "../dataTypes/coding.js";

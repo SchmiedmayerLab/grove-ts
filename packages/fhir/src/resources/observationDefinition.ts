@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ObservationDefinitionQualifiedInterval,
-  type ObservationDefinitionQuantitativeDetails,
-  type ObservationDefinition,
-  type Coding,
+import type {
+  ObservationDefinitionQualifiedInterval,
+  ObservationDefinitionQuantitativeDetails,
+  ObservationDefinition,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

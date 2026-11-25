@@ -6,24 +6,24 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ContractContentDefinition,
-  type ContractFriendly,
-  type ContractLegal,
-  type ContractRule,
-  type ContractSigner,
-  type ContractTermAction,
-  type ContractTermActionSubject,
-  type ContractTermAsset,
-  type ContractTermAssetContext,
-  type ContractTermAssetValuedItem,
-  type ContractTermOffer,
-  type ContractTermOfferAnswer,
-  type ContractTermOfferParty,
-  type ContractTermSecurityLabel,
-  type Coding,
-  type Contract,
-  type ContractTerm,
+import type {
+  ContractContentDefinition,
+  ContractFriendly,
+  ContractLegal,
+  ContractRule,
+  ContractSigner,
+  ContractTermAction,
+  ContractTermActionSubject,
+  ContractTermAsset,
+  ContractTermAssetContext,
+  ContractTermAssetValuedItem,
+  ContractTermOffer,
+  ContractTermOfferAnswer,
+  ContractTermOfferParty,
+  ContractTermSecurityLabel,
+  Coding,
+  Contract,
+  ContractTerm,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

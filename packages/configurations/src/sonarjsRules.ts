@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-import { type Linter, type Rule } from "eslint";
+import type { Linter, Rule } from "eslint";
 
 /**
  * The parts of eslint-plugin-sonarjs that the rule split reads.

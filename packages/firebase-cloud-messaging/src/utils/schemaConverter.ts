@@ -10,7 +10,7 @@
  * Schema converter utility for transforming between raw objects and typed classes
  */
 
-import { type z } from "zod";
+import type { z } from "zod";
 
 /**
  * A utility class for converting between domain objects and schema-validated data

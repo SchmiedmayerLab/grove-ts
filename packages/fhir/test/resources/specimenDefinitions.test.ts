@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type SpecimenDefinition } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { SpecimenDefinition } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirSpecimenDefinition,
   type untypedSpecimenDefinitionSchema,

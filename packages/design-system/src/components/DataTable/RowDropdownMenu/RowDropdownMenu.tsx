@@ -7,7 +7,7 @@
 //
 
 import { Ellipsis } from "lucide-react";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Button } from "../../Button";
 import {
   DropdownMenu,

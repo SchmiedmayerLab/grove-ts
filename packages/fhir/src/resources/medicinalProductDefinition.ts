@@ -6,16 +6,16 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type MedicinalProductDefinition,
-  type MedicinalProductDefinitionCharacteristic,
-  type MedicinalProductDefinitionContact,
-  type MedicinalProductDefinitionCrossReference,
-  type MedicinalProductDefinitionName,
-  type MedicinalProductDefinitionNameCountryLanguage,
-  type MedicinalProductDefinitionNameNamePart,
-  type MedicinalProductDefinitionOperation,
+import type {
+  Coding,
+  MedicinalProductDefinition,
+  MedicinalProductDefinitionCharacteristic,
+  MedicinalProductDefinitionContact,
+  MedicinalProductDefinitionCrossReference,
+  MedicinalProductDefinitionName,
+  MedicinalProductDefinitionNameCountryLanguage,
+  MedicinalProductDefinitionNameNamePart,
+  MedicinalProductDefinitionOperation,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

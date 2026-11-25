@@ -8,7 +8,7 @@
 
 import { Check, ChevronRight, Circle } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 /**

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Coding, type Schedule } from "fhir/r4b.js";
+import type { Coding, Schedule } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   codeableConceptSchema,

@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type AccountCoverage,
-  type AccountGuarantor,
-  type Account,
-  type Coding,
+import type {
+  AccountCoverage,
+  AccountGuarantor,
+  Account,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

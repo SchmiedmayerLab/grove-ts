@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type VerificationResultAttestation,
-  type VerificationResultPrimarySource,
-  type VerificationResultValidator,
-  type VerificationResult,
+import type {
+  VerificationResultAttestation,
+  VerificationResultPrimarySource,
+  VerificationResultValidator,
+  VerificationResult,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

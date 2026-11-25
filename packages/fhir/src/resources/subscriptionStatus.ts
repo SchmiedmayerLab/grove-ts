@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type SubscriptionStatusNotificationEvent,
-  type SubscriptionStatus,
+import type {
+  SubscriptionStatusNotificationEvent,
+  SubscriptionStatus,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

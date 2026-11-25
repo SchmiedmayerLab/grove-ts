@@ -8,7 +8,7 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { Progress as ProgressPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 import { strategy } from "@/utils/misc";
 

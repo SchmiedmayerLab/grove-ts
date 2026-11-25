@@ -7,7 +7,7 @@
 //
 
 import { Search } from "lucide-react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 import { Input, type InputProps } from "../Input";
 

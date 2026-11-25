@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta, type StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react";
 import {
   Activity,
   ArrowUpRight,
@@ -35,7 +35,7 @@ import { StatusDot } from "@/components/StatusDot";
 import { GroveProvider, type GroveContextRouter } from "@/GroveProvider";
 import { darkTheme } from "@/theme/dark";
 import { lightTheme } from "@/theme/light";
-import { type GroveThemes, type ResolvedColorScheme } from "@/theme/utils";
+import type { GroveThemes, ResolvedColorScheme } from "@/theme/utils";
 
 const stanfordThemes = {
   light: {

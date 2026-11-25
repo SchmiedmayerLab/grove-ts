@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CompartmentDefinitionResource,
-  type CompartmentDefinition,
+import type {
+  CompartmentDefinitionResource,
+  CompartmentDefinition,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

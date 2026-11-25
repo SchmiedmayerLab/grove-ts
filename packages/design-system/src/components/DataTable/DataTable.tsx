@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Row, type Table as TableType } from "@tanstack/table-core";
+import type { Row, Table as TableType } from "@tanstack/table-core";
 import { isBoolean } from "es-toolkit";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Async,
   type AsyncProps,

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Coding, type BodyStructure } from "fhir/r4b.js";
+import type { Coding, BodyStructure } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   attachmentSchema,

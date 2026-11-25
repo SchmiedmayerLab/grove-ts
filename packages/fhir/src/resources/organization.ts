@@ -6,11 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type OrganizationContact,
-  type Coding,
-  type Organization,
-} from "fhir/r4b.js";
+import type { OrganizationContact, Coding, Organization } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   addressSchema,

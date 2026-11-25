@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type EvidenceVariableCategory,
-  type EvidenceVariableCharacteristicTimeFromStart,
-  type EvidenceVariable,
-  type EvidenceVariableCharacteristic,
-  type Coding,
+import type {
+  EvidenceVariableCategory,
+  EvidenceVariableCharacteristicTimeFromStart,
+  EvidenceVariable,
+  EvidenceVariableCharacteristic,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

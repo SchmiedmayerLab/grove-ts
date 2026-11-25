@@ -6,11 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type Communication,
-  type CommunicationPayload,
-} from "fhir/r4b.js";
+import type { Coding, Communication, CommunicationPayload } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   annotationSchema,

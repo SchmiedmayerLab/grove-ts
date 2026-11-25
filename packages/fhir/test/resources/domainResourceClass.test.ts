@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Patient, type Reference } from "fhir/r4b.js";
+import type { Patient, Reference } from "fhir/r4b.js";
 import { FhirPatient, FhirDomainResource } from "../../src/index.js";
 
 describe("FhirDomainResource", () => {

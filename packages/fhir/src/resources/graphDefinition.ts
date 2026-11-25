@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type GraphDefinitionLinkTarget,
-  type GraphDefinitionLinkTargetCompartment,
-  type GraphDefinition,
-  type GraphDefinitionLink,
+import type {
+  GraphDefinitionLinkTarget,
+  GraphDefinitionLinkTargetCompartment,
+  GraphDefinition,
+  GraphDefinitionLink,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

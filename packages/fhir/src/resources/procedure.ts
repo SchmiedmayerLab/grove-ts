@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ProcedureFocalDevice,
-  type ProcedurePerformer,
-  type Coding,
-  type Procedure,
+import type {
+  ProcedureFocalDevice,
+  ProcedurePerformer,
+  Coding,
+  Procedure,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

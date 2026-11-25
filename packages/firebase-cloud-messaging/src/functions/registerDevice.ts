@@ -10,9 +10,9 @@
  * Firebase function for registering a device
  */
 
-import { type z } from "zod";
+import type { z } from "zod";
 import { deviceConverter } from "../models/device.js";
-import { type NotificationService } from "../services/notificationService.js";
+import type { NotificationService } from "../services/notificationService.js";
 
 /**
  * Zod schema for register device input validation

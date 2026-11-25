@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Library } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Library } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirLibrary, type untypedLibrarySchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

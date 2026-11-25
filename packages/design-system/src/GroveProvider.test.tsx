@@ -7,7 +7,7 @@
 //
 
 import { act, render } from "@testing-library/react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { darkTheme } from "@/theme/dark";
 import { lightTheme } from "@/theme/light";
 import { GroveProvider } from "./GroveProvider";

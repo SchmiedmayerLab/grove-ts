@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ConceptMapGroup,
-  type ConceptMapGroupElement,
-  type ConceptMapGroupElementTarget,
-  type ConceptMapGroupElementTargetDependsOn,
-  type ConceptMapGroupUnmapped,
-  type ConceptMap,
+import type {
+  ConceptMapGroup,
+  ConceptMapGroupElement,
+  ConceptMapGroupElementTarget,
+  ConceptMapGroupElementTargetDependsOn,
+  ConceptMapGroupUnmapped,
+  ConceptMap,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

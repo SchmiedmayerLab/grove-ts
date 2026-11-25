@@ -7,7 +7,7 @@
 //
 
 import { Check, CircleAlert } from "lucide-react";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/utils/className";
 import { useTimedFlag } from "@/utils/useTimedFlag";
 import { Button } from "../Button";

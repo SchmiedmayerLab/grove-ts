@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { Badge } from "@/components/Badge";
 import { Table, TableBody, TableCell, TableRow } from "@/components/Table";
 import { useIsScreen } from "./useMedia";

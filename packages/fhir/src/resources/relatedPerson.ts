@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type RelatedPersonCommunication,
-  type Coding,
-  type RelatedPerson,
+import type {
+  RelatedPersonCommunication,
+  Coding,
+  RelatedPerson,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

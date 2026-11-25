@@ -10,11 +10,11 @@
 // sonarjs and @eslint-react are optional peer dependencies, loaded only by the configurations that use them.
 
 import { fileURLToPath } from "node:url";
-import {
-  type DummyRuleMap,
-  type ExternalPluginEntry,
-  type OxlintConfig,
-  type OxlintOverride,
+import type {
+  DummyRuleMap,
+  ExternalPluginEntry,
+  OxlintConfig,
+  OxlintOverride,
 } from "oxlint";
 import { loadOptionalPackage } from "../optionalPackages";
 import { getSonarRuleSet, type SonarjsPlugin } from "../sonarjsRules";

@@ -6,19 +6,19 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type SubstanceDefinition,
-  type SubstanceDefinitionName,
-  type SubstanceDefinitionMoiety,
-  type SubstanceDefinitionProperty,
-  type SubstanceDefinitionRelationship,
-  type SubstanceDefinitionSourceMaterial,
-  type SubstanceDefinitionMolecularWeight,
-  type SubstanceDefinitionStructure,
-  type SubstanceDefinitionStructureRepresentation,
-  type SubstanceDefinitionNameOfficial,
-  type SubstanceDefinitionCode,
-  type Coding,
+import type {
+  SubstanceDefinition,
+  SubstanceDefinitionName,
+  SubstanceDefinitionMoiety,
+  SubstanceDefinitionProperty,
+  SubstanceDefinitionRelationship,
+  SubstanceDefinitionSourceMaterial,
+  SubstanceDefinitionMolecularWeight,
+  SubstanceDefinitionStructure,
+  SubstanceDefinitionStructureRepresentation,
+  SubstanceDefinitionNameOfficial,
+  SubstanceDefinitionCode,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

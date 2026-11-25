@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Ingredient,
-  type IngredientManufacturer,
-  type IngredientSubstance,
-  type IngredientSubstanceStrength,
-  type IngredientSubstanceStrengthReferenceStrength,
+import type {
+  Ingredient,
+  IngredientManufacturer,
+  IngredientSubstance,
+  IngredientSubstanceStrength,
+  IngredientSubstanceStrengthReferenceStrength,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

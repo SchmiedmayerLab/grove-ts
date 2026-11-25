@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type MessageHeader } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { MessageHeader } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirMessageHeader,
   type untypedMessageHeaderSchema,

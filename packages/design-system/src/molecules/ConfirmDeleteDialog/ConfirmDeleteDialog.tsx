@@ -6,11 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ComponentProps,
-  type MouseEventHandler,
-  type ReactNode,
-} from "react";
+import type { ComponentProps, MouseEventHandler, ReactNode } from "react";
 import { Button } from "../../components/Button";
 import {
   Dialog,

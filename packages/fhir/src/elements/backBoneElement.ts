@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type BackboneElement } from "fhir/r4b.js";
-import { type ZodType } from "zod";
+import type { BackboneElement } from "fhir/r4b.js";
+import type { ZodType } from "zod";
 import { elementSchema } from "./element.js";
 import { extensionSchema } from "./extension.js";
 

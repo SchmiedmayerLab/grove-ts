@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta, type StoryObj } from "@storybook/react";
-import { type Auth, type AuthProvider } from "firebase/auth";
+import type { Meta, StoryObj } from "@storybook/react";
+import type { Auth, AuthProvider } from "firebase/auth";
 import { fn } from "storybook/test";
 import { SignInForm } from "./SignInForm";
 

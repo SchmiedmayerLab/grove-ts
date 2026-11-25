@@ -8,7 +8,7 @@
 
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 import { type Size, sizeToMaxWidthRecord } from "@/utils/tailwind";
 

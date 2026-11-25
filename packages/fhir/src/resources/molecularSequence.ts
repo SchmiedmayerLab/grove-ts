@@ -6,17 +6,17 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type MolecularSequenceQuality,
-  type MolecularSequenceQualityRoc,
-  type MolecularSequenceReferenceSeq,
-  type MolecularSequenceRepository,
-  type MolecularSequenceStructureVariant,
-  type MolecularSequenceStructureVariantInner,
-  type MolecularSequenceStructureVariantOuter,
-  type MolecularSequenceVariant,
-  type MolecularSequence,
-  type Coding,
+import type {
+  MolecularSequenceQuality,
+  MolecularSequenceQualityRoc,
+  MolecularSequenceReferenceSeq,
+  MolecularSequenceRepository,
+  MolecularSequenceStructureVariant,
+  MolecularSequenceStructureVariantInner,
+  MolecularSequenceStructureVariantOuter,
+  MolecularSequenceVariant,
+  MolecularSequence,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

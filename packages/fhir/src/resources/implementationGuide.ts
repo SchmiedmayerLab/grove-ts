@@ -6,19 +6,19 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ImplementationGuide,
-  type ImplementationGuideDependsOn,
-  type ImplementationGuideDefinition,
-  type ImplementationGuideDefinitionGrouping,
-  type ImplementationGuideDefinitionPage,
-  type ImplementationGuideDefinitionParameter,
-  type ImplementationGuideDefinitionResource,
-  type ImplementationGuideDefinitionTemplate,
-  type ImplementationGuideGlobal,
-  type ImplementationGuideManifest,
-  type ImplementationGuideManifestPage,
-  type ImplementationGuideManifestResource,
+import type {
+  ImplementationGuide,
+  ImplementationGuideDependsOn,
+  ImplementationGuideDefinition,
+  ImplementationGuideDefinitionGrouping,
+  ImplementationGuideDefinitionPage,
+  ImplementationGuideDefinitionParameter,
+  ImplementationGuideDefinitionResource,
+  ImplementationGuideDefinitionTemplate,
+  ImplementationGuideGlobal,
+  ImplementationGuideManifest,
+  ImplementationGuideManifestPage,
+  ImplementationGuideManifestResource,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

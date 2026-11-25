@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type PersonLink, type Coding, type Person } from "fhir/r4b.js";
+import type { PersonLink, Coding, Person } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   addressSchema,

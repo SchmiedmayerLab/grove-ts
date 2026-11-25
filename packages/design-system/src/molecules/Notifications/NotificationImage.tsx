@@ -9,7 +9,7 @@
 import { Info } from "lucide-react";
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
-import { type Nil } from "@/utils/misc";
+import type { Nil } from "@/utils/misc";
 import { useNotificationContext } from "./NotificationContext";
 
 type NotificationImageProps = Omit<ComponentProps<"img">, "src"> & {

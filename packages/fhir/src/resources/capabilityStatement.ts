@@ -6,21 +6,21 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CapabilityStatementDocument,
-  type CapabilityStatementImplementation,
-  type CapabilityStatementMessaging,
-  type CapabilityStatementMessagingEndpoint,
-  type CapabilityStatementMessagingSupportedMessage,
-  type CapabilityStatementRest,
-  type CapabilityStatementRestInteraction,
-  type CapabilityStatementRestResource,
-  type CapabilityStatementRestResourceInteraction,
-  type CapabilityStatementRestResourceOperation,
-  type CapabilityStatementRestResourceSearchParam,
-  type CapabilityStatementRestSecurity,
-  type CapabilityStatementSoftware,
-  type CapabilityStatement,
+import type {
+  CapabilityStatementDocument,
+  CapabilityStatementImplementation,
+  CapabilityStatementMessaging,
+  CapabilityStatementMessagingEndpoint,
+  CapabilityStatementMessagingSupportedMessage,
+  CapabilityStatementRest,
+  CapabilityStatementRestInteraction,
+  CapabilityStatementRestResource,
+  CapabilityStatementRestResourceInteraction,
+  CapabilityStatementRestResourceOperation,
+  CapabilityStatementRestResourceSearchParam,
+  CapabilityStatementRestSecurity,
+  CapabilityStatementSoftware,
+  CapabilityStatement,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

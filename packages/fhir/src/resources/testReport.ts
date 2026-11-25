@@ -6,17 +6,17 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type TestReportParticipant,
-  type TestReportSetup,
-  type TestReportSetupAction,
-  type TestReportSetupActionAssert,
-  type TestReportSetupActionOperation,
-  type TestReportTeardown,
-  type TestReportTeardownAction,
-  type TestReportTest,
-  type TestReportTestAction,
-  type TestReport,
+import type {
+  TestReportParticipant,
+  TestReportSetup,
+  TestReportSetupAction,
+  TestReportSetupActionAssert,
+  TestReportSetupActionOperation,
+  TestReportTeardown,
+  TestReportTeardownAction,
+  TestReportTest,
+  TestReportTestAction,
+  TestReport,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

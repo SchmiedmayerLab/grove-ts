@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Patient, type ContactPoint, type Coding } from "fhir/r4b.js";
+import type { Patient, ContactPoint, Coding } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   addressSchema,

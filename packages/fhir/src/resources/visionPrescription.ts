@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type VisionPrescription,
-  type VisionPrescriptionLensSpecification,
-  type VisionPrescriptionLensSpecificationPrism,
+import type {
+  Coding,
+  VisionPrescription,
+  VisionPrescriptionLensSpecification,
+  VisionPrescriptionLensSpecificationPrism,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -7,7 +7,7 @@
 //
 
 import { Switch as SwitchPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 /**

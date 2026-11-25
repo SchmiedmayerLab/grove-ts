@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { z } from "zod";
 import { Button } from "@/components/Button";
 import { Label as LabelComponent, LabelContainer } from "@/components/Label";

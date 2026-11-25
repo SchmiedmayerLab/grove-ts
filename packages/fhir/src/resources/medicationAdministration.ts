@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type MedicationAdministrationPerformer,
-  type Coding,
-  type MedicationAdministration,
-  type MedicationAdministrationDosage,
+import type {
+  MedicationAdministrationPerformer,
+  Coding,
+  MedicationAdministration,
+  MedicationAdministrationDosage,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

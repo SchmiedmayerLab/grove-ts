@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type FirestoreDataConverter,
-  type QueryDocumentSnapshot,
+import type {
+  FirestoreDataConverter,
+  QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
 import { Device, DevicePlatform } from "../../src/models/device.js";
 import { FirestoreDeviceStorage } from "../../src/storage/firestoreDeviceStorage.js";

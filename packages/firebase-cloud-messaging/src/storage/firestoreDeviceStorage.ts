@@ -10,14 +10,14 @@
  * Firestore implementation of device storage
  */
 
-import {
-  type FirestoreDataConverter,
-  type Firestore,
-  type Query,
-  type Transaction,
+import type {
+  FirestoreDataConverter,
+  Firestore,
+  Query,
+  Transaction,
 } from "firebase-admin/firestore";
 import { type Device, deviceConverter } from "../models/device.js";
-import { type DeviceStorage, type Document } from "./deviceStorage.js";
+import type { DeviceStorage, Document } from "./deviceStorage.js";
 
 /**
  * This class provides Firestore storage for device tokens

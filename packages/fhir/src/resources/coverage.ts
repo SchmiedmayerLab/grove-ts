@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CoverageClass,
-  type CoverageCostToBeneficiary,
-  type CoverageCostToBeneficiaryException,
-  type Coverage,
-  type Coding,
+import type {
+  CoverageClass,
+  CoverageCostToBeneficiary,
+  CoverageCostToBeneficiaryException,
+  Coverage,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

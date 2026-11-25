@@ -7,8 +7,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type DiagnosticReport } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { DiagnosticReport } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirDiagnosticReport,
   type untypedDiagnosticReportSchema,

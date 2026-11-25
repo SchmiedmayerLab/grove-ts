@@ -7,7 +7,7 @@
 //
 
 import { isNil } from "es-toolkit";
-import { type Nil } from "@/utils/misc";
+import type { Nil } from "@/utils/misc";
 
 export type DateInput = Date | string | number;
 

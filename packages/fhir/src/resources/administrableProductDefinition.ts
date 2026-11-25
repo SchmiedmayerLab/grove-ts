@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type AdministrableProductDefinition,
-  type AdministrableProductDefinitionProperty,
-  type AdministrableProductDefinitionRouteOfAdministration,
-  type AdministrableProductDefinitionRouteOfAdministrationTargetSpecies,
-  type AdministrableProductDefinitionRouteOfAdministrationTargetSpeciesWithdrawalPeriod,
+import type {
+  Coding,
+  AdministrableProductDefinition,
+  AdministrableProductDefinitionProperty,
+  AdministrableProductDefinitionRouteOfAdministration,
+  AdministrableProductDefinitionRouteOfAdministrationTargetSpecies,
+  AdministrableProductDefinitionRouteOfAdministrationTargetSpeciesWithdrawalPeriod,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type EvidenceReport } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { EvidenceReport } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirEvidenceReport,
   type untypedEvidenceReportSchema,

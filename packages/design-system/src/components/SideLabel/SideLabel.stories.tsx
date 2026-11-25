@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { Switch } from "../Switch";
 import { SideLabel } from "./SideLabel";
 

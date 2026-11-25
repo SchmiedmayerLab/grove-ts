@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type z } from "zod";
-import { type Lazy } from "./lazy.js";
+import type { z } from "zod";
+import type { Lazy } from "./lazy.js";
 
 /**
  * Generic schema converter for type-safe data transformation.

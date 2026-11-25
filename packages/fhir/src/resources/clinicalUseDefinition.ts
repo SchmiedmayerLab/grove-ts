@@ -6,16 +6,16 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type ClinicalUseDefinition,
-  type ClinicalUseDefinitionContraindication,
-  type ClinicalUseDefinitionIndication,
-  type ClinicalUseDefinitionInteraction,
-  type ClinicalUseDefinitionInteractionInteractant,
-  type ClinicalUseDefinitionUndesirableEffect,
-  type ClinicalUseDefinitionWarning,
-  type ClinicalUseDefinitionContraindicationOtherTherapy,
+import type {
+  Coding,
+  ClinicalUseDefinition,
+  ClinicalUseDefinitionContraindication,
+  ClinicalUseDefinitionIndication,
+  ClinicalUseDefinitionInteraction,
+  ClinicalUseDefinitionInteractionInteractant,
+  ClinicalUseDefinitionUndesirableEffect,
+  ClinicalUseDefinitionWarning,
+  ClinicalUseDefinitionContraindicationOtherTherapy,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

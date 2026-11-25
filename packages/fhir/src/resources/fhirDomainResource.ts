@@ -6,18 +6,18 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CodeableConcept,
-  type Coding,
-  type Extension,
-  type DomainResource,
-  type Reference,
-  type Identifier,
-  type HumanName,
-  type ContactPoint,
-  type Period,
-  type Annotation,
-  type FhirResource,
+import type {
+  CodeableConcept,
+  Coding,
+  Extension,
+  DomainResource,
+  Reference,
+  Identifier,
+  HumanName,
+  ContactPoint,
+  Period,
+  Annotation,
+  FhirResource,
 } from "fhir/r4b.js";
 
 /**

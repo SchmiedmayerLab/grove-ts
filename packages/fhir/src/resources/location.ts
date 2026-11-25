@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type LocationHoursOfOperation,
-  type LocationPosition,
-  type Coding,
-  type Location,
+import type {
+  LocationHoursOfOperation,
+  LocationPosition,
+  Coding,
+  Location,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

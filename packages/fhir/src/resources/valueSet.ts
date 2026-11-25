@@ -6,17 +6,17 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ValueSetComposeIncludeConceptDesignation,
-  type ValueSet,
-  type ValueSetExpansionContains,
-  type Coding,
-  type ValueSetCompose,
-  type ValueSetExpansion,
-  type ValueSetExpansionParameter,
-  type ValueSetComposeInclude,
-  type ValueSetComposeIncludeConcept,
-  type ValueSetComposeIncludeFilter,
+import type {
+  ValueSetComposeIncludeConceptDesignation,
+  ValueSet,
+  ValueSetExpansionContains,
+  Coding,
+  ValueSetCompose,
+  ValueSetExpansion,
+  ValueSetExpansionParameter,
+  ValueSetComposeInclude,
+  ValueSetComposeIncludeConcept,
+  ValueSetComposeIncludeFilter,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

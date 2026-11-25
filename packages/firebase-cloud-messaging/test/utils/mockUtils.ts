@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Mock } from "vitest";
+import type { Mock } from "vitest";
 
 type MockFunction<R> = Mock<(...args: any[]) => R>;
 

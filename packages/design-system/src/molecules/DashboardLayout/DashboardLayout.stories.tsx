@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { Home, User } from "lucide-react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 import { DashboardLayout, MenuItem, PageTitle, UserMenuItem } from ".";
 import {

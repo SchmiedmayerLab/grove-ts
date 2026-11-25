@@ -8,7 +8,7 @@
 
 import reactPlugin from "@eslint-react/eslint-plugin";
 import eslint from "@eslint/js";
-import { type Processor } from "@typescript-eslint/utils/ts-eslint";
+import type { Processor } from "@typescript-eslint/utils/ts-eslint";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import { flatConfigs as importConfigs } from "eslint-plugin-import-x";
 import * as preferArrow from "eslint-plugin-prefer-arrow-functions";

@@ -6,16 +6,16 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type StructureMapGroup,
-  type StructureMapGroupInput,
-  type StructureMapGroupRuleDependent,
-  type StructureMapGroupRuleSource,
-  type StructureMapGroupRuleTarget,
-  type StructureMapGroupRuleTargetParameter,
-  type StructureMapStructure,
-  type StructureMap,
-  type StructureMapGroupRule,
+import type {
+  StructureMapGroup,
+  StructureMapGroupInput,
+  StructureMapGroupRuleDependent,
+  StructureMapGroupRuleSource,
+  StructureMapGroupRuleTarget,
+  StructureMapGroupRuleTargetParameter,
+  StructureMapStructure,
+  StructureMap,
+  StructureMapGroupRule,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

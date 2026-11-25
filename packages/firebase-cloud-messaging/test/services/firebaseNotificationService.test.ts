@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type MockInstance } from "vitest";
+import type { MockInstance } from "vitest";
 import { Device, DevicePlatform } from "../../src/models/device.js";
 import { Message } from "../../src/models/message.js";
 import { FirebaseNotificationService } from "../../src/services/firebaseNotificationService.js";
-import { type Document } from "../../src/storage/deviceStorage.js";
+import type { Document } from "../../src/storage/deviceStorage.js";
 import { createStub } from "../utils/mockUtils.js";
 
 describe("FirebaseNotificationService", () => {

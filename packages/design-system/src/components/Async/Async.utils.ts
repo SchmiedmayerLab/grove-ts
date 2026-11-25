@@ -8,7 +8,7 @@
 
 import { isObject } from "@/utils/misc";
 import { combineQueries, type Query } from "@/utils/query";
-import { type FullErrorProps } from "./Async";
+import type { FullErrorProps } from "./Async";
 
 /**
  * Parses an array of queries into {@link Async} component props.

@@ -6,24 +6,24 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type MedicationKnowledgeAdministrationGuidelines,
-  type MedicationKnowledgeCost,
-  type MedicationKnowledgeIngredient,
-  type MedicationKnowledgeMedicineClassification,
-  type MedicationKnowledgeMonitoringProgram,
-  type MedicationKnowledgeMonograph,
-  type MedicationKnowledgePackaging,
-  type MedicationKnowledgeRelatedMedicationKnowledge,
-  type MedicationKnowledge,
-  type MedicationKnowledgeRegulatory,
-  type MedicationKnowledgeDrugCharacteristic,
-  type MedicationKnowledgeKinetics,
-  type MedicationKnowledgeRegulatorySubstitution,
-  type MedicationKnowledgeRegulatorySchedule,
-  type MedicationKnowledgeRegulatoryMaxDispense,
-  type MedicationKnowledgeAdministrationGuidelinesDosage,
-  type MedicationKnowledgeAdministrationGuidelinesPatientCharacteristics,
+import type {
+  MedicationKnowledgeAdministrationGuidelines,
+  MedicationKnowledgeCost,
+  MedicationKnowledgeIngredient,
+  MedicationKnowledgeMedicineClassification,
+  MedicationKnowledgeMonitoringProgram,
+  MedicationKnowledgeMonograph,
+  MedicationKnowledgePackaging,
+  MedicationKnowledgeRelatedMedicationKnowledge,
+  MedicationKnowledge,
+  MedicationKnowledgeRegulatory,
+  MedicationKnowledgeDrugCharacteristic,
+  MedicationKnowledgeKinetics,
+  MedicationKnowledgeRegulatorySubstitution,
+  MedicationKnowledgeRegulatorySchedule,
+  MedicationKnowledgeRegulatoryMaxDispense,
+  MedicationKnowledgeAdministrationGuidelinesDosage,
+  MedicationKnowledgeAdministrationGuidelinesPatientCharacteristics,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

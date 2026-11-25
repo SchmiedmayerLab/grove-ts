@@ -8,7 +8,7 @@
 
 import { ChevronDownIcon } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import {
   CollapsibleContentRoot,
   CollapsibleContentInner,

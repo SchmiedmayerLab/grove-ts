@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Observation } from "fhir/r4b.js";
+import type { Observation } from "fhir/r4b.js";
 import { FhirObservation } from "../../src/index.js";
 
 describe("FhirObservation", () => {

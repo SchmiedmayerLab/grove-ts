@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CodeSystemConceptDesignation,
-  type CodeSystemConceptProperty,
-  type CodeSystemFilter,
-  type CodeSystemProperty,
-  type CodeSystem,
-  type CodeSystemConcept,
-  type Coding,
+import type {
+  CodeSystemConceptDesignation,
+  CodeSystemConceptProperty,
+  CodeSystemFilter,
+  CodeSystemProperty,
+  CodeSystem,
+  CodeSystemConcept,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

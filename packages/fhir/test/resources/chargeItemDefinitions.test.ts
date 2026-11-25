@@ -7,8 +7,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type ChargeItemDefinition } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { ChargeItemDefinition } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirChargeItemDefinition,
   type untypedChargeItemDefinitionSchema,

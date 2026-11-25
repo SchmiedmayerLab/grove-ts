@@ -7,7 +7,7 @@
 //
 
 import { FirebaseError } from "firebase/app";
-import { type Auth, type signInWithEmailAndPassword } from "firebase/auth";
+import type { Auth, signInWithEmailAndPassword } from "firebase/auth";
 import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { Button, type ButtonProps } from "@/components/Button";

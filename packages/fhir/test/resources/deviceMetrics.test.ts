@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type DeviceMetric } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { DeviceMetric } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirDeviceMetric,
   type untypedDeviceMetricSchema,

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type FhirResource } from "fhir/r4b.js";
+import type { FhirResource } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { untypedAccountSchema } from "./account.js";
 import { untypedActivityDefinitionSchema } from "./activityDefinition.js";

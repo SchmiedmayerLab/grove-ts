@@ -8,7 +8,7 @@
 
 import { Command as CommandPrimitive } from "cmdk";
 import { Search, SearchX } from "lucide-react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import {
   DialogContent,
   DialogDescription,

@@ -7,8 +7,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type EnrollmentRequest } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { EnrollmentRequest } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirEnrollmentRequest,
   type untypedEnrollmentRequestSchema,

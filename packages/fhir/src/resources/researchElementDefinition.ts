@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type ResearchElementDefinition,
-  type ResearchElementDefinitionCharacteristic,
+import type {
+  Coding,
+  ResearchElementDefinition,
+  ResearchElementDefinitionCharacteristic,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -10,14 +10,14 @@
  * Firebase implementation of notification service
  */
 
-import {
-  type Message as FirebaseMessage,
-  type Messaging,
+import type {
+  Message as FirebaseMessage,
+  Messaging,
 } from "firebase-admin/messaging";
 import { DevicePlatform, type Device } from "../models/device.js";
-import { type Message } from "../models/message.js";
-import { type DeviceStorage, type Document } from "../storage/deviceStorage.js";
-import { type NotificationService } from "./notificationService.js";
+import type { Message } from "../models/message.js";
+import type { DeviceStorage, Document } from "../storage/deviceStorage.js";
+import type { NotificationService } from "./notificationService.js";
 
 /**
  * Firebase implementation of the NotificationService interface

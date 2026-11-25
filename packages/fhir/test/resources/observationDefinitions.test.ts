@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type ObservationDefinition } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { ObservationDefinition } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirObservationDefinition,
   type untypedObservationDefinitionSchema,

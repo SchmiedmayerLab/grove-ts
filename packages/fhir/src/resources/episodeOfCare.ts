@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type EpisodeOfCareDiagnosis,
-  type EpisodeOfCareStatusHistory,
-  type EpisodeOfCare,
-  type Coding,
+import type {
+  EpisodeOfCareDiagnosis,
+  EpisodeOfCareStatusHistory,
+  EpisodeOfCare,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

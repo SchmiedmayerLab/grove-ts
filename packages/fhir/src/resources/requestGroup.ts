@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type RequestGroup,
-  type RequestGroupAction,
-  type RequestGroupActionCondition,
-  type RequestGroupActionRelatedAction,
+import type {
+  Coding,
+  RequestGroup,
+  RequestGroupAction,
+  RequestGroupActionCondition,
+  RequestGroupActionRelatedAction,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

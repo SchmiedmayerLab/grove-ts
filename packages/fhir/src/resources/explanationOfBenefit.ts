@@ -6,26 +6,26 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ExplanationOfBenefitAccident,
-  type ExplanationOfBenefitAddItem,
-  type ExplanationOfBenefitBenefitBalance,
-  type ExplanationOfBenefitBenefitBalanceFinancial,
-  type ExplanationOfBenefitCareTeam,
-  type ExplanationOfBenefitDiagnosis,
-  type ExplanationOfBenefitInsurance,
-  type ExplanationOfBenefitItem,
-  type ExplanationOfBenefitItemAdjudication,
-  type ExplanationOfBenefitItemDetail,
-  type ExplanationOfBenefitPayee,
-  type ExplanationOfBenefitPayment,
-  type ExplanationOfBenefitProcedure,
-  type ExplanationOfBenefitProcessNote,
-  type ExplanationOfBenefitRelated,
-  type ExplanationOfBenefitSupportingInfo,
-  type ExplanationOfBenefitTotal,
-  type ExplanationOfBenefit,
-  type Coding,
+import type {
+  ExplanationOfBenefitAccident,
+  ExplanationOfBenefitAddItem,
+  ExplanationOfBenefitBenefitBalance,
+  ExplanationOfBenefitBenefitBalanceFinancial,
+  ExplanationOfBenefitCareTeam,
+  ExplanationOfBenefitDiagnosis,
+  ExplanationOfBenefitInsurance,
+  ExplanationOfBenefitItem,
+  ExplanationOfBenefitItemAdjudication,
+  ExplanationOfBenefitItemDetail,
+  ExplanationOfBenefitPayee,
+  ExplanationOfBenefitPayment,
+  ExplanationOfBenefitProcedure,
+  ExplanationOfBenefitProcessNote,
+  ExplanationOfBenefitRelated,
+  ExplanationOfBenefitSupportingInfo,
+  ExplanationOfBenefitTotal,
+  ExplanationOfBenefit,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

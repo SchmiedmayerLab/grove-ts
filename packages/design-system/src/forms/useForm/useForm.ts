@@ -14,7 +14,7 @@ import {
   useForm as useFormHook,
   type UseFormProps,
 } from "react-hook-form";
-import { type z } from "zod";
+import type { z } from "zod";
 import { parseUnknownError } from "@/utils/query";
 
 type FieldValues = Record<string, unknown>;

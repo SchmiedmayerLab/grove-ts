@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type AuditEventAgent,
-  type AuditEventAgentNetwork,
-  type AuditEventEntity,
-  type AuditEventEntityDetail,
-  type AuditEventSource,
-  type AuditEvent,
+import type {
+  AuditEventAgent,
+  AuditEventAgentNetwork,
+  AuditEventEntity,
+  AuditEventEntityDetail,
+  AuditEventSource,
+  AuditEvent,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -7,7 +7,7 @@
 //
 
 import { Separator as SeparatorPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 /**

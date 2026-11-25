@@ -8,7 +8,7 @@
 
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { Slot } from "radix-ui";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
 } from "@/components/DropdownMenu";
 import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";
-import { type AsChildProp } from "@/utils/misc";
+import type { AsChildProp } from "@/utils/misc";
 
 const defaultBreadcrumbSeparator = <ChevronRight />;
 

@@ -7,7 +7,7 @@
 //
 
 import { ListX, SearchX } from "lucide-react";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/utils/className";
 
 export interface EmptyStateProps extends Omit<
