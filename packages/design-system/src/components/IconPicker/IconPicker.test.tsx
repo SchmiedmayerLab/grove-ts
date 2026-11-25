@@ -28,6 +28,13 @@ describe("IconPicker", () => {
     Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
       value: 800,
     });
+    // The virtualizer measures the scroll viewport with the client dimensions.
+    Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+      value: 800,
+    });
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+      value: 800,
+    });
   });
 
   it("renders trigger button", () => {
