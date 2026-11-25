@@ -529,3 +529,36 @@ test("formats with the oxfmt configuration", async () => {
     ].join("\n"),
   );
 });
+
+test("sorts package.json keys without reordering nested fields", async () => {
+  const manifest = {
+    scripts: { test: "vitest", build: "tsdown" },
+    exports: {
+      ".": { types: "./dist/index.d.ts", default: "./dist/index.js" },
+    },
+    dependencies: { zod: "^4.0.0", "@example/core": "workspace:*" },
+    keywords: ["grove", "example"],
+    packageManager: "pnpm@12.0.0",
+    name: "@example/package",
+  };
+  const { code, errors } = await format(
+    "package.json",
+    JSON.stringify(manifest),
+    oxfmtConfig,
+  );
+
+  expect(errors).toEqual([]);
+  const formatted = JSON.parse(code) as typeof manifest;
+  expect(Object.keys(formatted)).toEqual([
+    "name",
+    "keywords",
+    "exports",
+    "scripts",
+    "dependencies",
+    "packageManager",
+  ]);
+  expect(formatted.keywords).toEqual(["example", "grove"]);
+  expect(Object.keys(formatted.exports["."])).toEqual(["types", "default"]);
+  expect(Object.keys(formatted.scripts)).toEqual(["test", "build"]);
+  expect(Object.keys(formatted.dependencies)).toEqual(["@example/core", "zod"]);
+});

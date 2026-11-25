@@ -12,7 +12,6 @@ import { defineConfig } from "oxfmt";
 // which cannot be imported here because formatting runs before the packages are built.
 export default defineConfig({
   printWidth: 80,
-  sortPackageJson: false,
   sortTailwindcss: {},
   sortImports: {
     groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
