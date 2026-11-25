@@ -43,6 +43,25 @@ describe("useForm", () => {
     expect(result.current.formError).toBe(undefined);
   });
 
+  it("resolves handleSubmit to the handler result, or undefined after an error", async () => {
+    const { result } = renderHook(() => useForm({ formSchema: z.object({}) }));
+
+    let submitted: unknown;
+    await act(async () => {
+      submitted = await result.current.handleSubmit(() => "saved")();
+    });
+    expect(submitted).toBe("saved");
+
+    const failingHandler = (): string => {
+      throw new Error("Save failed");
+    };
+    await act(async () => {
+      submitted = await result.current.handleSubmit(failingHandler)();
+    });
+    expect(submitted).toBe(undefined);
+    expect(result.current.formError).toMatchObject({ message: "Save failed" });
+  });
+
   it("exposes submitAsync utility", async () => {
     const { result } = renderHook(() =>
       useForm({

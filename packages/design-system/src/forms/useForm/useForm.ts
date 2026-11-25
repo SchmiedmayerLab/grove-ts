@@ -10,9 +10,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback } from "react";
 import {
   type DeepRequired,
+  type GlobalError,
   type FieldErrorsImpl,
   useForm as useFormHook,
   type UseFormProps,
+  type UseFormReturn,
+  type UseFormSetError,
 } from "react-hook-form";
 import type { z } from "zod";
 import { parseUnknownError } from "@/utils/query";
@@ -36,6 +39,22 @@ class ValidationError<
     this.fieldErrors = fieldErrors;
   }
 }
+
+// The return type is spelled out, because react-hook-form exports a FormState component under the name of its FormState type.
+// An inferred return type would need that type, and the declaration build cannot name it.
+type UseFormResult<
+  Input extends FieldValues,
+  Context,
+  Output extends FieldValues,
+> = UseFormReturn<Input, Context, Output> & {
+  submitAsync: () => Promise<Output>;
+  formError: (Record<string, GlobalError> & GlobalError) | undefined;
+  setFormError: (
+    error: unknown,
+    options?: Parameters<UseFormSetError<Input>>[2],
+  ) => void;
+  isSubmitDisabled: boolean;
+};
 
 /**
  * Enhanced version of [react-hook-form's useForm](https://react-hook-form.com/docs/useform).
@@ -66,7 +85,7 @@ export const useForm = <
   ...props
 }: UseFormProps<Input, Context, Output> & {
   formSchema: z.ZodType<Output, Input>;
-}) => {
+}): UseFormResult<Input, Context, Output> => {
   const form = useFormHook<Input, Context, Output>({
     resolver: zodResolver<Input, Context, Output>(formSchema),
     ...props,
@@ -113,6 +132,7 @@ export const useForm = <
   /**
    * Wraps react-hook-form's handleSubmit to automatically set form errors for caught exceptions.
    * This adds error handling without requiring try/catch blocks in form handlers.
+   * The returned function resolves to the handler's result, or to `undefined` when validation or the handler fails.
    */
   const handleSubmit: (typeof form)["handleSubmit"] = (
     successHandler,
@@ -120,9 +140,10 @@ export const useForm = <
   ) =>
     form.handleSubmit(async (...args) => {
       try {
-        await successHandler(...args);
+        return await successHandler(...args);
       } catch (error) {
         setFormError(error);
+        return undefined;
       }
     }, negativeHandler);
 
