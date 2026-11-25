@@ -43,6 +43,10 @@
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     },
+    "./eslint": {
+      "types": "./dist/eslint/index.d.mts",
+      "default": "./dist/eslint/index.mjs"
+    },
     "./eslint-type-aware": {
       "types": "./dist/eslint/typeAware.d.mts",
       "default": "./dist/eslint/typeAware.mjs"

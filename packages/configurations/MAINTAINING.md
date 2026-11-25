@@ -17,7 +17,7 @@ Users only need the [README](README.md).
 
 | File                         | Purpose                                                                                                           |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `src/eslint/index.ts`        | Full ESLint configurations, which need Prettier and the TypeScript import resolver                                |
+| `src/eslint/index.ts`        | Full ESLint configurations, published as `./eslint`, which need Prettier and the TypeScript import resolver       |
 | `src/eslint/typeAware.ts`    | Type-aware ESLint configurations for the oxc setup, published as `./eslint-type-aware` without those dependencies |
 | `src/eslint/shared.ts`       | Helpers both ESLint entry points use                                                                              |
 | `src/prettier.ts`            | Prettier configuration                                                                                            |
@@ -117,9 +117,9 @@ The import turns that file into a module, so any other declaration in it would s
 ## Tests
 
 The tests run with Vitest against the built entry points, so build the package before `pnpm test`.
-`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the `./prettier` entry point loads nothing from ESLint, and loading with `require()`.
+`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the main and `./prettier` entry points load nothing from ESLint, and loading with `require()`.
 After an intended change to the ESLint configurations, update the snapshot with `pnpm test -u`; oxfmt leaves it as Vitest writes it.
-`test/package.test.ts` loads the main ESM entry point as published.
+`test/package.test.ts` loads the main and `./eslint` ESM entry points as published.
 
 `test/oxc.test.ts` lints the fixture project in `test/fixtures/project` with oxlint and the type-aware ESLint configuration, and formats with oxfmt.
 It also checks the rule lists against oxlint's rule metadata and that the `./eslint-type-aware` entry point loads neither Prettier nor the import resolver.

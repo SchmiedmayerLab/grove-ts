@@ -5,5 +5,7 @@
 //
 // SPDX-License-Identifier: MIT
 //
-export * from "./eslint";
+
+// The ESLint configurations are published as `./eslint`, so that this entry point does not load
+// typescript-eslint, which fails with TypeScript 7 installed as `typescript`.
 export * from "./prettier";

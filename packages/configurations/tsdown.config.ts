@@ -22,6 +22,7 @@ const { default: getTypeScript7Path } = (await import(
 export default defineConfig({
   entry: [
     "src/index.ts",
+    "src/eslint/index.ts",
     "src/eslint/typeAware.ts",
     "src/oxlint/index.ts",
     // Not exported: oxlint loads the sonarjs wrapper by its file path.

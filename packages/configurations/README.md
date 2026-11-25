@@ -159,6 +159,7 @@ createOxlintConfig({
 oxlint's type-aware rules already run on TypeScript 7, so they read your `tsconfig.json` with TypeScript 7.
 Options that TypeScript 7 removed, such as `baseUrl`, stop all type-aware rules, even when the project still compiles with TypeScript 6.
 ESLint uses typescript-eslint, which needs the compiler API that TypeScript 7 does not ship yet.
+The `/eslint`, `/eslint-type-aware` and `/oxlint` entry points load typescript-eslint, while the main entry point, `/prettier` and `/oxfmt` do not.
 Install TypeScript 6 under the `typescript` name for these tools and TypeScript 7 under another name:
 
 ```json
@@ -185,7 +186,7 @@ npm install --save-dev prettier eslint eslint-import-resolver-typescript @schmie
 Create an `eslint.config.mjs` file:
 
 ```javascript
-import { getEslintReactConfig } from "@schmiedmayerlab/grove-configurations";
+import { getEslintReactConfig } from "@schmiedmayerlab/grove-configurations/eslint";
 
 export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname });
 ```
@@ -212,7 +213,7 @@ export default [
 ];
 ```
 
-The building blocks `getEslintRules`, `getNodeGlobals`, `getTslint`, `getPreferArrowFunctions`, `getReactPlugins` and `getPrettierPlugin` are exported for configurations that need to be assembled by hand.
+The building blocks `getEslintRules`, `getNodeGlobals`, `getTslint`, `getPreferArrowFunctions`, `getReactPlugins` and `getPrettierPlugin` are exported from `/eslint` for configurations that need to be assembled by hand.
 
 ## License
 
