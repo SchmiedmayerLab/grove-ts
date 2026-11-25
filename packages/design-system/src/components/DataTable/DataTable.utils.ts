@@ -16,14 +16,27 @@ import {
   createFilteredRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
+  filterFn_arrHas,
   filterFn_arrIncludes,
   filterFn_arrIncludesAll,
   filterFn_arrIncludesSome,
+  filterFn_between,
+  filterFn_betweenInclusive,
+  filterFn_empty,
+  filterFn_endsWith,
   filterFn_equals,
   filterFn_equalsString,
+  filterFn_equalsStringSensitive,
+  filterFn_greaterThan,
+  filterFn_greaterThanOrEqualTo,
+  filterFn_inDateRange,
   filterFn_inNumberRange,
   filterFn_includesString,
   filterFn_includesStringSensitive,
+  filterFn_lessThan,
+  filterFn_lessThanOrEqualTo,
+  filterFn_notEmpty,
+  filterFn_startsWith,
   filterFn_weakEquals,
   metaHelper,
   type RowData,
@@ -104,10 +117,10 @@ export const fuzzyFilter = constructFilterFn({
  *
  * Registers all stock TanStack Table features, so every v8 table, row, column, and cell API stays available.
  * Adds client-side filtering, sorting, and pagination row models,
- * the built-in filter and sort functions of v8, and the `fuzzy` filter used for global filtering.
+ * every built-in filter and sort function under its TanStack name, and the `fuzzy` filter used for global filtering.
  *
  * Spread it to replace a row model or a registered function, and pass the result as `features`.
- * Pass custom filter and sort functions to column definitions directly, like `filterFn: startsWith`.
+ * Pass custom filter and sort functions to column definitions directly, like `filterFn: matchesStatus`.
  *
  * @example
  * ```ts
@@ -122,16 +135,28 @@ export const dataTableFeatures = tableFeatures({
   filteredRowModel: createFilteredRowModel(),
   sortedRowModel: createSortedRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
-  // Register the built-in functions of v8 by their names, so `auto` and string references keep resolving.
   filterFns: {
+    arrHas: filterFn_arrHas,
     arrIncludes: filterFn_arrIncludes,
     arrIncludesAll: filterFn_arrIncludesAll,
     arrIncludesSome: filterFn_arrIncludesSome,
+    between: filterFn_between,
+    betweenInclusive: filterFn_betweenInclusive,
+    empty: filterFn_empty,
+    endsWith: filterFn_endsWith,
     equals: filterFn_equals,
     equalsString: filterFn_equalsString,
+    equalsStringSensitive: filterFn_equalsStringSensitive,
+    greaterThan: filterFn_greaterThan,
+    greaterThanOrEqualTo: filterFn_greaterThanOrEqualTo,
+    inDateRange: filterFn_inDateRange,
     inNumberRange: filterFn_inNumberRange,
     includesString: filterFn_includesString,
     includesStringSensitive: filterFn_includesStringSensitive,
+    lessThan: filterFn_lessThan,
+    lessThanOrEqualTo: filterFn_lessThanOrEqualTo,
+    notEmpty: filterFn_notEmpty,
+    startsWith: filterFn_startsWith,
     weakEquals: filterFn_weakEquals,
     fuzzy: fuzzyFilter,
   },

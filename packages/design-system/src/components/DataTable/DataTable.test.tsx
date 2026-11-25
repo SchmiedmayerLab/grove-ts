@@ -317,6 +317,55 @@ describe("DataTable", () => {
     });
   });
 
+  describe("built-in filter functions", () => {
+    it("resolves built-in filter functions by name", () => {
+      const columns = [
+        columnHelper.accessor("name", {
+          header: "Name",
+          filterFn: "startsWith",
+        }),
+      ];
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          initialState={{ columnFilters: [{ id: "name", value: "j" }] }}
+        />,
+      );
+
+      const startingWithJ = peopleData.filter((person) =>
+        person.name.startsWith("J"),
+      );
+      expect(getRows()).toHaveLength(startingWithJ.length);
+      expectNamesInGivenOrder(startingWithJ);
+    });
+
+    it("filters date columns with the auto filter function", () => {
+      const columns = [
+        columnHelper.accessor("name", { header: "Name" }),
+        columnHelper.accessor("updatedAt", { header: "Updated" }),
+      ];
+      const from = new Date(2020, 0, 1);
+      const to = new Date(2025, 0, 1);
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          initialState={{
+            columnFilters: [{ id: "updatedAt", value: [from, to] }],
+          }}
+        />,
+      );
+
+      const updatedInRange = peopleData.filter(
+        ({ updatedAt }) =>
+          updatedAt !== null && updatedAt >= from && updatedAt <= to,
+      );
+      expect(getRows()).toHaveLength(updatedInRange.length);
+      expectNamesInGivenOrder(updatedInRange);
+    });
+  });
+
   describe("row selection", () => {
     const SelectableTable = (
       props: Pick<DataTableProps<Person>, "enableRowRangeSelection">,

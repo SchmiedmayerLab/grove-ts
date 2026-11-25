@@ -52,9 +52,10 @@ Rows must be objects or arrays, as required by the v9 `RowData` type.
 `dataTableFeatures` registers every stock TanStack Table feature,
 so all table, row, column, and cell APIs of v8 stay available in columns and custom views.
 It also registers the client-side filtering, sorting, and pagination row models,
-the built-in filter and sort functions of v8 under their v8 names, and the `fuzzy` filter used for global search.
+every built-in filter and sort function under its TanStack name, and the `fuzzy` filter used for global search.
+That makes `auto` and string references like `filterFn: "startsWith"` resolve, including `inDateRange`, which `auto` picks for date columns.
 
-Pass custom filter and sort functions to column definitions directly, like `filterFn: startsWith`.
+Pass custom filter and sort functions to column definitions directly, like `filterFn: matchesStatus`.
 To replace a row model or a registered function for one table, spread `dataTableFeatures` and pass the result as `features`:
 
 ```tsx
