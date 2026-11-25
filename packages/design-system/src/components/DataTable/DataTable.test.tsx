@@ -6,15 +6,22 @@
 // SPDX-License-Identifier: MIT
 //
 
+import {
+  constructFilterFn,
+  type SortingState,
+  tableFeatures,
+} from "@tanstack/react-table";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { useState } from "react";
 import { vitest } from "vitest";
-import { DataTable } from ".";
+import { DataTable, type DataTableProps, dataTableFeatures } from ".";
 import {
   columnHelper,
   peopleColumn,
   peopleColumns,
   peopleData,
+  type Person,
 } from "./DataTable.mocks";
 
 describe("DataTable", () => {
@@ -140,6 +147,177 @@ describe("DataTable", () => {
     fireEvent.click(disabledSortButton);
     // Just order of the data
     expectNamesInGivenOrder(peopleData);
+  });
+
+  it("supports controlled sorting", () => {
+    const onSortingChange = vitest.fn();
+    const ControlledTable = () => {
+      const [sorting, setSorting] = useState<SortingState>([]);
+      return (
+        <DataTable
+          columns={peopleColumns}
+          data={peopleData}
+          state={{ sorting }}
+          onSortingChange={(updater) => {
+            onSortingChange(updater);
+            setSorting(updater);
+          }}
+        />
+      );
+    };
+    render(<ControlledTable />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort descending by Age column" }),
+    );
+
+    expect(onSortingChange).toHaveBeenCalledTimes(1);
+    expectNamesInGivenOrder([...peopleData].sort((a, b) => b.age - a.age));
+  });
+
+  it("merges pageSize with initial pagination state", () => {
+    render(
+      <DataTable
+        columns={peopleColumns}
+        data={peopleData}
+        pageSize={2}
+        initialState={{ pagination: { pageIndex: 1, pageSize: 2 } }}
+      />,
+    );
+
+    expect(screen.getByText(`3-4 of ${peopleData.length}`)).toBeInTheDocument();
+  });
+
+  it("resets pagination when filtering from a later page", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={peopleColumns} data={peopleData} pageSize={2} />,
+    );
+    await user.click(screen.getByRole("button", { name: "4" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Search..." }),
+      "Lorem",
+    );
+
+    await screen.findByText("1-1 of 1");
+    expect(screen.getByRole("cell", { name: "Lorem" })).toBeInTheDocument();
+  });
+
+  describe("custom filter functions", () => {
+    const startsWith = constructFilterFn({
+      filter: (dataValue: unknown, filterValue: unknown) =>
+        String(dataValue)
+          .toLowerCase()
+          .startsWith(String(filterValue).toLowerCase()),
+    });
+    const initialState = { columnFilters: [{ id: "name", value: "a" }] };
+    const startingWithA = peopleData.filter((person) =>
+      person.name.toLowerCase().startsWith("a"),
+    );
+
+    it("accepts filter functions in column definitions", () => {
+      const columns = [
+        columnHelper.accessor("name", { header: "Name", filterFn: startsWith }),
+      ];
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          initialState={initialState}
+        />,
+      );
+
+      expectNamesInGivenOrder(startingWithA);
+    });
+
+    it("accepts extended features", () => {
+      const features = tableFeatures({
+        ...dataTableFeatures,
+        filterFns: {
+          ...dataTableFeatures.filterFns,
+          includesString: startsWith,
+        },
+      });
+      const columns = [
+        columnHelper.accessor("name", {
+          header: "Name",
+          filterFn: "includesString",
+        }),
+      ];
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          features={features}
+          initialState={initialState}
+        />,
+      );
+
+      expectNamesInGivenOrder(startingWithA);
+    });
+  });
+
+  describe("row selection", () => {
+    const SelectableTable = (
+      props: Pick<DataTableProps<Person>, "enableRowRangeSelection">,
+    ) => (
+      <DataTable columns={peopleColumns} data={peopleData} {...props}>
+        {({ rows }) =>
+          rows.map((row) => (
+            <label key={row.id}>
+              <input
+                type="checkbox"
+                checked={row.getIsSelected()}
+                onChange={row.getToggleSelectedHandler()}
+              />
+              {row.original.name}
+            </label>
+          ))
+        }
+      </DataTable>
+    );
+
+    const getCheckbox = (index: number) =>
+      screen.getByRole("checkbox", { name: peopleData[index]?.name });
+
+    it("toggles rows through a custom view", async () => {
+      const user = userEvent.setup();
+      render(<SelectableTable />);
+
+      await user.click(getCheckbox(0));
+      expect(getCheckbox(0)).toBeChecked();
+      await user.click(getCheckbox(0));
+      expect(getCheckbox(0)).not.toBeChecked();
+    });
+
+    it("does not select ranges with Shift by default", async () => {
+      const user = userEvent.setup();
+      render(<SelectableTable />);
+
+      await user.click(getCheckbox(0));
+      await user.keyboard("{Shift>}");
+      await user.click(getCheckbox(2));
+      await user.keyboard("{/Shift}");
+
+      expect(screen.getAllByRole("checkbox", { checked: true })).toHaveLength(
+        2,
+      );
+      expect(getCheckbox(1)).not.toBeChecked();
+    });
+
+    it("selects ranges with Shift when enabled", async () => {
+      const user = userEvent.setup();
+      render(<SelectableTable enableRowRangeSelection />);
+
+      await user.click(getCheckbox(0));
+      await user.keyboard("{Shift>}");
+      await user.click(getCheckbox(2));
+      await user.keyboard("{/Shift}");
+
+      expect(screen.getAllByRole("checkbox", { checked: true })).toHaveLength(
+        3,
+      );
+    });
   });
 
   it("filters data with fuzzy search", async () => {

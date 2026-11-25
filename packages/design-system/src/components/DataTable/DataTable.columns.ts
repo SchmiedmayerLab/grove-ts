@@ -6,9 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { CellContext } from "@tanstack/react-table";
+import type { CellContext, RowData } from "@tanstack/react-table";
 import { formatNilDate, formatNilDateTime } from "../../utils/date";
 import type { Nil } from "../../utils/misc";
+import type { DataTableFeatures } from "./DataTable.utils";
 
 /**
  * Column cell formatter that formats date to include just the day, month and year.
@@ -23,8 +24,9 @@ import type { Nil } from "../../utils/misc";
  * })
  * ```
  */
-export const dateColumn = <T>(props: CellContext<T, Nil<string | Date>>) =>
-  formatNilDate(props.getValue()) ?? "";
+export const dateColumn = <T extends RowData>(
+  props: CellContext<DataTableFeatures, T, Nil<string | Date>>,
+) => formatNilDate(props.getValue()) ?? "";
 
 /**
  * Column cell formatter that formats date to include both day, month, year and time.
@@ -39,5 +41,6 @@ export const dateColumn = <T>(props: CellContext<T, Nil<string | Date>>) =>
  * })
  * ```
  */
-export const dateTimeColumn = <T>(props: CellContext<T, Nil<string | Date>>) =>
-  formatNilDateTime(props.getValue()) ?? "";
+export const dateTimeColumn = <T extends RowData>(
+  props: CellContext<DataTableFeatures, T, Nil<string | Date>>,
+) => formatNilDateTime(props.getValue()) ?? "";
