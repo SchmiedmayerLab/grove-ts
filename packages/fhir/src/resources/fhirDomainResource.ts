@@ -27,6 +27,11 @@ import type {
  * @template ResourceType - The specific FHIR resource type this class wraps
  */
 export abstract class FhirDomainResource<ResourceType extends DomainResource> {
+  // Properties
+
+  /** The wrapped FHIR resource. */
+  public value: ResourceType;
+
   // Constructor
 
   /**
@@ -34,7 +39,9 @@ export abstract class FhirDomainResource<ResourceType extends DomainResource> {
    *
    * @param value - The FHIR resource to wrap
    */
-  public constructor(public value: ResourceType) {}
+  public constructor(value: ResourceType) {
+    this.value = value;
+  }
 
   // Methods
 
