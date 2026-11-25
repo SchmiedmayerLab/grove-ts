@@ -17,18 +17,21 @@ Users only need the [README](README.md).
 
 | File                         | Purpose                                                                                                           |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `src/eslint/index.ts`        | Full ESLint configurations, which need Prettier and the TypeScript import resolver                                |
+| `src/eslint/index.ts`        | Full ESLint configurations, published as `./eslint`, which need Prettier and the TypeScript import resolver       |
 | `src/eslint/typeAware.ts`    | Type-aware ESLint configurations for the oxc setup, published as `./eslint-type-aware` without those dependencies |
 | `src/eslint/shared.ts`       | Helpers both ESLint entry points use                                                                              |
 | `src/prettier.ts`            | Prettier configuration                                                                                            |
-| `src/oxlint/index.ts`        | `createOxlintConfig` and the oxlint exports                                                                       |
+| `src/oxlint/core.ts`         | `createOxlintConfig` and the core configurations, published as `./oxlint-core`, which load no optional plugin     |
+| `src/oxlint/index.ts`        | The full oxlint configurations, published as `./oxlint`, which load sonarjs and @eslint-react                     |
+| `src/optionalPackages.ts`    | Loads an optional peer dependency only when a configuration uses it                                               |
+| `src/virtualModules.d.ts`    | Types of the typescript-eslint preset rules that the build writes into the package                                |
 | `src/oxlint/rules.ts`        | Native oxlint rules on top of the correctness category                                                            |
 | `src/oxlint/sonarjs.ts`      | sonarjs prepared for oxlint's JS plugin runtime                                                                   |
 | `src/sonarjsRules.ts`        | Splits the sonarjs rules between oxlint and ESLint                                                                |
 | `src/typeAwareRules.ts`      | @eslint-react rules that run in ESLint                                                                            |
 | `src/oxfmt.ts`               | oxfmt configuration                                                                                               |
 | `global-types.d.ts`          | Global types entry, published as `./global-types`                                                                 |
-| `tsdown.config.ts`           | Build of the entry points                                                                                         |
+| `tsdown.config.ts`           | Build of the entry points, with declarations from TypeScript 7                                                    |
 | `test/compatibility.test.ts` | Pins the ESLint and Prettier configurations                                                                       |
 | `test/oxc.test.ts`           | Checks the oxlint and oxfmt configurations                                                                        |
 
@@ -100,10 +103,24 @@ oxlint passes the same `context.sourceCode` object to every file, which breaks t
 `src/oxlint/sonarjs.ts` resets the cache for each file with the internal `clearFileCaches` of sonarjs.
 That is why `eslint-plugin-sonarjs` is pinned to an exact version; check the wrapper when you update it.
 
+## Optional Plugins
+
+typescript-eslint, `eslint-plugin-import-x`, `eslint-plugin-sonarjs` and `@eslint-react/eslint-plugin` are optional peer dependencies, because they need TypeScript 6 installed as `typescript`.
+They stay in `devDependencies` for this package's own build and tests.
+The modules that `/oxlint-core` loads must not import them; `test/oxc.test.ts` loads it with those packages missing.
+`src/oxlint/core.ts` loads sonarjs and @eslint-react through `loadOptionalPackage` only when a configuration enables them.
+`src/sonarjsRules.ts` takes the sonarjs plugin as an argument for the same reason.
+
 ## Build
 
 tsdown builds the entry points listed in `tsdown.config.ts`; a new entry point needs its line there and in `exports` in `package.json`.
+The oxlint TypeScript rules follow typescript-eslint's presets, which `tsdown.config.ts` reads at build time and writes into `dist/_virtual`, so that `/oxlint-core` does not load typescript-eslint.
+After a typescript-eslint update, the next build picks up the new preset rules.
 publint and attw in `pack:lint` check that every export points at a built file.
+The declaration plugin of tsdown picks its compiler by the `typescript` package, which is TypeScript 6 here for typescript-eslint.
+The configuration therefore points its TypeScript 7 generator at the `typescript7` package, which emits the same declarations faster.
+tsdown warns that this generator is experimental.
+Once `typescript` is TypeScript 7, the plugin picks it by itself and the explicit path can go.
 
 ## Global Types
 
@@ -113,9 +130,9 @@ The import turns that file into a module, so any other declaration in it would s
 ## Tests
 
 The tests run with Vitest against the built entry points, so build the package before `pnpm test`.
-`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the `./prettier` entry point loads nothing from ESLint, and loading with `require()`.
+`test/compatibility.test.ts` compares the resolved ESLint rules with `test/snapshots/eslint-rules.json`, and checks the Prettier output, that the `./prettier` entry point loads nothing from ESLint, loading with `require()`, and that the package has no main entry point.
 After an intended change to the ESLint configurations, update the snapshot with `pnpm test -u`; oxfmt leaves it as Vitest writes it.
-`test/package.test.ts` loads the main ESM entry point as published.
+`test/package.test.ts` loads the `./eslint` and `./prettier` ESM entry points as published.
 
 `test/oxc.test.ts` lints the fixture project in `test/fixtures/project` with oxlint and the type-aware ESLint configuration, and formats with oxfmt.
 It also checks the rule lists against oxlint's rule metadata and that the `./eslint-type-aware` entry point loads neither Prettier nor the import resolver.

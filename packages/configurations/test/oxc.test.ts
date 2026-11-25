@@ -22,6 +22,10 @@ import {
   oxlintNodeConfig,
   oxlintReactConfig,
 } from "@schmiedmayerlab/grove-configurations/oxlint";
+import {
+  oxlintNodeCoreConfig,
+  oxlintReactCoreConfig,
+} from "@schmiedmayerlab/grove-configurations/oxlint-core";
 import { ESLint, type Linter } from "eslint";
 import { format } from "oxfmt";
 import { type OxlintConfig } from "oxlint";
@@ -60,10 +64,13 @@ interface OxlintRuleMetadata {
 const level = (entry: unknown): unknown =>
   Array.isArray(entry) ? entry[0] : entry;
 
-const runOxlint = (args: string[]): OxlintDiagnostic[] => {
+const runOxlint = (
+  args: string[],
+  config = "oxlint.config.mjs",
+): OxlintDiagnostic[] => {
   const result = spawnSync(
     process.execPath,
-    [oxlintBin, "--config", "oxlint.config.mjs", "--format", "json", ...args],
+    [oxlintBin, "--config", config, "--format", "json", ...args],
     { cwd: fixtureDir, encoding: "utf8" },
   );
   expect(result.stdout, result.stderr).toBeTruthy();
@@ -78,8 +85,8 @@ const listOxlintRules = () =>
     }).stdout,
   ) as OxlintRuleMetadata[];
 
-const lintWithOxlint = (): Finding[] => {
-  return runOxlint(["src"]).map(({ code, filename, message }) => ({
+const lintWithOxlint = (config?: string): Finding[] => {
+  return runOxlint(["src"], config).map(({ code, filename, message }) => ({
     code,
     file: filename,
     message,
@@ -116,6 +123,11 @@ interface Finding {
 const codesIn = (diagnostics: Finding[], file: string) =>
   diagnostics.filter((entry) => entry.file === file).map((entry) => entry.code);
 
+const pluginNames = (config: OxlintConfig) =>
+  (config.jsPlugins ?? []).map((plugin) =>
+    typeof plugin === "string" ? plugin : plugin.name,
+  );
+
 test("exposes the oxlint configurations", () => {
   for (const config of [oxlintNodeConfig, oxlintReactConfig]) {
     expect(config.options?.typeAware).toBe(true);
@@ -124,10 +136,6 @@ test("exposes the oxlint configurations", () => {
     expect(Object.keys(config.rules ?? {}).length).toBeGreaterThan(10);
     expect(config.jsPlugins?.length).toBeGreaterThan(0);
   }
-  const pluginNames = (config: OxlintConfig) =>
-    (config.jsPlugins ?? []).map((plugin) =>
-      typeof plugin === "string" ? plugin : plugin.name,
-    );
   expect(pluginNames(oxlintReactConfig)).toContain("@eslint-react");
   expect(pluginNames(oxlintNodeConfig)).not.toContain("@eslint-react");
 
@@ -138,6 +146,112 @@ test("exposes the oxlint configurations", () => {
     (override) => override.rules?.["import/no-default-export"] === "off",
   );
   expect(defaultExportOverride?.files).toEqual(["**/*.mts"]);
+});
+
+const allRuleNames = (config: OxlintConfig) => [
+  ...Object.keys(config.rules ?? {}),
+  ...(config.overrides ?? []).flatMap((override) =>
+    Object.keys(override.rules ?? {}),
+  ),
+];
+
+test("exposes the oxlint core configurations without sonarjs and @eslint-react", () => {
+  for (const config of [oxlintNodeCoreConfig, oxlintReactCoreConfig]) {
+    expect(config.options?.typeAware).toBe(true);
+    expect(config.rules?.["typescript/no-floating-promises"]).toBe("error");
+    expect(pluginNames(config)).toEqual(["prefer-arrow-functions"]);
+    expect(
+      allRuleNames(config).filter((rule) =>
+        /^(sonarjs|@eslint-react)\//.test(rule),
+      ),
+    ).toEqual([]);
+  }
+  expect(oxlintReactCoreConfig.overrides?.[0]?.env).toEqual({ browser: true });
+  expect(oxlintNodeCoreConfig.overrides?.[0]?.env).toEqual({ node: true });
+});
+
+/**
+ * Runs `script` as an ES module in the fixture project, with the given packages missing.
+ */
+const runWithoutPackages = (packages: RegExp, script: string) =>
+  spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "--eval",
+      `
+        import { registerHooks } from "node:module";
+        registerHooks({
+          resolve(specifier, context, nextResolve) {
+            if (${String(packages)}.test(specifier)) {
+              const error = new Error("Cannot find package " + specifier);
+              error.code = "ERR_MODULE_NOT_FOUND";
+              throw error;
+            }
+            return nextResolve(specifier, context);
+          },
+        });
+        ${script}
+      `,
+    ],
+    { cwd: fixtureDir, encoding: "utf8" },
+  );
+
+test("loads the oxlint core entry point without the plugins that need TypeScript 6", () => {
+  const result = runWithoutPackages(
+    /^(typescript-eslint|@typescript-eslint\/|eslint-plugin-sonarjs|@eslint-react\/|eslint-plugin-import-x)/,
+    `
+      const { oxlintReactCoreConfig } = await import("@schmiedmayerlab/grove-configurations/oxlint-core");
+      if (!oxlintReactCoreConfig.rules["typescript/no-floating-promises"]) throw new Error("no TypeScript rules");
+    `,
+  );
+  expect(result.status, result.stderr).toBe(0);
+});
+
+test("explains which plugin the full oxlint configurations miss", () => {
+  const result = runWithoutPackages(
+    /^eslint-plugin-sonarjs$/,
+    `
+      const { oxlintNodeConfig } = await import("@schmiedmayerlab/grove-configurations/oxlint");
+      JSON.stringify(oxlintNodeConfig);
+    `,
+  );
+  expect(result.status).not.toBe(0);
+  expect(result.stderr).toContain("needs eslint-plugin-sonarjs");
+  expect(result.stderr).toContain(
+    "@schmiedmayerlab/grove-configurations/oxlint-core",
+  );
+});
+
+test("builds the full Node configuration without @eslint-react", () => {
+  const result = runWithoutPackages(
+    /^@eslint-react\//,
+    `
+      const { oxlintNodeConfig } = await import("@schmiedmayerlab/grove-configurations/oxlint");
+      if (!oxlintNodeConfig.jsPlugins.some((plugin) => plugin.name === "sonarjs")) throw new Error("no sonarjs");
+    `,
+  );
+  expect(result.status, result.stderr).toBe(0);
+});
+
+test("builds the full configurations with every key of createOxlintConfig", () => {
+  expect(Object.keys(oxlintNodeConfig)).toEqual(
+    Object.keys(createOxlintConfig()),
+  );
+  expect(JSON.parse(JSON.stringify(oxlintReactConfig))).toEqual(
+    JSON.parse(JSON.stringify(createOxlintConfig({ react: true }))),
+  );
+});
+
+test("reports the core rules through oxlint without the JS plugins that need TypeScript 6", () => {
+  const codes = lintWithOxlint("oxlint.core.config.mjs").map(
+    ({ code }) => code,
+  );
+  expect(codes).toContain("typescript(no-floating-promises)");
+  expect(codes).toContain("prefer-arrow-functions(prefer-arrow-functions)");
+  expect(
+    codes.filter((code) => /^(sonarjs|@eslint-react)\(/.test(code)),
+  ).toEqual([]);
 });
 
 test("keeps the rules at the top level, so that projects can change them", () => {

@@ -9,11 +9,11 @@
 import {
   getEslintNodeConfig,
   getEslintReactConfig,
-  prettierConfig,
-} from "@schmiedmayerlab/grove-configurations";
+} from "@schmiedmayerlab/grove-configurations/eslint";
+import { prettierConfig } from "@schmiedmayerlab/grove-configurations/prettier";
 import { expect, test } from "vitest";
 
-test("loads the published ESM configuration entry point", () => {
+test("loads the published ESM configuration entry points", () => {
   const options = { tsconfigRootDir: import.meta.dirname };
 
   expect(getEslintNodeConfig(options).length).toBeGreaterThan(0);

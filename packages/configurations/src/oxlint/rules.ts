@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import type { DummyRuleMap } from "oxlint";
-import { configs as typescriptEslintConfigs } from "typescript-eslint";
+import typescriptEslintPresetEntries from "virtual:typescript-eslint-presets";
 
 /**
  * ESLint recommended and import rules for every JavaScript and TypeScript file.
@@ -117,12 +117,10 @@ const toOxlintRuleName = (name: string) => {
  * typescript-eslint's strict-type-checked and stylistic-type-checked presets with oxlint rule names.
  * The presets turn off the ESLint core rules that TypeScript checks itself.
  * Rules that oxlint does not have are left out; a test checks that none of them is enabled.
+ * The build writes the preset rules into the package, so that oxlint does not need typescript-eslint.
  */
 const typescriptEslintPresetRules = (): DummyRuleMap => {
-  const entries = [
-    ...typescriptEslintConfigs.strictTypeChecked,
-    ...typescriptEslintConfigs.stylisticTypeChecked,
-  ].flatMap((config) => Object.entries(config.rules ?? {}));
+  const entries = typescriptEslintPresetEntries;
   // Core rules first, so that the typescript-eslint versions of the same rules take precedence.
   const ordered = [
     ...entries.filter(([name]) => !name.startsWith(typescriptEslintPrefix)),

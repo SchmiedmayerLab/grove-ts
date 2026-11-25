@@ -5,5 +5,9 @@
 //
 // SPDX-License-Identifier: MIT
 //
-export * from "./eslint";
-export * from "./prettier";
+
+import { oxlintReactCoreConfig } from "@schmiedmayerlab/grove-configurations/oxlint-core";
+
+export default {
+  extends: [oxlintReactCoreConfig],
+};

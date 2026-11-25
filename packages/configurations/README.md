@@ -26,11 +26,15 @@ The [ESLint and Prettier configurations](#eslint-and-prettier) remain for existi
 
 ## Setup
 
-Install the tools:
+Install the tools and the plugins:
 
 ```bash
-npm install --save-dev oxlint oxlint-tsgolint oxfmt eslint @schmiedmayerlab/grove-configurations
+npm install --save-dev oxlint oxlint-tsgolint oxfmt eslint @schmiedmayerlab/grove-configurations eslint-plugin-sonarjs@4.2.2 typescript-eslint eslint-plugin-import-x
 ```
+
+React projects also install `@eslint-react/eslint-plugin`.
+The plugins are optional peer dependencies, because they need TypeScript 6, see [TypeScript 7](#typescript-7).
+Projects that skip them use the [core configurations](#core-configurations).
 
 ### oxlint
 
@@ -53,6 +57,28 @@ It does not lint their templates, and oxfmt does not format them.
 oxlint and oxfmt skip the files that `.gitignore` ignores, such as build output.
 Add `ignorePatterns` to your own configuration only for committed files that should not be linted, such as generated code.
 A pattern without a slash matches at any depth, so `lib` also skips `src/lib`; anchor root folders as `/lib`.
+
+### Core Configurations
+
+`oxlintNodeCoreConfig` and `oxlintReactCoreConfig` from `/oxlint-core` leave out the sonarjs and @eslint-react rules.
+They need none of the optional plugins and work with TypeScript 7 installed as `typescript`:
+
+```bash
+npm install --save-dev oxlint oxlint-tsgolint oxfmt @schmiedmayerlab/grove-configurations
+```
+
+```typescript
+import { oxlintReactCoreConfig } from "@schmiedmayerlab/grove-configurations/oxlint-core";
+import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  extends: [oxlintReactCoreConfig],
+});
+```
+
+They keep the ESLint core, import and TypeScript rules, including the type-aware ones, and skip the type-aware ESLint configuration below.
+`createOxlintConfig` takes `sonarjs` and `eslintReact` options to choose the plugins one by one.
+The full configurations of `/oxlint` load their plugins when oxlint reads them, and fail with an explanation when one is not installed.
 
 ### ESLint for Type-aware Plugin Rules
 
@@ -158,8 +184,10 @@ createOxlintConfig({
 
 oxlint's type-aware rules already run on TypeScript 7, so they read your `tsconfig.json` with TypeScript 7.
 Options that TypeScript 7 removed, such as `baseUrl`, stop all type-aware rules, even when the project still compiles with TypeScript 6.
-ESLint uses typescript-eslint, which needs the compiler API that TypeScript 7 does not ship yet.
-Install TypeScript 6 under the `typescript` name for these tools and TypeScript 7 under another name:
+typescript-eslint, sonarjs and @eslint-react need the compiler API that TypeScript 7 does not ship yet.
+The `/eslint` and `/eslint-type-aware` entry points and the full configurations of `/oxlint` load them, while `/oxlint-core`, `/prettier` and `/oxfmt` do not.
+With the [core configurations](#core-configurations), install TypeScript 7 as `typescript`.
+Otherwise, install TypeScript 6 under the `typescript` name for these plugins and TypeScript 7 under another name:
 
 ```json
 {
@@ -179,13 +207,13 @@ Use these configurations only when a project cannot run oxlint.
 They lint and format through ESLint, with Prettier as an ESLint rule.
 
 ```bash
-npm install --save-dev prettier eslint eslint-import-resolver-typescript @schmiedmayerlab/grove-configurations
+npm install --save-dev prettier eslint eslint-import-resolver-typescript @schmiedmayerlab/grove-configurations typescript-eslint eslint-plugin-import-x eslint-plugin-sonarjs@4.2.2 @eslint-react/eslint-plugin
 ```
 
 Create an `eslint.config.mjs` file:
 
 ```javascript
-import { getEslintReactConfig } from "@schmiedmayerlab/grove-configurations";
+import { getEslintReactConfig } from "@schmiedmayerlab/grove-configurations/eslint";
 
 export default getEslintReactConfig({ tsconfigRootDir: import.meta.dirname });
 ```
@@ -212,7 +240,7 @@ export default [
 ];
 ```
 
-The building blocks `getEslintRules`, `getNodeGlobals`, `getTslint`, `getPreferArrowFunctions`, `getReactPlugins` and `getPrettierPlugin` are exported for configurations that need to be assembled by hand.
+The building blocks `getEslintRules`, `getNodeGlobals`, `getTslint`, `getPreferArrowFunctions`, `getReactPlugins` and `getPrettierPlugin` are exported from `/eslint` for configurations that need to be assembled by hand.
 
 ## License
 

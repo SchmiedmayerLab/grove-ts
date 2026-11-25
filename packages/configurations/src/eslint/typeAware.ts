@@ -18,7 +18,7 @@ import {
   plugin as typescriptEslintPlugin,
   type ConfigWithExtends,
 } from "typescript-eslint";
-import { getSonarRuleSet } from "../sonarjsRules";
+import { getSonarRuleSet, type SonarjsPlugin } from "../sonarjsRules";
 import { typeAwareReactRules } from "../typeAwareRules";
 import { defineTypedConfig, getIgnoredDirs } from "./shared";
 
@@ -73,7 +73,9 @@ const getTypeAwareConfig = (
         parser,
         parserOptions: { projectService: true, tsconfigRootDir },
       },
-      rules: getSonarRuleSet({ typeAware: true }),
+      rules: getSonarRuleSet(sonarjsPlugin as unknown as SonarjsPlugin, {
+        typeAware: true,
+      }),
     },
     ...(react
       ? [

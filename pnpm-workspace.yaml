@@ -41,3 +41,13 @@ overrides:
   # Firebase Admin storage tooling; uuid below 11.1.1 is affected by GHSA-w5hq-g745-h8pq.
   teeny-request>uuid: 11.1.1
   tinypool: ^2.1.2
+
+# Storybook's TypeScript docgen reads the TypeScript 6 compiler API.
+# Its `typescript` peer would otherwise resolve to TypeScript 7, which pnpm installs for the missing peer.
+packageExtensions:
+  "@joshwooding/vite-plugin-react-docgen-typescript":
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
+  react-docgen-typescript:
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
