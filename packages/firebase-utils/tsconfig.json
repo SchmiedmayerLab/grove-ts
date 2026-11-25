@@ -7,16 +7,10 @@
 //
 
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@schmiedmayerlab/grove-configurations/tsconfig/node-library",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "declaration": true,
     "rootDir": "src",
-    "outDir": "dist",
-    "forceConsistentCasingInFileNames": true
+    "outDir": "dist"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*.test.ts"]

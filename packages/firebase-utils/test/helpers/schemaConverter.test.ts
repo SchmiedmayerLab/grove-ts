@@ -13,10 +13,13 @@ import { SchemaConverter } from "../../src/helpers/schemaConverter.js";
 describe("SchemaConverter", () => {
   // Simple class for testing
   class TestUser {
-    constructor(
-      public readonly name: string,
-      public readonly age: number,
-    ) {}
+    readonly name: string;
+    readonly age: number;
+
+    constructor(name: string, age: number) {
+      this.name = name;
+      this.age = age;
+    }
   }
 
   describe("constructor", () => {
