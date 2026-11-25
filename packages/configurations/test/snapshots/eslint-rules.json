@@ -2170,9 +2170,7 @@
     "@eslint-react/dom-no-unsafe-iframe-sandbox": "warn",
     "@eslint-react/dom-no-unsafe-target-blank": [
       "warn",
-      {
-        "allowReferrer": false
-      }
+      {}
     ],
     "@eslint-react/dom-no-use-form-state": "error",
     "@eslint-react/dom-no-void-elements-with-children": "error",
@@ -2187,10 +2185,7 @@
     "@eslint-react/jsx-no-namespace": "error",
     "@eslint-react/jsx-no-useless-fragment": [
       "warn",
-      {
-        "allowEmptyFragment": false,
-        "allowExpressions": true
-      }
+      {}
     ],
     "@eslint-react/naming-convention-context-name": "warn",
     "@eslint-react/naming-convention-id-name": "warn",
@@ -2226,9 +2221,7 @@
     "@eslint-react/no-unstable-context-value": "warn",
     "@eslint-react/no-unstable-default-props": [
       "warn",
-      {
-        "safeDefaultProps": []
-      }
+      {}
     ],
     "@eslint-react/no-unused-class-component-members": "warn",
     "@eslint-react/no-unused-props": "warn",
@@ -2243,11 +2236,7 @@
     "@eslint-react/use-memo": "error",
     "@eslint-react/use-state": [
       "warn",
-      {
-        "enforceAssignment": true,
-        "enforceLazyInitialization": true,
-        "enforceSetterName": true
-      }
+      {}
     ],
     "@eslint-react/web-api-no-leaked-event-listener": "warn",
     "@eslint-react/web-api-no-leaked-fetch": "warn",
@@ -2977,9 +2966,7 @@
     "@eslint-react/dom-no-unsafe-iframe-sandbox": "warn",
     "@eslint-react/dom-no-unsafe-target-blank": [
       "warn",
-      {
-        "allowReferrer": false
-      }
+      {}
     ],
     "@eslint-react/dom-no-use-form-state": "error",
     "@eslint-react/dom-no-void-elements-with-children": "error",
@@ -2994,10 +2981,7 @@
     "@eslint-react/jsx-no-namespace": "error",
     "@eslint-react/jsx-no-useless-fragment": [
       "warn",
-      {
-        "allowEmptyFragment": false,
-        "allowExpressions": true
-      }
+      {}
     ],
     "@eslint-react/naming-convention-context-name": "warn",
     "@eslint-react/naming-convention-id-name": "warn",
@@ -3033,9 +3017,7 @@
     "@eslint-react/no-unstable-context-value": "warn",
     "@eslint-react/no-unstable-default-props": [
       "warn",
-      {
-        "safeDefaultProps": []
-      }
+      {}
     ],
     "@eslint-react/no-unused-class-component-members": "warn",
     "@eslint-react/no-unused-props": "warn",
@@ -3050,11 +3032,7 @@
     "@eslint-react/use-memo": "error",
     "@eslint-react/use-state": [
       "warn",
-      {
-        "enforceAssignment": true,
-        "enforceLazyInitialization": true,
-        "enforceSetterName": true
-      }
+      {}
     ],
     "@eslint-react/web-api-no-leaked-event-listener": "warn",
     "@eslint-react/web-api-no-leaked-fetch": "warn",

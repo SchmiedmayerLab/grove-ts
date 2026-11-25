@@ -28,12 +28,12 @@ export const useIsScrolled = (threshold: number) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // The state intentionally mirrors an external browser scroll position.
-      // eslint-disable-next-line @eslint-react/set-state-in-effect
       setIsScrolled(window.scrollY > threshold);
     };
 
-    // Check initial scroll position to handle cases where the page is already scrolled on mount
+    // Check initial scroll position to handle cases where the page is already scrolled on mount.
+    // The state intentionally mirrors an external browser scroll position.
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     handleScroll();
 
     // Use passive listener since we're not calling preventDefault()
