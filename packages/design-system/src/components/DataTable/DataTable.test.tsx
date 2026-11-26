@@ -106,6 +106,37 @@ describe("DataTable", () => {
     });
   });
 
+  it.each([
+    { state: "error", props: { error: true } },
+    { state: "loading", props: { loading: true } },
+  ])("hides pagination in the $state state", ({ props }) => {
+    render(
+      <DataTable
+        columns={peopleColumns}
+        data={peopleData}
+        pageSize={2}
+        {...props}
+      />,
+    );
+
+    const paginationCounter = screen.queryByText(`1-2 of ${peopleData.length}`);
+    expect(paginationCounter).not.toBeInTheDocument();
+  });
+
+  it("keeps pagination for an error object that is not shown", () => {
+    render(
+      <DataTable
+        columns={peopleColumns}
+        data={peopleData}
+        pageSize={2}
+        error={{ show: false }}
+      />,
+    );
+
+    const paginationCounter = screen.getByText(`1-2 of ${peopleData.length}`);
+    expect(paginationCounter).toBeInTheDocument();
+  });
+
   it("paginates data", () => {
     render(
       <DataTable columns={peopleColumns} data={peopleData} pageSize={2} />,
