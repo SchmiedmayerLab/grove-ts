@@ -89,7 +89,7 @@ export const DashboardLayout = ({
       >
         <header
           className={cn(
-            "border-b-border-layout flex h-(--headerHeight) items-center gap-4 border-x-0 border-t-0 border-b border-solid px-4 py-1 lg:ml-(--asideWidth) xl:px-8",
+            "flex h-(--headerHeight) items-center gap-4 border-x-0 border-t-0 border-b border-solid px-4 py-1 lg:ml-(--asideWidth) xl:px-8",
             !title && !actions && "lg:hidden",
           )}
         >
@@ -107,7 +107,7 @@ export const DashboardLayout = ({
         </header>
         <aside
           className={cn(
-            "border-r-border-layout bg-surface fixed top-0 left-0 hidden h-screen w-(--asideWidth) flex-col items-center border-y-0 border-r border-l-0 border-solid py-4 lg:flex",
+            "bg-surface fixed top-0 left-0 hidden h-screen w-(--asideWidth) flex-col items-center border-y-0 border-r border-l-0 border-solid py-4 lg:flex",
             shrinkable ? "xl:px-3" : "lg:px-3",
           )}
         >
