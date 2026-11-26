@@ -46,7 +46,7 @@ jobs:
       - name: Set up pnpm, Node.js, and dependencies
         uses: pnpm/setup@v3
         with:
-          runtime: node@24
+          node-version-file: .nvmrc
           cache: true
           require-lockfile: true
       - name: Check formatting
