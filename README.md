@@ -78,8 +78,10 @@ Grove is currently pre-1.0, so review the [release notes](https://github.com/Sch
 
 To work on Grove itself, install:
 
-- Node.js 24.15 or later
+- Node.js in the version listed in `.nvmrc`
 - pnpm 12
+
+CI builds and publishes with the Node.js version in `.nvmrc` and also builds, type-checks, and tests every package on Node.js 24, the oldest runtime the packages support.
 
 Clone the repository and install the dependencies of every workspace, including the documentation site:
 

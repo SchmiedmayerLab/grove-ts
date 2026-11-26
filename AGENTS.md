@@ -28,7 +28,8 @@ Guidance for contributors working in this repository.
 
 ## Working Rules
 
-- Use Node.js 24.15 or later and pnpm 12.
+- Use the Node.js version in `.nvmrc` and pnpm 12.
+- Keep published code compatible with the oldest Node.js version in `engines.node`, and keep `@types/node` on that major.
 - Run `pnpm install` after changing dependencies and commit the resulting `pnpm-lock.yaml`.
 - Run `pnpm run validate` before requesting review.
 - Keep package entry points, published files, engine requirements, repository metadata, and scripts consistent across all publishable workspaces.
