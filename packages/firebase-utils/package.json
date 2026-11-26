@@ -2,15 +2,42 @@
   "name": "@schmiedmayerlab/grove-firebase-utils",
   "version": "0.0.0",
   "description": "Utility functions for Firebase projects",
+  "keywords": [
+    "firebase",
+    "firestore",
+    "helpers",
+    "typescript",
+    "utilities",
+    "zod"
+  ],
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "license": "MIT",
+  "author": "Schmiedmayer Lab",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
+    "directory": "packages/firebase-utils"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "lint": "oxlint",
@@ -27,33 +54,6 @@
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json",
     "prepublishOnly": "pnpm run clean && pnpm run build"
   },
-  "author": "Schmiedmayer Lab",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git",
-    "directory": "packages/firebase-utils"
-  },
-  "bugs": {
-    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
-  },
-  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
-  "publishConfig": {
-    "access": "public"
-  },
-  "keywords": [
-    "firebase",
-    "firestore",
-    "utilities",
-    "helpers",
-    "zod",
-    "typescript"
-  ],
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
   "dependencies": {
     "zod": "^4.6.7"
   },

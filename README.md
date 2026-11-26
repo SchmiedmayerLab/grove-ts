@@ -121,7 +121,7 @@ Useful repository-wide commands include:
 | `pnpm run lint`          | Run oxlint in every workspace                              |
 | `pnpm run lint:types`    | Run the ESLint rules that need type information            |
 | `pnpm run lint:ci`       | Run oxlint and ESLint with no warnings allowed             |
-| `pnpm run format`        | Format the repository with oxfmt                           |
+| `pnpm run format`        | Format the repository and sort `package.json` with oxfmt   |
 | `pnpm run analyze`       | Check dead files, dependencies, exports, and import cycles |
 | `pnpm run docs`          | Start the design system documentation locally              |
 | `pnpm run pages:build`   | Assemble the complete GitHub Pages artifact                |

@@ -115,6 +115,8 @@ export default defineConfig(oxfmtConfig);
 ```
 
 It keeps oxfmt's default formatting with Prettier's 80 columns, and adds import and Tailwind class sorting.
+oxfmt also sorts the keys of every `package.json` into one fixed order, together with the dependency lists and `keywords`.
+It leaves the order inside `exports`, `scripts` and other nested fields as written, so conditions such as `types` before `default` stay in place.
 
 ### Global Types
 

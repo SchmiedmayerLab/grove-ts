@@ -2,29 +2,24 @@
   "name": "@schmiedmayerlab/grove",
   "version": "0.0.0",
   "private": true,
-  "author": "Schmiedmayer Lab",
-  "license": "MIT",
   "description": "TypeScript packages for the Grove ecosystem",
   "keywords": [
-    "grove",
-    "typescript",
-    "react",
+    "design-system",
     "firebase",
-    "design-system"
+    "grove",
+    "react",
+    "typescript"
   ],
+  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
+  "bugs": {
+    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
+  },
+  "license": "MIT",
+  "author": "Schmiedmayer Lab",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SchmiedmayerLab/grove-ts.git"
   },
-  "bugs": {
-    "url": "https://github.com/SchmiedmayerLab/grove-ts/issues"
-  },
-  "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
-  "engines": {
-    "node": ">=24",
-    "pnpm": ">=12"
-  },
-  "packageManager": "pnpm@12.20.0",
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" run build",
     "build:fhir": "pnpm --filter @schmiedmayerlab/grove-fhir run build",
@@ -71,6 +66,11 @@
     "playwright": "^1.62.1",
     "publint": "^0.3.22"
   },
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=12"
+  },
+  "packageManager": "pnpm@12.20.0",
   "knip": {
     "ignoreWorkspaces": [
       "packages/design-system/docs"
