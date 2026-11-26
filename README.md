@@ -50,7 +50,7 @@ Packages are independently installable from the `@schmiedmayerlab` npm scope and
 
 ## Quick Start
 
-Grove packages require Node.js 24 or later.
+Grove packages require Node.js 24.15 or later.
 Install the package you need directly:
 
 ```bash
@@ -78,7 +78,7 @@ Grove is currently pre-1.0, so review the [release notes](https://github.com/Sch
 
 To work on Grove itself, install:
 
-- Node.js 24
+- Node.js 24.15 or later
 - pnpm 12
 
 Clone the repository and install the dependencies of every workspace, including the documentation site:

@@ -83,6 +83,7 @@ The full configurations of `/oxlint` load their plugins when oxlint reads them, 
 ### ESLint for Type-aware Plugin Rules
 
 A few sonarjs and @eslint-react rules need type information that oxlint cannot pass to ESLint plugins yet, so they run in ESLint.
+The same goes for typescript-eslint rules that oxlint-tsgolint does not implement yet, such as `no-unsafe-class-instance-assignment`.
 Create an `eslint.config.mjs` file:
 
 ```javascript

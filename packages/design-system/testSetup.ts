@@ -7,6 +7,7 @@
 //
 
 import "@testing-library/jest-dom/vitest";
+import { toast } from "sonner";
 
 class ResizeObserverMock {
   observe = vi.fn();
@@ -24,3 +25,9 @@ if (!("scrollIntoView" in Element.prototype)) {
     configurable: true,
   });
 }
+
+// Sonner keeps toasts in a module-level store and shows earlier ones once a Toaster mounts.
+// Dismiss them after each test, so toasts from one test do not appear in the next.
+afterEach(() => {
+  toast.dismiss();
+});

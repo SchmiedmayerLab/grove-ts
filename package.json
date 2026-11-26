@@ -60,17 +60,17 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@storybook/react-vite": "^10.5.5",
-    "knip": "^6.29.0",
-    "oxfmt": "^0.78.0",
-    "playwright": "^1.62.1",
-    "publint": "^0.3.22"
+    "@storybook/react-vite": "^10.6.7",
+    "knip": "^6.45.1",
+    "oxfmt": "^0.79.0",
+    "playwright": "^1.65.1",
+    "publint": "^0.3.25"
   },
   "engines": {
-    "node": ">=24",
+    "node": ">=24.15",
     "pnpm": ">=12"
   },
-  "packageManager": "pnpm@12.20.0",
+  "packageManager": "pnpm@12.22.0",
   "knip": {
     "ignoreWorkspaces": [
       "packages/design-system/docs"

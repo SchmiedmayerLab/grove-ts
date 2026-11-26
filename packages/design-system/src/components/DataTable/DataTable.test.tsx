@@ -6,10 +6,23 @@
 // SPDX-License-Identifier: MIT
 //
 
+import {
+  constructFilterFn,
+  type SortingState,
+  tableFeatures,
+} from "@tanstack/react-table";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { useState } from "react";
 import { vitest } from "vitest";
-import { DataTable } from ".";
+import { formatDate, formatDateTime } from "@/utils/date";
+import {
+  createDataTableColumnHelper,
+  DataTable,
+  dataTableFeatures,
+  dateColumn,
+  dateTimeColumn,
+} from ".";
 import {
   columnHelper,
   peopleColumn,
@@ -140,6 +153,215 @@ describe("DataTable", () => {
     fireEvent.click(disabledSortButton);
     // Just order of the data
     expectNamesInGivenOrder(peopleData);
+  });
+
+  it("shows sort buttons only for sortable columns", () => {
+    const columns = [
+      columnHelper.accessor("name", {
+        header: "Name",
+        enableColumnFilter: false,
+      }),
+      columnHelper.accessor("age", {
+        header: "Age",
+        enableSorting: false,
+      }),
+    ];
+    render(<DataTable columns={columns} data={peopleData} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort ascending by Name column" }),
+    );
+    expectNamesInGivenOrder(
+      [...peopleData].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    expect(
+      within(screen.getByRole("columnheader", { name: "Age" })).queryByRole(
+        "button",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("supports controlled sorting", () => {
+    const onSortingChange = vitest.fn();
+    const ControlledTable = () => {
+      const [sorting, setSorting] = useState<SortingState>([]);
+      return (
+        <DataTable
+          columns={peopleColumns}
+          data={peopleData}
+          state={{ sorting }}
+          onSortingChange={(updater) => {
+            onSortingChange(updater);
+            setSorting(updater);
+          }}
+        />
+      );
+    };
+    render(<ControlledTable />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sort descending by Age column" }),
+    );
+
+    expect(onSortingChange).toHaveBeenCalledTimes(1);
+    expectNamesInGivenOrder([...peopleData].sort((a, b) => b.age - a.age));
+  });
+
+  it("merges pageSize with initial pagination state", () => {
+    render(
+      <DataTable
+        columns={peopleColumns}
+        data={peopleData}
+        pageSize={2}
+        initialState={{ pagination: { pageIndex: 1, pageSize: 2 } }}
+      />,
+    );
+
+    expect(screen.getByText(`3-4 of ${peopleData.length}`)).toBeInTheDocument();
+  });
+
+  it("resets pagination when filtering from a later page", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable columns={peopleColumns} data={peopleData} pageSize={2} />,
+    );
+    await user.click(screen.getByRole("button", { name: "4" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Search..." }),
+      "Lorem",
+    );
+
+    await screen.findByText("1-1 of 1");
+    expect(screen.getByRole("cell", { name: "Lorem" })).toBeInTheDocument();
+  });
+
+  it("formats date columns of any date value type", () => {
+    const createdAt = new Date(2026, 0, 2, 3, 4);
+    const data = [{ name: "Ada", createdAt, updatedAt: null }];
+    const eventHelper = createDataTableColumnHelper<(typeof data)[number]>();
+    const columns = [
+      eventHelper.accessor("createdAt", { header: "Date", cell: dateColumn }),
+      eventHelper.accessor("createdAt", {
+        id: "createdAtTime",
+        header: "Date Time",
+        cell: dateTimeColumn,
+      }),
+      eventHelper.accessor("updatedAt", {
+        header: "Updated",
+        cell: dateColumn,
+      }),
+    ];
+    render(<DataTable columns={columns} data={data} />);
+
+    expect(
+      screen.getByRole("cell", { name: formatDate(createdAt) }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("cell", { name: formatDateTime(createdAt) }),
+    ).toBeInTheDocument();
+  });
+
+  describe("custom filter functions", () => {
+    const startsWith = constructFilterFn({
+      filter: (dataValue: unknown, filterValue: unknown) =>
+        String(dataValue)
+          .toLowerCase()
+          .startsWith(String(filterValue).toLowerCase()),
+    });
+    const initialState = { columnFilters: [{ id: "name", value: "a" }] };
+    const startingWithA = peopleData.filter((person) =>
+      person.name.toLowerCase().startsWith("a"),
+    );
+
+    it("accepts filter functions in column definitions", () => {
+      const columns = [
+        columnHelper.accessor("name", { header: "Name", filterFn: startsWith }),
+      ];
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          initialState={initialState}
+        />,
+      );
+
+      expectNamesInGivenOrder(startingWithA);
+    });
+
+    it("accepts extended features", () => {
+      const features = tableFeatures({
+        ...dataTableFeatures,
+        filterFns: {
+          ...dataTableFeatures.filterFns,
+          includesString: startsWith,
+        },
+      });
+      const columns = [
+        columnHelper.accessor("name", {
+          header: "Name",
+          filterFn: "includesString",
+        }),
+      ];
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          features={features}
+          initialState={initialState}
+        />,
+      );
+
+      expectNamesInGivenOrder(startingWithA);
+    });
+  });
+
+  describe("built-in filter functions", () => {
+    it("resolves built-in filter functions by name", () => {
+      const columns = [
+        columnHelper.accessor("name", {
+          header: "Name",
+          filterFn: "startsWith",
+        }),
+      ];
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          initialState={{ columnFilters: [{ id: "name", value: "j" }] }}
+        />,
+      );
+
+      const startingWithJ = peopleData.filter((person) =>
+        person.name.startsWith("J"),
+      );
+      expect(getRows()).toHaveLength(startingWithJ.length);
+      expectNamesInGivenOrder(startingWithJ);
+    });
+
+    it("filters date columns with the auto filter function", () => {
+      const columns = [
+        columnHelper.accessor("name", { header: "Name" }),
+        columnHelper.accessor("updatedAt", { header: "Updated" }),
+      ];
+      const from = new Date(2020, 0, 1);
+      const to = new Date(2025, 0, 1);
+      render(
+        <DataTable
+          columns={columns}
+          data={peopleData}
+          initialState={{
+            columnFilters: [{ id: "updatedAt", value: [from, to] }],
+          }}
+        />,
+      );
+
+      const updatedInRange = peopleData.filter(
+        ({ updatedAt }) =>
+          updatedAt !== null && updatedAt >= from && updatedAt <= to,
+      );
+      expect(getRows()).toHaveLength(updatedInRange.length);
+      expectNamesInGivenOrder(updatedInRange);
+    });
   });
 
   it("filters data with fuzzy search", async () => {

@@ -14,3 +14,11 @@ export const typeAwareReactRules = [
   "@eslint-react/no-leaked-conditional-rendering",
   "@eslint-react/no-unused-props",
 ] as const;
+
+/**
+ * typescript-eslint rules of the strict and stylistic type-checked presets that oxlint-tsgolint does not implement yet.
+ * They stay in ESLint until oxlint can run them.
+ */
+export const typeAwareTypeScriptEslintRules = [
+  "@typescript-eslint/no-unsafe-class-instance-assignment",
+] as const;

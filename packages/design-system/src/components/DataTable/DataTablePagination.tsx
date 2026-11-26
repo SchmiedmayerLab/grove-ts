@@ -6,24 +6,25 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { Table as TableType } from "@tanstack/table-core";
+import type { RowData, Table as TableType } from "@tanstack/table-core";
 import { ButtonPagination } from "@/components/Pagination/ButtonPagination";
 import { RangeCounter } from "@/components/RangeCounter";
+import type { DataTableFeatures } from "./DataTable.utils";
 
-interface DataTablePaginationProps<Data> {
-  table: TableType<Data>;
+interface DataTablePaginationProps<Data extends RowData> {
+  table: TableType<DataTableFeatures, Data>;
 }
 
 /**
  * Uses core DataTable hook to construct pagination
  */
-export const DataTablePagination = <Data,>({
+export const DataTablePagination = <Data extends RowData>({
   table,
 }: DataTablePaginationProps<Data>) => {
   const rows = table.getRowModel().rows;
   const filteredRowsLength = table.getFilteredRowModel().rows.length;
 
-  const tableState = table.getState();
+  const tableState = table.store.state;
   const currentPage = tableState.pagination.pageIndex + 1;
 
   const itemsRangeStartIndex =

@@ -309,12 +309,17 @@ test("lists every enabled type-aware TypeScript rule", () => {
 
 test("keeps every enabled rule of the typescript-eslint presets", () => {
   const tsRules = rulesForTypeScriptFiles(oxlintNodeConfig);
+  // Rules that oxlint-tsgolint does not implement run in the type-aware ESLint configuration.
+  const eslintRules = mergeEslintRules(
+    getEslintTypeAwareNodeConfig({ tsconfigRootDir: fixtureDir }),
+  );
   const presetRules = mergeEslintRules([
     ...typescriptEslintConfigs.strictTypeChecked,
     ...typescriptEslintConfigs.stylisticTypeChecked,
   ] as Linter.Config[]);
   const missing = Object.entries(presetRules)
     .filter(([, entry]) => level(entry) !== "off")
+    .filter(([name]) => level(eslintRules[name] ?? "off") === "off")
     .map(([name]) => name.replace("@typescript-eslint/", ""))
     .filter(
       (name) =>
