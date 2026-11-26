@@ -168,7 +168,8 @@ export const Calendar = (props: CalendarProps) => {
             "data-selected:bg-primary data-selected:text-primary-foreground data-selected:hover:bg-primary/80",
           ),
           day_button: "size-full",
-          today: "border",
+          today:
+            "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-current",
           outside: "text-muted-foreground opacity-50",
           disabled: "text-muted-foreground opacity-50",
           hidden: "invisible",
