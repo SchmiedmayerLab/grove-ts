@@ -206,7 +206,7 @@ import {
 } from "@schmiedmayerlab/grove-design-system";
 
 const App = () => (
-  <main className="flex-center h-screen w-screen">
+  <main className="flex h-screen w-screen items-center justify-center">
     <Card className="min-w-lg">
       <CardHeader>
         <CardTitle>Notifications</CardTitle>
@@ -321,7 +321,7 @@ const LoginForm = () => {
 };
 
 const App = () => (
-  <main className="flex-center h-screen">
+  <main className="flex h-screen items-center justify-center">
     <div className="w-lg">
       <LoginForm />
     </div>

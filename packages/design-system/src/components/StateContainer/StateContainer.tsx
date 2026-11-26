@@ -34,7 +34,7 @@ export const StateContainer = ({
 }: StateContainerProps) => (
   <div
     className={cn(
-      "flex-center",
+      "flex items-center justify-center",
       padding && "py-8",
       grow && "size-full grow",
       className,

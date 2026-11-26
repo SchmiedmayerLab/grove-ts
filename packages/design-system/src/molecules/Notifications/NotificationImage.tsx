@@ -44,7 +44,7 @@ export const NotificationImage = ({
     <div
       data-slot="notification-image"
       className={cn(
-        "flex-center shrink-0",
+        "flex items-center justify-center shrink-0",
         notification.isRead && "opacity-70",
       )}
     >
@@ -58,7 +58,7 @@ export const NotificationImage = ({
       ) : (
         <div
           className={cn(
-            "flex-center bg-accent size-10 rounded-full",
+            "flex items-center justify-center bg-accent size-10 rounded-full",
             className,
           )}
         >

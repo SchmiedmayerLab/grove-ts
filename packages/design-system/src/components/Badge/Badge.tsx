@@ -13,7 +13,7 @@ import { cn } from "@/utils/className";
 import type { AsChildProp } from "@/utils/misc";
 
 export const badgeVariance = cva(
-  "inline-flex-center border transition focus-ring",
+  "inline-flex items-center justify-center border transition focus-ring",
   {
     variants: {
       /**

@@ -34,15 +34,15 @@ export const DatePicker = (props: DatePickerProps) => {
           data-slot="date-picker"
           variant="outline"
           className={cn(
-            "bg-surface-primary! w-full! justify-start! text-left! text-sm!",
-            !selected && "text-muted-foreground!",
+            "bg-surface-primary w-full justify-start text-left text-sm",
+            !selected && "text-muted-foreground",
           )}
         >
           <CalendarIcon className="size-4" />
           {displayValue}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto! p-0!">
+      <PopoverContent className="w-auto p-0">
         <Calendar {...props} />
       </PopoverContent>
     </PopoverRoot>

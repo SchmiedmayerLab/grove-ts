@@ -9,6 +9,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 import type { ComponentProps } from "react";
+import { cn } from "@/utils/className";
 import type { AsChildProp } from "@/utils/misc";
 import { ButtonPending } from "./ButtonPending";
 
@@ -132,7 +133,7 @@ export const Button = ({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={buttonVariance({ variant, size, className })}
+      className={cn(buttonVariance({ variant, size }), className)}
       type={type}
       aria-label={isPending ? "Loading" : undefined}
       {...props}

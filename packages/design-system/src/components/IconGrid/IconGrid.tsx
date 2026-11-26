@@ -52,7 +52,7 @@ const IconGridSkeleton = ({
       {times(columns * visibleRows, (index) => (
         <div
           key={index}
-          className="flex-center size-full"
+          className="flex size-full items-center justify-center"
           style={{ height: rowHeight }}
         >
           <Skeleton className="size-2/3 rounded-sm" />
@@ -72,7 +72,7 @@ const IconRenderer = memo(({ name, showTooltip }: IconRendererProps) => {
   return (
     <div
       data-testid={`icon-renderer-${name}`}
-      className="flex-center relative size-full"
+      className="relative flex size-full items-center justify-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -83,7 +83,7 @@ const IconRenderer = memo(({ name, showTooltip }: IconRendererProps) => {
           <TooltipTrigger asChild>
             <div
               data-testid={`icon-tooltip-trigger-${name}`}
-              className="flex-center absolute inset-0"
+              className="absolute inset-0 flex items-center justify-center"
               onMouseLeave={() => setIsHovered(false)}
             />
           </TooltipTrigger>
@@ -316,7 +316,7 @@ export const IconGrid = ({
     return (
       <EmptyState
         entityName="icon"
-        className="flex-center"
+        className="flex items-center justify-center"
         style={{ height: rowHeight * visibleRows }}
       />
     );

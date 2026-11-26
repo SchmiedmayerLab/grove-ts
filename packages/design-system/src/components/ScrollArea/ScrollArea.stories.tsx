@@ -53,7 +53,7 @@ export const HorizontalScrolling: Story = {
         {times(10, (i) => (
           <div
             key={i}
-            className="bg-muted flex-center h-28 w-32 rounded text-sm"
+            className="bg-muted flex h-28 w-32 items-center justify-center rounded text-sm"
           >
             Card {i + 1}
           </div>
@@ -73,7 +73,7 @@ export const BothDirections: Story = {
             {times(8, (j) => (
               <div
                 key={j}
-                className="flex-center h-16 w-24 rounded bg-blue-100 text-xs"
+                className="flex h-16 w-24 items-center justify-center rounded bg-blue-100 text-xs"
               >
                 {i + 1}-{j + 1}
               </div>

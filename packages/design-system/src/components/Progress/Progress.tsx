@@ -56,7 +56,7 @@ export const Progress = ({
     <ProgressPrimitive.Root
       data-slot="progress"
       data-color={color}
-      className={progressVariance({ color, className })}
+      className={cn(progressVariance({ color }), className)}
       value={value}
       max={max}
       {...props}

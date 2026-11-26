@@ -494,7 +494,7 @@ export const SelectContent = ({ children, ...props }: SelectContentProps) => {
           </CommandList>
         </Command>
       </div>
-      <PopoverContent className="min-w-(--radix-popover-trigger-width) !p-0">
+      <PopoverContent className="min-w-(--radix-popover-trigger-width) p-0">
         <Command
           {...props}
           filter={(value, searchTerm, keywords) => {

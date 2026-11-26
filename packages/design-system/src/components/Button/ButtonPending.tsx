@@ -28,7 +28,10 @@ export const ButtonPending = ({
 }: ButtonPendingProps) => (
   <span
     data-slot="button-pending"
-    className={cn("inline-flex-center relative", className)}
+    className={cn(
+      "inline-flex items-center justify-center relative",
+      className,
+    )}
     {...props}
   >
     {isPending && (
@@ -38,7 +41,7 @@ export const ButtonPending = ({
     )}
     <span
       className={cn(
-        "inline-flex-center",
+        "inline-flex items-center justify-center",
         size === "lg" ? "gap-2.5" : "gap-2",
         isPending && "invisible",
       )}

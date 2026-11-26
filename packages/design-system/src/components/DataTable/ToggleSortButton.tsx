@@ -50,7 +50,7 @@ export const ToggleSortButton = <Data extends RowData>({
       data-slot="toggle-sort-button"
       size="sm"
       variant="ghost"
-      className="relative -left-2 w-full justify-start! px-2!"
+      className="relative -left-2 w-full justify-start px-2"
       onClick={header.column.getToggleSortingHandler()}
       aria-label={label}
     >

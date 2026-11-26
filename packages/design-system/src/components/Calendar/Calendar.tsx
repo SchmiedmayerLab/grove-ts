@@ -40,7 +40,7 @@ const TimePicker = ({
 }: Pick<PropsSingle | PropsSingleRequired, "selected" | "onSelect">) => {
   const value = isDate(selected) ? selected : undefined;
   return (
-    <div className="flex-center pb-3">
+    <div className="flex items-center justify-center pb-3">
       <input
         type="time"
         data-testid="dateInput"
@@ -133,7 +133,7 @@ export const Calendar = (props: CalendarProps) => {
 
   const navButton = cn(
     buttonVariance({ variant: "outline" }),
-    "size-7! p-0! opacity-50 hover:opacity-100 z-4",
+    "size-7 p-0 opacity-50 hover:opacity-100 z-4",
   );
 
   return (
@@ -149,7 +149,7 @@ export const Calendar = (props: CalendarProps) => {
           months: "relative flex flex-col space-y-4",
           month: "space-y-4",
           dropdown: "focus-ring rounded-sm",
-          month_caption: "flex-center pt-1 relative",
+          month_caption: "flex items-center justify-center pt-1 relative",
           caption_label: "text-sm font-medium",
           dropdowns: "hide-all-hidden flex gap-2 text-sm items-center",
           nav: "space-x-1 flex items-center justify-between absolute top-0 left-0 w-full",
@@ -164,7 +164,7 @@ export const Calendar = (props: CalendarProps) => {
           range_middle: "rounded-none!",
           day: cn(
             buttonVariance({ variant: "ghost" }),
-            "size-9! p-0! text-sm",
+            "size-9 p-0 text-sm",
             "data-selected:bg-primary data-selected:text-primary-foreground data-selected:hover:bg-primary/80",
           ),
           day_button: "size-full",

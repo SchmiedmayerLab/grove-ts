@@ -186,7 +186,7 @@ export const PaginationEllipsis = ({
   <span
     data-slot="pagination-ellipsis"
     aria-hidden
-    className={cn("flex-center size-9", className)}
+    className={cn("flex items-center justify-center size-9", className)}
     {...props}
   >
     <Ellipsis className="size-4" />

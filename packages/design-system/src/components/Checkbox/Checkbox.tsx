@@ -39,14 +39,14 @@ export const Checkbox = ({ className, ...props }: CheckboxProps) => (
   <CheckboxPrimitive.Root
     data-slot="checkbox"
     className={cn(
-      "focus-ring flex-center border-input peer size-4 shrink-0 rounded-sm border disabled:cursor-not-allowed disabled:opacity-50",
+      "focus-ring flex items-center justify-center border-input peer size-4 shrink-0 rounded-sm border disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
   >
     <CheckboxPrimitive.Indicator
       data-slot="checkbox-indicator"
-      className="flex-center bg-primary size-2.5 rounded-xs"
+      className="bg-primary flex size-2.5 items-center justify-center rounded-xs"
     />
   </CheckboxPrimitive.Root>
 );
