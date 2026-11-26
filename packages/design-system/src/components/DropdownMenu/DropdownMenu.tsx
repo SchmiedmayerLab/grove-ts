@@ -72,7 +72,7 @@ export const DropdownMenuSubTrigger = ({
   <DropdownMenuPrimitive.SubTrigger
     data-slot="dropdown-menu-sub-trigger"
     className={cn(
-      "focus:bg-accent data-[state=open]:bg-accent flex cursor-default items-center gap-2 rounded-xs px-2 py-1.5 text-sm outline-hidden select-none",
+      "focus:bg-accent data-[state=open]:bg-accent flex cursor-default items-center gap-2 rounded-xs px-2 py-1.5 text-sm outline-hidden select-none **:[svg]:size-4",
       inset && "pl-8",
       className,
     )}
