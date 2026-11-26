@@ -33,6 +33,15 @@ export const Default: Story = {
 
 export const UserInitials: Story = {};
 
+/**
+ * Falls back to the initials when the image fails to load.
+ */
+export const BrokenImage: Story = {
+  args: {
+    src: "https://example.invalid/avatar.png",
+  },
+};
+
 export const CustomFallback: Story = {
   args: {
     fallback: <span>🎉</span>,

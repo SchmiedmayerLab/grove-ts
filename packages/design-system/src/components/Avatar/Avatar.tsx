@@ -51,6 +51,8 @@ type AvatarProps = VariantProps<typeof avatarVariance> &
     objectFit?: "cover" | "contain";
   };
 
+type ImageStatus = "loading" | "loaded" | "error";
+
 /**
  * Extracts initials from a given name string.
  * For full names, returns first letters of first and last name.
@@ -130,16 +132,16 @@ export const Avatar = ({
   objectFit = "cover",
   ...props
 }: AvatarProps) => {
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [imageStatus, setImageStatus] = useState<ImageStatus>("loading");
   const [prevSrc, setPrevSrc] = useState(src);
 
   if (src !== prevSrc) {
     setPrevSrc(src);
-    setIsImageLoaded(false);
+    setImageStatus("loading");
   }
 
   let fallbackContent = fallback;
-  if (isImageLoaded) fallbackContent = null;
+  if (imageStatus === "loaded") fallbackContent = null;
   else if (name) fallbackContent = getInitials(name);
 
   return (
@@ -149,17 +151,18 @@ export const Avatar = ({
       className={cn(avatarVariance({ size }), className)}
       {...props}
     >
-      <div className="size-full overflow-hidden rounded-full">
-        {src ? (
+      <div className="relative size-full overflow-hidden rounded-full">
+        {src && imageStatus !== "error" ? (
           <img
             data-slot="avatar-image"
             className={cn(
-              "aspect-square size-full",
+              "absolute inset-0 aspect-square size-full",
               objectFit === "cover" ? "object-cover" : "object-contain",
-              !isImageLoaded && "opacity-0",
+              imageStatus === "loading" && "opacity-0",
             )}
             src={src}
-            onLoad={() => setIsImageLoaded(true)}
+            onLoad={() => setImageStatus("loaded")}
+            onError={() => setImageStatus("error")}
             alt={[name, "avatar"].filter(Boolean).join(" ")}
           />
         ) : null}
