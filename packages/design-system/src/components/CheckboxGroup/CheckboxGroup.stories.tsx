@@ -50,7 +50,7 @@ export const Default: Story = {
 
 export const WithDefaultValue: Story = {
   args: {
-    defaultValue: ["travel", "technology"],
+    defaultValue: ["travel", "tech"],
   },
 };
 

@@ -42,7 +42,7 @@ export const Controlled: Story = {
     );
   },
   args: {
-    value: "option1",
+    value: "md",
   },
 };
 
