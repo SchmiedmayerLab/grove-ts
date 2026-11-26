@@ -189,7 +189,7 @@ export const DropdownMenuItem = ({
   <DropdownMenuPrimitive.Item
     data-slot="dropdown-menu-item"
     className={cn(
-      "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-xs px-2 py-1.5 text-sm outline-hidden transition select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4",
+      "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-xs px-2 py-1.5 text-sm outline-hidden transition select-none data-disabled:pointer-events-none data-disabled:opacity-50 **:[svg]:size-4",
       inset && "pl-8",
       className,
     )}

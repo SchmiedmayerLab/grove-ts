@@ -31,7 +31,7 @@ export const TableHeader = ({
 }: ComponentProps<"thead">) => (
   <thead
     data-slot="table-header"
-    className={cn("[&_tr]:border-b", className)}
+    className={cn("**:[tr]:border-b", className)}
     {...props}
   />
 );
@@ -42,7 +42,7 @@ export const TableHeader = ({
 export const TableBody = ({ className, ...props }: ComponentProps<"tbody">) => (
   <tbody
     data-slot="table-body"
-    className={cn("[&_tr:last-child]:border-0", className)}
+    className={cn("**:[tr:last-child]:border-0", className)}
     {...props}
   />
 );
@@ -57,7 +57,7 @@ export const TableFooter = ({
   <tfoot
     data-slot="table-footer"
     className={cn(
-      "bg-muted/50 border-t font-medium last:[&>tr]:border-b-0",
+      "bg-muted/50 border-t font-medium last:*:[tr]:border-b-0",
       className,
     )}
     {...props}
@@ -104,7 +104,7 @@ export const TableHead = ({ className, ...props }: ComponentProps<"th">) => (
   <th
     data-slot="table-head"
     className={cn(
-      "text-muted-foreground h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0",
+      "text-muted-foreground h-12 px-4 text-left align-middle font-medium has-[[role=checkbox]]:pr-0",
       className,
     )}
     {...props}
@@ -118,7 +118,7 @@ export const TableCell = ({ className, ...props }: ComponentProps<"td">) => (
   <td
     data-slot="table-cell"
     className={cn(
-      "p-4 text-left align-middle [&:has([role=checkbox])]:pr-0",
+      "p-4 text-left align-middle has-[[role=checkbox]]:pr-0",
       className,
     )}
     {...props}

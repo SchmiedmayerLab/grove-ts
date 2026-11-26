@@ -50,7 +50,7 @@ export const PageTitle = ({ title, subTitle, icon }: PageTitleProps) => (
   <div data-slot="page-title" className="flex items-center gap-2 lg:gap-4">
     {icon ? (
       <div
-        className="bg-muted flex items-center justify-center rounded-lg p-2 [&_svg]:size-5 lg:[&_svg]:size-6"
+        className="bg-muted flex items-center justify-center rounded-lg p-2 **:[svg]:size-5 lg:**:[svg]:size-6"
         aria-hidden
       >
         {icon}

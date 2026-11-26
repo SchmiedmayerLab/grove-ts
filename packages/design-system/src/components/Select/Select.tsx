@@ -357,7 +357,7 @@ export const SelectTrigger = ({
         disabled={disabled}
         className={cn(
           "group border-input bg-surface-primary ring-offset-surface placeholder:text-muted-foreground focus-ring flex h-10 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm",
-          "[&>span]:line-clamp-1 [&>span]:text-left",
+          "*:[span]:line-clamp-1 *:[span]:text-left",
           "disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
