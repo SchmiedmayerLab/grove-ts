@@ -30,3 +30,11 @@ export const SeparatorText = () => (
     </Separator>
   </div>
 );
+
+export const Vertical = () => (
+  <div className="flex h-8 items-center gap-4">
+    <span>Left</span>
+    <Separator orientation="vertical" />
+    <span>Right</span>
+  </div>
+);
