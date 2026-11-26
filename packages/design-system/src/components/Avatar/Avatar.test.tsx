@@ -41,6 +41,21 @@ describe("Avatar", () => {
     expect(initials2).not.toBeInTheDocument();
   });
 
+  it("shows initials and removes the image when it fails to load", () => {
+    const { rerender } = render(
+      <Avatar src="https://example.com/broken.png" name="John" />,
+    );
+
+    fireEvent.error(screen.getByRole("img"));
+
+    expect(screen.getByText("JO")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+
+    rerender(<Avatar src="https://example.com/avatar.png" name="John" />);
+
+    expect(screen.getByRole("img")).toBeInTheDocument();
+  });
+
   it("renders custom fallback", () => {
     render(<Avatar fallback="Lorem" />);
 
