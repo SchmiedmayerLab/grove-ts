@@ -7,6 +7,7 @@
 //
 
 import type { Meta, StoryObj } from "@storybook/react";
+import logo from "@/tests/assets/logo.svg";
 import {
   AsideBrandLayoutRoot,
   AsideBrandLayoutAside,
@@ -50,18 +51,14 @@ export const Simple: Story = {
 };
 
 /**
- * Branded layout example with Stanford logo and your application name.
+ * Branded layout example with a logo and your application name.
  */
 export const Branded: Story = {
   render: () => (
     <AsideBrandLayoutRoot>
       <AsideBrandLayoutAside>
         <h1 className="text-2xl font-bold">Grove Web Design System</h1>
-        <img
-          src="https://github.com/SchmiedmayerLab/_jcr_content/local-header/_jcr_content/custom-logo.img.full.high.png"
-          alt="Schmiedmayer Lab Logo"
-          className="w-40"
-        />
+        <img src={logo} alt="Example logo" className="w-40" />
       </AsideBrandLayoutAside>
       <AsideBrandLayoutMain>
         <MockSignInForm />

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Synthetic portrait">
+<!--
+
+This source file is part of the Grove open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+
+-->
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bfe3c6" />
+      <stop offset="1" stop-color="#7cc48b" />
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#background)" />
+  <path d="M28 256c6-56 48-88 100-88s94 32 100 88z" fill="#2f6b3c" />
+  <circle cx="128" cy="104" r="52" fill="#f3d9c4" />
+  <path d="M76 100c0-34 23-58 52-58s52 24 52 58c-12-18-30-26-52-26s-40 8-52 26z" fill="#4a3426" />
+</svg>
