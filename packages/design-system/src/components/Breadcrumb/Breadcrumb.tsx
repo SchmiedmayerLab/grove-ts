@@ -156,7 +156,7 @@ export const BreadcrumbEllipsis = ({
     data-slot="breadcrumb-ellipsis"
     role="presentation"
     aria-hidden="true"
-    className={cn("flex-center size-4", className)}
+    className={cn("flex items-center justify-center size-4", className)}
     {...props}
   >
     <MoreHorizontal className="size-4" />

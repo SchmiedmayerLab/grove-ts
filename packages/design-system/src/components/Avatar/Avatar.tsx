@@ -169,7 +169,7 @@ export const Avatar = ({
         {fallbackContent ? (
           <div
             data-slot="avatar-fallback"
-            className="flex-center bg-muted size-full rounded-full"
+            className="bg-muted flex size-full items-center justify-center rounded-full"
           >
             {fallbackContent}
           </div>

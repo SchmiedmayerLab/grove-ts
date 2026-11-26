@@ -21,7 +21,10 @@ export const NotFoundIcon = ({
 }: Omit<ComponentProps<"div">, "children">) => (
   <div
     data-slot="not-found-icon"
-    className={cn("flex-center bg-muted mb-2 size-20 rounded-full", className)}
+    className={cn(
+      "flex items-center justify-center bg-muted mb-2 size-20 rounded-full",
+      className,
+    )}
     {...props}
   >
     <RouteOff className="size-7" />
@@ -37,7 +40,10 @@ export const NotFoundContainer = ({
 }: ComponentProps<"div">) => (
   <div
     data-slot="not-found"
-    className={cn("flex-center grow flex-col gap-1", className)}
+    className={cn(
+      "flex items-center justify-center grow flex-col gap-1",
+      className,
+    )}
     {...props}
   />
 );

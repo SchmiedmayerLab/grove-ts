@@ -123,7 +123,7 @@ export const NavigationBlocker = ({
       <DialogContent size="sm">
         <DialogHeader className="items-center sm:items-start">
           <div className="mb-4 size-8 rounded-lg border shadow-xs">
-            <div className="flex-center size-full">
+            <div className="flex size-full items-center justify-center">
               <CircleAlert className="text-muted-foreground size-4" />
             </div>
           </div>

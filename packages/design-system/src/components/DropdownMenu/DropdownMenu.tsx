@@ -228,7 +228,7 @@ export const DropdownMenuCheckboxItem = ({
     checked={checked}
     {...props}
   >
-    <span className="flex-center absolute left-2 size-3.5">
+    <span className="absolute left-2 flex size-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
         <Check className="size-4" />
       </DropdownMenuPrimitive.ItemIndicator>

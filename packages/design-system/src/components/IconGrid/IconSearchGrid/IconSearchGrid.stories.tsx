@@ -38,7 +38,7 @@ export const WithPopover: Story = {
     (Story) => {
       const [value, setValue] = useState<IconName>("apple");
       return (
-        <div className="flex-center size-full">
+        <div className="flex size-full items-center justify-center">
           <PopoverRoot>
             <PopoverTrigger className="hover:bg-muted rounded-md p-2 transition">
               <DynamicIcon name={value} className="size-6" />

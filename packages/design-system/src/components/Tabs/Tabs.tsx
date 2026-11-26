@@ -86,7 +86,7 @@ export const TabsList = ({ className, grow, ...props }: TabsListProps) => {
       <TabsPrimitive.List
         data-slot="tabs-list"
         className={cn(
-          "inline-flex-center text-muted-foreground h-10 p-1",
+          "inline-flex items-center justify-center text-muted-foreground h-10 p-1",
           grow && "w-full",
           className,
         )}
@@ -109,7 +109,7 @@ export const TabsTrigger = ({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex-center focus-ring border-b-border data-[state=active]:border-b-primary data-[state=active]:text-foreground border-b px-3 py-2 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-xs",
+        "inline-flex items-center justify-center focus-ring border-b-border data-[state=active]:border-b-primary data-[state=active]:text-foreground border-b px-3 py-2 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-xs",
         grow && "grow",
         className,
       )}

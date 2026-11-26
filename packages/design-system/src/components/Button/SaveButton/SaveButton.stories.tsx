@@ -39,7 +39,7 @@ export const Default: Story = {
         }, 2000);
       };
       return (
-        <div className="flex-center flex-col gap-6">
+        <div className="flex flex-col items-center justify-center gap-6">
           <SideLabel label="Success" reverse className="pr-6">
             <SideLabel label="Error">
               <Switch

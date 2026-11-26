@@ -20,7 +20,7 @@ export const SeparatorText = ({
   <div
     data-slot="separator-text"
     className={cn(
-      "flex-center absolute -top-2.5 left-0 w-full text-sm",
+      "flex items-center justify-center absolute -top-2.5 left-0 w-full text-sm",
       className,
     )}
     {...props}

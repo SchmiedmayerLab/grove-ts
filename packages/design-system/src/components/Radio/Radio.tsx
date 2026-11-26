@@ -49,14 +49,14 @@ export const Radio = ({
   <RadioGroupPrimitive.Item
     data-slot="radio"
     className={cn(
-      "focus-ring flex-center border-input size-4 shrink-0 rounded-full border disabled:cursor-not-allowed disabled:opacity-50",
+      "focus-ring flex items-center justify-center border-input size-4 shrink-0 rounded-full border disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
   >
     <RadioGroupPrimitive.Indicator
       data-slot="radio-indicator"
-      className="flex-center bg-primary size-2 rounded-full"
+      className="bg-primary flex size-2 items-center justify-center rounded-full"
     />
   </RadioGroupPrimitive.Item>
 );

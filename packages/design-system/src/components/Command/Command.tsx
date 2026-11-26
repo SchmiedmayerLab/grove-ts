@@ -205,7 +205,7 @@ export const CommandEmpty = ({
   <CommandPrimitive.Empty
     data-slot="command-empty"
     className={cn(
-      "text-muted-foreground flex-center gap-2 py-6 text-center text-sm",
+      "text-muted-foreground flex items-center justify-center gap-2 py-6 text-center text-sm",
       className,
     )}
     {...props}
