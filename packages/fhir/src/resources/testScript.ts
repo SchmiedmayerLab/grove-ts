@@ -6,24 +6,24 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type TestScriptDestination,
-  type TestScriptMetadata,
-  type TestScriptOrigin,
-  type TestScript,
-  type TestScriptMetadataLink,
-  type TestScriptMetadataCapability,
-  type TestScriptFixture,
-  type TestScriptVariable,
-  type TestScriptSetup,
-  type TestScriptSetupAction,
-  type TestScriptSetupActionOperation,
-  type TestScriptSetupActionAssert,
-  type TestScriptSetupActionOperationRequestHeader,
-  type TestScriptTest,
-  type TestScriptTeardown,
-  type TestScriptTeardownAction,
-  type TestScriptTestAction,
+import type {
+  TestScriptDestination,
+  TestScriptMetadata,
+  TestScriptOrigin,
+  TestScript,
+  TestScriptMetadataLink,
+  TestScriptMetadataCapability,
+  TestScriptFixture,
+  TestScriptVariable,
+  TestScriptSetup,
+  TestScriptSetupAction,
+  TestScriptSetupActionOperation,
+  TestScriptSetupActionAssert,
+  TestScriptSetupActionOperationRequestHeader,
+  TestScriptTest,
+  TestScriptTeardown,
+  TestScriptTeardownAction,
+  TestScriptTestAction,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 export interface StateContainerProps extends ComponentProps<"div"> {

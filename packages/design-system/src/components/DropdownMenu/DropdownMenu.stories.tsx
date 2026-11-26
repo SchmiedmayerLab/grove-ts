@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "@storybook/react";
+import type { Meta } from "@storybook/react";
 import { LogOut } from "lucide-react";
 import { useIsDocs } from "@/tests/storybook";
 import { Button } from "../Button";

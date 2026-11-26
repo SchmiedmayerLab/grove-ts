@@ -6,15 +6,15 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type EncounterClassHistory,
-  type EncounterDiagnosis,
-  type EncounterHospitalization,
-  type EncounterLocation,
-  type EncounterParticipant,
-  type EncounterStatusHistory,
-  type Encounter,
-  type Coding,
+import type {
+  EncounterClassHistory,
+  EncounterDiagnosis,
+  EncounterHospitalization,
+  EncounterLocation,
+  EncounterParticipant,
+  EncounterStatusHistory,
+  Encounter,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -7,8 +7,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Claim } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Claim } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirClaim, type untypedClaimSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

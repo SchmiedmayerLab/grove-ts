@@ -28,7 +28,7 @@ import {
 } from "@schmiedmayerlab/grove-configurations/oxlint-core";
 import { ESLint, type Linter } from "eslint";
 import { format } from "oxfmt";
-import { type OxlintConfig } from "oxlint";
+import type { OxlintConfig } from "oxlint";
 import { configs as typescriptEslintConfigs } from "typescript-eslint";
 import { expect, test } from "vitest";
 import { sonarRulesCoveredElsewhere } from "../src/sonarjsRules";
@@ -365,6 +365,7 @@ test("reports the expected rules through oxlint", () => {
   const imports = codesIn(diagnostics, "src/imports.ts");
   expect(imports).toContain("import(extensions)");
   expect(imports).toContain("import(no-default-export)");
+  expect(imports).toContain("typescript(no-import-type-side-effects)");
 
   const component = codesIn(diagnostics, "src/component.tsx");
   expect(component).toContain("@eslint-react(web-api-no-leaked-interval)");

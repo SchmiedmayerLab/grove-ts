@@ -8,7 +8,7 @@
 
 import reactPlugin from "@eslint-react/eslint-plugin";
 import eslint from "@eslint/js";
-import { type Processor } from "@typescript-eslint/utils/ts-eslint";
+import type { Processor } from "@typescript-eslint/utils/ts-eslint";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import { flatConfigs as importConfigs } from "eslint-plugin-import-x";
 import * as preferArrow from "eslint-plugin-prefer-arrow-functions";
@@ -196,6 +196,8 @@ export const getTslint = (): ConfigWithExtends => ({
         disallowTypeAnnotations: false,
       },
     ],
+    // With verbatimModuleSyntax, an import of only inline types stays in the output as `import {} from`.
+    "@typescript-eslint/no-import-type-side-effects": "error",
     "@typescript-eslint/no-misused-promises": [
       "error",
       {

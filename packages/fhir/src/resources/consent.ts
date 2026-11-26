@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ConsentPolicy,
-  type ConsentProvision,
-  type ConsentProvisionActor,
-  type ConsentProvisionData,
-  type ConsentVerification,
-  type Consent,
-  type Coding,
+import type {
+  ConsentPolicy,
+  ConsentProvision,
+  ConsentProvisionActor,
+  ConsentProvisionData,
+  ConsentVerification,
+  Consent,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -7,7 +7,7 @@
 //
 
 import { Loader2 } from "lucide-react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 export interface SpinnerProps extends ComponentProps<typeof Loader2> {}

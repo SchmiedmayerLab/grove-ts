@@ -7,7 +7,7 @@
 //
 
 import { RouteOff } from "lucide-react";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Button } from "@/components/Button";
 import { useGroveContext } from "@/GroveProvider";
 import { cn } from "@/utils/className";

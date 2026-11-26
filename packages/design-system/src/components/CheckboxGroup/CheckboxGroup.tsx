@@ -7,7 +7,7 @@
 //
 
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Checkbox } from "@/components/Checkbox";
 import { SideLabel } from "@/components/SideLabel";
 import { cn } from "@/utils/className";

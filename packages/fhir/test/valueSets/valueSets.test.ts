@@ -7,15 +7,15 @@
 //
 
 import { expectTypeOf } from "expect-type";
-import {
-  type CapabilityStatement,
-  type DataRequirement,
-  type ExampleScenarioInstance,
-  type ImplementationGuide,
-  type TestScriptSetupActionOperation,
-  type TimingRepeat,
+import type {
+  CapabilityStatement,
+  DataRequirement,
+  ExampleScenarioInstance,
+  ImplementationGuide,
+  TestScriptSetupActionOperation,
+  TimingRepeat,
 } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { z } from "zod";
 import {
   type CodeSearchSupport,
   codeSearchSupportSchema,

@@ -9,7 +9,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/tests/helpers";
-import { type IconData } from "../IconGrid";
+import type { IconData } from "../IconGrid";
 import { IconPicker } from "./IconPicker";
 
 const mockIcons: IconData[] = [

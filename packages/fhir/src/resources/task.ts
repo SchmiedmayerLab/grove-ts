@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type TaskInput,
-  type TaskOutput,
-  type TaskRestriction,
-  type Task,
-  type Coding,
+import type {
+  TaskInput,
+  TaskOutput,
+  TaskRestriction,
+  Task,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { anyValueSchema } from "../elements/anyValueSchema.js";

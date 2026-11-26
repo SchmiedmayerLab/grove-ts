@@ -72,6 +72,7 @@ export default defineConfig({
         "src/tests/**",
         "**/*.stories.{ts,tsx}",
         "**/*.test.{ts,tsx}",
+        "**/*.mocks.{ts,tsx}",
         "testSetup.ts",
         "vite.config.ts",
         "oxlint.config.ts",

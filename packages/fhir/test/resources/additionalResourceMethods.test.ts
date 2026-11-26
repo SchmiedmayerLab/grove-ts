@@ -6,11 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Condition,
-  type Encounter,
-  type MedicationRequest,
-} from "fhir/r4b.js";
+import type { Condition, Encounter, MedicationRequest } from "fhir/r4b.js";
 import {
   FhirCondition,
   FhirEncounter,

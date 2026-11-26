@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Dosage } from "fhir/r4b.js";
+import type { Dosage } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { codeableConceptSchema } from "./dataTypes/codeableConcept.js";
 import {

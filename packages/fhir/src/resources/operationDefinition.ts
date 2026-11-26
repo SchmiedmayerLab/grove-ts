@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type OperationDefinitionOverload,
-  type OperationDefinitionParameterBinding,
-  type OperationDefinitionParameterReferencedFrom,
-  type OperationDefinition,
-  type OperationDefinitionParameter,
+import type {
+  OperationDefinitionOverload,
+  OperationDefinitionParameterBinding,
+  OperationDefinitionParameterReferencedFrom,
+  OperationDefinition,
+  OperationDefinitionParameter,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

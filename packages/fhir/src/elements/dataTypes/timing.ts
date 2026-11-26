@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Timing } from "fhir/r4b.js";
+import type { Timing } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { eventTimingSchema } from "../../valueSets/index.js";
 import { elementSchema } from "../element.js";

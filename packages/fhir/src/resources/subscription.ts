@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type SubscriptionChannel, type Subscription } from "fhir/r4b.js";
+import type { SubscriptionChannel, Subscription } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,

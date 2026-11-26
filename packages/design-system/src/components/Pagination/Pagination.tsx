@@ -7,7 +7,7 @@
 //
 
 import { ChevronLeft, ChevronRight, Ellipsis } from "lucide-react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 import { Button, type ButtonProps } from "../Button";
 

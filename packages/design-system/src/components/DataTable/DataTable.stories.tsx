@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta, type StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react";
 import { Pencil, Trash } from "lucide-react";
 import { Button } from "../Button";
 import { DropdownMenuItem } from "../DropdownMenu";

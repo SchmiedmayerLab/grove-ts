@@ -6,19 +6,19 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ClaimResponseItem,
-  type ClaimResponseItemAdjudication,
-  type ClaimResponseItemDetail,
-  type ClaimResponse,
-  type Coding,
-  type ClaimResponseAddItem,
-  type ClaimResponseAddItemDetail,
-  type ClaimResponseTotal,
-  type ClaimResponsePayment,
-  type ClaimResponseProcessNote,
-  type ClaimResponseInsurance,
-  type ClaimResponseError,
+import type {
+  ClaimResponseItem,
+  ClaimResponseItemAdjudication,
+  ClaimResponseItemDetail,
+  ClaimResponse,
+  Coding,
+  ClaimResponseAddItem,
+  ClaimResponseAddItemDetail,
+  ClaimResponseTotal,
+  ClaimResponsePayment,
+  ClaimResponseProcessNote,
+  ClaimResponseInsurance,
+  ClaimResponseError,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

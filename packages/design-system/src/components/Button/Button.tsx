@@ -8,8 +8,8 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-import { type ComponentProps } from "react";
-import { type AsChildProp } from "@/utils/misc";
+import type { ComponentProps } from "react";
+import type { AsChildProp } from "@/utils/misc";
 import { ButtonPending } from "./ButtonPending";
 
 export const buttonVariants = {

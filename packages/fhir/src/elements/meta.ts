@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta } from "fhir/r4b.js";
+import type { Meta } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { codingSchema } from "./dataTypes/coding.js";
 import {

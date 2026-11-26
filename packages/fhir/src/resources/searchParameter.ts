@@ -6,10 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type SearchParameterComponent,
-  type SearchParameter,
-} from "fhir/r4b.js";
+import type { SearchParameterComponent, SearchParameter } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,

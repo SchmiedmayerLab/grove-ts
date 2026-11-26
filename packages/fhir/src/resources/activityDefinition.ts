@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ActivityDefinition,
-  type ActivityDefinitionParticipant,
-  type ActivityDefinitionDynamicValue,
-  type Coding,
+import type {
+  ActivityDefinition,
+  ActivityDefinitionParticipant,
+  ActivityDefinitionDynamicValue,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

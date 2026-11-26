@@ -7,8 +7,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type ClaimResponse } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { ClaimResponse } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirClaimResponse,
   type untypedClaimResponseSchema,

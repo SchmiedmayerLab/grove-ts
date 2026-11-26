@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Range } from "fhir/r4b.js";
+import type { Range } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { elementSchema } from "../element.js";
 import { quantitySchema } from "./quantity.js";

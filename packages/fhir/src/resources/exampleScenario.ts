@@ -6,17 +6,17 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ExampleScenarioActor,
-  type ExampleScenarioInstance,
-  type ExampleScenarioInstanceContainedInstance,
-  type ExampleScenarioInstanceVersion,
-  type ExampleScenarioProcessStepAlternative,
-  type ExampleScenarioProcessStepOperation,
-  type ExampleScenario,
-  type ExampleScenarioProcess,
-  type ExampleScenarioProcessStep,
-  type Coding,
+import type {
+  ExampleScenarioActor,
+  ExampleScenarioInstance,
+  ExampleScenarioInstanceContainedInstance,
+  ExampleScenarioInstanceVersion,
+  ExampleScenarioProcessStepAlternative,
+  ExampleScenarioProcessStepOperation,
+  ExampleScenario,
+  ExampleScenarioProcess,
+  ExampleScenarioProcessStep,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

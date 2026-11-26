@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 /**
  * CSS color value.

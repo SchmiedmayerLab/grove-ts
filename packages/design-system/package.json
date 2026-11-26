@@ -22,6 +22,11 @@
   },
   "files": [
     "dist",
+    "src",
+    "!src/**/*.stories.*",
+    "!src/**/*.test.*",
+    "!src/**/*.mocks.*",
+    "!src/tests",
     "README.md",
     "LICENSE"
   ],

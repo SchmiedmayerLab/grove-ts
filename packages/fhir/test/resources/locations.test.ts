@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Location } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Location } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirLocation, type untypedLocationSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

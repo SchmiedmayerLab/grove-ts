@@ -7,7 +7,7 @@
 //
 
 import { fireEvent, screen } from "@testing-library/react";
-import { type Auth, type AuthProvider } from "firebase/auth";
+import type { Auth, AuthProvider } from "firebase/auth";
 import { vitest } from "vitest";
 import { renderWithProviders } from "@/tests/helpers";
 import { SignInForm } from "./SignInForm";

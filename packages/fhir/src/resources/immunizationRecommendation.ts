@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ImmunizationRecommendationRecommendation,
-  type ImmunizationRecommendationRecommendationDateCriterion,
-  type ImmunizationRecommendation,
-  type Coding,
+import type {
+  ImmunizationRecommendationRecommendation,
+  ImmunizationRecommendationRecommendationDateCriterion,
+  ImmunizationRecommendation,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type EvidenceReport,
-  type EvidenceReportSubject,
-  type EvidenceReportSection,
-  type EvidenceReportSubjectCharacteristic,
-  type EvidenceReportRelatesTo,
+import type {
+  EvidenceReport,
+  EvidenceReportSubject,
+  EvidenceReportSection,
+  EvidenceReportSubjectCharacteristic,
+  EvidenceReportRelatesTo,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

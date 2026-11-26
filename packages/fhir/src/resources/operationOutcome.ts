@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type OperationOutcomeIssue, type OperationOutcome } from "fhir/r4b.js";
+import type { OperationOutcomeIssue, OperationOutcome } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,

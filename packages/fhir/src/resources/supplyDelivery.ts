@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type SupplyDelivery,
-  type SupplyDeliverySuppliedItem,
+import type {
+  Coding,
+  SupplyDelivery,
+  SupplyDeliverySuppliedItem,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

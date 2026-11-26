@@ -10,7 +10,7 @@ import { use } from "react";
 import { cn } from "@/utils/className";
 import { Avatar } from "../../components/Avatar";
 import { Button, type ButtonProps } from "../../components/Button";
-import { type Nil } from "../../utils/misc";
+import type { Nil } from "../../utils/misc";
 import { DashboardContext } from "./DashboardContext";
 
 type UserMenuItemProps = Omit<ButtonProps, "name"> & {

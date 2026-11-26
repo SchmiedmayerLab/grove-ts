@@ -7,7 +7,7 @@
 //
 
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
-import { type ComponentProps, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Radio } from "@/components/Radio";
 import { SideLabel } from "@/components/SideLabel";
 import { cn } from "@/utils/className";

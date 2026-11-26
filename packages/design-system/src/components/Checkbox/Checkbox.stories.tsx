@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta, type StoryObj } from "@storybook/react";
-import { type ComponentProps } from "react";
+import type { Meta, StoryObj } from "@storybook/react";
+import type { ComponentProps } from "react";
 import { useArgs } from "storybook/preview-api";
 import { fn } from "storybook/test";
 import { SideLabel } from "@/components/SideLabel";

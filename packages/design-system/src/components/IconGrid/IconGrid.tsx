@@ -14,7 +14,7 @@ import { Tooltip } from "radix-ui";
 import { memo, useMemo, useState } from "react";
 import { times, upperFirst } from "@/utils/misc";
 import { EmptyState } from "../EmptyState";
-import { type iconsData } from "../IconPicker/iconsData";
+import type { iconsData } from "../IconPicker/iconsData";
 import { ScrollArea } from "../ScrollArea";
 import { Skeleton } from "../Skeleton";
 import {

@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type BiologicallyDerivedProduct,
-  type BiologicallyDerivedProductCollection,
-  type BiologicallyDerivedProductManipulation,
-  type BiologicallyDerivedProductProcessing,
-  type BiologicallyDerivedProductStorage,
+import type {
+  Coding,
+  BiologicallyDerivedProduct,
+  BiologicallyDerivedProductCollection,
+  BiologicallyDerivedProductManipulation,
+  BiologicallyDerivedProductProcessing,
+  BiologicallyDerivedProductStorage,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

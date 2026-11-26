@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type SubstanceIngredient,
-  type SubstanceInstance,
-  type Substance,
-  type Coding,
+import type {
+  SubstanceIngredient,
+  SubstanceInstance,
+  Substance,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

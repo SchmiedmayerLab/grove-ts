@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Coding, type CoverageEligibilityResponse } from "fhir/r4b.js";
+import type { Coding, CoverageEligibilityResponse } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";
 import {

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type LinkageItem, type Linkage } from "fhir/r4b.js";
+import type { LinkageItem, Linkage } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,

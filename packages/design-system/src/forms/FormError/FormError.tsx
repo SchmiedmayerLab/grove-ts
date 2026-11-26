@@ -7,8 +7,8 @@
 //
 
 import { isString } from "es-toolkit";
-import { type ReactNode } from "react";
-import { type GlobalError } from "react-hook-form";
+import type { ReactNode } from "react";
+import type { GlobalError } from "react-hook-form";
 import { ErrorState, type ErrorStateProps } from "@/components/ErrorState";
 import { StateContainer } from "@/components/StateContainer";
 import { cn } from "@/utils/className";

@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type CommunicationRequest } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { CommunicationRequest } from "fhir/r4b.js";
+import type { z } from "zod";
 import {
   FhirCommunicationRequest,
   type untypedCommunicationRequestSchema,

@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT
 
 ## Getting Started
 
-Shared linting and formatting configurations for TypeScript projects.
+Shared linting, formatting and TypeScript configurations for TypeScript projects.
 
 The configurations are opinionated and strict, to catch mistakes and harmful practices early.
 Some rules are meant to be broken once in a while, with a comment that explains why.
@@ -131,6 +131,77 @@ import "@schmiedmayerlab/grove-configurations/global-types";
 
 The import turns the file into a module, so any other declaration in it would stop being global.
 Adopting them can surface new type errors, for example where code relies on `JSON.parse` returning `any`.
+
+### TypeScript
+
+The package ships `tsconfig.json` presets with strict compiler checks, the runtime target and the module system.
+Extend the preset that matches your project:
+
+| Preset          | For                                                      | Adds to `strict`                                                                                         |
+| --------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `node-app`      | Node.js 24 applications                                  | ES2025 target and the Node.js 24 library, `module: nodenext`, `types: ["node"]`                          |
+| `node-library`  | Node.js libraries compiled with `tsc`                    | Everything in `node-app`, plus declarations and source maps with the sources embedded                    |
+| `react-app`     | React applications built by a bundler, such as Vite      | ES2023 target with the DOM, `module: preserve`, `jsx: react-jsx`, `noEmit`, `allowImportingTsExtensions` |
+| `react-library` | React libraries built by a bundler                       | ES2023 target with the DOM, `module: preserve`, `jsx: react-jsx`, declarations                           |
+| `strict`        | Frameworks with their own base configuration, like Astro | Only the compiler checks below                                                                           |
+
+Each preset is exported as `@schmiedmayerlab/grove-configurations/tsconfig/<preset>`, without the `.json` extension.
+For example, a Node.js library:
+
+```json
+{
+  "extends": "@schmiedmayerlab/grove-configurations/tsconfig/node-library",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
+```
+
+`strict` sets these checks, and every other preset extends it:
+
+- `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noUnusedLocals`, `noUnusedParameters`, `noUncheckedSideEffectImports`, and `false` for `allowUnreachableCode` and `allowUnusedLabels`.
+- `verbatimModuleSyntax` and `isolatedModules`, so imports that are only types need the `type` keyword, which oxlint and ESLint add with `--fix`.
+  TypeScript then keeps every import that is not marked as a type, so `import { type A } from "a"` stays in the output as `import {} from "a"` and loads the module.
+  Write `import type { A } from "a"` instead, which the Grove oxlint and ESLint configurations enforce and fix.
+  A side-effect import, such as `import "./styles.css"`, stays as written.
+- `erasableSyntaxOnly`, so enums, namespaces and parameter properties are errors, and tools that only strip types, such as Node.js, can run the code.
+- `moduleDetection: force`, so every file is a module.
+
+To add the checks to a framework base, list `strict` after it, since later entries win:
+
+```json
+{
+  "extends": [
+    "astro/tsconfigs/strict",
+    "@schmiedmayerlab/grove-configurations/tsconfig/strict"
+  ]
+}
+```
+
+The presets leave the project layout to you.
+Set `include`, `exclude`, `rootDir`, `outDir`, `paths`, `incremental`, `composite` and `tsBuildInfoFile` in your own `tsconfig.json`, because paths in an extended file resolve relative to that file inside `node_modules`.
+Add your `global-types.d.ts` file to your `include` as well.
+
+The presets do not set `moduleResolution`, which follows from `module`, so you can override `module`.
+Under `nodenext`, relative imports need the `.js` extension, and `verbatimModuleSyntax` needs `"type": "module"` in `package.json`.
+A Node.js project that a bundler or `tsx` runs can use `"module": "preserve"` instead.
+
+Override any other option in your `compilerOptions`.
+Arrays replace the preset value instead of extending it, so repeat `node` when you add test globals, for example `"types": ["node", "vitest/globals"]`.
+A Vite application adds `"types": ["vite/client"]`.
+A project whose public API exports enums can set `"erasableSyntaxOnly": false` until it replaces them.
+To emit JavaScript from a `react-app` project, set `"noEmit": false` and `"allowImportingTsExtensions": false`.
+
+The library presets leave out declaration maps, which only help when the package also publishes its sources.
+A package that publishes `src` can set `"declarationMap": true`, so that editors and agents jump from a type to its implementation.
+
+Next.js skips its own `tsconfig.json` setup when the file has `extends`, so keep its `plugins`, `paths`, `incremental` and `.next` `include` entries yourself.
+
+The Node.js presets need TypeScript 6.0 or newer for the ES2025 target.
+The React and `strict` presets also work with TypeScript 5.9.
+All presets work with TypeScript 7 and with TypeScript 6, which [typescript-eslint](#typescript-7) still needs.
 
 ## Customization
 

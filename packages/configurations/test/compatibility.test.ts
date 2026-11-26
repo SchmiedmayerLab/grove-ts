@@ -97,6 +97,7 @@ test("reports violations through the full ESLint configurations", async () => {
     "sonarjs/no-alphabetical-sort",
     "import-x/no-default-export",
     "import-x/extensions",
+    "@typescript-eslint/no-import-type-side-effects",
   ]) {
     expect(rules).toContain(rule);
   }

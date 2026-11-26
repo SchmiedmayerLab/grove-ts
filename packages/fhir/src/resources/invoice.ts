@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type InvoiceLineItem,
-  type InvoiceLineItemPriceComponent,
-  type InvoiceParticipant,
-  type Coding,
-  type Invoice,
+import type {
+  InvoiceLineItem,
+  InvoiceLineItemPriceComponent,
+  InvoiceParticipant,
+  Coding,
+  Invoice,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

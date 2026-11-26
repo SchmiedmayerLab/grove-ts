@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 import { defineConfig } from "eslint/config";
-import { type ConfigWithExtends } from "typescript-eslint";
+import type { ConfigWithExtends } from "typescript-eslint";
 
 /**
  * Bridges typescript-eslint's config type to ESLint 10's native config helper.

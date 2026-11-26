@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ChargeItemDefinitionApplicability,
-  type ChargeItemDefinitionPropertyGroup,
-  type ChargeItemDefinitionPropertyGroupPriceComponent,
-  type ChargeItemDefinition,
-  type Coding,
+import type {
+  ChargeItemDefinitionApplicability,
+  ChargeItemDefinitionPropertyGroup,
+  ChargeItemDefinitionPropertyGroupPriceComponent,
+  ChargeItemDefinition,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

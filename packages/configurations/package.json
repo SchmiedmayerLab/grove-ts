@@ -1,7 +1,7 @@
 {
   "name": "@schmiedmayerlab/grove-configurations",
   "version": "0.0.0",
-  "description": "Shared oxlint, oxfmt, ESLint and Prettier configurations for Grove TypeScript projects",
+  "description": "Shared oxlint, oxfmt, ESLint, Prettier and TypeScript configurations for Grove TypeScript projects",
   "keywords": [
     "configuration",
     "eslint",
@@ -11,6 +11,7 @@
     "oxfmt",
     "oxlint",
     "prettier",
+    "tsconfig",
     "typescript"
   ],
   "homepage": "https://github.com/SchmiedmayerLab/grove-ts#readme",
@@ -27,6 +28,7 @@
   "files": [
     "dist",
     "global-types.d.ts",
+    "tsconfig/*.json",
     "README.md",
     "LICENSE"
   ],
@@ -59,7 +61,12 @@
     },
     "./global-types": {
       "types": "./global-types.d.ts"
-    }
+    },
+    "./tsconfig/strict": "./tsconfig/strict.json",
+    "./tsconfig/node-app": "./tsconfig/node-app.json",
+    "./tsconfig/node-library": "./tsconfig/node-library.json",
+    "./tsconfig/react-app": "./tsconfig/react-app.json",
+    "./tsconfig/react-library": "./tsconfig/react-library.json"
   },
   "publishConfig": {
     "access": "public"
@@ -90,6 +97,7 @@
   "devDependencies": {
     "@eslint-react/eslint-plugin": "^5.18.1",
     "@types/node": "^24.10.0",
+    "@types/react": "^19.2.18",
     "@typescript-eslint/utils": "^8.72.1",
     "eslint": "^10.13.0",
     "eslint-import-resolver-typescript": "^4.4.5",

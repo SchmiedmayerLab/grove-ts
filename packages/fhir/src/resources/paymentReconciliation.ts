@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type PaymentReconciliationDetail,
-  type PaymentReconciliationProcessNote,
-  type Coding,
-  type PaymentReconciliation,
+import type {
+  PaymentReconciliationDetail,
+  PaymentReconciliationProcessNote,
+  Coding,
+  PaymentReconciliation,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { domainResourceSchema } from "../elements/domainResource.js";

@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type SubscriptionTopicCanFilterBy,
-  type SubscriptionTopicEventTrigger,
-  type SubscriptionTopicNotificationShape,
-  type SubscriptionTopicResourceTrigger,
-  type SubscriptionTopicResourceTriggerQueryCriteria,
-  type SubscriptionTopic,
-  type Coding,
+import type {
+  SubscriptionTopicCanFilterBy,
+  SubscriptionTopicEventTrigger,
+  SubscriptionTopicNotificationShape,
+  SubscriptionTopicResourceTrigger,
+  SubscriptionTopicResourceTriggerQueryCriteria,
+  SubscriptionTopic,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

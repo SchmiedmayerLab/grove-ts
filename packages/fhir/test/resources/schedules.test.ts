@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Schedule } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Schedule } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirSchedule, type untypedScheduleSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ProvenanceAgent,
-  type ProvenanceEntity,
-  type Provenance,
+import type {
+  ProvenanceAgent,
+  ProvenanceEntity,
+  Provenance,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

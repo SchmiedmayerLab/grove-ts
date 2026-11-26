@@ -8,11 +8,11 @@
 
 import { TabsContent, TabsList, TabsTrigger } from "./Tabs";
 
-export enum Tab {
-  lorem = "lorem",
-  ipsum = "ipsum",
-  dolor = "dolor",
-}
+export const Tab = {
+  lorem: "lorem",
+  ipsum: "ipsum",
+  dolor: "dolor",
+} as const;
 
 export const elements = {
   triggers: (

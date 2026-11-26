@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ParameterDefinition } from "fhir/r4b.js";
+import type { ParameterDefinition } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { fhirTypeSchema } from "../../valueSets/index.js";
 import { intSchema, stringSchema } from "../dataTypes/primitiveTypes.js";

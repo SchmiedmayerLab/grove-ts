@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type MessageDefinitionAllowedResponse,
-  type MessageDefinitionFocus,
-  type MessageDefinition,
+import type {
+  MessageDefinitionAllowedResponse,
+  MessageDefinitionFocus,
+  MessageDefinition,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

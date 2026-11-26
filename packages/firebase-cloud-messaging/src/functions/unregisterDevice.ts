@@ -11,7 +11,7 @@
  */
 
 import { z } from "zod";
-import { type NotificationService } from "../services/notificationService.js";
+import type { NotificationService } from "../services/notificationService.js";
 
 /**
  * Zod schema for unregister device input validation

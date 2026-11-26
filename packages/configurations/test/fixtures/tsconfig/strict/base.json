@@ -1,0 +1,20 @@
+//
+// This source file is part of the Grove open-source project
+//
+// SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+//
+
+// Stands in for a framework base such as astro/tsconfigs/strict.
+{
+  "compilerOptions": {
+    "strict": false,
+    "target": "es2023",
+    "lib": ["es2023"],
+    "module": "preserve",
+    "jsx": "preserve",
+    "noEmit": true,
+    "types": []
+  }
+}

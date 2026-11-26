@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type NutritionProduct,
-  type NutritionProductIngredient,
-  type NutritionProductInstance,
-  type NutritionProductNutrient,
-  type NutritionProductProductCharacteristic,
+import type {
+  NutritionProduct,
+  NutritionProductIngredient,
+  NutritionProductInstance,
+  NutritionProductNutrient,
+  NutritionProductProductCharacteristic,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

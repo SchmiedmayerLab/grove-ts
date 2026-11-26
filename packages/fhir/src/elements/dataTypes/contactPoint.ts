@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ContactPoint } from "fhir/r4b.js";
+import type { ContactPoint } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { elementSchema } from "../element.js";
 import { periodSchema } from "./period.js";

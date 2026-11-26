@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type NutritionOrder,
-  type NutritionOrderEnteralFormula,
-  type NutritionOrderEnteralFormulaAdministration,
-  type NutritionOrderOralDiet,
-  type NutritionOrderOralDietNutrient,
-  type NutritionOrderOralDietTexture,
-  type NutritionOrderSupplement,
+import type {
+  NutritionOrder,
+  NutritionOrderEnteralFormula,
+  NutritionOrderEnteralFormulaAdministration,
+  NutritionOrderOralDiet,
+  NutritionOrderOralDietNutrient,
+  NutritionOrderOralDietTexture,
+  NutritionOrderSupplement,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

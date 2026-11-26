@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type MarketingStatus } from "fhir/r4b.js";
+import type { MarketingStatus } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { backboneElementSchema } from "../backBoneElement.js";
 import { elementSchema } from "../element.js";

@@ -6,11 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type AppointmentParticipant,
-  type Appointment,
-  type Coding,
-} from "fhir/r4b.js";
+import type { AppointmentParticipant, Appointment, Coding } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,

@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type SpecimenCollection,
-  type SpecimenContainer,
-  type SpecimenProcessing,
-  type Coding,
-  type Specimen,
+import type {
+  SpecimenCollection,
+  SpecimenContainer,
+  SpecimenProcessing,
+  Coding,
+  Specimen,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

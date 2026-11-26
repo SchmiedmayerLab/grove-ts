@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CapabilityStatement,
-  type DataRequirement,
-  type ExampleScenarioInstance,
-  type ImplementationGuide,
-  type TimingRepeat,
+import type {
+  CapabilityStatement,
+  DataRequirement,
+  ExampleScenarioInstance,
+  ImplementationGuide,
+  TimingRepeat,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 

@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type CatalogEntry,
-  type CatalogEntryRelatedEntry,
+import type {
+  Coding,
+  CatalogEntry,
+  CatalogEntryRelatedEntry,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

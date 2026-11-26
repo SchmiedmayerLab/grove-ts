@@ -7,7 +7,11 @@
 //
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, type RenderOptions } from "@testing-library/react";
+import {
+  render,
+  type RenderOptions,
+  type RenderResult,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { GroveProvider, type GroveContextType } from "@/GroveProvider";
 
@@ -41,7 +45,10 @@ const DefaultWrapper = ({ children }: DefaultWrapperProps) => <>{children}</>;
 /**
  * Utility for tests that ensures component is rendered with every required context.
  */
-export const renderWithProviders = (node: ReactNode, options?: RenderOptions) =>
+export const renderWithProviders = (
+  node: ReactNode,
+  options?: RenderOptions,
+): RenderResult =>
   render(node, {
     wrapper: ({ children }) => {
       const Wrapper = options?.wrapper ?? DefaultWrapper;

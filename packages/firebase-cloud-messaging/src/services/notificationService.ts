@@ -10,9 +10,9 @@
  * Interface for notification service
  */
 
-import { type Device } from "../models/device.js";
-import { type Message } from "../models/message.js";
-import { type Document } from "../storage/deviceStorage.js";
+import type { Device } from "../models/device.js";
+import type { Message } from "../models/message.js";
+import type { Document } from "../storage/deviceStorage.js";
 
 /**
  * Service interface for managing device notifications

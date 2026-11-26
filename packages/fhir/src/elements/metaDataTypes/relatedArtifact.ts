@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type RelatedArtifact } from "fhir/r4b.js";
+import type { RelatedArtifact } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { attachmentSchema } from "../dataTypes/attachment.js";
 import { stringSchema, urlSchema } from "../dataTypes/primitiveTypes.js";

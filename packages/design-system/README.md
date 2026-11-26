@@ -43,6 +43,8 @@ As part of the broader Grove ecosystem, this library provides a foundation for b
 - 📖 **[API Reference](https://schmiedmayerlab.github.io/grove-ts/docs/api/GroveProvider)** - Detailed technical documentation and API reference
 - 🏗️ **[Repository](https://github.com/SchmiedmayerLab/grove-ts)** - Browse every Grove TypeScript package
 
+The package also publishes its TypeScript sources with declaration maps, so editors and coding agents can go from a type to its implementation in `node_modules`.
+
 ## Grove Ecosystem
 
 Grove Design System is part of a larger ecosystem of tools and packages:

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface PageTitleProps {
   /**

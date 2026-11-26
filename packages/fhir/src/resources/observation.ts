@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Coding, type Observation } from "fhir/r4b.js";
+import type { Coding, Observation } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   booleanSchema,

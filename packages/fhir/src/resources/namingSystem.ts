@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type NamingSystemUniqueId, type NamingSystem } from "fhir/r4b.js";
+import type { NamingSystemUniqueId, NamingSystem } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   backboneElementSchema,

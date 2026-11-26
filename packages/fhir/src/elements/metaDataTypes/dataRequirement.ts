@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type DataRequirement } from "fhir/r4b.js";
+import type { DataRequirement } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import { fhirTypeSchema } from "../../valueSets/index.js";
 import { codeableConceptSchema } from "../dataTypes/codeableConcept.js";

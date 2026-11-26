@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type QuestionnaireResponseItemAnswer,
-  type QuestionnaireResponse,
-  type QuestionnaireResponseItem,
+import type {
+  QuestionnaireResponseItemAnswer,
+  QuestionnaireResponse,
+  QuestionnaireResponseItem,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type DeviceRequestParameter,
-  type DeviceRequest,
-  type Coding,
+import type {
+  DeviceRequestParameter,
+  DeviceRequest,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

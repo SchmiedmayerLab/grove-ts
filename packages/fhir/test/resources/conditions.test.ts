@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Condition } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Condition } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirCondition, type untypedConditionSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

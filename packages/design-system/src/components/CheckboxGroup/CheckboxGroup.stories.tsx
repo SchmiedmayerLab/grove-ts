@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Meta, type StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react";
 import { action } from "storybook/actions";
 import { useArgs } from "storybook/preview-api";
 import { CheckboxGroup } from "./CheckboxGroup";

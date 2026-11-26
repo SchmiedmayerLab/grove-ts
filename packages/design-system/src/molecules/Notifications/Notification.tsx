@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { NotificationLink } from "@/molecules/Notifications/NotificationLink";
 import { NotificationActions } from "./NotificationActions";
 import { NotificationContentContainer } from "./NotificationContentContainer";
-import { type NotificationContextType } from "./NotificationContext";
+import type { NotificationContextType } from "./NotificationContext";
 import { NotificationHeader } from "./NotificationHeader";
 import { NotificationImage } from "./NotificationImage";
 import { NotificationMessage } from "./NotificationMessage";

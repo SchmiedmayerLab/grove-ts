@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type MessageHeaderDestination,
-  type MessageHeaderResponse,
-  type MessageHeaderSource,
-  type MessageHeader,
+import type {
+  MessageHeaderDestination,
+  MessageHeaderResponse,
+  MessageHeaderSource,
+  MessageHeader,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

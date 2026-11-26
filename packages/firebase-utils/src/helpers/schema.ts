@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type z, type ZodType } from "zod";
+import type { z, ZodType } from "zod";
 
 /**
  * Extract the forward schema type from a BidirectionalSchema

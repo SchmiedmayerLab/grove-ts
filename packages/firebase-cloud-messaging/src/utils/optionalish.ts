@@ -10,7 +10,7 @@
  * Utility for handling optional fields in schemas
  */
 
-import { type z } from "zod";
+import type { z } from "zod";
 
 /**
  * Creates a schema that transforms null values to undefined

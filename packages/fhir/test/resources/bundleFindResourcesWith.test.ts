@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Bundle, type Patient, type Observation } from "fhir/r4b.js";
+import type { Bundle, Patient, Observation } from "fhir/r4b.js";
 import { FhirBundle } from "../../src/index.js";
 
 const patient = (resource: Patient): Patient => resource;

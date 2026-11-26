@@ -6,18 +6,18 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CodeableConcept,
-  type Coding,
-  type Extension,
-  type DomainResource,
-  type Reference,
-  type Identifier,
-  type HumanName,
-  type ContactPoint,
-  type Period,
-  type Annotation,
-  type FhirResource,
+import type {
+  CodeableConcept,
+  Coding,
+  Extension,
+  DomainResource,
+  Reference,
+  Identifier,
+  HumanName,
+  ContactPoint,
+  Period,
+  Annotation,
+  FhirResource,
 } from "fhir/r4b.js";
 
 /**
@@ -27,6 +27,11 @@ import {
  * @template ResourceType - The specific FHIR resource type this class wraps
  */
 export abstract class FhirDomainResource<ResourceType extends DomainResource> {
+  // Properties
+
+  /** The wrapped FHIR resource. */
+  public value: ResourceType;
+
   // Constructor
 
   /**
@@ -34,7 +39,9 @@ export abstract class FhirDomainResource<ResourceType extends DomainResource> {
    *
    * @param value - The FHIR resource to wrap
    */
-  public constructor(public value: ResourceType) {}
+  public constructor(value: ResourceType) {
+    this.value = value;
+  }
 
   // Methods
 

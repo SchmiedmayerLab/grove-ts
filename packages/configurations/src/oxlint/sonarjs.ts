@@ -16,7 +16,7 @@
 // It relies on sonarjs' internal `clearFileCaches`, so the sonarjs version is pinned exactly.
 
 import { createRequire } from "node:module";
-import { type Rule } from "eslint";
+import type { Rule } from "eslint";
 
 const require = createRequire(import.meta.url);
 

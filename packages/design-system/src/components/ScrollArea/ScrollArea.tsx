@@ -7,7 +7,7 @@
 //
 
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui";
-import { type ComponentProps, type Ref } from "react";
+import type { ComponentProps, Ref } from "react";
 import { cn } from "@/utils/className";
 
 export const ScrollArea = ({

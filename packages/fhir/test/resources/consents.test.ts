@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Consent } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Consent } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirConsent, type untypedConsentSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

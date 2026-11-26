@@ -6,16 +6,16 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type PlanDefinitionActionCondition,
-  type PlanDefinitionActionDynamicValue,
-  type PlanDefinitionActionParticipant,
-  type PlanDefinitionActionRelatedAction,
-  type PlanDefinition,
-  type PlanDefinitionAction,
-  type PlanDefinitionGoal,
-  type PlanDefinitionGoalTarget,
-  type Coding,
+import type {
+  PlanDefinitionActionCondition,
+  PlanDefinitionActionDynamicValue,
+  PlanDefinitionActionParticipant,
+  PlanDefinitionActionRelatedAction,
+  PlanDefinition,
+  PlanDefinitionAction,
+  PlanDefinitionGoal,
+  PlanDefinitionGoalTarget,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

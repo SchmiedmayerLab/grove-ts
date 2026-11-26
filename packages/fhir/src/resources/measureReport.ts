@@ -6,15 +6,15 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type MeasureReport,
-  type MeasureReportGroup,
-  type MeasureReportGroupPopulation,
-  type MeasureReportGroupStratifier,
-  type MeasureReportGroupStratifierStratum,
-  type MeasureReportGroupStratifierStratumPopulation,
-  type MeasureReportGroupStratifierStratumComponent,
-  type Coding,
+import type {
+  MeasureReport,
+  MeasureReportGroup,
+  MeasureReportGroupPopulation,
+  MeasureReportGroupStratifier,
+  MeasureReportGroupStratifierStratum,
+  MeasureReportGroupStratifierStratumPopulation,
+  MeasureReportGroupStratifierStratumComponent,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

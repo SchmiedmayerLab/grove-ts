@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type DocumentReference,
-  type DocumentReferenceContent,
-  type DocumentReferenceContext,
-  type DocumentReferenceRelatesTo,
+import type {
+  Coding,
+  DocumentReference,
+  DocumentReferenceContent,
+  DocumentReferenceContext,
+  DocumentReferenceRelatesTo,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

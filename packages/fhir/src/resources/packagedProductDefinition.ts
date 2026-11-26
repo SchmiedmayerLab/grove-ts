@@ -6,13 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type PackagedProductDefinition,
-  type PackagedProductDefinitionLegalStatusOfSupply,
-  type PackagedProductDefinitionPackage,
-  type PackagedProductDefinitionPackageContainedItem,
-  type PackagedProductDefinitionPackageProperty,
-  type PackagedProductDefinitionPackageShelfLifeStorage,
+import type {
+  PackagedProductDefinition,
+  PackagedProductDefinitionLegalStatusOfSupply,
+  PackagedProductDefinitionPackage,
+  PackagedProductDefinitionPackageContainedItem,
+  PackagedProductDefinitionPackageProperty,
+  PackagedProductDefinitionPackageShelfLifeStorage,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -9,7 +9,7 @@
 // The full oxlint configurations, with the sonarjs and @eslint-react rules.
 // The core configurations live in `./core`, published as `./oxlint-core`, which loads neither plugin.
 
-import { type OxlintConfig } from "oxlint";
+import type { OxlintConfig } from "oxlint";
 import { createOxlintConfig, type OxlintConfigOptions } from "./core";
 
 export * from "./core";

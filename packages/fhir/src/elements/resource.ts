@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Resource } from "fhir/r4b.js";
+import type { Resource } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   codeSchema,

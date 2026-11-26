@@ -7,7 +7,7 @@
 //
 
 import { ClipboardCopy } from "lucide-react";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/utils/className";
 import { copyToClipboard } from "../../utils/misc";
 

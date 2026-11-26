@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Theme } from "./utils";
+import type { Theme } from "./utils";
 
 /**
  * Default implementation of a dark theme.

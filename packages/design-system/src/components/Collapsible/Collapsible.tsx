@@ -9,7 +9,7 @@
 import { Slot, Collapsible as CollapsiblePrimitive } from "radix-ui";
 import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
-import { type AsChildProp } from "@/utils/misc";
+import type { AsChildProp } from "@/utils/misc";
 
 /**
  * Primitive component for collapsible content. Root provides state.

@@ -6,11 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type CareTeam,
-  type CareTeamParticipant,
-} from "fhir/r4b.js";
+import type { Coding, CareTeam, CareTeamParticipant } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {
   annotationSchema,

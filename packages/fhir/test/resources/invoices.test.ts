@@ -7,8 +7,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Invoice } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Invoice } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirInvoice, type untypedInvoiceSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

@@ -6,22 +6,22 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type ElementDefinition,
-  type ElementDefinitionBase,
-  type ElementDefinitionBinding,
-  type ElementDefinitionConstraint,
-  type ElementDefinitionExample,
-  type ElementDefinitionMapping,
-  type ElementDefinitionSlicing,
-  type ElementDefinitionSlicingDiscriminator,
-  type ElementDefinitionType,
-  type StructureDefinitionContext,
-  type StructureDefinitionDifferential,
-  type StructureDefinitionMapping,
-  type StructureDefinitionSnapshot,
-  type StructureDefinition,
-  type Coding,
+import type {
+  ElementDefinition,
+  ElementDefinitionBase,
+  ElementDefinitionBinding,
+  ElementDefinitionConstraint,
+  ElementDefinitionExample,
+  ElementDefinitionMapping,
+  ElementDefinitionSlicing,
+  ElementDefinitionSlicingDiscriminator,
+  ElementDefinitionType,
+  StructureDefinitionContext,
+  StructureDefinitionDifferential,
+  StructureDefinitionMapping,
+  StructureDefinitionSnapshot,
+  StructureDefinition,
+  Coding,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

@@ -6,10 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type Coding,
-  type SupplyRequest,
-  type SupplyRequestParameter,
+import type {
+  Coding,
+  SupplyRequest,
+  SupplyRequestParameter,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

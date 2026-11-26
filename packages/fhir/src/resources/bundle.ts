@@ -6,14 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type BundleEntry,
-  type BundleEntryRequest,
-  type BundleEntryResponse,
-  type BundleEntrySearch,
-  type BundleLink,
-  type Bundle,
-  type Resource,
+import type {
+  BundleEntry,
+  BundleEntryRequest,
+  BundleEntryResponse,
+  BundleEntrySearch,
+  BundleLink,
+  Bundle,
+  Resource,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

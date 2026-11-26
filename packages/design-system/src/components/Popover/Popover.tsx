@@ -8,7 +8,7 @@
 
 import { X } from "lucide-react";
 import { Popover as PopoverPrimitive } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 
 /**

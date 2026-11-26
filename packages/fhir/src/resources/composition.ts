@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import {
-  type CompositionAttester,
-  type CompositionEvent,
-  type CompositionRelatesTo,
-  type CompositionSection,
-  type Composition,
+import type {
+  CompositionAttester,
+  CompositionEvent,
+  CompositionRelatesTo,
+  CompositionSection,
+  Composition,
 } from "fhir/r4b.js";
 import { z, type ZodType } from "zod";
 import {

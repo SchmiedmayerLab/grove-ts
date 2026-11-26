@@ -8,8 +8,8 @@
 
 import fs from "fs";
 import { expectTypeOf } from "expect-type";
-import { type Endpoint } from "fhir/r4b.js";
-import { type z } from "zod";
+import type { Endpoint } from "fhir/r4b.js";
+import type { z } from "zod";
 import { FhirEndpoint, type untypedEndpointSchema } from "../../src/index.js";
 import { jsonStringifyDeterministically } from "./testHelpers.js";
 

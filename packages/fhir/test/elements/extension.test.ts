@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type Bundle, type Patient } from "fhir/r4b.js";
+import type { Bundle, Patient } from "fhir/r4b.js";
 import {
   extensionSchema,
   FhirBundle,

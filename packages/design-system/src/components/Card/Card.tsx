@@ -8,9 +8,9 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
-import { type AsChildProp } from "@/utils/misc";
+import type { AsChildProp } from "@/utils/misc";
 
 export const cardVariants = {};
 

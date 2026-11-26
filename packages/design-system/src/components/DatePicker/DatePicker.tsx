@@ -8,7 +8,7 @@
 
 import { format, isDate } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "@/utils/className";
 import { Button } from "../Button";
 import { Calendar } from "../Calendar";

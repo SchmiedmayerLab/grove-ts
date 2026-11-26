@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { useNotificationContext } from "@/molecules/Notifications/NotificationContext";
 import { cn } from "@/utils/className";
 import { formatDateTime } from "@/utils/date";
