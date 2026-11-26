@@ -89,7 +89,7 @@ export const AccordionTrigger = ({
     <AccordionPrimitive.Trigger
       data-slot="accordion-trigger"
       className={cn(
-        "interactive-opacity flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
+        "interactive-opacity flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium disabled:pointer-events-none disabled:opacity-50 data-[state=open]:*:[svg]:rotate-180",
         className,
       )}
       {...props}
