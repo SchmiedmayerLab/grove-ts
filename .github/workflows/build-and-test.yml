@@ -67,8 +67,8 @@ jobs:
         run: pnpm run audit
       - name: Verify registry signatures
         run: pnpm run audit:signatures
-  node-current:
-    name: Node.js 26 Compatibility
+  node-minimum:
+    name: Node.js 24 Compatibility
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -79,7 +79,8 @@ jobs:
       - name: Set up pnpm, Node.js, and dependencies
         uses: pnpm/setup@v3
         with:
-          runtime: node@26
+          # The oldest Node.js major allowed by `engines.node` in the published packages.
+          runtime: node@24
           cache: true
           require-lockfile: true
       - name: Build packages
@@ -139,7 +140,7 @@ jobs:
       - dependency-review
       - documentation
       - markdown-links
-      - node-current
+      - node-minimum
       - quality
       - reuse
       - tests
