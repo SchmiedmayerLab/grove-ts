@@ -28,6 +28,7 @@ export type SideLabelProps = Omit<ComponentProps<"label">, "label"> & {
 
 /**
  * Component for creating labeled form controls like radio, checkbox or switch.
+ * The label is dimmed when the control inside it is disabled.
  *
  * @example
  * ```tsx
@@ -48,7 +49,7 @@ export const SideLabel = ({
   <label
     data-slot="side-label"
     className={cn(
-      "flex cursor-pointer gap-2.5 select-none",
+      "group/side-label flex cursor-pointer gap-2.5 select-none has-disabled:cursor-not-allowed",
       reverse && "flex-row-reverse",
       center && "items-center",
       className,
@@ -56,6 +57,8 @@ export const SideLabel = ({
     {...props}
   >
     {children}
-    <div className="text-sm leading-none">{label}</div>
+    <div className="text-sm leading-none group-has-disabled/side-label:opacity-70">
+      {label}
+    </div>
   </label>
 );
