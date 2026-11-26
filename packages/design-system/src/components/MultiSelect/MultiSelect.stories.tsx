@@ -19,6 +19,13 @@ import {
 const meta: Meta<typeof MultiSelect> = {
   title: "Components/MultiSelect",
   component: MultiSelect,
+  decorators: [
+    (Story) => (
+      <div className="w-100">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;

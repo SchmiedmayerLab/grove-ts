@@ -12,7 +12,7 @@ import { Card } from "./Card";
 const meta: Meta<typeof Card> = {
   title: "Components/Card",
   component: Card,
-  args: { children: "Lorem ipsum" },
+  args: { children: <div className="p-5">Lorem ipsum</div> },
 };
 
 export default meta;

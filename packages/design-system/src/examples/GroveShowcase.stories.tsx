@@ -181,7 +181,11 @@ const GroveShowcase = ({ colorScheme }: GroveShowcaseProps) => (
                 Settings
               </Button>
               <div className="bg-muted flex items-center gap-3 rounded-xl p-3">
-                <Avatar size="sm" name="Paul Schmiedmayer" />
+                <Avatar
+                  size="sm"
+                  name="Paul Schmiedmayer"
+                  className="**:data-[slot=avatar-fallback]:bg-primary/10 **:data-[slot=avatar-fallback]:text-primary"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
                     Paul Schmiedmayer

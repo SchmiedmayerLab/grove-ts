@@ -49,7 +49,7 @@ const BaseComponent = ({
   const menuLinks = (
     <>
       <MenuItem href="/" label="Home" icon={<Home />} isActive />
-      <MenuItem href="/" label="Highligthed" icon={<Home />} isHighlighted />
+      <MenuItem href="/" label="Highlighted" icon={<Home />} isHighlighted />
       <MenuItem href="/" label="Another" icon={<User />} />
     </>
   );

@@ -57,7 +57,7 @@ export const CustomLabels: Story = {
         label: (
           <div className="flex flex-col">
             <span className="font-medium">Basic Plan</span>
-            <span className="text-xs text-gray-500">$10/month</span>
+            <span className="text-muted-foreground text-xs">$10/month</span>
           </div>
         ),
         value: "basic",
@@ -66,7 +66,7 @@ export const CustomLabels: Story = {
         label: (
           <div className="flex flex-col">
             <span className="font-medium">Premium Plan</span>
-            <span className="text-xs text-gray-500">$20/month</span>
+            <span className="text-muted-foreground text-xs">$20/month</span>
           </div>
         ),
         value: "premium",
@@ -75,7 +75,7 @@ export const CustomLabels: Story = {
         label: (
           <div className="flex flex-col">
             <span className="font-medium">Enterprise Plan</span>
-            <span className="text-xs text-gray-500">$50/month</span>
+            <span className="text-muted-foreground text-xs">$50/month</span>
           </div>
         ),
         value: "enterprise",

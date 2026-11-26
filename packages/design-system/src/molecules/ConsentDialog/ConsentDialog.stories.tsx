@@ -48,7 +48,7 @@ export const Default: Story = {
           Consent&quot;, you agree to our processing of your personal data as
           described in our Privacy Policy, which includes:
         </p>
-        <ul>
+        <ul className="list-disc space-y-1 pl-5">
           <li>Collection of usage data to improve our services</li>
           <li>Processing of account information for service provision</li>
         </ul>
@@ -75,7 +75,7 @@ export const LongContent: Story = {
         <DialogTitle>Privacy Policy</DialogTitle>
         <DialogDescription>Please review our privacy policy</DialogDescription>
       </DialogHeader>
-      <ConsentDialogContent>
+      <ConsentDialogContent className="space-y-4">
         {Array.from({ length: 10 }, (_, index) => index + 1).map(
           (paragraphNumber) => (
             <p key={paragraphNumber}>
