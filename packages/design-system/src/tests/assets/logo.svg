@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" role="img" aria-label="Synthetic logo">
+<!--
+
+This source file is part of the Grove open-source project
+
+SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+
+-->
+  <rect width="480" height="160" rx="24" fill="#f6f5f4" />
+  <circle cx="88" cy="80" r="44" fill="#3eb055" />
+  <path d="M88 52c16 12 22 28 0 56c-22-28-16-44 0-56z" fill="#f6f5f4" />
+  <rect x="160" y="52" width="232" height="22" rx="11" fill="#1e0f0f" />
+  <rect x="160" y="88" width="160" height="16" rx="8" fill="#9f9f9f" />
+</svg>

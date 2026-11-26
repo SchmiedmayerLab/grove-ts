@@ -7,6 +7,8 @@
 //
 
 import type { Meta, StoryObj } from "@storybook/react";
+import logo from "@/tests/assets/logo.svg";
+import portrait from "@/tests/assets/portrait.svg";
 import { Avatar, avatarVariants } from "./Avatar";
 
 const meta: Meta<typeof Avatar> = {
@@ -27,7 +29,7 @@ type Story = StoryObj<typeof Avatar>;
 
 export const Default: Story = {
   args: {
-    src: "https://cdn.icon-icons.com/icons2/2643/PNG/512/avatar_female_woman_person_people_white_tone_icon_159360.png",
+    src: portrait,
   },
 };
 
@@ -54,7 +56,7 @@ export const LG: Story = { args: { size: "lg" } };
 
 export const Contain: Story = {
   args: {
-    src: "https://github.com/SchmiedmayerLab/_jcr_content/local-header/_jcr_content/custom-logo.img.full.high.png",
+    src: logo,
     objectFit: "contain",
   },
 };

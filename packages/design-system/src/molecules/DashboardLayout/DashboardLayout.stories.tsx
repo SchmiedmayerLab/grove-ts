@@ -9,6 +9,7 @@
 import type { Meta } from "@storybook/react";
 import { Home, User } from "lucide-react";
 import type { ComponentProps } from "react";
+import portrait from "@/tests/assets/portrait.svg";
 import { cn } from "@/utils/className";
 import { DashboardLayout, MenuItem, PageTitle, UserMenuItem } from ".";
 import {
@@ -35,10 +36,7 @@ const BaseComponent = ({
   const user = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <UserMenuItem
-          name="John Doe"
-          img="https://cdn.icon-icons.com/icons2/2643/PNG/512/avatar_female_woman_person_people_white_tone_icon_159360.png"
-        />
+        <UserMenuItem name="John Doe" img={portrait} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem>Sign Out</DropdownMenuItem>
