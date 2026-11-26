@@ -102,7 +102,7 @@ export const CommandDialogContent = ({
   className,
   ...props
 }: CommandDialogContentProps) => (
-  <DialogContent className={cn("overflow-hidden !p-0", className)} {...props}>
+  <DialogContent className={cn("overflow-hidden p-0", className)} {...props}>
     {/* Hidden header elements to improve a11y */}
     <DialogTitle className="sr-only">{title}</DialogTitle>
     <DialogDescription className="sr-only">{description}</DialogDescription>

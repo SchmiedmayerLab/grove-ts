@@ -45,7 +45,7 @@ export const UserMenuItem = ({ name, img, ...props }: UserMenuItemProps) => {
       data-slot="user-menu-item"
       variant="ghost"
       className={cn(
-        "mt-auto mb-2 p-2! transition",
+        "mt-auto mb-2 p-2 transition",
         shrinkable
           ? "xl:mb-0 xl:w-full xl:justify-start xl:self-start"
           : "lg:mb-0 lg:w-full lg:justify-start lg:self-start",

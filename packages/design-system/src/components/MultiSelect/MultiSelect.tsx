@@ -420,7 +420,7 @@ export const MultiSelectContent = ({
           </CommandList>
         </Command>
       </div>
-      <PopoverContent className="min-w-(--radix-popover-trigger-width) !p-0">
+      <PopoverContent className="min-w-(--radix-popover-trigger-width) p-0">
         <Command {...props}>
           {searchObject ? (
             <CommandInput placeholder={searchObject.placeholder} />

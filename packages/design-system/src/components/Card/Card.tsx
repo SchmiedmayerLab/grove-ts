@@ -51,7 +51,11 @@ export interface CardProps
 export const Card = ({ className, asChild, ...props }: CardProps) => {
   const Comp = asChild ? Slot.Root : "div";
   return (
-    <Comp data-slot="card" className={cardVariance({ className })} {...props} />
+    <Comp
+      data-slot="card"
+      className={cn(cardVariance(), className)}
+      {...props}
+    />
   );
 };
 

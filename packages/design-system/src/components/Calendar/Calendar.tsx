@@ -133,7 +133,7 @@ export const Calendar = (props: CalendarProps) => {
 
   const navButton = cn(
     buttonVariance({ variant: "outline" }),
-    "size-7! p-0! opacity-50 hover:opacity-100 z-4",
+    "size-7 p-0 opacity-50 hover:opacity-100 z-4",
   );
 
   return (
@@ -164,7 +164,7 @@ export const Calendar = (props: CalendarProps) => {
           range_middle: "rounded-none!",
           day: cn(
             buttonVariance({ variant: "ghost" }),
-            "size-9! p-0! text-sm",
+            "size-9 p-0 text-sm",
             "data-selected:bg-primary data-selected:text-primary-foreground data-selected:hover:bg-primary/80",
           ),
           day_button: "size-full",
