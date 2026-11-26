@@ -56,7 +56,7 @@ export const AsideBrandLayoutRoot = ({
   <div
     data-slot="aside-brand-layout"
     className={cn(
-      "w-full lg:grid lg:min-h-screen lg:grid-cols-[450px_1fr] xl:grid-cols-[600px_1fr]",
+      "w-full lg:grid lg:min-h-screen lg:grid-cols-[28.125rem_1fr] xl:grid-cols-[37.5rem_1fr]",
       className,
     )}
     {...props}

@@ -32,7 +32,7 @@ export default meta;
 
 export const Default = () => (
   <MultiSelect>
-    <MultiSelectTrigger className="w-full max-w-[400px]">
+    <MultiSelectTrigger className="w-full max-w-100">
       <MultiSelectValue placeholder="Select fruit..." />
     </MultiSelectTrigger>
     <MultiSelectContent>
@@ -49,7 +49,7 @@ export const Default = () => (
 );
 export const CustomSearchAndOverflow = () => (
   <MultiSelect>
-    <MultiSelectTrigger className="w-full max-w-[360px] min-w-[200px]">
+    <MultiSelectTrigger className="w-full max-w-90 min-w-50">
       <MultiSelectValue
         placeholder="Select components..."
         overflowBehavior="cutoff"

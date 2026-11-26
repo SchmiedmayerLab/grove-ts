@@ -79,7 +79,7 @@ interface MultiSelectProps {
  * @example
  * ```tsx
  * <MultiSelect>
- *   <MultiSelectTrigger className="w-full max-w-[400px]">
+ *   <MultiSelectTrigger className="w-full max-w-100">
  *     <MultiSelectValue placeholder="Select fruit..." />
  *   </MultiSelectTrigger>
  *   <MultiSelectContent>
@@ -420,7 +420,7 @@ export const MultiSelectContent = ({
           </CommandList>
         </Command>
       </div>
-      <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] !p-0">
+      <PopoverContent className="min-w-(--radix-popover-trigger-width) !p-0">
         <Command {...props}>
           {searchObject ? (
             <CommandInput placeholder={searchObject.placeholder} />
