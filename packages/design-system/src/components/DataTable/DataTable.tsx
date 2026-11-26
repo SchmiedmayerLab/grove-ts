@@ -234,6 +234,7 @@ export const DataTable = <Data extends RowData>({
   });
 
   const viewProps = { table, entityName, rows };
+  const hasError = isBoolean(error) ? error : error.show;
   let emptyState: AsyncProps["empty"] = defaultEmptyProps;
   if (isObject(empty)) emptyState = { ...defaultEmptyProps, ...empty };
   else if (isBoolean(empty)) emptyState = empty;
@@ -270,11 +271,14 @@ export const DataTable = <Data extends RowData>({
       >
         {content}
       </Async>
-      {(!minimal || table.getPageCount() > 1) && !isEmpty && (
-        <footer className="flex items-center justify-between border-t p-4">
-          <DataTablePagination table={table} />
-        </footer>
-      )}
+      {(!minimal || table.getPageCount() > 1) &&
+        !isEmpty &&
+        !hasError &&
+        !loading && (
+          <footer className="flex items-center justify-between border-t p-4">
+            <DataTablePagination table={table} />
+          </footer>
+        )}
     </div>
   );
 };
