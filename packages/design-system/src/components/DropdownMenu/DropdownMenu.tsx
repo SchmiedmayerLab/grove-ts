@@ -93,7 +93,7 @@ export const DropdownMenuSubContent = ({
   <DropdownMenuPrimitive.SubContent
     data-slot="dropdown-menu-sub-content"
     className={cn(
-      "animate-entrance-fade-slide bg-popover text-popover-foreground z-50 min-w-[8rem] overflow-hidden rounded-md border p-1",
+      "animate-entrance-fade-slide bg-popover text-popover-foreground z-50 min-w-32 overflow-hidden rounded-md border p-1",
       className,
     )}
     {...props}
@@ -142,7 +142,7 @@ export const DropdownMenuContent = ({
       data-slot="dropdown-menu-content"
       sideOffset={sideOffset}
       className={cn(
-        "animate-entrance-fade-slide bg-popover text-popover-foreground z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md",
+        "animate-entrance-fade-slide bg-popover text-popover-foreground z-50 min-w-32 overflow-hidden rounded-md border p-1 shadow-md",
         className,
       )}
       {...props}

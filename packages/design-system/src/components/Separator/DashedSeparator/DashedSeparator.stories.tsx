@@ -27,7 +27,7 @@ export const CustomStyleProps = () => (
   <div className="w-96">
     <DashedSeparator
       dashColor="var(--color-primary)"
-      dashSize="8px"
+      dashSize="0.5rem"
       dashGap="10%"
     />
   </div>
@@ -35,7 +35,7 @@ export const CustomStyleProps = () => (
 
 export const CustomStyleClassNames = () => (
   <div className="w-96">
-    <DashedSeparator className="[--dash-color:theme(colors.red.500)] [--dash-gap:theme(spacing.3)] [--dash-size:theme(spacing.4)]" />
+    <DashedSeparator className="[--dash-color:var(--color-red-500)] [--dash-gap:--spacing(3)] [--dash-size:--spacing(4)]" />
   </div>
 );
 

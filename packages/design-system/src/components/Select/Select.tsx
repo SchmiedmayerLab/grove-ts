@@ -207,7 +207,7 @@ export const useSelectProvider = ({
  * ```tsx
  * // Basic usage
  * <Select>
- *   <SelectTrigger className="w-full max-w-[400px]">
+ *   <SelectTrigger className="w-full max-w-100">
  *     <SelectValue placeholder="Select fruit..." />
  *   </SelectTrigger>
  *   <SelectContent>
@@ -494,7 +494,7 @@ export const SelectContent = ({ children, ...props }: SelectContentProps) => {
           </CommandList>
         </Command>
       </div>
-      <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] !p-0">
+      <PopoverContent className="min-w-(--radix-popover-trigger-width) !p-0">
         <Command
           {...props}
           filter={(value, searchTerm, keywords) => {

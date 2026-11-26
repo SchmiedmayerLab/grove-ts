@@ -141,7 +141,7 @@ const GroveShowcase = ({ colorScheme }: GroveShowcaseProps) => (
           <div className="w-11" aria-hidden="true" />
         </div>
 
-        <div className="bg-surface flex h-[720px]">
+        <div className="bg-surface flex h-180">
           <aside className="border-border bg-surface-primary flex w-64 shrink-0 flex-col border-r p-4">
             <div className="flex items-center gap-3 px-2 py-2">
               <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl shadow-sm">
@@ -228,7 +228,7 @@ const GroveShowcase = ({ colorScheme }: GroveShowcaseProps) => (
               </div>
             </header>
 
-            <div className="h-[656px] overflow-hidden p-7">
+            <div className="h-164 overflow-hidden p-7">
               <div className="flex items-end justify-between">
                 <div>
                   <Badge variant="successLight" className="mb-3">

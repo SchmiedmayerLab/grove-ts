@@ -81,10 +81,10 @@ export const DashboardLayout = ({
       <div
         data-slot="dashboard-layout"
         className={cn(
-          "text-foreground [--headerHeight:72px] **:[box-sizing:border-box] lg:[--headerHeight:86px]",
+          "text-foreground [--headerHeight:4.5rem] **:[box-sizing:border-box] lg:[--headerHeight:5.375rem]",
           shrinkable
-            ? "[--asideWidth:86px] xl:[--asideWidth:240px]"
-            : "[--asideWidth:240px]",
+            ? "[--asideWidth:5.375rem] xl:[--asideWidth:15rem]"
+            : "[--asideWidth:15rem]",
         )}
       >
         <header

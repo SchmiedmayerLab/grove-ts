@@ -30,7 +30,7 @@ const meta: Meta<typeof Command> = {
 export default meta;
 
 export const Default = () => (
-  <Command className="border md:min-w-[450px]">
+  <Command className="border md:min-w-112.5">
     <CommandInput placeholder="Search..." />
     <CommandList>
       <CommandEmpty>No results found.</CommandEmpty>

@@ -29,8 +29,8 @@ interface DashedSeparatorProps extends ComponentProps<typeof Separator> {
  * <DashedSeparator
  *   decorative
  *   dashColor="red"
- *   dashSize="8px"
- *   dashGap="4px"
+ *   dashSize="0.5rem"
+ *   dashGap="0.25rem"
  * />
  * ```
  *
@@ -38,9 +38,9 @@ interface DashedSeparatorProps extends ComponentProps<typeof Separator> {
  * ```tsx
  * // Custom dash styling using class names
  * <DashedSeparator className={`
- *   [--dash-color:theme(colors.red.500)]
- *   [--dash-size:theme(spacing.4)]
- *   [--dash-gap:theme(spacing.2)]
+ *   [--dash-color:var(--color-red-500)]
+ *   [--dash-size:--spacing(4)]
+ *   [--dash-gap:--spacing(2)]
  * `} />
  * ```
  *
@@ -89,10 +89,10 @@ export const DashedSeparator = ({
     orientation={orientation}
     className={cn(
       // We need this CSS variable so the bg class is applied in projects without a 'border' color var in the Tailwind config
-      "[--default-border-color:theme(colors.border)]",
+      "[--default-border-color:var(--color-border)]",
       orientation === "vertical" ? "[--tilt:0deg]" : "[--tilt:90deg]",
-      "bg-[linear-gradient(var(--tilt),var(--dash-color,var(--default-border-color)),var(--dash-color,var(--default-border-color))_calc(100%_-_var(--dash-gap,theme(spacing.1))),transparent_calc(100%_-_var(--dash-gap,theme(spacing.1))),transparent_100%)]",
-      "bg-[length:var(--dash-size,theme(spacing.4))_var(--dash-size,theme(spacing.4))]",
+      "bg-[linear-gradient(var(--tilt),var(--dash-color,var(--default-border-color)),var(--dash-color,var(--default-border-color))_calc(100%_-_var(--dash-gap,--spacing(1))),transparent_calc(100%_-_var(--dash-gap,--spacing(1))),transparent_100%)]",
+      "bg-[length:var(--dash-size,--spacing(4))_var(--dash-size,--spacing(4))]",
       className,
     )}
     style={

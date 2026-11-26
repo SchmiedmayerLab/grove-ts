@@ -52,7 +52,7 @@ export const statusDotVariance = cva("rounded-full", {
      */
     appearance: {
       solid: "",
-      glow: "border-(length:--glow-size) border-[color-mix(in_srgb,var(--glow-color)_50%,transparent)] bg-clip-padding shadow-[0_0_calc(var(--glow-size)*3)_color-mix(in_srgb,var(--glow-color)_30%,transparent)]",
+      glow: "border-(length:--glow-size) border-(--glow-color)/50 bg-clip-padding shadow-[0_0_calc(var(--glow-size)*3)_color-mix(in_srgb,var(--glow-color)_30%,transparent)]",
     },
   },
   defaultVariants: {
@@ -127,7 +127,7 @@ export interface StatusDotProps
  * ```tsx
  * // Custom colors
  * <StatusDot status={null} className="bg-blue-500" aria-label="In progress" />
- * <StatusDot status={null} appearance="glow" className="bg-purple-500 [--glow-color:theme(colors.purple.500)]" aria-label="Active" />
+ * <StatusDot status={null} appearance="glow" className="bg-purple-500 [--glow-color:var(--color-purple-500)]" aria-label="Active" />
  * ```
  *
  * @example

@@ -70,7 +70,7 @@ export const CustomColor: Story = {
   args: {
     status: null,
     appearance: "glow",
-    className: "bg-blue-500 [--glow-color:theme(colors.blue.500)]",
+    className: "bg-blue-500 [--glow-color:var(--color-blue-500)]",
     "aria-label": "In progress",
   },
 };

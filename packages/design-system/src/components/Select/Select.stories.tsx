@@ -26,7 +26,7 @@ export default meta;
 
 export const Default = () => (
   <Select>
-    <SelectTrigger className="w-[220px]">
+    <SelectTrigger className="w-55">
       <SelectValue placeholder="Organizations" />
     </SelectTrigger>
     <SelectContent>
@@ -41,7 +41,7 @@ export const Default = () => (
 
 export const GroupedOptions = () => (
   <Select>
-    <SelectTrigger className="w-[220px]">
+    <SelectTrigger className="w-55">
       <SelectValue placeholder="Select a fruit" />
     </SelectTrigger>
     <SelectContent>
@@ -61,7 +61,7 @@ export const GroupedOptions = () => (
 
 export const CustomOptions = () => (
   <Select search>
-    <SelectTrigger className="w-[220px]">
+    <SelectTrigger className="w-55">
       <SelectValue placeholder="Select option" />
     </SelectTrigger>
     <SelectContent>
@@ -89,7 +89,7 @@ export const CustomOptions = () => (
 
 export const Search = () => (
   <Select search>
-    <SelectTrigger className="w-[220px]">
+    <SelectTrigger className="w-55">
       <SelectValue placeholder="Select a framework" />
     </SelectTrigger>
     <SelectContent>
@@ -110,7 +110,7 @@ export const CustomSearch = () => (
       emptyMessage: "No language found.",
     }}
   >
-    <SelectTrigger className="w-[220px]">
+    <SelectTrigger className="w-55">
       <SelectValue placeholder="Select a language" />
     </SelectTrigger>
     <SelectContent>
@@ -138,7 +138,7 @@ export const WithCreate = () => {
         create
         formatValue={(value) => `new sport: ${value}`}
       >
-        <SelectTrigger className="w-[220px]">
+        <SelectTrigger className="w-55">
           <SelectValue placeholder="Select or create sport..." />
         </SelectTrigger>
         <SelectContent>
@@ -156,7 +156,7 @@ export const Controlled = () => {
   return (
     <div className="space-y-4">
       <Select value={value} onValueChange={setValue}>
-        <SelectTrigger className="w-[220px]">
+        <SelectTrigger className="w-55">
           <SelectValue placeholder="Select a fruit" />
         </SelectTrigger>
         <SelectContent>
@@ -172,7 +172,7 @@ export const Controlled = () => {
 
 export const Disabled = () => (
   <Select disabled>
-    <SelectTrigger className="w-[220px]">
+    <SelectTrigger className="w-55">
       <SelectValue placeholder="Organizations" />
     </SelectTrigger>
     <SelectContent>

@@ -56,15 +56,15 @@ describe("DashedSeparator", () => {
 
   it("renders separator with custom style classes", () => {
     render(
-      <DashedSeparator className="[--dash-color:theme(colors.red.500)] [--dash-gap:theme(spacing.3)] [--dash-size:theme(spacing.4)]" />,
+      <DashedSeparator className="[--dash-color:var(--color-red-500)] [--dash-gap:--spacing(3)] [--dash-size:--spacing(4)]" />,
     );
 
     const element = screen.getByRole("separator");
     expect(element).toBeInTheDocument();
     expect(element).toHaveClass(
-      "[--dash-color:theme(colors.red.500)]",
-      "[--dash-size:theme(spacing.4)]",
-      "[--dash-gap:theme(spacing.3)]",
+      "[--dash-color:var(--color-red-500)]",
+      "[--dash-size:--spacing(4)]",
+      "[--dash-gap:--spacing(3)]",
     );
   });
 });

@@ -142,7 +142,7 @@ export const DialogContentElement = ({
   <DialogPrimitive.Content
     data-slot="dialog-content"
     className={cn(
-      "animate-entrance-fade-zoom bg-surface fixed top-[50%] left-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg sm:rounded-lg",
+      "animate-entrance-fade-zoom bg-surface fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 border p-6 shadow-lg sm:rounded-lg",
       size && sizeToMaxWidthRecord[size],
       className,
     )}
