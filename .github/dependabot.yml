@@ -25,6 +25,6 @@ updates:
       # `typescript` stays TypeScript 6 for the tools that need its compiler API, such as typescript-eslint and TypeDoc.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
-      # Grove's supported runtime is Node.js 24.
+      # `@types/node` follows the oldest runtime in `engines.node`, not the development runtime in `.nvmrc`.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
