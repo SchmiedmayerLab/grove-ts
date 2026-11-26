@@ -23,6 +23,12 @@ export const WithSwitch = () => (
   </SideLabel>
 );
 
+export const Disabled = () => (
+  <SideLabel label="Not available">
+    <Switch disabled />
+  </SideLabel>
+);
+
 export const Reversed = () => (
   <SideLabel label="Check me" reverse>
     <Switch />
