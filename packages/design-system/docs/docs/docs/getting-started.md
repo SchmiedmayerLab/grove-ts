@@ -161,6 +161,9 @@ const customDarkTheme = {
 </GroveProvider>
 ```
 
+Every token is also a CSS variable named after its key, such as `--color-primary`.
+`tailwind.css` defines the light values on `:root`, and `GroveProvider` overrides them for its children when `colorScheme` or `themes` is set, so `var(--color-primary)` works in custom CSS and arbitrary values.
+
 ## Basic Usage
 
 ## Importing
